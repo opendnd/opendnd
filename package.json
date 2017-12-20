@@ -1,5 +1,5 @@
 {
-  "name": "dnd",
+  "name": "opendnd",
   "version": "0.0.2",
   "description": "This is master dependency and CLI for all OpenDnD tools.",
   "main": "lib/opendnd.js",
