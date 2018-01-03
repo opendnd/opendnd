@@ -35,8 +35,9 @@
     "commander": "^2.11.0",
     "dominia": "^0.2.1",
     "dynastia": "^0.3.3",
+    "genetica": "^0.2.0",
     "nomina": "^0.3.2",
-    "personae": "^0.3.1"
+    "personae": "^0.4.1"
   },
   "devDependencies": {
     "chai": "^4.1.2",
