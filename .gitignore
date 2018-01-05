@@ -45,3 +45,9 @@ jspm_packages
 
 # Yarn Integrity file
 .yarn-integrity
+
+# ignore all files
+*.dyn
+*.per
+*.dna
+*.dom
