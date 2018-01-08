@@ -1,6 +1,6 @@
 {
   "name": "opendnd",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "This is master dependency and CLI for all OpenDnD tools.",
   "main": "lib/opendnd.js",
   "scripts": {
