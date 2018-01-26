@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 const expect = require('chai').expect;
 const path = require('path');
 const rootDir = path.join(__dirname, '..', '..');
