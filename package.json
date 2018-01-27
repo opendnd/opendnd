@@ -34,10 +34,10 @@
     "colors": "^1.1.2",
     "commander": "^2.13.0",
     "dominia": "^0.5.2",
-    "dynastia": "^0.4.4",
+    "dynastia": "^0.4.5",
     "genetica": "^0.3.10",
     "nomina": "^0.4.2",
-    "personae": "^0.7.6"
+    "personae": "^0.8.1"
   },
   "devDependencies": {
     "chai": "^4.1.2",
