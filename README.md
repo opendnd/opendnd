@@ -10,14 +10,14 @@ You will need [node](https://nodejs.org/en/) and [npm](https://www.npmjs.com/) i
 
 `npm install -g opendnd`
 
-## Generate a Person from CLI
+## Generate from CLI
 
 ```shell
-dnd name
-dnd dna
-dnd person
-dnd domain
-dnd dynasty
+dnd name    # generate a name for a character or city
+dnd dna     # generate DNA for a person with unique traits and physical characteristics
+dnd person  # generate a person either a playable character or non
+dnd domain  # generate a kingdom, city, town, etc. for the characters to explore
+dnd dynasty # generate a dynasty to give the kingdom a rich history
 ``` 
 
 ## Module Usage
