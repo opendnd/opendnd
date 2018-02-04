@@ -51,3 +51,4 @@ jspm_packages
 *.per
 *.dna
 *.dom
+tmp
