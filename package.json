@@ -33,7 +33,7 @@
   "dependencies": {
     "colors": "^1.1.2",
     "commander": "^2.13.0",
-    "dominia": "^0.5.2",
+    "dominia": "^0.5.3",
     "dynastia": "^0.4.5",
     "genetica": "^0.3.10",
     "nomina": "^0.4.2",
