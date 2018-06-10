@@ -3,37 +3,39 @@ const path = require('path');
 const rootDir = path.join(__dirname, '..', '..');
 const libDir = path.join(rootDir, 'lib');
 const opendnd = require(path.join(libDir, 'opendnd'));
+const { Dynastia, Nomina, Dominia, Genetica, Personae } = opendnd;
 
 describe('opendnd', () => {
   it('is an object with dependencies', () => {
     expect(opendnd).to.be.an('object');
-    expect(opendnd.Dynastia).to.be.an('function');
-    expect(opendnd.Nomina).to.be.an('function');
-    expect(opendnd.Dominia).to.be.an('function');
-    expect(opendnd.Genetica).to.be.an('function');
-    expect(opendnd.Personae).to.be.an('function');
+    expect(Dynastia).to.be.a('function');
+    expect(Nomina).to.be.a('function');
+    expect(Dominia).to.be.a('function');
+    expect(Genetica).to.be.a('function');
+    expect(Personae).to.be.a('function');
   });
 
   it('generates a person', () => {
-    const person = new opendnd.Personae().generate();
+    const person = new Personae().generate();
 
     expect(person).to.be.an('object');
   });
 
   it('generates a name', () => {
-    const name = opendnd.Nomina.generate();
+    const nomina = new Nomina();
+    const name = nomina.generate();
 
     expect(name).to.be.a('string');
   });
 
   it('generates a dynasty', () => {
-    const dynasty = new opendnd.Dynastia().generate();
+    const dynasty = new Dynastia().generate();
 
     expect(dynasty).to.be.an('object');
   });
 
   it('generates a domain', () => {
-    const domain = new opendnd.Dominia().generate();
+    const domain = new Dominia().generate();
 
     expect(domain).to.be.an('object');
   });
