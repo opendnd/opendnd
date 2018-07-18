@@ -31,7 +31,7 @@
     "dnd": "./bin/dnd"
   },
   "dependencies": {
-    "avataria": "^0.4.0",
+    "avataria": "^0.4.1",
     "colors": "^1.1.2",
     "commander": "^2.13.0",
     "dominia": "^0.5.4",
