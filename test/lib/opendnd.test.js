@@ -3,16 +3,23 @@ const path = require('path');
 const rootDir = path.join(__dirname, '..', '..');
 const libDir = path.join(rootDir, 'lib');
 const opendnd = require(path.join(libDir, 'opendnd'));
-const { Dynastia, Nomina, Dominia, Genetica, Personae } = opendnd;
+const { Avataria, Dynastia, Nomina, Dominia, Genetica, Personae } = opendnd;
 
 describe('opendnd', () => {
   it('is an object with dependencies', () => {
     expect(opendnd).to.be.an('object');
+    expect(Avataria).to.be.a('function');
     expect(Dynastia).to.be.a('function');
     expect(Nomina).to.be.a('function');
     expect(Dominia).to.be.a('function');
     expect(Genetica).to.be.a('function');
     expect(Personae).to.be.a('function');
+  });
+
+  it('generates an avatar', () => {
+    const avatar = new Avataria().generate();
+
+    expect(avatar).to.be.a('string');
   });
 
   it('generates a person', () => {
