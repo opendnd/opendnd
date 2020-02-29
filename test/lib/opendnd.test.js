@@ -46,4 +46,44 @@ describe('opendnd', () => {
 
     expect(domain).to.be.an('object');
   });
+
+  it('generates the README sample code', () => {
+    // generate name
+    const nomina = new Nomina();
+    const name = nomina.generate();
+
+    expect(name).to.be.a('string');
+
+    // generate DNA
+    const genetica = new Genetica();
+    const DNA = genetica.generate();
+
+    expect(DNA).to.be.an('object');
+
+    // generate a person with our name and DNA
+    // all are optional if we leave it out it will be generated for us
+    const personae = new Personae();
+    const person = personae.generate({
+      name,
+      DNA,
+    });
+
+    expect(person).to.be.an('object');
+
+    // generate a dynasty with our person
+    const dynastia = new Dynastia();
+    const dynasty = dynastia.generate({
+      progenitor: person,
+    });
+
+    expect(dynasty).to.be.an('object');
+
+    // generate a town where this dynasty is from
+    const dominia = new Dominia();
+    const town = dominia.generate({
+      size: 'town',
+    });
+
+    expect(town).to.be.an('object');
+  });
 });

@@ -18,7 +18,7 @@ dnd dna     # generate DNA for a person with unique traits and physical characte
 dnd person  # generate a person either a playable character or non
 dnd domain  # generate a kingdom, city, town, etc. for the characters to explore
 dnd dynasty # generate a dynasty to give the kingdom a rich history
-``` 
+```
 
 ## Module Usage
 
@@ -29,8 +29,8 @@ const opendnd = require('opendnd');
 const { Nomina, Genetica, Personae, Dominia, Dynastia } = opendnd;
 
 // generate name
-const name = Nomina.generate();
-const themes = Nomina.getThemes();
+const nomina = new Nomina();
+const name = nomina.generate();
 
 // generate DNA
 const genetica = new Genetica();
