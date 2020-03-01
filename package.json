@@ -31,14 +31,14 @@
     "dnd": "./bin/dnd"
   },
   "dependencies": {
+    "@opendnd/genetica": "^0.6.1",
+    "@opendnd/nomina": "^0.4.4",
+    "@opendnd/personae": "^0.10.8",
     "avataria": "^0.4.1",
     "colors": "^1.1.2",
     "commander": "^2.13.0",
     "dominia": "^0.5.4",
-    "dynastia": "^0.4.6",
-    "genetica": "^0.4.0",
-    "nomina": "^0.4.3",
-    "personae": "^0.8.5"
+    "dynastia": "^0.4.8"
   },
   "devDependencies": {
     "chai": "^4.1.2",
