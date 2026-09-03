@@ -37,13 +37,25 @@
       "cache": true
     },
     "test": {
+      "dependsOn": [
+        "^build"
+      ],
       "cache": true
     },
     "test:ci": {
+      "dependsOn": [
+        "^build"
+      ],
       "cache": true,
       "outputs": [
         "test-results.xml"
       ]
+    },
+    "generate": {
+      "dependsOn": [
+        "^build"
+      ],
+      "cache": false
     },
     "lint": {
       "cache": true

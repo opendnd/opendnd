@@ -1,0 +1,19 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "perspective",
+  "url": "https://opendnd.org/ours/vocabularies/perspective.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Perspective",
+  "description": "Whether a statement is made from inside the fiction or about it (after Wikidata P5102).",
+  "codes": [
+    {
+      "code": "in-universe",
+      "display": "In-universe"
+    },
+    {
+      "code": "out-of-universe",
+      "display": "Out-of-universe"
+    }
+  ]
+}

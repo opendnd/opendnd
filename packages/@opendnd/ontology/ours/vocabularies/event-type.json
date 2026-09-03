@@ -1,0 +1,87 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "event-type",
+  "url": "https://opendnd.org/ours/vocabularies/event-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Event type",
+  "description": "Kinds of event in a world's history.",
+  "codes": [
+    {
+      "code": "birth",
+      "display": "Birth"
+    },
+    {
+      "code": "death",
+      "display": "Death"
+    },
+    {
+      "code": "marriage",
+      "display": "Marriage"
+    },
+    {
+      "code": "coronation",
+      "display": "Coronation"
+    },
+    {
+      "code": "succession",
+      "display": "Succession"
+    },
+    {
+      "code": "founding",
+      "display": "Founding"
+    },
+    {
+      "code": "dissolution",
+      "display": "Dissolution"
+    },
+    {
+      "code": "battle",
+      "display": "Battle"
+    },
+    {
+      "code": "war",
+      "display": "War"
+    },
+    {
+      "code": "treaty",
+      "display": "Treaty"
+    },
+    {
+      "code": "disaster",
+      "display": "Disaster"
+    },
+    {
+      "code": "discovery",
+      "display": "Discovery"
+    },
+    {
+      "code": "migration",
+      "display": "Migration"
+    },
+    {
+      "code": "journey",
+      "display": "Journey"
+    },
+    {
+      "code": "construction",
+      "display": "Construction"
+    },
+    {
+      "code": "plague",
+      "display": "Plague"
+    },
+    {
+      "code": "festival",
+      "display": "Festival"
+    },
+    {
+      "code": "other",
+      "display": "Other"
+    },
+    {
+      "code": "session",
+      "display": "Play session"
+    }
+  ]
+}

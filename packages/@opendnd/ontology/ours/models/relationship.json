@@ -1,0 +1,32 @@
+{
+  "resourceType": "Model",
+  "id": "relationship",
+  "url": "https://opendnd.org/ours/models/relationship.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Relationship",
+  "description": "A tie between two people.",
+  "schema": "https://opendnd.org/ours/schemas/relationship.schema.json",
+  "relationships": [
+    {
+      "predicate": "person1",
+      "target": "Person"
+    },
+    {
+      "predicate": "person2",
+      "target": "Person"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "http://gedcomx.org/v1",
+      "schema": "http://gedcomx.org/v1/Relationship",
+      "type": "one-to-one"
+    },
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/knows",
+      "type": "partial"
+    }
+  ]
+}

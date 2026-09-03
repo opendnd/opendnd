@@ -1,0 +1,51 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "work-type",
+  "url": "https://opendnd.org/ours/vocabularies/work-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Work type",
+  "description": "Kinds of in-world or out-of-world creative work.",
+  "codes": [
+    {
+      "code": "chronicle",
+      "display": "Chronicle"
+    },
+    {
+      "code": "legend",
+      "display": "Legend"
+    },
+    {
+      "code": "myth",
+      "display": "Myth"
+    },
+    {
+      "code": "song",
+      "display": "Song"
+    },
+    {
+      "code": "letter",
+      "display": "Letter"
+    },
+    {
+      "code": "report",
+      "display": "Report"
+    },
+    {
+      "code": "map",
+      "display": "Map"
+    },
+    {
+      "code": "article",
+      "display": "Article"
+    },
+    {
+      "code": "adventure",
+      "display": "Adventure"
+    },
+    {
+      "code": "rulebook",
+      "display": "Rulebook"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "resourceType": "Ontology",
+  "id": "fixture",
+  "url": "https://example.test/ours/ontology.json",
+  "version": "0.1.0",
+  "publisher": "Fixture",
+  "models": "https://example.test/ours/models.json",
+  "vocabularies": "https://example.test/ours/vocabularies.json"
+}

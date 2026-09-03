@@ -1,0 +1,43 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/organization.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Organization",
+  "description": "An organized group: state, dynasty, faction, guild, religion (schema.org Organization, CIDOC E74 Group, W3C ORG).",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "organizationType": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/organization-type.json"
+    },
+    "parent": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "seat": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "leader": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "founded": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+    },
+    "dissolved": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+    },
+    "motto": {
+      "type": "string"
+    },
+    "sigil": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "required": [
+    "organizationType"
+  ],
+  "additionalProperties": false
+}

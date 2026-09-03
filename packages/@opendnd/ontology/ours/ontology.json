@@ -1,0 +1,12 @@
+{
+  "resourceType": "Ontology",
+  "id": "opendnd",
+  "url": "https://opendnd.org/ours/ontology.json",
+  "version": "0.1.0",
+  "publisher": "OpenDnD, a project of OpenHI",
+  "name": "OpenDnD worldbuilding ontology",
+  "description": "An ontology for fictional worlds: people, places, organizations, events, works and claims, with in-world time, canon status and provenance built into every record.",
+  "models": "https://opendnd.org/ours/models.json",
+  "vocabularies": "https://opendnd.org/ours/vocabularies.json",
+  "mappings": "https://opendnd.org/ours/mappings.json"
+}

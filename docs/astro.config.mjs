@@ -19,6 +19,8 @@ export default defineConfig({
       ],
       sidebar: [
         { label: 'Overview', slug: '' },
+        { label: 'Guides', items: [{ autogenerate: { directory: 'guides' } }] },
+        { label: 'Packages', items: [{ autogenerate: { directory: 'packages' } }] },
         { label: 'Research', items: [{ autogenerate: { directory: 'research' } }] },
         {
           label: 'Architecture decisions',

@@ -1,0 +1,27 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "person-status",
+  "url": "https://opendnd.org/ours/vocabularies/person-status.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Person status",
+  "description": "Whether a person is living at the record's valid time.",
+  "codes": [
+    {
+      "code": "alive",
+      "display": "Alive"
+    },
+    {
+      "code": "dead",
+      "display": "Dead"
+    },
+    {
+      "code": "undead",
+      "display": "Undead"
+    },
+    {
+      "code": "unknown",
+      "display": "Unknown"
+    }
+  ]
+}

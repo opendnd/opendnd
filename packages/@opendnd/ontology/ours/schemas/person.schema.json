@@ -1,0 +1,105 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/person.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Person",
+  "description": "A person in the world, real to it or legendary (schema.org Person, CIDOC E21, Wikidata fictional human).",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "species": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "culture": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "sex": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/sex.json"
+    },
+    "pronouns": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/person-status.json",
+      "default": "alive"
+    },
+    "birth": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+        },
+        "place": {
+          "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        }
+      },
+      "additionalProperties": false
+    },
+    "death": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+        },
+        "place": {
+          "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        },
+        "cause": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "titles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "memberOf": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      }
+    },
+    "residence": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "occupation": {
+      "type": "string"
+    },
+    "dna": {
+      "type": "string",
+      "description": "Chromosome record from the genetics generator."
+    },
+    "traits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "gene": {
+            "type": "string"
+          },
+          "trait": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "gene",
+          "trait"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "portrait": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

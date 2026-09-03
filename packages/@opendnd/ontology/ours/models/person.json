@@ -1,0 +1,51 @@
+{
+  "resourceType": "Model",
+  "id": "person",
+  "url": "https://opendnd.org/ours/models/person.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Person",
+  "description": "A person in the world.",
+  "schema": "https://opendnd.org/ours/schemas/person.schema.json",
+  "relationships": [
+    {
+      "predicate": "species",
+      "target": "Person"
+    },
+    {
+      "predicate": "memberOf",
+      "target": "Organization"
+    },
+    {
+      "predicate": "residence",
+      "target": "Place"
+    },
+    {
+      "predicate": "bornAt",
+      "target": "Place"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/Person",
+      "type": "one-to-one"
+    },
+    {
+      "system": "https://www.wikidata.org",
+      "schema": "https://www.wikidata.org/entity/Q15632617",
+      "type": "one-to-one",
+      "comment": "fictional human"
+    },
+    {
+      "system": "http://www.cidoc-crm.org/cidoc-crm",
+      "schema": "http://www.cidoc-crm.org/cidoc-crm/E21_Person",
+      "type": "one-to-one"
+    },
+    {
+      "system": "http://gedcomx.org/v1",
+      "schema": "http://gedcomx.org/v1/Person",
+      "type": "partial"
+    }
+  ]
+}

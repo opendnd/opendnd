@@ -1,0 +1,58 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/relationship.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Relationship",
+  "description": "A tie between two people, with dated facts (GEDCOM X Relationship extended for succession).",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "relationshipType": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/relationship-type.json"
+    },
+    "person1": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "person2": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "facts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "time": {
+            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+          },
+          "place": {
+            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "legitimacy": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/legitimacy.json"
+    },
+    "successionOrder": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "relationshipType",
+    "person1",
+    "person2"
+  ],
+  "additionalProperties": false
+}

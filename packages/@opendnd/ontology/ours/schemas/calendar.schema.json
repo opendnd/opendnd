@@ -1,0 +1,156 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/calendar.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Calendar",
+  "description": "A temporal reference system: months, weekdays, leap rules, moons and eras (after Kanka; OWL-Time TRS).",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "months": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "intercalary": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "name",
+          "length"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "weekdays": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "leapYear": {
+      "type": "object",
+      "properties": {
+        "every": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "extraDays": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "month": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "offset": {
+          "type": "integer",
+          "default": 0
+        }
+      },
+      "required": [
+        "every",
+        "extraDays",
+        "month"
+      ],
+      "additionalProperties": false
+    },
+    "moons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "cycle": {
+            "type": "number",
+            "description": "Days per full cycle."
+          },
+          "offset": {
+            "type": "number",
+            "default": 0
+          }
+        },
+        "required": [
+          "name",
+          "cycle"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "seasons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "month": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "day": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "name",
+          "month",
+          "day"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "eras": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "abbreviation": {
+            "type": "string"
+          },
+          "startYear": {
+            "type": "integer"
+          },
+          "endYear": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "startYear"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "hasYearZero": {
+      "type": "boolean",
+      "default": false
+    },
+    "yearSuffix": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "months"
+  ],
+  "additionalProperties": false
+}

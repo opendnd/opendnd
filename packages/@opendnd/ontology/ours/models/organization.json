@@ -1,0 +1,41 @@
+{
+  "resourceType": "Model",
+  "id": "organization",
+  "url": "https://opendnd.org/ours/models/organization.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Organization",
+  "description": "An organized group of people.",
+  "schema": "https://opendnd.org/ours/schemas/organization.schema.json",
+  "relationships": [
+    {
+      "predicate": "parent",
+      "target": "Organization"
+    },
+    {
+      "predicate": "seat",
+      "target": "Place"
+    },
+    {
+      "predicate": "leader",
+      "target": "Person"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/Organization",
+      "type": "one-to-one"
+    },
+    {
+      "system": "http://www.cidoc-crm.org/cidoc-crm",
+      "schema": "http://www.cidoc-crm.org/cidoc-crm/E74_Group",
+      "type": "one-to-one"
+    },
+    {
+      "system": "http://www.w3.org/ns/org",
+      "schema": "http://www.w3.org/ns/org#Organization",
+      "type": "one-to-one"
+    }
+  ]
+}

@@ -9,6 +9,10 @@ export interface PackageConfig {
   readonly devDeps?: string[];
   /** Bun test timeout in ms. Projen synth tests need more than the default. */
   readonly testTimeout?: number;
+  /** Extra projen tasks: name -> { description, exec }. */
+  readonly tasks?: Record<string, { description: string; exec: string }>;
+  /** Globs of generated source that eslint and prettier must leave alone. */
+  readonly generated?: string[];
 }
 
 const packages: readonly PackageConfig[] = [
@@ -23,10 +27,31 @@ const packages: readonly PackageConfig[] = [
     testTimeout: 30000,
   },
   {
+    name: '@opendnd/ours',
+    description:
+      'Tooling for the OURS ontology format: resource types, bundle loader, validator and JSON Schema to Zod code generation. Domain-agnostic.',
+    deps: [`zod@${versions.zod}`],
+  },
+  {
     name: '@opendnd/ontology',
     description:
       'The OpenDnD worldbuilding ontology authored in OURS: models, JSON Schemas, vocabularies and alignment mappings.',
+    devDeps: ['@opendnd/ours@workspace:*'],
+  },
+  {
+    name: '@opendnd/types',
+    description:
+      'TypeScript types and Zod schemas generated from the @opendnd/ontology OURS bundle. Do not edit by hand; run `bun run generate`.',
     deps: [`zod@${versions.zod}`],
+    devDeps: ['@opendnd/ours@workspace:*', '@opendnd/ontology@workspace:*'],
+    generated: ['src/generated/**'],
+    tasks: {
+      generate: {
+        description:
+          'Regenerate src/generated from the OURS bundle in @opendnd/ontology. Run `bun run generate` at the root so dependencies build first.',
+        exec: 'bun run scripts/generate.ts',
+      },
+    },
   },
 ];
 
@@ -53,6 +78,20 @@ export function configurePackages(parent: Project): TypeScriptProject[] {
       sampleCode: false,
       ...(config.testTimeout ? { timeout: config.testTimeout } : {}),
     });
+
+    for (const [name, task] of Object.entries(config.tasks ?? {})) {
+      project.addTask(name, task);
+    }
+
+    // Generated code is checked by the drift test and the compiler, not by
+    // formatters, which would otherwise rewrite it and cause drift.
+    for (const glob of config.generated ?? []) {
+      project.eslint?.addIgnorePattern(glob);
+      project.prettier?.addIgnorePattern(glob);
+    }
+
+    // Scratch space used by tests that need to import a generated module.
+    project.gitignore.addPatterns('specs/.tmp-*');
 
     project.package.addField('main', 'dist/src/index.js');
     project.package.addField('types', 'dist/src/index.d.ts');

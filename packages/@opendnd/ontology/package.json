@@ -16,6 +16,7 @@
     "test:ci": "bun test --pass-with-no-tests --timeout 5000 --reporter=junit --reporter-outfile=./test-results.xml ./specs"
   },
   "devDependencies": {
+    "@opendnd/ours": "workspace:*",
     "@types/bun": "*",
     "@types/node": "ts5.9",
     "@typescript-eslint/eslint-plugin": "^8",
@@ -27,9 +28,6 @@
     "eslint-plugin-prettier": "*",
     "prettier": "*",
     "typescript": "^5.9.3"
-  },
-  "dependencies": {
-    "zod": "^4.3.6"
   },
   "devEngines": {
     "packageManager": {

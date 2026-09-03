@@ -1,0 +1,12 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "mood",
+  "url": "https://example.test/ours/vocabularies/mood.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Mood",
+  "codes": [
+    { "code": "happy", "display": "Happy" },
+    { "code": "sad", "display": "Sad" }
+  ]
+}

@@ -18,5 +18,6 @@ Everything is free to use. Features that cost money to run, such as AI token spe
 
 ## Where to start
 
+- [Authoring the ontology](/guides/authoring-the-ontology/): how to add a model.
 - [Research](/research/landscape/): what already exists and what we align to.
 - [Architecture decisions](/adr/adr-001-monorepo-tooling/): the choices, in order.

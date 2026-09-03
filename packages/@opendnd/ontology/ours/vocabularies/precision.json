@@ -1,0 +1,43 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "precision",
+  "url": "https://opendnd.org/ours/vocabularies/precision.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Temporal precision",
+  "description": "The finest unit a temporal position is known to.",
+  "codes": [
+    {
+      "code": "era",
+      "display": "Era"
+    },
+    {
+      "code": "century",
+      "display": "Century"
+    },
+    {
+      "code": "decade",
+      "display": "Decade"
+    },
+    {
+      "code": "year",
+      "display": "Year"
+    },
+    {
+      "code": "month",
+      "display": "Month"
+    },
+    {
+      "code": "day",
+      "display": "Day"
+    },
+    {
+      "code": "hour",
+      "display": "Hour"
+    },
+    {
+      "code": "minute",
+      "display": "Minute"
+    }
+  ]
+}

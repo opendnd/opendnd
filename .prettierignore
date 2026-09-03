@@ -8,4 +8,5 @@ coverage
 .turbo
 build
 *.generated.ts
+**/src/generated/**
 **/.astro

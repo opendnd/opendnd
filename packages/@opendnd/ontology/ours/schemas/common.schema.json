@@ -1,0 +1,382 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/common.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OpenDnD common definitions",
+  "description": "Shared building blocks: references, in-world time, geometry, provenance, and the base every resource extends.",
+  "$defs": {
+    "Reference": {
+      "description": "A typed pointer to another resource in the same world.",
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Model id of the target, e.g. person."
+        },
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string",
+          "description": "Denormalized display name, for convenience."
+        }
+      },
+      "required": [
+        "model",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "TemporalPosition": {
+      "description": "A point in in-world time, expressed in a named calendar (OWL-Time TemporalPosition with a temporal reference system).",
+      "type": "object",
+      "properties": {
+        "trs": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The Calendar resource this position is expressed in."
+        },
+        "year": {
+          "type": "integer"
+        },
+        "month": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "day": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "hour": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 23
+        },
+        "minute": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 59
+        },
+        "precision": {
+          "type": "string",
+          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/precision.json",
+          "default": "year"
+        },
+        "nominal": {
+          "type": "string",
+          "description": "A named position when no numeric one is known, e.g. 'the Age of Ash'."
+        }
+      },
+      "required": [
+        "trs",
+        "year"
+      ],
+      "additionalProperties": false
+    },
+    "TimeSpan": {
+      "description": "An interval of in-world time with optional fuzzy bounds (CIDOC-CRM E52 Time-Span).",
+      "type": "object",
+      "properties": {
+        "begin": {
+          "$ref": "#/$defs/TemporalPosition"
+        },
+        "end": {
+          "$ref": "#/$defs/TemporalPosition"
+        },
+        "earliest": {
+          "$ref": "#/$defs/TemporalPosition",
+          "description": "Outer lower bound when begin is uncertain."
+        },
+        "latest": {
+          "$ref": "#/$defs/TemporalPosition",
+          "description": "Outer upper bound when end is uncertain."
+        }
+      },
+      "additionalProperties": false
+    },
+    "Position": {
+      "description": "A GeoJSON position: [x, y] or [x, y, z] in the world's CRS.",
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 3
+    },
+    "Geometry": {
+      "description": "A GeoJSON geometry object.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "Point"
+            },
+            "coordinates": {
+              "$ref": "#/$defs/Position"
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "LineString"
+            },
+            "coordinates": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Position"
+              },
+              "minItems": 2
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "Polygon"
+            },
+            "coordinates": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/Position"
+                },
+                "minItems": 4
+              }
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "MultiPolygon"
+            },
+            "coordinates": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Position"
+                  },
+                  "minItems": 4
+                }
+              }
+            }
+          },
+          "required": [
+            "type",
+            "coordinates"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Feature": {
+      "description": "Geometry placed in a named coordinate reference system (GeoSPARQL Feature/Geometry split). GeoJSON hard-codes Earth, so the CRS travels beside the geometry.",
+      "type": "object",
+      "properties": {
+        "crs": {
+          "type": "string",
+          "format": "uri",
+          "description": "IRI of the world's CRS, minted per world."
+        },
+        "geometry": {
+          "$ref": "#/$defs/Geometry"
+        },
+        "properties": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "required": [
+        "crs",
+        "geometry"
+      ],
+      "additionalProperties": false
+    },
+    "Provenance": {
+      "description": "How this record came to exist (PROV-O), including the generator seed when it was produced procedurally or by AI.",
+      "type": "object",
+      "properties": {
+        "generatedBy": {
+          "type": "string",
+          "description": "Generator id and version, e.g. dynastia@2.0.0 or bedrock:anthropic.claude-sonnet-5."
+        },
+        "seed": {
+          "type": "string",
+          "description": "Deterministic seed path. Same seed and generator yields the same derivedId."
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "promptHash": {
+          "type": "string",
+          "description": "Hash of the prompt for AI-generated records."
+        },
+        "derivedFrom": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Reference"
+          }
+        },
+        "attributedTo": {
+          "type": "string",
+          "description": "User id of the human author or approver."
+        },
+        "revisionOf": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The record this one supersedes."
+        }
+      },
+      "additionalProperties": false
+    },
+    "Recorded": {
+      "description": "Transaction time: when the record itself was written, as opposed to when the fact holds in-world.",
+      "type": "object",
+      "properties": {
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "author": {
+          "type": "string",
+          "description": "User id."
+        }
+      },
+      "required": [
+        "createdAt",
+        "updatedAt",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "Citation": {
+      "description": "Where a fact is attested inside the fiction: a Work and a locator within it.",
+      "type": "object",
+      "properties": {
+        "work": {
+          "$ref": "#/$defs/Reference"
+        },
+        "locator": {
+          "type": "string",
+          "description": "Page, chapter, verse or similar."
+        },
+        "quote": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "work"
+      ],
+      "additionalProperties": false
+    },
+    "ResourceBase": {
+      "description": "Every OpenDnD resource is an assertion about a world: it carries in-world valid time, transaction time, canon status, perspective and provenance.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Random v4. Never derived from mutable content, so renames never break references."
+        },
+        "derivedId": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Deterministic v5 id derived from the provenance seed, so regeneration is idempotent."
+        },
+        "world": {
+          "type": "string",
+          "format": "uuid",
+          "description": "The World this resource belongs to."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "alternateNames": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "description": {
+          "type": "string"
+        },
+        "canonStatus": {
+          "type": "string",
+          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/canon-status.json"
+        },
+        "perspective": {
+          "type": "string",
+          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/perspective.json",
+          "default": "in-universe"
+        },
+        "validTime": {
+          "$ref": "#/$defs/TimeSpan",
+          "description": "When this assertion holds in-world. Absent means always."
+        },
+        "recorded": {
+          "$ref": "#/$defs/Recorded"
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Citation"
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "module": {
+          "type": "string",
+          "description": "Content-addressed id of the module this record ships in, when it is not native to the world."
+        }
+      },
+      "required": [
+        "id",
+        "world",
+        "name",
+        "canonStatus",
+        "recorded"
+      ]
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "sex",
+  "url": "https://opendnd.org/ours/vocabularies/sex.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Sex",
+  "description": "Biological sex as used by the genetics generator.",
+  "codes": [
+    {
+      "code": "male",
+      "display": "Male"
+    },
+    {
+      "code": "female",
+      "display": "Female"
+    },
+    {
+      "code": "neuter",
+      "display": "Neuter"
+    },
+    {
+      "code": "unknown",
+      "display": "Unknown"
+    }
+  ]
+}

@@ -161,6 +161,7 @@ export class BunMonorepoProject extends TypeScriptProject {
       '.turbo',
       'build',
       '*.generated.ts',
+      '**/src/generated/**',
       // Astro writes its content collection and env types here on every build,
       // and they are not formatted to this project's rules. They are gitignored,
       // so they only exist locally and in CI after a build has run, which is
@@ -236,6 +237,7 @@ export class BunMonorepoProject extends TypeScriptProject {
       eslint: 'bunx projen eslint',
       watch: 'bunx projen watch',
       'build:all': 'turbo run build',
+      generate: 'turbo run generate',
       'test:all': 'turbo run test',
       // What CI runs. Same tests, plus a JUnit report per package so an
       // intermittent failure leaves evidence instead of one line of console.
@@ -393,11 +395,16 @@ export class BunMonorepoProject extends TypeScriptProject {
             outputs: ['dist/**', '.next/**', '!.next/cache/**'],
             cache: true,
           },
-          test: { cache: true },
+          test: { dependsOn: ['^build'], cache: true },
           // The same tests with a JUnit report alongside. Declaring the report
           // as an output means turbo restores it on a cache hit, so the evidence
           // survives a cached run rather than only existing when tests re-run.
-          'test:ci': { cache: true, outputs: ['test-results.xml'] },
+          'test:ci': {
+            dependsOn: ['^build'],
+            cache: true,
+            outputs: ['test-results.xml'],
+          },
+          generate: { dependsOn: ['^build'], cache: false },
           lint: { cache: true },
           dev: {
             persistent: true,

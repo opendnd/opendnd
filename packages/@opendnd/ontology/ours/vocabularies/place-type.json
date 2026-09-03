@@ -1,0 +1,79 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "place-type",
+  "url": "https://opendnd.org/ours/vocabularies/place-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Place type",
+  "description": "Kinds of place, from the whole world down to a single room.",
+  "codes": [
+    {
+      "code": "world",
+      "display": "World"
+    },
+    {
+      "code": "continent",
+      "display": "Continent"
+    },
+    {
+      "code": "region",
+      "display": "Region"
+    },
+    {
+      "code": "realm",
+      "display": "Realm"
+    },
+    {
+      "code": "province",
+      "display": "Province"
+    },
+    {
+      "code": "city",
+      "display": "City"
+    },
+    {
+      "code": "town",
+      "display": "Town"
+    },
+    {
+      "code": "village",
+      "display": "Village"
+    },
+    {
+      "code": "hamlet",
+      "display": "Hamlet"
+    },
+    {
+      "code": "district",
+      "display": "District"
+    },
+    {
+      "code": "building",
+      "display": "Building"
+    },
+    {
+      "code": "room",
+      "display": "Room"
+    },
+    {
+      "code": "dungeon",
+      "display": "Dungeon"
+    },
+    {
+      "code": "landmark",
+      "display": "Landmark"
+    },
+    {
+      "code": "wilderness",
+      "display": "Wilderness"
+    },
+    {
+      "code": "route",
+      "display": "Route"
+    },
+    {
+      "code": "water",
+      "display": "Body of water"
+    }
+  ]
+}

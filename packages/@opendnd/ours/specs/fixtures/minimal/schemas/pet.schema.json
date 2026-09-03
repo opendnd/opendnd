@@ -1,0 +1,20 @@
+{
+  "$id": "https://example.test/ours/schemas/pet.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Pet",
+  "allOf": [
+    { "$ref": "https://example.test/ours/schemas/common.schema.json#/$defs/Base" }
+  ],
+  "properties": {
+    "mood": {
+      "type": "string",
+      "x-ours-vocabulary": "https://example.test/ours/vocabularies/mood.json",
+      "default": "happy"
+    },
+    "owner": { "$ref": "https://example.test/ours/schemas/common.schema.json#/$defs/Reference" },
+    "legs": { "type": "integer", "minimum": 0, "maximum": 8 },
+    "nicknames": { "type": "array", "items": { "type": "string" } },
+    "born": { "type": ["string", "null"], "format": "date" }
+  },
+  "required": ["legs"]
+}

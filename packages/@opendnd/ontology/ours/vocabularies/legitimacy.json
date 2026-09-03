@@ -1,0 +1,27 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "legitimacy",
+  "url": "https://opendnd.org/ours/vocabularies/legitimacy.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Legitimacy",
+  "description": "Standing of a child within a line of succession.",
+  "codes": [
+    {
+      "code": "legitimate",
+      "display": "Legitimate"
+    },
+    {
+      "code": "illegitimate",
+      "display": "Illegitimate"
+    },
+    {
+      "code": "legitimized",
+      "display": "Legitimized"
+    },
+    {
+      "code": "adopted",
+      "display": "Adopted"
+    }
+  ]
+}

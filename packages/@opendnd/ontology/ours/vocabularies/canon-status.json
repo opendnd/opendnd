@@ -1,0 +1,41 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "canon-status",
+  "url": "https://opendnd.org/ours/vocabularies/canon-status.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Canon status",
+  "description": "How authoritative a record is within its world.",
+  "codes": [
+    {
+      "code": "canon",
+      "display": "Canon",
+      "definition": "Accepted as true by the world owner."
+    },
+    {
+      "code": "non-canon",
+      "display": "Non-canon",
+      "definition": "Deliberately outside the accepted history (what-ifs, alternate takes)."
+    },
+    {
+      "code": "proposed",
+      "display": "Proposed",
+      "definition": "Authored by a person and awaiting review."
+    },
+    {
+      "code": "generated",
+      "display": "Generated",
+      "definition": "Produced by a procedural or AI generator and not yet promoted."
+    },
+    {
+      "code": "player-authored",
+      "display": "Player authored",
+      "definition": "Created during play by a participant other than the world owner."
+    },
+    {
+      "code": "retired",
+      "display": "Retired",
+      "definition": "No longer part of the world but kept for history."
+    }
+  ]
+}

@@ -20,6 +20,7 @@
     "test:watch": "bunx projen test:watch",
     "upgrade": "bunx projen upgrade",
     "build:all": "turbo run build",
+    "generate": "turbo run generate",
     "test:all": "turbo run test",
     "test:ci": "turbo run test:ci",
     "lint:all": "turbo run lint",

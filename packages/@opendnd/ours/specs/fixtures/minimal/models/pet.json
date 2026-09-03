@@ -1,0 +1,14 @@
+{
+  "resourceType": "Model",
+  "id": "pet",
+  "url": "https://example.test/ours/models/pet.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Pet",
+  "description": "A companion animal.",
+  "schema": "https://example.test/ours/schemas/pet.schema.json",
+  "relationships": [{ "predicate": "ownedBy", "target": "Pet" }],
+  "mapsTo": [
+    { "system": "https://schema.org", "schema": "https://schema.org/Thing", "type": "partial" }
+  ]
+}

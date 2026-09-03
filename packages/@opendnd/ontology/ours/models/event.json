@@ -1,0 +1,45 @@
+{
+  "resourceType": "Model",
+  "id": "event",
+  "url": "https://opendnd.org/ours/models/event.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Event",
+  "description": "Something that happened in-world.",
+  "schema": "https://opendnd.org/ours/schemas/event.schema.json",
+  "relationships": [
+    {
+      "predicate": "locations",
+      "target": "Place"
+    },
+    {
+      "predicate": "participants",
+      "target": "Person"
+    },
+    {
+      "predicate": "partOf",
+      "target": "Event"
+    },
+    {
+      "predicate": "causedBy",
+      "target": "Event"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/Event",
+      "type": "one-to-one"
+    },
+    {
+      "system": "http://www.cidoc-crm.org/cidoc-crm",
+      "schema": "http://www.cidoc-crm.org/cidoc-crm/E5_Event",
+      "type": "one-to-one"
+    },
+    {
+      "system": "https://www.w3.org/2006/time",
+      "schema": "http://www.w3.org/2006/time#TemporalEntity",
+      "type": "partial"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "$id": "https://example.test/ours/schemas/common.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Base": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "name": { "type": "string", "minLength": 1 }
+      },
+      "required": ["id", "name"]
+    },
+    "Reference": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "format": "uuid" },
+        "model": { "type": "string" }
+      },
+      "required": ["id", "model"],
+      "additionalProperties": false
+    }
+  }
+}

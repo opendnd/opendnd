@@ -1,0 +1,55 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "relationship-type",
+  "url": "https://opendnd.org/ours/vocabularies/relationship-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Relationship type",
+  "description": "Kinds of relationship between two people (GEDCOM X types plus feudal and social ties).",
+  "codes": [
+    {
+      "code": "parent-child",
+      "display": "Parent and child"
+    },
+    {
+      "code": "adoptive-parent-child",
+      "display": "Adoptive parent and child"
+    },
+    {
+      "code": "foster-parent-child",
+      "display": "Foster parent and child"
+    },
+    {
+      "code": "couple",
+      "display": "Couple"
+    },
+    {
+      "code": "sibling",
+      "display": "Siblings"
+    },
+    {
+      "code": "liege-vassal",
+      "display": "Liege and vassal"
+    },
+    {
+      "code": "mentor-student",
+      "display": "Mentor and student"
+    },
+    {
+      "code": "ally",
+      "display": "Allies"
+    },
+    {
+      "code": "rival",
+      "display": "Rivals"
+    },
+    {
+      "code": "enemy",
+      "display": "Enemies"
+    },
+    {
+      "code": "friend",
+      "display": "Friends"
+    }
+  ]
+}

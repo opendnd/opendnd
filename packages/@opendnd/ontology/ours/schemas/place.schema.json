@@ -1,0 +1,40 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/place.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Place",
+  "description": "A location at any scale, optionally with geometry in the world's CRS (schema.org Place, CIDOC E53, GeoSPARQL Feature).",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "placeType": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/place-type.json"
+    },
+    "parent": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "feature": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Feature"
+    },
+    "population": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "biome": {
+      "type": "string"
+    },
+    "controlledBy": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "founded": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+    }
+  },
+  "required": [
+    "placeType"
+  ],
+  "additionalProperties": false
+}

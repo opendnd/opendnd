@@ -1,0 +1,62 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/event.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Event",
+  "description": "Something that happened in-world, with participants in roles and optional cause links (schema.org Event, CIDOC E5, Dwarf Fortress historical events).",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "eventType": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/event-type.json"
+    },
+    "when": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TimeSpan"
+    },
+    "locations": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      }
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+          },
+          "role": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor",
+          "role"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "partOf": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "causedBy": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      }
+    },
+    "outcome": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "eventType",
+    "when"
+  ],
+  "additionalProperties": false
+}

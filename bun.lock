@@ -37,6 +37,24 @@
     "packages/@opendnd/ontology": {
       "name": "@opendnd/ontology",
       "version": "0.0.0",
+      "devDependencies": {
+        "@opendnd/ours": "workspace:*",
+        "@types/bun": "*",
+        "@types/node": "ts5.9",
+        "@typescript-eslint/eslint-plugin": "^8",
+        "@typescript-eslint/parser": "^8",
+        "eslint": "^9",
+        "eslint-config-prettier": "*",
+        "eslint-import-resolver-typescript": "*",
+        "eslint-plugin-import": "*",
+        "eslint-plugin-prettier": "*",
+        "prettier": "*",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/@opendnd/ours": {
+      "name": "@opendnd/ours",
+      "version": "0.0.0",
       "dependencies": {
         "zod": "^4.3.6",
       },
@@ -62,6 +80,28 @@
         "projen": "^0.103.1",
       },
       "devDependencies": {
+        "@types/bun": "*",
+        "@types/node": "ts5.9",
+        "@typescript-eslint/eslint-plugin": "^8",
+        "@typescript-eslint/parser": "^8",
+        "eslint": "^9",
+        "eslint-config-prettier": "*",
+        "eslint-import-resolver-typescript": "*",
+        "eslint-plugin-import": "*",
+        "eslint-plugin-prettier": "*",
+        "prettier": "*",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/@opendnd/types": {
+      "name": "@opendnd/types",
+      "version": "0.0.0",
+      "dependencies": {
+        "zod": "^4.3.6",
+      },
+      "devDependencies": {
+        "@opendnd/ontology": "workspace:*",
+        "@opendnd/ours": "workspace:*",
         "@types/bun": "*",
         "@types/node": "ts5.9",
         "@typescript-eslint/eslint-plugin": "^8",
@@ -329,7 +369,11 @@
 
     "@opendnd/ontology": ["@opendnd/ontology@workspace:packages/@opendnd/ontology"],
 
+    "@opendnd/ours": ["@opendnd/ours@workspace:packages/@opendnd/ours"],
+
     "@opendnd/projen": ["@opendnd/projen@workspace:packages/@opendnd/projen"],
+
+    "@opendnd/types": ["@opendnd/types@workspace:packages/@opendnd/types"],
 
     "@oslojs/encoding": ["@oslojs/encoding@1.1.0", "", {}, "sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ=="],
 

@@ -1,0 +1,55 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "organization-type",
+  "url": "https://opendnd.org/ours/vocabularies/organization-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Organization type",
+  "description": "Kinds of organized group.",
+  "codes": [
+    {
+      "code": "state",
+      "display": "State"
+    },
+    {
+      "code": "dynasty",
+      "display": "Dynasty"
+    },
+    {
+      "code": "family",
+      "display": "Family"
+    },
+    {
+      "code": "faction",
+      "display": "Faction"
+    },
+    {
+      "code": "guild",
+      "display": "Guild"
+    },
+    {
+      "code": "religion",
+      "display": "Religion"
+    },
+    {
+      "code": "military",
+      "display": "Military"
+    },
+    {
+      "code": "company",
+      "display": "Company"
+    },
+    {
+      "code": "order",
+      "display": "Order"
+    },
+    {
+      "code": "school",
+      "display": "School"
+    },
+    {
+      "code": "party",
+      "display": "Adventuring party"
+    }
+  ]
+}

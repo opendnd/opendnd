@@ -1,0 +1,23 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "belief-value",
+  "url": "https://opendnd.org/ours/vocabularies/belief-value.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Belief value",
+  "description": "Whether a holder holds a proposition to be true (after CRMinf I6).",
+  "codes": [
+    {
+      "code": "true",
+      "display": "Held true"
+    },
+    {
+      "code": "false",
+      "display": "Held false"
+    },
+    {
+      "code": "unknown",
+      "display": "Unknown"
+    }
+  ]
+}
