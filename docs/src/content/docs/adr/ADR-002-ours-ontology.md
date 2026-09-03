@@ -7,7 +7,7 @@ description: OpenDnD owns the setting-and-history layer, aligns rules content to
 
 ## Context
 
-The [landscape research](/research/landscape/) found that rules content (classes, spells, monsters, items) has de facto standards, while no open, specified model exists for setting and history content (places, factions, events, eras, calendars). Formal RPG and narrative ontologies model play structure or story theory, not a game master's canonical world state. OURS, OpenHI's ontology format, has no non-healthcare consumer yet.
+The [landscape research](/research/landscape/) found that rules content (classes, spells, monsters, items) has de facto standards, while no open, specified model exists for setting and history content (places, factions, events, eras, calendars). Formal RPG and narrative ontologies model play structure or story theory, not a game master's canonical world state. OURS is a published format for describing an ontology and its alignments to other standards; nothing in worldbuilding uses it yet.
 
 ## Decision
 

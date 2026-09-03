@@ -102,8 +102,8 @@ Idle cloud cost: roughly $0–20/mo.
 
 **Runner-up:** libSQL everywhere (local file ↔ Turso per-world DB) if PGlite proves too heavy on desktop, accepting weaker geo and manual bitemporal columns.
 
-## 5. Patterns borrowed from graphflow2
+## 5. Design patterns adopted
 
-- **RFC 008 (revised)**: entity `id` is random v4 so renames never break references; deterministic v5 ids live in a derived field beside it. For OpenDnD the derived field is the seed-path, making regeneration idempotent.
-- **RFC 035**: content-addressed data layers with deterministic snapshot hashes. This *is* the module system: a module is an immutable snapshot layered over vanilla, whether paid, bring-your-own, or AI-generated.
-- **RFC 010 / 024**: interface-based repository and graph abstraction with SQLite/Postgres adapters via recursive CTEs.
+- **Stable ids with a derived twin.** An entity's `id` is a random v4 so renames never break references; a deterministic v5 id derived from a namespace and a name sits beside it so "the same thing by seed" stays computable. For OpenDnD the derived field comes from the seed path, which makes regeneration idempotent.
+- **Content-addressed data layers.** Immutable snapshots of resources with deterministic hashes, stacked over a base the way container images stack layers. This *is* the module system: paid, bring-your-own and AI-generated modules are one mechanism with different provenance.
+- **Interface-first storage.** Repositories and graph traversal defined as interfaces with database adapters behind them, using recursive CTEs for graph queries in SQL, so the engine can change without touching services.

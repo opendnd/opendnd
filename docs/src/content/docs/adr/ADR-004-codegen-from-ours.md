@@ -7,7 +7,7 @@ description: Zod-first code generation from JSON Schema, committed output, a tes
 
 ## Context
 
-OpenHI generates TypeScript and Zod from FHIR StructureDefinitions through an intermediate representation, byte-deterministic and drift-checked in CI. We want the same discipline for OURS, without FHIR and without any OpenHI dependency, and we want the tooling to be usable by other OURS publishers.
+Mature type generators for standards such as FHIR emit TypeScript and Zod from an intermediate representation, byte-deterministic and drift-checked in CI. We want the same discipline for OURS without adopting FHIR or depending on anyone else's generator, and we want the tooling to be usable by other OURS publishers.
 
 ## Decision
 

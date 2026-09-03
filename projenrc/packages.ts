@@ -44,6 +44,12 @@ const packages: readonly PackageConfig[] = [
       'Seeded, deterministic randomness: a xoshiro128** PRNG keyed by a seed string, dice notation, weighted picks, and UUID v5 derived ids.',
   },
   {
+    name: '@opendnd/spatial',
+    description:
+      'Spatial identity for worlds: a cube-sphere quadtree with S2-compatible cell ids from planet to 5-foot square, projection for any world radius, containment, neighbours and battle-map tiles.',
+    devDeps: ['@opendnd/random@workspace:*'],
+  },
+  {
     name: '@opendnd/generators',
     description:
       'Deterministic content generators (names, genetics, people) behind one Generator contract: input resources plus a seed path in, ontology resources with provenance out.',

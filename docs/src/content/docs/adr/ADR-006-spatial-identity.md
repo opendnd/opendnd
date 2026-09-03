@@ -3,7 +3,7 @@ title: "ADR-006: Spatial identity from planet to 5-foot square"
 description: A cube-sphere quadtree gives every point on a world one nested id at every zoom level, down to a battle-map square; hexes are a derived view.
 ---
 
-**Status:** Proposed, 2026-09-03. Records the intended design ahead of the map and place generators.
+**Status:** Accepted, 2026-09-03. Implemented in `@opendnd/spatial`.
 
 ## Context
 
@@ -12,7 +12,7 @@ The Atlas needs Google-Maps-style zoom from a whole planet to a street, and the 
 ## Decision
 
 - **A cube-sphere quadtree is the single spatial identity system**, after the design of S2. Six cube faces project onto the sphere; each cell subdivides into four children; a cell id encodes face and path, so ids nest and every level of detail is a prefix relationship. Level 0 is a face; on an Earth-sized world level 22 or 23 is about 5 feet across. The level that equals 5 feet is computed from the world's radius and recorded on the World.
-- **Battle maps are tiles of the quadtree.** A battle-map tile is a cell at a fixed level (for example 64 by 64 squares, about 320 feet on a side) treated as locally flat. A square is addressed by tile cell id plus local x,y. Distortion near cube edges is bounded to roughly 1.5x in area and is accepted.
+- **Battle maps are tiles of the quadtree.** A battle-map tile is a cell at a fixed level (for example 64 by 64 squares, about 320 feet on a side) treated as locally flat. A square is addressed by tile cell id plus local x,y. With S2's quadratic face projection, cell edges at one level vary by at most about 1.8x and areas by about 2.1x over the whole sphere; that is accepted, since squares only need to be consistent and unique, not surveyed.
 - **Flat and disc worlds** use the same quadtree over a single face without the sphere projection.
 - **Hexes are a derived view**, rendered at regional levels for overland travel and combat, with each hex mapped to the cell containing its centroid. They never carry identity.
 - **Places carry cells.** A `place` resource may carry the cell it occupies at its scale (a realm at level 8, a town at level 15, a building at level 20) in addition to GeoJSON geometry, so containment and proximity queries are prefix comparisons.
@@ -22,4 +22,4 @@ The Atlas needs Google-Maps-style zoom from a whole planet to a street, and the 
 
 - Vector tiles for the Atlas are cut from PostGIS geometry as planned; the quadtree adds ids and containment, it does not replace geometry.
 - The 2019 icosahedron experiment is retired: geodesic grids are more uniform but do not nest, which matters more here.
-- A `@opendnd/spatial` package implementing cell ids, projection for a given world radius, containment and neighbour queries is the first step of the map slice.
+- `@opendnd/spatial` implements cell ids, projection for a given world radius, containment, neighbours and battle-map tile addressing. Position bits use Z-order rather than S2's Hilbert curve; the layout and level semantics match S2, so the curve can be swapped without changing the API.

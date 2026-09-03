@@ -19,6 +19,11 @@
     "feature": {
       "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Feature"
     },
+    "cell": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{1,16}$",
+      "description": "Quadtree cell token for this place at its own scale (a realm at a coarse level, a building at a fine one). Containment is a prefix relationship. See ADR-006."
+    },
     "population": {
       "type": "integer",
       "minimum": 0

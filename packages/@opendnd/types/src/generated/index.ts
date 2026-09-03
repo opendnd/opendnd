@@ -598,6 +598,8 @@ export const placeSchema = z.strictObject({
   placeType: placeTypeSchema,
   parent: referenceSchema.optional(),
   feature: featureSchema.optional(),
+  /** Quadtree cell token for this place at its own scale (a realm at a coarse level, a building at a fine one). Containment is a prefix relationship. See ADR-006. */
+  cell: z.string().regex(new RegExp("^[0-9a-f]{1,16}$")).optional(),
   population: z.int().min(0).optional(),
   biome: z.string().optional(),
   controlledBy: referenceSchema.optional(),

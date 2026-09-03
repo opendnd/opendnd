@@ -7,7 +7,7 @@ description: Docker Postgres locally, Neon in the cloud, Hono on Lambda, PMTiles
 
 ## Context
 
-The project must run locally first, later as a desktop app, and deploy to AWS as serverless as possible for a donation-funded nonprofit. Data needs are graph-ish relationships, geospatial tiles with zoom levels, bitemporal history, full-text search and vector embeddings. SQLite was the initial instinct, following GraphFlow v2's local mode.
+The project must run locally first, later as a desktop app, and deploy to AWS as serverless as possible for a donation-funded nonprofit. Data needs are graph-ish relationships, geospatial tiles with zoom levels, bitemporal history, full-text search and vector embeddings. SQLite was the initial instinct for local mode.
 
 ## Decision
 
@@ -17,7 +17,7 @@ The project must run locally first, later as a desktop app, and deploy to AWS as
 - **Maps.** MapLibre GL reading PMTiles: from disk locally, from S3 behind CloudFront in the cloud. No tile server.
 - **Events.** A versioned event envelope; EventBridge in the cloud.
 - **AI.** Amazon Bedrock. Token usage is metered in-app from each response and recorded per user, which is the cost-plus-ten-percent mechanism.
-- **Modules.** Content-addressed, immutable snapshots layered over vanilla content, after GraphFlow v2's data-layers design.
+- **Modules.** Content-addressed, immutable snapshots layered over vanilla content, the way container images stack layers, each with a deterministic hash.
 - **No Kubernetes and no always-on containers.** GitHub Actions for CI/CD once the local path works.
 
 ## Consequences

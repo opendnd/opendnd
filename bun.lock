@@ -131,6 +131,24 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/@opendnd/spatial": {
+      "name": "@opendnd/spatial",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@opendnd/random": "workspace:*",
+        "@types/bun": "*",
+        "@types/node": "ts5.9",
+        "@typescript-eslint/eslint-plugin": "^8",
+        "@typescript-eslint/parser": "^8",
+        "eslint": "^9",
+        "eslint-config-prettier": "*",
+        "eslint-import-resolver-typescript": "*",
+        "eslint-plugin-import": "*",
+        "eslint-plugin-prettier": "*",
+        "prettier": "*",
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/@opendnd/types": {
       "name": "@opendnd/types",
       "version": "0.0.0",
@@ -414,6 +432,8 @@
     "@opendnd/projen": ["@opendnd/projen@workspace:packages/@opendnd/projen"],
 
     "@opendnd/random": ["@opendnd/random@workspace:packages/@opendnd/random"],
+
+    "@opendnd/spatial": ["@opendnd/spatial@workspace:packages/@opendnd/spatial"],
 
     "@opendnd/types": ["@opendnd/types@workspace:packages/@opendnd/types"],
 
