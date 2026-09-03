@@ -15,14 +15,15 @@ The bundle lives in `packages/@opendnd/ontology/ours/`. It is data, not code: JS
 | `culture` | A people's naming, languages and customs, separate from biology | World Anvil Ethnicity, Kanka |
 | `person` | A person, real to the world or legendary | schema.org Person, Wikidata fictional human, CIDOC E21, GEDCOM X |
 | `place` | A location at any scale, with optional geometry in the world's CRS | schema.org Place, CIDOC E53, GeoSPARQL Feature |
-| `organization` | State, dynasty, faction, guild, religion | schema.org Organization, CIDOC E74, W3C ORG |
+| `faction` | State, dynasty, faction, guild, religion | schema.org Organization, CIDOC E74, W3C ORG |
 | `event` | Something that happened, with participants, roles and cause links | schema.org Event, CIDOC E5 |
 | `relationship` | A tie between two people with dated facts and succession fields | GEDCOM X Relationship |
 | `work` | A creative work in-world or out-of-world | schema.org CreativeWork, CIDOC E73 |
-| `claim` | A belief a holder has about a proposition, for contested history | CRMinf Belief |
-| `office` | A seat of authority in an organization with a succession rule | W3C ORG Post |
-| `tenure` | One person's time in an office, with the events that began and ended it | W3C ORG Membership |
+| `belief` | A belief a holder has about a proposition, for contested history | CRMinf Belief |
+| `title` | A seat of authority in a faction with a succession rule | W3C ORG Post |
+| `tenure` | One person's time in an title, with the events that began and ended it | W3C ORG Membership |
 | `population` | An aggregate head count at a place and time | schema.org Observation |
+| `economy` | A snapshot of a settlement's prosperity, businesses and livestock at a time | schema.org Observation |
 
 ## The base every model extends
 
@@ -32,4 +33,4 @@ Shared definitions also cover `Reference`, `TemporalPosition`, `TimeSpan`, GeoJS
 
 ## Vocabularies
 
-Canon status, perspective, sex, person status, place type, organization type, event type, relationship type, legitimacy, work type, belief value, temporal precision, creature size, name type, succession rule and a five-by-five alignment matrix (order by goodness, each axis -2 to +2). Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.
+Canon status, perspective, sex, person status, place type, faction type, event type, relationship type, legitimacy, work type, belief value, temporal precision, creature size, name type, succession law, a five-by-five alignment matrix (order by goodness, each axis -2 to +2), terrain, prosperity, sixty-one natural resources and ninety-eight industries. Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.

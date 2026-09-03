@@ -1,9 +1,9 @@
 import { GeneratorContext, childContext } from '@opendnd/generators';
 import type {
-  Office,
+  Title,
   Person,
   Reference,
-  SuccessionRule,
+  SuccessionLaw,
   Tenure,
 } from '@opendnd/types';
 import { Lifecycle, isAdult } from 'src/lifecycle';
@@ -12,8 +12,8 @@ import { HistoryState } from 'src/state';
 import type { HistoryInput } from 'src/types';
 
 /**
- * Fills vacant offices. An office falls vacant when its holder died this
- * year; the heir is chosen by the office's succession rule, and a new
+ * Fills vacant titles. An title falls vacant when its holder died this
+ * year; the heir is chosen by the title's succession rule, and a new
  * tenure begins with a succession event caused by the death.
  */
 export function succession(
@@ -26,8 +26,8 @@ export function succession(
   const yctx = childContext(ctx, `y${year}`);
   const place = ref('place', input.settlement);
 
-  for (const office of input.offices) {
-    const current = state.currentTenure(office.id);
+  for (const title of input.titles) {
+    const current = state.currentTenure(title.id);
     if (current && state.isAlive(state.person(current.holder.id))) continue;
 
     const predecessor = current ? state.person(current.holder.id) : undefined;
@@ -55,20 +55,20 @@ export function succession(
     }
 
     const heir = chooseHeir(
-      office,
+      title,
       predecessor,
       input.house.id,
       state,
       lifecycle,
-      yctx.rng.child(`heir/${office.id}`),
+      yctx.rng.child(`heir/${title.id}`),
     );
-    const officeRef = ref('office', office);
+    const titleRef = ref('title', title);
     if (!heir) {
       state.addEvent(
-        makeEvent(yctx, `vacancy/${office.id}`, input.calendar, {
+        makeEvent(yctx, `vacancy/${title.id}`, input.calendar, {
           type: 'succession',
           year,
-          name: `${office.name} falls vacant`,
+          name: `${title.name} falls vacant`,
           description: predecessor
             ? `No heir could be found after the death of ${predecessor.name}.`
             : 'No eligible holder could be found.',
@@ -83,10 +83,10 @@ export function succession(
       continue;
     }
 
-    const event = makeEvent(yctx, `succession/${office.id}`, input.calendar, {
+    const event = makeEvent(yctx, `succession/${title.id}`, input.calendar, {
       type: predecessor ? 'succession' : 'coronation',
       year,
-      name: `${heir.name} takes ${office.name}`,
+      name: `${heir.name} takes ${title.name}`,
       participants: [
         { actor: ref('person', heir), role: 'successor' },
         ...(predecessor
@@ -100,9 +100,9 @@ export function succession(
     state.tenures.push(
       makeTenure(
         yctx,
-        `tenure/${office.id}/${heir.id}`,
+        `tenure/${title.id}/${heir.id}`,
         input.calendar,
-        officeRef,
+        titleRef,
         heir,
         year,
         event,
@@ -117,14 +117,14 @@ export function succession(
  * childless holder is followed by a sibling's line before a cousin's.
  */
 export function chooseHeir(
-  office: Office,
+  title: Title,
   predecessor: Person | undefined,
   houseId: string,
   state: HistoryState,
   lifecycle: Lifecycle,
   rng: GeneratorContext['rng'],
 ): Person | undefined {
-  const rule: SuccessionRule = office.successionRule;
+  const rule: SuccessionLaw = title.successionLaw;
   const eligible = (p: Person) =>
     state.isAlive(p) &&
     (p.memberOf ?? []).some((m) => m.id === houseId) &&

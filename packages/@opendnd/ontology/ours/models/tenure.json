@@ -9,8 +9,8 @@
   "schema": "https://opendnd.org/ours/schemas/tenure.schema.json",
   "relationships": [
     {
-      "predicate": "office",
-      "target": "Office"
+      "predicate": "title",
+      "target": "Title"
     },
     {
       "predicate": "holder",

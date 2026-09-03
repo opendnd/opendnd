@@ -10,13 +10,13 @@ import { lifecycleOf } from './lifecycle';
 import {
   HISTORY_GENERATOR,
   makeEvent,
-  makePopulation,
   makeRelationship,
   ref,
   yearOf,
 } from './resources';
 import { HistoryState } from './state';
 import { demographics } from './systems/demographics';
+import { settlements } from './systems/settlements';
 import { succession } from './systems/succession';
 import { DEFAULT_PARAMS, HistoryInput, HistoryOutput } from './types';
 
@@ -35,8 +35,6 @@ export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
     const params = { ...DEFAULT_PARAMS, ...(input.params ?? {}) };
     const lifecycle = lifecycleOf(input.species);
     const state = new HistoryState(input.startYear);
-    const place = ref('place', input.settlement);
-
     for (const e of input.canonEvents ?? []) {
       state.addEvent(e);
       if (e.eventType !== 'death') continue;
@@ -54,19 +52,9 @@ export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
       foundHouse(state, input, ctx, lifecycle.maturity);
     }
 
-    let population = input.initialPopulation;
-    state.populations.push(
-      makePopulation(
-        ctx,
-        `population/${state.year}`,
-        input.calendar,
-        place,
-        ref('species', input.species),
-        ref('culture', input.culture),
-        population,
-        state.year,
-      ),
-    );
+    state.populationCount = input.initialPopulation;
+    state.prosperity = input.prosperity ?? 'prosperous';
+    settlements(state, input, params, childContext(ctx, 'settlements'), true);
 
     const endYear = input.startYear + input.years;
     for (; state.year < endYear; state.year++) {
@@ -78,25 +66,13 @@ export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
         childContext(ctx, 'demographics'),
       );
       succession(state, input, lifecycle, childContext(ctx, 'succession'));
-      population *= 1 + params.populationGrowth;
-      const elapsed = state.year + 1 - input.startYear;
-      if (
-        elapsed % params.populationSnapshotEvery === 0 ||
-        state.year + 1 === endYear
-      ) {
-        state.populations.push(
-          makePopulation(
-            ctx,
-            `population/${state.year + 1}`,
-            input.calendar,
-            place,
-            ref('species', input.species),
-            ref('culture', input.culture),
-            population,
-            state.year + 1,
-          ),
-        );
-      }
+      settlements(
+        state,
+        input,
+        params,
+        childContext(ctx, 'settlements'),
+        false,
+      );
     }
 
     const people = [...state.people.values()];
@@ -109,6 +85,7 @@ export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
       events,
       tenures: state.tenures,
       populations: state.populations,
+      economies: state.economies,
       endYear,
     };
     return {
@@ -118,7 +95,7 @@ export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
   },
 };
 
-/** A founding couple, a founding event, and the first holder of each office. */
+/** A founding couple, a founding event, and the first holder of each title. */
 function foundHouse(
   state: HistoryState,
   input: HistoryInput,
@@ -127,7 +104,7 @@ function foundHouse(
 ): void {
   const year = state.year;
   const place = ref('place', input.settlement);
-  const house = ref('organization', input.house);
+  const house = ref('faction', input.house);
   const fctx = childContext(ctx, 'founders');
   const founder = (label: string, sex: Person['sex'], age: number): Person => ({
     ...personGenerator.generate(
@@ -160,5 +137,5 @@ function foundHouse(
   });
   state.addEvent(founding);
   // succession() will seat the first holders this same year because every
-  // office starts vacant; it treats a missing predecessor as a coronation.
+  // title starts vacant; it treats a missing predecessor as a coronation.
 }

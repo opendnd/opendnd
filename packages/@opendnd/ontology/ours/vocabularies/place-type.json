@@ -74,6 +74,26 @@
     {
       "code": "water",
       "display": "Body of water"
+    },
+    {
+      "code": "metropolis",
+      "display": "Metropolis",
+      "definition": "A city of twenty thousand or more."
+    },
+    {
+      "code": "county",
+      "display": "County",
+      "definition": "A demesne of several localities, about 800 square miles."
+    },
+    {
+      "code": "duchy",
+      "display": "Duchy",
+      "definition": "A demesne of several counties, about 16,000 square miles."
+    },
+    {
+      "code": "kingdom",
+      "display": "Kingdom",
+      "definition": "A realm of several duchies, about 80,000 square miles."
     }
   ]
 }

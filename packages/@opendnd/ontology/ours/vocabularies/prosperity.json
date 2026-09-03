@@ -1,0 +1,27 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "prosperity",
+  "url": "https://opendnd.org/ours/vocabularies/prosperity.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Prosperity",
+  "description": "How well a settlement is doing; scales how many people each business needs to survive.",
+  "codes": [
+    {
+      "code": "booming",
+      "display": "Booming"
+    },
+    {
+      "code": "prosperous",
+      "display": "Prosperous"
+    },
+    {
+      "code": "poor",
+      "display": "Poor"
+    },
+    {
+      "code": "very-poor",
+      "display": "Very poor"
+    }
+  ]
+}

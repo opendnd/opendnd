@@ -53,6 +53,17 @@ describe('Rng', () => {
     expect(new Rng('ids').uuid()).toBe(id);
   });
 
+  it('draws roughly normal values', () => {
+    const rng = new Rng('normal');
+    const xs = Array.from({ length: 4000 }, () => rng.normal(100, 15));
+    const mean = xs.reduce((a, b) => a + b, 0) / xs.length;
+    const sd = Math.sqrt(
+      xs.reduce((a, b) => a + (b - mean) ** 2, 0) / xs.length,
+    );
+    expect(Math.abs(mean - 100)).toBeLessThan(1.5);
+    expect(Math.abs(sd - 15)).toBeLessThan(1.5);
+  });
+
   it('derives independent child streams', () => {
     const root = new Rng('world');
     const x = root.child('names').next();

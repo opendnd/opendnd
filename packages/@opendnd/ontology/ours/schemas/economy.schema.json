@@ -1,0 +1,70 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/economy.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Economy",
+  "description": "A snapshot of a settlement's economy at a point in time: prosperity, how many of each business it supports, and its livestock. Like population, an aggregate that individuals are drawn from on demand.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "place": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "at": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+    },
+    "prosperity": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/prosperity.json"
+    },
+    "industries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "industry": {
+            "type": "string",
+            "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/industry.json"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "industry",
+          "count"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "livestock": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "animal": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "animal",
+          "count"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "place",
+    "at",
+    "prosperity"
+  ],
+  "additionalProperties": false
+}

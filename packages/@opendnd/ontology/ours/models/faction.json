@@ -1,16 +1,16 @@
 {
   "resourceType": "Model",
-  "id": "organization",
-  "url": "https://opendnd.org/ours/models/organization.json",
+  "id": "faction",
+  "url": "https://opendnd.org/ours/models/faction.json",
   "version": "0.1.0",
   "system": "internal",
-  "name": "Organization",
-  "description": "An organized group of people.",
-  "schema": "https://opendnd.org/ours/schemas/organization.schema.json",
+  "name": "Faction",
+  "description": "An organized group of any kind.",
+  "schema": "https://opendnd.org/ours/schemas/faction.schema.json",
   "relationships": [
     {
       "predicate": "parent",
-      "target": "Organization"
+      "target": "Faction"
     },
     {
       "predicate": "seat",

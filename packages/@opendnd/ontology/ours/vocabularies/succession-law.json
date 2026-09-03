@@ -1,11 +1,11 @@
 {
   "resourceType": "Vocabulary",
-  "id": "succession-rule",
-  "url": "https://opendnd.org/ours/vocabularies/succession-rule.json",
+  "id": "succession-law",
+  "url": "https://opendnd.org/ours/vocabularies/succession-law.json",
   "version": "0.1.0",
   "system": "internal",
-  "name": "Succession rule",
-  "description": "How the next holder of an office is chosen.",
+  "name": "Succession law",
+  "description": "How a title passes from holder to holder.",
   "codes": [
     {
       "code": "primogeniture",

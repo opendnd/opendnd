@@ -1,16 +1,16 @@
 {
   "resourceType": "Model",
-  "id": "office",
-  "url": "https://opendnd.org/ours/models/office.json",
+  "id": "title",
+  "url": "https://opendnd.org/ours/models/title.json",
   "version": "0.1.0",
   "system": "internal",
-  "name": "Office",
-  "description": "A seat of authority in an organization.",
-  "schema": "https://opendnd.org/ours/schemas/office.schema.json",
+  "name": "Title",
+  "description": "A seat of authority in a faction.",
+  "schema": "https://opendnd.org/ours/schemas/title.schema.json",
   "relationships": [
     {
-      "predicate": "organization",
-      "target": "Organization"
+      "predicate": "faction",
+      "target": "Faction"
     }
   ],
   "mapsTo": [

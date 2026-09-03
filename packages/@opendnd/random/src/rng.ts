@@ -66,6 +66,16 @@ export class Rng {
     return items[items.length - 1].value;
   }
 
+  /** A normally distributed draw (Box-Muller). */
+  normal(mean = 0, stdev = 1): number {
+    let u = 0;
+    while (u === 0) u = this.next();
+    const v = this.next();
+    return (
+      mean + stdev * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v)
+    );
+  }
+
   /** A new array in random order (Fisher-Yates). */
   shuffle<T>(items: readonly T[]): T[] {
     const out = [...items];

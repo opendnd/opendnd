@@ -31,7 +31,7 @@ export function demographics(
   const year = state.year;
   const yctx = childContext(ctx, `y${year}`);
   const place = ref('place', input.settlement);
-  const house = ref('organization', input.house);
+  const house = ref('faction', input.house);
 
   // Deaths first, so nobody marries or reproduces in the year they die.
   for (const person of state.living()) {
@@ -90,7 +90,7 @@ export function demographics(
 
   // Only figures close to a seat of power carry the line forward; the rest
   // live out their lives and their descendants stay in the aggregate. Before
-  // any office is held (the founding year) everyone counts.
+  // any title is held (the founding year) everyone counts.
   const kinship = state.kinshipToHolders(params.lineageDepth);
   const notable = (person: Person) =>
     kinship.size === 0 || kinship.has(person.id);

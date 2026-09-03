@@ -11,18 +11,19 @@ const world = '3c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a11';
 describe('@opendnd/types', () => {
   it('exposes every model in the registry', () => {
     expect(Object.keys(models).sort()).toEqual([
+      'belief',
       'calendar',
-      'claim',
       'culture',
+      'economy',
       'event',
-      'office',
-      'organization',
+      'faction',
       'person',
       'place',
       'population',
       'relationship',
       'species',
       'tenure',
+      'title',
       'work',
       'world',
     ]);

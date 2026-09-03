@@ -3,7 +3,7 @@ title: Legacy repository review
 description: What the eighteen 2015 to 2020 OpenDnD repositories contain, which ideas the rebuild has already carried forward, and which it still owes.
 ---
 
-Reviewed on 2026-09-03 across every repository in the original organization: `api`, `avataria`, `cartae`, `charactersheet`, `compendia`, `core`, `desktop`, `dominia`, `dynastia`, `genetica`, `modules`, `nomina`, `personae`, `questae`, `similia`, `ue4`, `aedificia`, and the `tmp` globe experiment. Algorithms already ported (Markov names, d20 genetics) are covered on the package pages; this page is about ideas.
+Reviewed on 2026-09-03 across every repository in the original GitHub organization: `api`, `avataria`, `cartae`, `charactersheet`, `compendia`, `core`, `desktop`, `dominia`, `dynastia`, `genetica`, `modules`, `nomina`, `personae`, `questae`, `similia`, `ue4`, `aedificia`, and the `tmp` globe experiment. Algorithms already ported (Markov names, d20 genetics) are covered on the package pages; this page is about ideas.
 
 ## The API repository
 
@@ -49,7 +49,7 @@ A route specification for a hosted `api.opendnd.org/v1`, with a dashboard app an
 
 | Original type | Now | Layer |
 |---|---|---|
-| persons, races, cultures, dynasties, factions, domains, calendars, events, titles, dna, names | person, species, culture, organization, place, calendar, event, office and tenure, genome on person, culture names | setting |
+| persons, races, cultures, dynasties, factions, domains, calendars, events, titles, dna, names | person, species, culture, faction, place, calendar, event, title and tenure, genome on person, culture names | setting |
 | buildings | place of type building; generation not started | setting |
 | religions, languages, sigils, sayings, artwork | not yet modelled | setting |
 | items, tools, features, familiars, backgrounds, klasses, spells, monsters, traps, diseases, vehicles | not yet modelled; align to the 5e-database 2024 shapes | rules |

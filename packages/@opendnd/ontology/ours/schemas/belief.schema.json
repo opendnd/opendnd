@@ -1,8 +1,8 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/claim.schema.json",
+  "$id": "https://opendnd.org/ours/schemas/belief.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Claim",
-  "description": "A belief held by a person or organization about a proposition, so contested history can be recorded without choosing a winner (CRMinf Belief).",
+  "title": "Belief",
+  "description": "A belief held by a person or faction about a proposition, so contested history can be recorded without choosing a winner (CRMinf Belief).",
   "allOf": [
     {
       "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"

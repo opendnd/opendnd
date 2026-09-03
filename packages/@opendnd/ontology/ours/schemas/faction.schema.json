@@ -1,17 +1,17 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/organization.schema.json",
+  "$id": "https://opendnd.org/ours/schemas/faction.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Organization",
-  "description": "An organized group: state, dynasty, faction, guild, religion (schema.org Organization, CIDOC E74 Group, W3C ORG).",
+  "title": "Faction",
+  "description": "An organized group of any kind: realm, dynasty, guild, religion, order, company, adventuring party.",
   "allOf": [
     {
       "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
-    "organizationType": {
+    "factionType": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/organization-type.json"
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/faction-type.json"
     },
     "parent": {
       "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
@@ -37,7 +37,7 @@
     }
   },
   "required": [
-    "organizationType"
+    "factionType"
   ],
   "additionalProperties": false
 }

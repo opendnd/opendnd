@@ -14,7 +14,7 @@
     },
     {
       "predicate": "controlledBy",
-      "target": "Organization"
+      "target": "Faction"
     }
   ],
   "mapsTo": [

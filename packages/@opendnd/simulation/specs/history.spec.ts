@@ -6,8 +6,8 @@ import {
   calendarSchema,
   cultureSchema,
   eventSchema,
-  officeSchema,
-  organizationSchema,
+  titleSchema,
+  factionSchema,
   personSchema,
   placeSchema,
   populationSchema,
@@ -42,15 +42,15 @@ const settlement = placeSchema.parse({
   ...base('c0000000-0000-4000-8000-000000000002', 'Thornehold'),
   placeType: 'town',
 });
-const house = organizationSchema.parse({
+const house = factionSchema.parse({
   ...base('c0000000-0000-4000-8000-000000000003', 'House Thorne'),
-  organizationType: 'dynasty',
+  factionType: 'dynasty',
   seat: { model: 'place', id: settlement.id },
 });
-const office = officeSchema.parse({
+const title = titleSchema.parse({
   ...base('c0000000-0000-4000-8000-000000000004', 'Lord of Thorne'),
-  organization: { model: 'organization', id: house.id, name: house.name },
-  successionRule: 'male-preference',
+  faction: { model: 'faction', id: house.id, name: house.name },
+  successionLaw: 'male-preference',
   rank: 0,
 });
 
@@ -60,7 +60,7 @@ const input: HistoryInput = {
   culture,
   settlement,
   house,
-  offices: [office],
+  titles: [title],
   initialPopulation: 400,
   startYear: 1000,
   years: 300,
@@ -91,7 +91,7 @@ describe('historyGenerator', () => {
     }
   });
 
-  it('spans generations and keeps the office continuously held', () => {
+  it('spans generations and keeps the title continuously held', () => {
     expect(out.people.length).toBeGreaterThan(20);
     expect(out.events[0].eventType).toBe('founding');
     expect(out.events[0].when.begin?.year).toBe(1000);
@@ -131,7 +131,7 @@ describe('historyGenerator', () => {
       ...personGenerator.generate({ species, culture, sex: 'male' }, fctx),
       canonStatus: 'canon' as const,
       birth: { time: { trs: calendar.id, year: 970 } },
-      memberOf: [{ model: 'organization', id: house.id }],
+      memberOf: [{ model: 'faction', id: house.id }],
     };
     const lady = {
       ...personGenerator.generate(
@@ -140,7 +140,7 @@ describe('historyGenerator', () => {
       ),
       canonStatus: 'canon' as const,
       birth: { time: { trs: calendar.id, year: 975 } },
-      memberOf: [{ model: 'organization', id: house.id }],
+      memberOf: [{ model: 'faction', id: house.id }],
     };
     const canonDeath = eventSchema.parse({
       ...base('c0000000-0000-4000-8000-000000000005', `Death of ${lord.name}`),

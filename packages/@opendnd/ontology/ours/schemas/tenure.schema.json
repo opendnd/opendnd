@@ -2,15 +2,16 @@
   "$id": "https://opendnd.org/ours/schemas/tenure.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Tenure",
-  "description": "One person's time in an office. The record's validTime is the tenure; a new record starts each time the office changes hands.",
+  "description": "One person's time holding a title. The record's validTime is the tenure; a new record starts each time the title changes hands.",
   "allOf": [
     {
       "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
-    "office": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    "title": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The title held."
     },
     "holder": {
       "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
@@ -25,7 +26,7 @@
     }
   },
   "required": [
-    "office",
+    "title",
     "holder"
   ],
   "additionalProperties": false

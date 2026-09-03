@@ -1,0 +1,71 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "terrain",
+  "url": "https://opendnd.org/ours/vocabularies/terrain.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Terrain",
+  "description": "The dominant terrain of a place, which decides what natural resources it can have.",
+  "codes": [
+    {
+      "code": "coastal",
+      "display": "Coastal"
+    },
+    {
+      "code": "desert",
+      "display": "Desert"
+    },
+    {
+      "code": "grassland",
+      "display": "Grassland"
+    },
+    {
+      "code": "hills",
+      "display": "Hills"
+    },
+    {
+      "code": "mountains",
+      "display": "Mountains"
+    },
+    {
+      "code": "plains",
+      "display": "Plains"
+    },
+    {
+      "code": "snow",
+      "display": "Snow"
+    },
+    {
+      "code": "tundra",
+      "display": "Tundra"
+    },
+    {
+      "code": "forest",
+      "display": "Forest"
+    },
+    {
+      "code": "river",
+      "display": "River"
+    },
+    {
+      "code": "jungle",
+      "display": "Jungle"
+    },
+    {
+      "code": "marsh",
+      "display": "Marsh"
+    },
+    {
+      "code": "flood-plains",
+      "display": "Flood Plains"
+    },
+    {
+      "code": "lakes",
+      "display": "Lakes"
+    },
+    {
+      "code": "oasis",
+      "display": "Oasis"
+    }
+  ]
+}

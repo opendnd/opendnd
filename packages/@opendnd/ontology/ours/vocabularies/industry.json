@@ -1,0 +1,403 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "industry",
+  "url": "https://opendnd.org/ours/vocabularies/industry.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Industry",
+  "description": "Trades and callings found in a settlement; each needs a number of people to support one business (after S. John Ross, Medieval Demographics Made Easy).",
+  "codes": [
+    {
+      "code": "miners",
+      "display": "Miners"
+    },
+    {
+      "code": "hunters",
+      "display": "Hunters"
+    },
+    {
+      "code": "produce-farmers",
+      "display": "Produce Farmers"
+    },
+    {
+      "code": "horse-farmers",
+      "display": "Horse Farmers"
+    },
+    {
+      "code": "cattle-farmers",
+      "display": "Cattle Farmers"
+    },
+    {
+      "code": "poultry-farmers",
+      "display": "Poultry Farmers"
+    },
+    {
+      "code": "pork-farmers",
+      "display": "Pork Farmers"
+    },
+    {
+      "code": "goatherders",
+      "display": "Goatherders"
+    },
+    {
+      "code": "shepherders",
+      "display": "Shepherders"
+    },
+    {
+      "code": "butlers",
+      "display": "Butlers"
+    },
+    {
+      "code": "maidservants",
+      "display": "Maidservants"
+    },
+    {
+      "code": "cooks",
+      "display": "Cooks"
+    },
+    {
+      "code": "groundskeepers",
+      "display": "Groundskeepers"
+    },
+    {
+      "code": "chauffeurs",
+      "display": "Chauffeurs"
+    },
+    {
+      "code": "nannies",
+      "display": "Nannies"
+    },
+    {
+      "code": "bodyguards",
+      "display": "Bodyguards"
+    },
+    {
+      "code": "majordomos",
+      "display": "Majordomos"
+    },
+    {
+      "code": "cobblers",
+      "display": "Cobblers"
+    },
+    {
+      "code": "shoemakers",
+      "display": "Shoemakers"
+    },
+    {
+      "code": "furriers",
+      "display": "Furriers"
+    },
+    {
+      "code": "tailors",
+      "display": "Tailors"
+    },
+    {
+      "code": "barbers",
+      "display": "Barbers"
+    },
+    {
+      "code": "jewelers",
+      "display": "Jewelers"
+    },
+    {
+      "code": "taverns",
+      "display": "Taverns"
+    },
+    {
+      "code": "clothiers",
+      "display": "Clothiers"
+    },
+    {
+      "code": "glassblowers",
+      "display": "Glassblowers"
+    },
+    {
+      "code": "pastrycooks",
+      "display": "Pastrycooks"
+    },
+    {
+      "code": "masons",
+      "display": "Masons"
+    },
+    {
+      "code": "carpenters",
+      "display": "Carpenters"
+    },
+    {
+      "code": "weavers",
+      "display": "Weavers"
+    },
+    {
+      "code": "chandlers",
+      "display": "Chandlers"
+    },
+    {
+      "code": "mercers",
+      "display": "Mercers"
+    },
+    {
+      "code": "coopers",
+      "display": "Coopers"
+    },
+    {
+      "code": "bakers",
+      "display": "Bakers"
+    },
+    {
+      "code": "watercarriers",
+      "display": "Watercarriers"
+    },
+    {
+      "code": "armorers",
+      "display": "Armorers"
+    },
+    {
+      "code": "scabbardmakers",
+      "display": "Scabbardmakers"
+    },
+    {
+      "code": "wine-sellers",
+      "display": "Wine Sellers"
+    },
+    {
+      "code": "tanners",
+      "display": "Tanners"
+    },
+    {
+      "code": "skinners",
+      "display": "Skinners"
+    },
+    {
+      "code": "leatherworkers",
+      "display": "Leatherworkers"
+    },
+    {
+      "code": "hatmakers",
+      "display": "Hatmakers"
+    },
+    {
+      "code": "saddlers",
+      "display": "Saddlers"
+    },
+    {
+      "code": "chicken-butchers",
+      "display": "Chicken Butchers"
+    },
+    {
+      "code": "pursemakers",
+      "display": "Pursemakers"
+    },
+    {
+      "code": "woodsellers",
+      "display": "Woodsellers"
+    },
+    {
+      "code": "magic-shops",
+      "display": "Magic Shops"
+    },
+    {
+      "code": "bookbinders",
+      "display": "Bookbinders"
+    },
+    {
+      "code": "butchers",
+      "display": "Butchers"
+    },
+    {
+      "code": "fishmongers",
+      "display": "Fishmongers"
+    },
+    {
+      "code": "shipwrights",
+      "display": "Shipwrights"
+    },
+    {
+      "code": "beer-sellers",
+      "display": "Beer Sellers"
+    },
+    {
+      "code": "buckle-makers",
+      "display": "Buckle Makers"
+    },
+    {
+      "code": "plasterers",
+      "display": "Plasterers"
+    },
+    {
+      "code": "spice-merchants",
+      "display": "Spice Merchants"
+    },
+    {
+      "code": "blacksmiths",
+      "display": "Blacksmiths"
+    },
+    {
+      "code": "painters",
+      "display": "Painters"
+    },
+    {
+      "code": "roofers",
+      "display": "Roofers"
+    },
+    {
+      "code": "locksmiths",
+      "display": "Locksmiths"
+    },
+    {
+      "code": "finesmiths",
+      "display": "Finesmiths"
+    },
+    {
+      "code": "bathers",
+      "display": "Bathers"
+    },
+    {
+      "code": "potters",
+      "display": "Potters"
+    },
+    {
+      "code": "tilemakers",
+      "display": "Tilemakers"
+    },
+    {
+      "code": "ropemakers",
+      "display": "Ropemakers"
+    },
+    {
+      "code": "inns",
+      "display": "Inns"
+    },
+    {
+      "code": "copyists",
+      "display": "Copyists"
+    },
+    {
+      "code": "sculptors",
+      "display": "Sculptors"
+    },
+    {
+      "code": "rugmakers",
+      "display": "Rugmakers"
+    },
+    {
+      "code": "harness-makers",
+      "display": "Harness Makers"
+    },
+    {
+      "code": "bleachers",
+      "display": "Bleachers"
+    },
+    {
+      "code": "hay-merchants",
+      "display": "Hay Merchants"
+    },
+    {
+      "code": "cutlers",
+      "display": "Cutlers"
+    },
+    {
+      "code": "glovemakers",
+      "display": "Glovemakers"
+    },
+    {
+      "code": "woodcarvers",
+      "display": "Woodcarvers"
+    },
+    {
+      "code": "booksellers",
+      "display": "Booksellers"
+    },
+    {
+      "code": "surveyors",
+      "display": "Surveyors"
+    },
+    {
+      "code": "cartographers",
+      "display": "Cartographers"
+    },
+    {
+      "code": "illuminators",
+      "display": "Illuminators"
+    },
+    {
+      "code": "master-artists",
+      "display": "Master Artists"
+    },
+    {
+      "code": "alchemists",
+      "display": "Alchemists"
+    },
+    {
+      "code": "astronomers",
+      "display": "Astronomers"
+    },
+    {
+      "code": "scribes",
+      "display": "Scribes"
+    },
+    {
+      "code": "librarians",
+      "display": "Librarians"
+    },
+    {
+      "code": "scholars",
+      "display": "Scholars"
+    },
+    {
+      "code": "apprentices",
+      "display": "Apprentices"
+    },
+    {
+      "code": "advocates",
+      "display": "Advocates"
+    },
+    {
+      "code": "healers",
+      "display": "Healers"
+    },
+    {
+      "code": "doctors",
+      "display": "Doctors"
+    },
+    {
+      "code": "clergy",
+      "display": "Clergy"
+    },
+    {
+      "code": "priests",
+      "display": "Priests"
+    },
+    {
+      "code": "nobles",
+      "display": "Nobles"
+    },
+    {
+      "code": "guards",
+      "display": "Guards"
+    },
+    {
+      "code": "urchins",
+      "display": "Urchins"
+    },
+    {
+      "code": "hermits",
+      "display": "Hermits"
+    },
+    {
+      "code": "folk-heroes",
+      "display": "Folk Heroes"
+    },
+    {
+      "code": "charlatans",
+      "display": "Charlatans"
+    },
+    {
+      "code": "criminals",
+      "display": "Criminals"
+    },
+    {
+      "code": "entertainers",
+      "display": "Entertainers"
+    }
+  ]
+}

@@ -35,6 +35,14 @@ The d20 genetic system, driven by a `Species` resource. A species declares up to
 
 The first resource-producing generator and the template for the rest. `personGenerator.generate({ species, culture, sex?, name? }, ctx)` returns a complete `Person`: genome and traits from the species, a given and family name from the culture, references to both, and the stamped platform fields. Every later generator (dynasties, settlements) composes smaller ones the same way and emits ontology resources rather than free-standing data.
 
+## settlement and realm
+
+`settlementGenerator.generate({ tier, culture, species, calendar, year, ... }, ctx)` returns a `place` with terrain, natural resources and land area, a `population` count and an `economy` snapshot. Tiers are hamlet, village, town, city and metropolis, each with a population range and a typical density; land is head count over density, about forty percent of it arable. Resources come from the terrain's table: roll the terrain's die for picks, keep each pick on a d20 of five or better. The economy divides the population by each industry's support value (people per business), scaled by prosperity and halved when the place has a resource that industry thrives on; the fractional remainder is the chance of one more. Livestock is a multiple of the population by animal.
+
+`realmGenerator.generate({ tier: 'kingdom' | 'duchy' | 'county', ... }, ctx)` builds nested demesnes down to localities. Populations split top-down, each child taking at most seventy percent of what remains, so a kingdom has a few large duchies and a tail of small ones. Every demesne gets a ruling house (a dynasty faction with the demesne as its seat, its liege's house as parent) and a ranked title with King and Queen, Duke and Duchess, Count and Countess styles, ready for the history simulation to run succession over.
+
+The tables are ported from the 2018 dominia generator, which drew on S. John Ross's "Medieval Demographics Made Easy". Two fixes over the original: the resource advantage now checks the settlement's own resources rather than the industry's list against itself, and a misspelled poultry resource is corrected.
+
 ## alignment
 
 Helpers over the 25-code alignment vocabulary: `alignmentAxes(code)` gives the numeric order and goodness position, `alignmentAt(order, goodness)` the code at a position, and `alignmentDistance(a, b)` the grid distance, so generators can drift a person's alignment or pick ideals that cohere with it.

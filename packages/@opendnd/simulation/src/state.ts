@@ -1,7 +1,9 @@
 import type {
+  Economy,
   Event,
   Person,
   Population,
+  Prosperity,
   Relationship,
   Tenure,
 } from '@opendnd/types';
@@ -19,6 +21,10 @@ export class HistoryState {
   readonly events: Event[] = [];
   readonly tenures: Tenure[] = [];
   readonly populations: Population[] = [];
+  readonly economies: Economy[] = [];
+  /** Aggregate head count of the settlement this year. */
+  populationCount = 0;
+  prosperity: Prosperity = 'prosperous';
   /** Ids of people this run created, as opposed to authored input. */
   readonly generated = new Set<string>();
   /** Person id -> year they must die, from canon death events. */
@@ -100,7 +106,7 @@ export class HistoryState {
   }
 
   /**
-   * Kinship distance from each living person to the nearest current office
+   * Kinship distance from each living person to the nearest current title
    * holder, counting parent, child and spouse edges, up to `maxDepth`.
    * People beyond the horizon are absent from the result.
    */
@@ -138,11 +144,11 @@ export class HistoryState {
     return [...this.people.values()].filter((p) => this.isAlive(p));
   }
 
-  /** The current holder of an office, if any. */
-  currentTenure(officeId: string): Tenure | undefined {
+  /** The current holder of an title, if any. */
+  currentTenure(titleId: string): Tenure | undefined {
     for (let i = this.tenures.length - 1; i >= 0; i--) {
       const t = this.tenures[i];
-      if (t.office.id === officeId && t.ended === undefined) return t;
+      if (t.title.id === titleId && t.ended === undefined) return t;
     }
     return undefined;
   }

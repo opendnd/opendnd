@@ -1,0 +1,43 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/title.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Title",
+  "description": "A title: a seat of authority in a faction, with a rank and the law by which it passes from holder to holder.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "faction": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The faction this title belongs to."
+    },
+    "rank": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Lower is higher: 0 for the sovereign seat."
+    },
+    "successionLaw": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/succession-law.json"
+    },
+    "styleMale": {
+      "type": "string",
+      "description": "Form of address for a male holder, e.g. Lord."
+    },
+    "styleFemale": {
+      "type": "string",
+      "description": "Form of address for a female holder, e.g. Lady."
+    },
+    "styleNeuter": {
+      "type": "string",
+      "description": "Form of address for a holder of neither, e.g. Keeper."
+    }
+  },
+  "required": [
+    "faction",
+    "successionLaw"
+  ],
+  "additionalProperties": false
+}

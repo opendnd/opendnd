@@ -100,12 +100,12 @@ export function checkHistory(record: HistoryRecord): Finding[] {
     }
   }
 
-  // One holder per office at a time, and holders are alive while they hold.
-  const byOffice = new Map<string, Tenure[]>();
+  // One holder per title at a time, and holders are alive while they hold.
+  const byTitle = new Map<string, Tenure[]>();
   for (const t of record.tenures) {
-    const list = byOffice.get(t.office.id) ?? [];
+    const list = byTitle.get(t.title.id) ?? [];
     list.push(t);
-    byOffice.set(t.office.id, list);
+    byTitle.set(t.title.id, list);
     const begin = t.validTime?.begin?.year;
     const end = t.validTime?.end?.year;
     const died = deathYear.get(t.holder.id);
@@ -113,7 +113,7 @@ export function checkHistory(record: HistoryRecord): Finding[] {
       findings.push({
         rule: 'holder-alive-during-tenure',
         severity: 'error',
-        message: `${name(people, t.holder.id)} holds ${t.office.name ?? t.office.id} past their death in ${died}`,
+        message: `${name(people, t.holder.id)} holds ${t.title.name ?? t.title.id} past their death in ${died}`,
         resources: [t.id, t.holder.id],
       });
     }
@@ -126,7 +126,7 @@ export function checkHistory(record: HistoryRecord): Finding[] {
       });
     }
   }
-  for (const [officeId, tenures] of byOffice) {
+  for (const [titleId, tenures] of byTitle) {
     const sorted = [...tenures].sort(
       (a, b) =>
         (a.validTime?.begin?.year ?? 0) - (b.validTime?.begin?.year ?? 0),
@@ -141,7 +141,7 @@ export function checkHistory(record: HistoryRecord): Finding[] {
         findings.push({
           rule: 'one-holder-at-a-time',
           severity: 'error',
-          message: `Two tenures of ${sorted[i].office.name ?? officeId} overlap`,
+          message: `Two tenures of ${sorted[i].title.name ?? titleId} overlap`,
           resources: [sorted[i - 1].id, sorted[i].id],
         });
       }

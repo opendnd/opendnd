@@ -91,7 +91,7 @@ describe('checkHistory', () => {
       canonStatus: 'canon',
       perspective: 'in-universe',
       recorded,
-      office: { model: 'office', id: 'o1', name: 'Lord' },
+      title: { model: 'title', id: 'o1', name: 'Lord' },
       holder: { model: 'person', id: holder },
       validTime: {
         begin: { trs, year: begin, precision: 'year' },

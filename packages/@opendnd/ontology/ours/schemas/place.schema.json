@@ -31,6 +31,40 @@
     "biome": {
       "type": "string"
     },
+    "terrain": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/terrain.json"
+    },
+    "resources": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/resource.json"
+      },
+      "description": "Natural resources the place yields."
+    },
+    "area": {
+      "type": "object",
+      "description": "Land in square miles.",
+      "properties": {
+        "squareMiles": {
+          "type": "number",
+          "minimum": 0
+        },
+        "arableSquareMiles": {
+          "type": "number",
+          "minimum": 0
+        },
+        "wildernessSquareMiles": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "squareMiles"
+      ],
+      "additionalProperties": false
+    },
     "controlledBy": {
       "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },

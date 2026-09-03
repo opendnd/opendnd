@@ -1,12 +1,14 @@
 import type {
   Calendar,
   Culture,
+  Economy,
   Event,
-  Office,
-  Organization,
+  Title,
+  Faction,
   Person,
   Place,
   Population,
+  Prosperity,
   Relationship,
   Species,
   Tenure,
@@ -24,12 +26,14 @@ export interface HistoryParams {
   readonly baseMortality: number;
   /** Largest age gap, in years, when a spouse is drawn from the population. */
   readonly spouseAgeSpread: number;
-  /** Yearly growth of the settlement's aggregate population. */
-  readonly populationGrowth: number;
+  /** Yearly growth of the aggregate population by prosperity. */
+  readonly populationGrowth: Record<Prosperity, number>;
+  /** Yearly chance the settlement's prosperity moves one step up or down. */
+  readonly prosperityDrift: number;
   /** Emit a Population record this often, in years. */
   readonly populationSnapshotEvery: number;
   /**
-   * Kinship steps (parent, child or spouse edges) from a current office
+   * Kinship steps (parent, child or spouse edges) from a current title
    * holder within which a person is notable enough to marry and have
    * children in the record. Everyone else ages and dies but leaves no line;
    * their descendants live on in the aggregate population.
@@ -45,7 +49,13 @@ export const DEFAULT_PARAMS: HistoryParams = {
   infantMortality: 0.03,
   baseMortality: 0.004,
   spouseAgeSpread: 6,
-  populationGrowth: 0.004,
+  populationGrowth: {
+    booming: 0.008,
+    prosperous: 0.004,
+    poor: 0,
+    'very-poor': -0.003,
+  },
+  prosperityDrift: 0.02,
   populationSnapshotEvery: 50,
   lineageDepth: 2,
   maxLivingFigures: 300,
@@ -58,9 +68,9 @@ export interface HistoryInput {
   /** The settlement everything happens in. */
   readonly settlement: Place;
   /** The house or dynasty whose figures are tracked. */
-  readonly house: Organization;
+  readonly house: Faction;
   /** Seats of authority in the house. The first is the sovereign one. */
-  readonly offices: readonly Office[];
+  readonly titles: readonly Title[];
   /**
    * Authored people to start from. When absent, a founding couple is
    * generated. Their existing birth and death fields are respected.
@@ -74,6 +84,8 @@ export interface HistoryInput {
   readonly canonEvents?: readonly Event[];
   /** Aggregate population of the settlement at the start. */
   readonly initialPopulation: number;
+  /** Prosperity at the start. Defaults to prosperous. */
+  readonly prosperity?: Prosperity;
   readonly startYear: number;
   readonly years: number;
   readonly params?: Partial<HistoryParams>;
@@ -85,6 +97,7 @@ export interface HistoryOutput {
   readonly events: Event[];
   readonly tenures: Tenure[];
   readonly populations: Population[];
+  readonly economies: Economy[];
   /** Consistency findings over the produced history. Empty when all is well. */
   readonly findings: Finding[];
   readonly endYear: number;

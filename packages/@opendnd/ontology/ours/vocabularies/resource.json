@@ -1,0 +1,255 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "resource",
+  "url": "https://opendnd.org/ours/vocabularies/resource.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Natural resource",
+  "description": "Raw materials, crops, animals and luxuries a place can yield.",
+  "codes": [
+    {
+      "code": "aluminum",
+      "display": "Aluminum"
+    },
+    {
+      "code": "amber",
+      "display": "Amber"
+    },
+    {
+      "code": "bananas",
+      "display": "Bananas"
+    },
+    {
+      "code": "bronze",
+      "display": "Bronze"
+    },
+    {
+      "code": "camels",
+      "display": "Camels"
+    },
+    {
+      "code": "cattle",
+      "display": "Cattle"
+    },
+    {
+      "code": "chickens",
+      "display": "Chickens"
+    },
+    {
+      "code": "cinnamon",
+      "display": "Cinnamon"
+    },
+    {
+      "code": "citrus",
+      "display": "Citrus"
+    },
+    {
+      "code": "clay",
+      "display": "Clay"
+    },
+    {
+      "code": "cloves",
+      "display": "Cloves"
+    },
+    {
+      "code": "coal",
+      "display": "Coal"
+    },
+    {
+      "code": "cobalt",
+      "display": "Cobalt"
+    },
+    {
+      "code": "cocoa",
+      "display": "Cocoa"
+    },
+    {
+      "code": "coffee",
+      "display": "Coffee"
+    },
+    {
+      "code": "copper",
+      "display": "Copper"
+    },
+    {
+      "code": "cosmetics",
+      "display": "Cosmetics"
+    },
+    {
+      "code": "cotton",
+      "display": "Cotton"
+    },
+    {
+      "code": "crabs",
+      "display": "Crabs"
+    },
+    {
+      "code": "deer",
+      "display": "Deer"
+    },
+    {
+      "code": "diamonds",
+      "display": "Diamonds"
+    },
+    {
+      "code": "ducks",
+      "display": "Ducks"
+    },
+    {
+      "code": "dyes",
+      "display": "Dyes"
+    },
+    {
+      "code": "fish",
+      "display": "Fish"
+    },
+    {
+      "code": "furs",
+      "display": "Furs"
+    },
+    {
+      "code": "geese",
+      "display": "Geese"
+    },
+    {
+      "code": "goats",
+      "display": "Goats"
+    },
+    {
+      "code": "gold",
+      "display": "Gold"
+    },
+    {
+      "code": "gypsum",
+      "display": "Gypsum"
+    },
+    {
+      "code": "honey",
+      "display": "Honey"
+    },
+    {
+      "code": "horses",
+      "display": "Horses"
+    },
+    {
+      "code": "incense",
+      "display": "Incense"
+    },
+    {
+      "code": "iron",
+      "display": "Iron"
+    },
+    {
+      "code": "ivory",
+      "display": "Ivory"
+    },
+    {
+      "code": "jade",
+      "display": "Jade"
+    },
+    {
+      "code": "marble",
+      "display": "Marble"
+    },
+    {
+      "code": "mercury",
+      "display": "Mercury"
+    },
+    {
+      "code": "obsidian",
+      "display": "Obsidian"
+    },
+    {
+      "code": "peacocks",
+      "display": "Peacocks"
+    },
+    {
+      "code": "pearls",
+      "display": "Pearls"
+    },
+    {
+      "code": "perfume",
+      "display": "Perfume"
+    },
+    {
+      "code": "pigs",
+      "display": "Pigs"
+    },
+    {
+      "code": "platinum",
+      "display": "Platinum"
+    },
+    {
+      "code": "rice",
+      "display": "Rice"
+    },
+    {
+      "code": "salt",
+      "display": "Salt"
+    },
+    {
+      "code": "sheep",
+      "display": "Sheep"
+    },
+    {
+      "code": "silk",
+      "display": "Silk"
+    },
+    {
+      "code": "silver",
+      "display": "Silver"
+    },
+    {
+      "code": "spices",
+      "display": "Spices"
+    },
+    {
+      "code": "springs",
+      "display": "Springs"
+    },
+    {
+      "code": "stone",
+      "display": "Stone"
+    },
+    {
+      "code": "sugar",
+      "display": "Sugar"
+    },
+    {
+      "code": "sulphur",
+      "display": "Sulphur"
+    },
+    {
+      "code": "tea",
+      "display": "Tea"
+    },
+    {
+      "code": "tobacco",
+      "display": "Tobacco"
+    },
+    {
+      "code": "truffles",
+      "display": "Truffles"
+    },
+    {
+      "code": "whales",
+      "display": "Whales"
+    },
+    {
+      "code": "wheat",
+      "display": "Wheat"
+    },
+    {
+      "code": "wine",
+      "display": "Wine"
+    },
+    {
+      "code": "wood",
+      "display": "Wood"
+    },
+    {
+      "code": "wool",
+      "display": "Wool"
+    }
+  ]
+}

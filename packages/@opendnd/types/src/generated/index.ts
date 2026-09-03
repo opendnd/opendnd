@@ -83,6 +83,127 @@ export const eventTypeCodes = [
 export const eventTypeSchema = z.enum(eventTypeCodes);
 export type EventType = z.infer<typeof eventTypeSchema>;
 
+/** Faction type: Kinds of organized group, from a realm to a guild. */
+export const factionTypeCodes = [
+  "state",
+  "dynasty",
+  "family",
+  "faction",
+  "guild",
+  "religion",
+  "military",
+  "company",
+  "order",
+  "school",
+  "party",
+] as const;
+export const factionTypeSchema = z.enum(factionTypeCodes);
+export type FactionType = z.infer<typeof factionTypeSchema>;
+
+/** Industry: Trades and callings found in a settlement; each needs a number of people to support one business (after S. John Ross, Medieval Demographics Made Easy). */
+export const industryCodes = [
+  "miners",
+  "hunters",
+  "produce-farmers",
+  "horse-farmers",
+  "cattle-farmers",
+  "poultry-farmers",
+  "pork-farmers",
+  "goatherders",
+  "shepherders",
+  "butlers",
+  "maidservants",
+  "cooks",
+  "groundskeepers",
+  "chauffeurs",
+  "nannies",
+  "bodyguards",
+  "majordomos",
+  "cobblers",
+  "shoemakers",
+  "furriers",
+  "tailors",
+  "barbers",
+  "jewelers",
+  "taverns",
+  "clothiers",
+  "glassblowers",
+  "pastrycooks",
+  "masons",
+  "carpenters",
+  "weavers",
+  "chandlers",
+  "mercers",
+  "coopers",
+  "bakers",
+  "watercarriers",
+  "armorers",
+  "scabbardmakers",
+  "wine-sellers",
+  "tanners",
+  "skinners",
+  "leatherworkers",
+  "hatmakers",
+  "saddlers",
+  "chicken-butchers",
+  "pursemakers",
+  "woodsellers",
+  "magic-shops",
+  "bookbinders",
+  "butchers",
+  "fishmongers",
+  "shipwrights",
+  "beer-sellers",
+  "buckle-makers",
+  "plasterers",
+  "spice-merchants",
+  "blacksmiths",
+  "painters",
+  "roofers",
+  "locksmiths",
+  "finesmiths",
+  "bathers",
+  "potters",
+  "tilemakers",
+  "ropemakers",
+  "inns",
+  "copyists",
+  "sculptors",
+  "rugmakers",
+  "harness-makers",
+  "bleachers",
+  "hay-merchants",
+  "cutlers",
+  "glovemakers",
+  "woodcarvers",
+  "booksellers",
+  "surveyors",
+  "cartographers",
+  "illuminators",
+  "master-artists",
+  "alchemists",
+  "astronomers",
+  "scribes",
+  "librarians",
+  "scholars",
+  "apprentices",
+  "advocates",
+  "healers",
+  "doctors",
+  "clergy",
+  "priests",
+  "nobles",
+  "guards",
+  "urchins",
+  "hermits",
+  "folk-heroes",
+  "charlatans",
+  "criminals",
+  "entertainers",
+] as const;
+export const industrySchema = z.enum(industryCodes);
+export type Industry = z.infer<typeof industrySchema>;
+
 /** Legitimacy: Standing of a child within a line of succession. */
 export const legitimacyCodes = [
   "legitimate",
@@ -103,23 +224,6 @@ export const nameTypeCodes = [
 ] as const;
 export const nameTypeSchema = z.enum(nameTypeCodes);
 export type NameType = z.infer<typeof nameTypeSchema>;
-
-/** Organization type: Kinds of organized group. */
-export const organizationTypeCodes = [
-  "state",
-  "dynasty",
-  "family",
-  "faction",
-  "guild",
-  "religion",
-  "military",
-  "company",
-  "order",
-  "school",
-  "party",
-] as const;
-export const organizationTypeSchema = z.enum(organizationTypeCodes);
-export type OrganizationType = z.infer<typeof organizationTypeSchema>;
 
 /** Person status: Whether a person is living at the record's valid time. */
 export const personStatusCodes = [
@@ -158,6 +262,10 @@ export const placeTypeCodes = [
   "wilderness",
   "route",
   "water",
+  "metropolis",
+  "county",
+  "duchy",
+  "kingdom",
 ] as const;
 export const placeTypeSchema = z.enum(placeTypeCodes);
 export type PlaceType = z.infer<typeof placeTypeSchema>;
@@ -176,6 +284,16 @@ export const precisionCodes = [
 export const precisionSchema = z.enum(precisionCodes);
 export type Precision = z.infer<typeof precisionSchema>;
 
+/** Prosperity: How well a settlement is doing; scales how many people each business needs to survive. */
+export const prosperityCodes = [
+  "booming",
+  "prosperous",
+  "poor",
+  "very-poor",
+] as const;
+export const prosperitySchema = z.enum(prosperityCodes);
+export type Prosperity = z.infer<typeof prosperitySchema>;
+
 /** Relationship type: Kinds of relationship between two people (GEDCOM X types plus feudal and social ties). */
 export const relationshipTypeCodes = [
   "parent-child",
@@ -192,6 +310,73 @@ export const relationshipTypeCodes = [
 ] as const;
 export const relationshipTypeSchema = z.enum(relationshipTypeCodes);
 export type RelationshipType = z.infer<typeof relationshipTypeSchema>;
+
+/** Natural resource: Raw materials, crops, animals and luxuries a place can yield. */
+export const resourceCodes = [
+  "aluminum",
+  "amber",
+  "bananas",
+  "bronze",
+  "camels",
+  "cattle",
+  "chickens",
+  "cinnamon",
+  "citrus",
+  "clay",
+  "cloves",
+  "coal",
+  "cobalt",
+  "cocoa",
+  "coffee",
+  "copper",
+  "cosmetics",
+  "cotton",
+  "crabs",
+  "deer",
+  "diamonds",
+  "ducks",
+  "dyes",
+  "fish",
+  "furs",
+  "geese",
+  "goats",
+  "gold",
+  "gypsum",
+  "honey",
+  "horses",
+  "incense",
+  "iron",
+  "ivory",
+  "jade",
+  "marble",
+  "mercury",
+  "obsidian",
+  "peacocks",
+  "pearls",
+  "perfume",
+  "pigs",
+  "platinum",
+  "rice",
+  "salt",
+  "sheep",
+  "silk",
+  "silver",
+  "spices",
+  "springs",
+  "stone",
+  "sugar",
+  "sulphur",
+  "tea",
+  "tobacco",
+  "truffles",
+  "whales",
+  "wheat",
+  "wine",
+  "wood",
+  "wool",
+] as const;
+export const resourceSchema = z.enum(resourceCodes);
+export type Resource = z.infer<typeof resourceSchema>;
 
 /** Sex: Biological sex as used by the genetics generator. */
 export const sexCodes = [
@@ -218,8 +403,8 @@ export const sizeCodes = [
 export const sizeSchema = z.enum(sizeCodes);
 export type Size = z.infer<typeof sizeSchema>;
 
-/** Succession rule: How the next holder of an office is chosen. */
-export const successionRuleCodes = [
+/** Succession law: How a title passes from holder to holder. */
+export const successionLawCodes = [
   "primogeniture",
   "male-preference",
   "agnatic",
@@ -227,8 +412,29 @@ export const successionRuleCodes = [
   "elective",
   "appointed",
 ] as const;
-export const successionRuleSchema = z.enum(successionRuleCodes);
-export type SuccessionRule = z.infer<typeof successionRuleSchema>;
+export const successionLawSchema = z.enum(successionLawCodes);
+export type SuccessionLaw = z.infer<typeof successionLawSchema>;
+
+/** Terrain: The dominant terrain of a place, which decides what natural resources it can have. */
+export const terrainCodes = [
+  "coastal",
+  "desert",
+  "grassland",
+  "hills",
+  "mountains",
+  "plains",
+  "snow",
+  "tundra",
+  "forest",
+  "river",
+  "jungle",
+  "marsh",
+  "flood-plains",
+  "lakes",
+  "oasis",
+] as const;
+export const terrainSchema = z.enum(terrainCodes);
+export type Terrain = z.infer<typeof terrainSchema>;
 
 /** Work type: Kinds of in-world or out-of-world creative work. */
 export const workTypeCodes = [
@@ -376,6 +582,36 @@ export const resourceBaseSchema = z.object({
 });
 export type ResourceBase = z.infer<typeof resourceBaseSchema>;
 
+/** A belief held by a person or faction about a proposition, so contested history can be recorded without choosing a winner (CRMinf Belief). */
+export const beliefSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  holder: referenceSchema,
+  proposition: z.string(),
+  about: z.array(referenceSchema).optional(),
+  value: beliefValueSchema,
+  /** Why the holder believes it: observation, inference, tradition, adoption. */
+  basis: z.string().optional(),
+});
+export type Belief = z.infer<typeof beliefSchema>;
+
 /** A temporal reference system: months, weekdays, leap rules, moons and eras (after Kanka; OWL-Time TRS). */
 export const calendarSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
@@ -431,36 +667,6 @@ export const calendarSchema = z.strictObject({
 });
 export type Calendar = z.infer<typeof calendarSchema>;
 
-/** A belief held by a person or organization about a proposition, so contested history can be recorded without choosing a winner (CRMinf Belief). */
-export const claimSchema = z.strictObject({
-  /** Random v4. Never derived from mutable content, so renames never break references. */
-  id: z.uuid(),
-  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
-  derivedId: z.uuid().optional(),
-  /** The World this resource belongs to. */
-  world: z.uuid(),
-  name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
-  description: z.string().optional(),
-  canonStatus: canonStatusSchema,
-  perspective: perspectiveSchema.default("in-universe"),
-  /** When this assertion holds in-world. Absent means always. */
-  validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
-  provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
-  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
-  module: z.string().optional(),
-  holder: referenceSchema,
-  proposition: z.string(),
-  about: z.array(referenceSchema).optional(),
-  value: beliefValueSchema,
-  /** Why the holder believes it: observation, inference, tradition, adoption. */
-  basis: z.string().optional(),
-});
-export type Claim = z.infer<typeof claimSchema>;
-
 /** A people's shared naming, language and customs, separate from biology so one species can hold many cultures and one culture span species (World Anvil Ethnicity). */
 export const cultureSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
@@ -498,6 +704,41 @@ export const cultureSchema = z.strictObject({
 });
 export type Culture = z.infer<typeof cultureSchema>;
 
+/** A snapshot of a settlement's economy at a point in time: prosperity, how many of each business it supports, and its livestock. Like population, an aggregate that individuals are drawn from on demand. */
+export const economySchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  place: referenceSchema,
+  at: temporalPositionSchema,
+  prosperity: prosperitySchema,
+  industries: z.array(z.strictObject({
+    industry: industrySchema,
+    count: z.int().min(1),
+  })).optional(),
+  livestock: z.array(z.strictObject({
+    animal: z.string(),
+    count: z.int().min(0),
+  })).optional(),
+});
+export type Economy = z.infer<typeof economySchema>;
+
 /** Something that happened in-world, with participants in roles and optional cause links (schema.org Event, CIDOC E5, Dwarf Fortress historical events). */
 export const eventSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
@@ -532,8 +773,8 @@ export const eventSchema = z.strictObject({
 });
 export type Event = z.infer<typeof eventSchema>;
 
-/** A seat of authority in an organization, with the rule by which it passes from holder to holder. */
-export const officeSchema = z.strictObject({
+/** An organized group of any kind: realm, dynasty, guild, religion, order, company, adventuring party. */
+export const factionSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
@@ -553,38 +794,7 @@ export const officeSchema = z.strictObject({
   tags: z.array(z.string()).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. */
   module: z.string().optional(),
-  organization: referenceSchema,
-  /** Lower is higher: 0 for the sovereign seat. */
-  rank: z.int().min(0).optional(),
-  successionRule: successionRuleSchema,
-  titleMale: z.string().optional(),
-  titleFemale: z.string().optional(),
-  titleNeuter: z.string().optional(),
-});
-export type Office = z.infer<typeof officeSchema>;
-
-/** An organized group: state, dynasty, faction, guild, religion (schema.org Organization, CIDOC E74 Group, W3C ORG). */
-export const organizationSchema = z.strictObject({
-  /** Random v4. Never derived from mutable content, so renames never break references. */
-  id: z.uuid(),
-  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
-  derivedId: z.uuid().optional(),
-  /** The World this resource belongs to. */
-  world: z.uuid(),
-  name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
-  description: z.string().optional(),
-  canonStatus: canonStatusSchema,
-  perspective: perspectiveSchema.default("in-universe"),
-  /** When this assertion holds in-world. Absent means always. */
-  validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
-  provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
-  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
-  module: z.string().optional(),
-  organizationType: organizationTypeSchema,
+  factionType: factionTypeSchema,
   parent: referenceSchema.optional(),
   seat: referenceSchema.optional(),
   leader: referenceSchema.optional(),
@@ -593,7 +803,7 @@ export const organizationSchema = z.strictObject({
   motto: z.string().optional(),
   sigil: z.url().optional(),
 });
-export type Organization = z.infer<typeof organizationSchema>;
+export type Faction = z.infer<typeof factionSchema>;
 
 /** A person in the world, real to it or legendary (schema.org Person, CIDOC E21, Wikidata fictional human). */
 export const personSchema = z.strictObject({
@@ -693,6 +903,15 @@ export const placeSchema = z.strictObject({
   cell: z.string().regex(new RegExp("^[0-9a-f]{1,16}$")).optional(),
   population: z.int().min(0).optional(),
   biome: z.string().optional(),
+  terrain: terrainSchema.optional(),
+  /** Natural resources the place yields. */
+  resources: z.array(resourceSchema).optional(),
+  /** Land in square miles. */
+  area: z.strictObject({
+    squareMiles: z.number().min(0),
+    arableSquareMiles: z.number().min(0).optional(),
+    wildernessSquareMiles: z.number().min(0).optional(),
+  }).optional(),
   controlledBy: referenceSchema.optional(),
   founded: temporalPositionSchema.optional(),
 });
@@ -835,7 +1054,7 @@ export const speciesSchema = z.strictObject({
 });
 export type Species = z.infer<typeof speciesSchema>;
 
-/** One person's time in an office. The record's validTime is the tenure; a new record starts each time the office changes hands. */
+/** One person's time holding a title. The record's validTime is the tenure; a new record starts each time the title changes hands. */
 export const tenureSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
@@ -856,7 +1075,8 @@ export const tenureSchema = z.strictObject({
   tags: z.array(z.string()).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. */
   module: z.string().optional(),
-  office: referenceSchema,
+  /** The title held. */
+  title: referenceSchema,
   holder: referenceSchema,
   /** The event that started this tenure (succession, coronation, founding). */
   began: referenceSchema.optional(),
@@ -864,6 +1084,41 @@ export const tenureSchema = z.strictObject({
   ended: referenceSchema.optional(),
 });
 export type Tenure = z.infer<typeof tenureSchema>;
+
+/** A title: a seat of authority in a faction, with a rank and the law by which it passes from holder to holder. */
+export const titleSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  /** The faction this title belongs to. */
+  faction: referenceSchema,
+  /** Lower is higher: 0 for the sovereign seat. */
+  rank: z.int().min(0).optional(),
+  successionLaw: successionLawSchema,
+  /** Form of address for a male holder, e.g. Lord. */
+  styleMale: z.string().optional(),
+  /** Form of address for a female holder, e.g. Lady. */
+  styleFemale: z.string().optional(),
+  /** Form of address for a holder of neither, e.g. Keeper. */
+  styleNeuter: z.string().optional(),
+});
+export type Title = z.infer<typeof titleSchema>;
 
 /** A creative work, in-world (a chronicle, a legend) or out-of-world (an adventure module) (schema.org CreativeWork; NOnt narration). */
 export const workSchema = z.strictObject({
@@ -928,18 +1183,19 @@ export type World = z.infer<typeof worldSchema>;
 
 /** Every model in the ontology, keyed by model id. */
 export const models = {
+  belief: beliefSchema,
   calendar: calendarSchema,
-  claim: claimSchema,
   culture: cultureSchema,
+  economy: economySchema,
   event: eventSchema,
-  office: officeSchema,
-  organization: organizationSchema,
+  faction: factionSchema,
   person: personSchema,
   place: placeSchema,
   population: populationSchema,
   relationship: relationshipSchema,
   species: speciesSchema,
   tenure: tenureSchema,
+  title: titleSchema,
   work: workSchema,
   world: worldSchema,
 } as const;
