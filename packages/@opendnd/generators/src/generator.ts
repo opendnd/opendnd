@@ -40,6 +40,18 @@ export function createContext(
   return { ...options, rng: new Rng(`${options.world}/${options.seedPath}`) };
 }
 
+/** A context for a labelled sub-task: `seedPath/label`, with a matching child Rng. */
+export function childContext(
+  ctx: GeneratorContext,
+  label: string,
+): GeneratorContext {
+  return {
+    ...ctx,
+    seedPath: `${ctx.seedPath}/${label}`,
+    rng: ctx.rng.child(label),
+  };
+}
+
 /**
  * The platform fields every generated resource carries: a reproducible id,
  * the derived id, canon status `generated`, transaction time and provenance.

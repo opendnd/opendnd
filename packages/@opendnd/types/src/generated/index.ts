@@ -3,6 +3,37 @@
 
 import { z } from 'zod';
 
+/** Alignment: A five-by-five alignment matrix: order (lawful, social, neutral, rebel, chaotic) by goodness (good, moral, neutral, impure, evil). Each axis maps to -2..+2 so alignments can be compared numerically. */
+export const alignmentCodes = [
+  "lawful-good",
+  "lawful-moral",
+  "lawful-neutral",
+  "lawful-impure",
+  "lawful-evil",
+  "social-good",
+  "social-moral",
+  "social-neutral",
+  "social-impure",
+  "social-evil",
+  "neutral-good",
+  "neutral-moral",
+  "true-neutral",
+  "neutral-impure",
+  "neutral-evil",
+  "rebel-good",
+  "rebel-moral",
+  "rebel-neutral",
+  "rebel-impure",
+  "rebel-evil",
+  "chaotic-good",
+  "chaotic-moral",
+  "chaotic-neutral",
+  "chaotic-impure",
+  "chaotic-evil",
+] as const;
+export const alignmentSchema = z.enum(alignmentCodes);
+export type Alignment = z.infer<typeof alignmentSchema>;
+
 /** Belief value: Whether a holder holds a proposition to be true (after CRMinf I6). */
 export const beliefValueCodes = [
   "true",
@@ -44,6 +75,9 @@ export const eventTypeCodes = [
   "plague",
   "festival",
   "other",
+  "abdication",
+  "deposition",
+  "annulment",
   "session",
 ] as const;
 export const eventTypeSchema = z.enum(eventTypeCodes);
@@ -183,6 +217,18 @@ export const sizeCodes = [
 ] as const;
 export const sizeSchema = z.enum(sizeCodes);
 export type Size = z.infer<typeof sizeSchema>;
+
+/** Succession rule: How the next holder of an office is chosen. */
+export const successionRuleCodes = [
+  "primogeniture",
+  "male-preference",
+  "agnatic",
+  "seniority",
+  "elective",
+  "appointed",
+] as const;
+export const successionRuleSchema = z.enum(successionRuleCodes);
+export type SuccessionRule = z.infer<typeof successionRuleSchema>;
 
 /** Work type: Kinds of in-world or out-of-world creative work. */
 export const workTypeCodes = [
@@ -486,6 +532,37 @@ export const eventSchema = z.strictObject({
 });
 export type Event = z.infer<typeof eventSchema>;
 
+/** A seat of authority in an organization, with the rule by which it passes from holder to holder. */
+export const officeSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  organization: referenceSchema,
+  /** Lower is higher: 0 for the sovereign seat. */
+  rank: z.int().min(0).optional(),
+  successionRule: successionRuleSchema,
+  titleMale: z.string().optional(),
+  titleFemale: z.string().optional(),
+  titleNeuter: z.string().optional(),
+});
+export type Office = z.infer<typeof officeSchema>;
+
 /** An organized group: state, dynasty, faction, guild, religion (schema.org Organization, CIDOC E74 Group, W3C ORG). */
 export const organizationSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
@@ -543,6 +620,9 @@ export const personSchema = z.strictObject({
   culture: referenceSchema.optional(),
   sex: sexSchema.optional(),
   pronouns: z.string().optional(),
+  /** A byname earned in life, e.g. 'the Bold'. Rendered as 'Name the Bold'. */
+  epithet: z.string().optional(),
+  alignment: alignmentSchema.optional(),
   status: personStatusSchema.default("alive"),
   birth: z.strictObject({
     time: temporalPositionSchema.optional(),
@@ -557,6 +637,17 @@ export const personSchema = z.strictObject({
   memberOf: z.array(referenceSchema).optional(),
   residence: referenceSchema.optional(),
   occupation: z.string().optional(),
+  /** How the person stands with the world's powers, each -100..100. */
+  standing: z.strictObject({
+    /** Ability to compel others. */
+    power: z.int().min(-100).max(100).optional(),
+    /** Regard among peers and rivals. */
+    honor: z.int().min(-100).max(100).optional(),
+    /** Regard among the faithful and the gods. */
+    piety: z.int().min(-100).max(100).optional(),
+    /** Regard among the common people. */
+    reputation: z.int().min(-100).max(100).optional(),
+  }).optional(),
   /** Genetic record produced by the genetics generator. */
   genome: z.strictObject({
     /** Chromosome number to allele pair, e.g. '3=9' or 'X1=Y3'. */
@@ -606,6 +697,35 @@ export const placeSchema = z.strictObject({
   founded: temporalPositionSchema.optional(),
 });
 export type Place = z.infer<typeof placeSchema>;
+
+/** An aggregate head count of one species (and optionally culture) at a place at a point in time. Individuals are instantiated from it only when they become notable or someone zooms in. */
+export const populationSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  place: referenceSchema,
+  species: referenceSchema,
+  culture: referenceSchema.optional(),
+  count: z.int().min(0),
+  at: temporalPositionSchema,
+});
+export type Population = z.infer<typeof populationSchema>;
 
 /** A tie between two people, with dated facts (GEDCOM X Relationship extended for succession). */
 export const relationshipSchema = z.strictObject({
@@ -702,8 +822,48 @@ export const speciesSchema = z.strictObject({
   })).optional(),
   /** Walking speed in feet. */
   speed: z.int().min(0).optional(),
+  /** Ages that drive the history simulation. Derived from ageRanges when absent. */
+  lifecycle: z.strictObject({
+    /** Age of adulthood in years. */
+    maturity: z.int().min(0),
+    fertileFrom: z.int().min(0),
+    fertileTo: z.int().min(0),
+    /** Age around which yearly mortality climbs steeply. */
+    lifeExpectancy: z.int().min(1),
+    maximumAge: z.int().min(1),
+  }).optional(),
 });
 export type Species = z.infer<typeof speciesSchema>;
+
+/** One person's time in an office. The record's validTime is the tenure; a new record starts each time the office changes hands. */
+export const tenureSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  office: referenceSchema,
+  holder: referenceSchema,
+  /** The event that started this tenure (succession, coronation, founding). */
+  began: referenceSchema.optional(),
+  /** The event that ended it (death, abdication, deposition). */
+  ended: referenceSchema.optional(),
+});
+export type Tenure = z.infer<typeof tenureSchema>;
 
 /** A creative work, in-world (a chronicle, a legend) or out-of-world (an adventure module) (schema.org CreativeWork; NOnt narration). */
 export const workSchema = z.strictObject({
@@ -772,11 +932,14 @@ export const models = {
   claim: claimSchema,
   culture: cultureSchema,
   event: eventSchema,
+  office: officeSchema,
   organization: organizationSchema,
   person: personSchema,
   place: placeSchema,
+  population: populationSchema,
   relationship: relationshipSchema,
   species: speciesSchema,
+  tenure: tenureSchema,
   work: workSchema,
   world: worldSchema,
 } as const;

@@ -1,0 +1,36 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/population.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Population",
+  "description": "An aggregate head count of one species (and optionally culture) at a place at a point in time. Individuals are instantiated from it only when they become notable or someone zooms in.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "place": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "species": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "culture": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "at": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+    }
+  },
+  "required": [
+    "place",
+    "species",
+    "count",
+    "at"
+  ],
+  "additionalProperties": false
+}

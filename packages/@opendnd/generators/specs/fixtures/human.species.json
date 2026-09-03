@@ -673,5 +673,12 @@
         "d6"
       ]
     }
+  },
+  "lifecycle": {
+    "maturity": 16,
+    "fertileFrom": 16,
+    "fertileTo": 45,
+    "lifeExpectancy": 62,
+    "maximumAge": 96
   }
 }

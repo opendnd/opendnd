@@ -1,0 +1,32 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/tenure.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Tenure",
+  "description": "One person's time in an office. The record's validTime is the tenure; a new record starts each time the office changes hands.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "office": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "holder": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "began": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The event that started this tenure (succession, coronation, founding)."
+    },
+    "ended": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The event that ended it (death, abdication, deposition)."
+    }
+  },
+  "required": [
+    "office",
+    "holder"
+  ],
+  "additionalProperties": false
+}

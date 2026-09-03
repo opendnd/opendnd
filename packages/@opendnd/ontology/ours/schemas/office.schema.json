@@ -1,0 +1,39 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/office.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Office",
+  "description": "A seat of authority in an organization, with the rule by which it passes from holder to holder.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "organization": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "rank": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Lower is higher: 0 for the sovereign seat."
+    },
+    "successionRule": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/succession-rule.json"
+    },
+    "titleMale": {
+      "type": "string"
+    },
+    "titleFemale": {
+      "type": "string"
+    },
+    "titleNeuter": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "organization",
+    "successionRule"
+  ],
+  "additionalProperties": false
+}

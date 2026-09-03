@@ -1,0 +1,28 @@
+{
+  "resourceType": "Model",
+  "id": "office",
+  "url": "https://opendnd.org/ours/models/office.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Office",
+  "description": "A seat of authority in an organization.",
+  "schema": "https://opendnd.org/ours/schemas/office.schema.json",
+  "relationships": [
+    {
+      "predicate": "organization",
+      "target": "Organization"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "http://www.w3.org/ns/org",
+      "schema": "http://www.w3.org/ns/org#Post",
+      "type": "one-to-one"
+    },
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/Role",
+      "type": "partial"
+    }
+  ]
+}

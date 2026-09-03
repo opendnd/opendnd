@@ -20,6 +20,9 @@ The bundle lives in `packages/@opendnd/ontology/ours/`. It is data, not code: JS
 | `relationship` | A tie between two people with dated facts and succession fields | GEDCOM X Relationship |
 | `work` | A creative work in-world or out-of-world | schema.org CreativeWork, CIDOC E73 |
 | `claim` | A belief a holder has about a proposition, for contested history | CRMinf Belief |
+| `office` | A seat of authority in an organization with a succession rule | W3C ORG Post |
+| `tenure` | One person's time in an office, with the events that began and ended it | W3C ORG Membership |
+| `population` | An aggregate head count at a place and time | schema.org Observation |
 
 ## The base every model extends
 
@@ -29,4 +32,4 @@ Shared definitions also cover `Reference`, `TemporalPosition`, `TimeSpan`, GeoJS
 
 ## Vocabularies
 
-Canon status, perspective, sex, person status, place type, organization type, event type, relationship type, legitimacy, work type, belief value, temporal precision, creature size and name type. Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.
+Canon status, perspective, sex, person status, place type, organization type, event type, relationship type, legitimacy, work type, belief value, temporal precision, creature size, name type, succession rule and a five-by-five alignment matrix (order by goodness, each axis -2 to +2). Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.

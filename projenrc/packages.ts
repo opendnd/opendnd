@@ -56,6 +56,16 @@ const packages: readonly PackageConfig[] = [
     deps: ['@opendnd/random@workspace:*', '@opendnd/types@workspace:*'],
   },
   {
+    name: '@opendnd/simulation',
+    description:
+      'History simulation: a yearly clock over a world state and rule systems (demographics, lineage, succession) that emit Event, Relationship, Person, Tenure and Population resources, fitted around authored canon, plus a consistency checker.',
+    deps: [
+      '@opendnd/random@workspace:*',
+      '@opendnd/types@workspace:*',
+      '@opendnd/generators@workspace:*',
+    ],
+  },
+  {
     name: '@opendnd/types',
     description:
       'TypeScript types and Zod schemas generated from the @opendnd/ontology OURS bundle. Do not edit by hand; run `bun run generate`.',

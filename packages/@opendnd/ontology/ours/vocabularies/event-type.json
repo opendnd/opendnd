@@ -80,6 +80,21 @@
       "display": "Other"
     },
     {
+      "code": "abdication",
+      "display": "Abdication",
+      "definition": "A holder gives up an office voluntarily."
+    },
+    {
+      "code": "deposition",
+      "display": "Deposition",
+      "definition": "A holder is removed from an office by others."
+    },
+    {
+      "code": "annulment",
+      "display": "Annulment",
+      "definition": "A marriage is declared void."
+    },
+    {
       "code": "session",
       "display": "Play session"
     }

@@ -147,6 +147,42 @@
       "type": "integer",
       "minimum": 0,
       "description": "Walking speed in feet."
+    },
+    "lifecycle": {
+      "description": "Ages that drive the history simulation. Derived from ageRanges when absent.",
+      "type": "object",
+      "properties": {
+        "maturity": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Age of adulthood in years."
+        },
+        "fertileFrom": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fertileTo": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lifeExpectancy": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Age around which yearly mortality climbs steeply."
+        },
+        "maximumAge": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "maturity",
+        "fertileFrom",
+        "fertileTo",
+        "lifeExpectancy",
+        "maximumAge"
+      ],
+      "additionalProperties": false
     }
   },
   "required": [

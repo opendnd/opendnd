@@ -1,0 +1,41 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "succession-rule",
+  "url": "https://opendnd.org/ours/vocabularies/succession-rule.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Succession rule",
+  "description": "How the next holder of an office is chosen.",
+  "codes": [
+    {
+      "code": "primogeniture",
+      "display": "Primogeniture",
+      "definition": "Eldest child first, then that child's line, regardless of sex."
+    },
+    {
+      "code": "male-preference",
+      "display": "Male-preference primogeniture",
+      "definition": "Sons and their lines before daughters and theirs."
+    },
+    {
+      "code": "agnatic",
+      "display": "Agnatic",
+      "definition": "Male heirs only."
+    },
+    {
+      "code": "seniority",
+      "display": "Seniority",
+      "definition": "The eldest living member of the house."
+    },
+    {
+      "code": "elective",
+      "display": "Elective",
+      "definition": "Chosen from the adult members of the organization."
+    },
+    {
+      "code": "appointed",
+      "display": "Appointed",
+      "definition": "Named by another office holder."
+    }
+  ]
+}

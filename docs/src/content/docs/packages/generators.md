@@ -35,6 +35,10 @@ The d20 genetic system, driven by a `Species` resource. A species declares up to
 
 The first resource-producing generator and the template for the rest. `personGenerator.generate({ species, culture, sex?, name? }, ctx)` returns a complete `Person`: genome and traits from the species, a given and family name from the culture, references to both, and the stamped platform fields. Every later generator (dynasties, settlements) composes smaller ones the same way and emits ontology resources rather than free-standing data.
 
+## alignment
+
+Helpers over the 25-code alignment vocabulary: `alignmentAxes(code)` gives the numeric order and goodness position, `alignmentAt(order, goodness)` the code at a position, and `alignmentDistance(a, b)` the grid distance, so generators can drift a person's alignment or pick ideals that cohere with it.
+
 ## Species and culture data
 
 Trait dictionaries and name lists are world content on `species` and `culture` resources, not code. The test fixtures are one human species and one culture converted from the 2019 SRD data. The plan is to author the full set with LLM assistance and hold it to tests: schema validity, every category resolving to a trait for every possible roll, and distribution checks over many generated genomes.

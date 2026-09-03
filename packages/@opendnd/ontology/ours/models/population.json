@@ -1,0 +1,37 @@
+{
+  "resourceType": "Model",
+  "id": "population",
+  "url": "https://opendnd.org/ours/models/population.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Population",
+  "description": "An aggregate head count at a place and time.",
+  "schema": "https://opendnd.org/ours/schemas/population.schema.json",
+  "relationships": [
+    {
+      "predicate": "place",
+      "target": "Place"
+    },
+    {
+      "predicate": "species",
+      "target": "Species"
+    },
+    {
+      "predicate": "culture",
+      "target": "Culture"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/Observation",
+      "type": "partial",
+      "comment": "a population count is a statistical observation"
+    },
+    {
+      "system": "http://www.cidoc-crm.org/cidoc-crm",
+      "schema": "http://www.cidoc-crm.org/cidoc-crm/E74_Group",
+      "type": "partial"
+    }
+  ]
+}

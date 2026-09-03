@@ -74,7 +74,12 @@ export function generateName(chain: MarkovChain, rng: Rng): string {
     while ([...word].length < length) {
       // A letter that only ever ended a word has no successors: stop early.
       if (!chain.tables.has(last)) break;
-      last = select(chain, last, rng);
+      let next = select(chain, last, rng);
+      // Real names rarely triple a letter; redraw a few times before accepting.
+      for (let tries = 0; tries < 3 && word.endsWith(next + next); tries++) {
+        next = select(chain, last, rng);
+      }
+      last = next;
       word += last;
     }
     words.push(word);

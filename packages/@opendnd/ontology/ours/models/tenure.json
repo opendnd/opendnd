@@ -1,0 +1,40 @@
+{
+  "resourceType": "Model",
+  "id": "tenure",
+  "url": "https://opendnd.org/ours/models/tenure.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Tenure",
+  "description": "One person's time in an office.",
+  "schema": "https://opendnd.org/ours/schemas/tenure.schema.json",
+  "relationships": [
+    {
+      "predicate": "office",
+      "target": "Office"
+    },
+    {
+      "predicate": "holder",
+      "target": "Person"
+    },
+    {
+      "predicate": "began",
+      "target": "Event"
+    },
+    {
+      "predicate": "ended",
+      "target": "Event"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "http://www.w3.org/ns/org",
+      "schema": "http://www.w3.org/ns/org#Membership",
+      "type": "one-to-one"
+    },
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/OrganizationRole",
+      "type": "partial"
+    }
+  ]
+}

@@ -131,6 +131,28 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/@opendnd/simulation": {
+      "name": "@opendnd/simulation",
+      "version": "0.0.0",
+      "dependencies": {
+        "@opendnd/generators": "workspace:*",
+        "@opendnd/random": "workspace:*",
+        "@opendnd/types": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "*",
+        "@types/node": "ts5.9",
+        "@typescript-eslint/eslint-plugin": "^8",
+        "@typescript-eslint/parser": "^8",
+        "eslint": "^9",
+        "eslint-config-prettier": "*",
+        "eslint-import-resolver-typescript": "*",
+        "eslint-plugin-import": "*",
+        "eslint-plugin-prettier": "*",
+        "prettier": "*",
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/@opendnd/spatial": {
       "name": "@opendnd/spatial",
       "version": "0.0.0",
@@ -432,6 +454,8 @@
     "@opendnd/projen": ["@opendnd/projen@workspace:packages/@opendnd/projen"],
 
     "@opendnd/random": ["@opendnd/random@workspace:packages/@opendnd/random"],
+
+    "@opendnd/simulation": ["@opendnd/simulation@workspace:packages/@opendnd/simulation"],
 
     "@opendnd/spatial": ["@opendnd/spatial@workspace:packages/@opendnd/spatial"],
 

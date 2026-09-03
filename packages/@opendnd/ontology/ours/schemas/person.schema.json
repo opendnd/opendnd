@@ -22,6 +22,14 @@
     "pronouns": {
       "type": "string"
     },
+    "epithet": {
+      "type": "string",
+      "description": "A byname earned in life, e.g. 'the Bold'. Rendered as 'Name the Bold'."
+    },
+    "alignment": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/alignment.json"
+    },
     "status": {
       "type": "string",
       "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/person-status.json",
@@ -71,6 +79,37 @@
     },
     "occupation": {
       "type": "string"
+    },
+    "standing": {
+      "description": "How the person stands with the world's powers, each -100..100.",
+      "type": "object",
+      "properties": {
+        "power": {
+          "type": "integer",
+          "minimum": -100,
+          "maximum": 100,
+          "description": "Ability to compel others."
+        },
+        "honor": {
+          "type": "integer",
+          "minimum": -100,
+          "maximum": 100,
+          "description": "Regard among peers and rivals."
+        },
+        "piety": {
+          "type": "integer",
+          "minimum": -100,
+          "maximum": 100,
+          "description": "Regard among the faithful and the gods."
+        },
+        "reputation": {
+          "type": "integer",
+          "minimum": -100,
+          "maximum": 100,
+          "description": "Regard among the common people."
+        }
+      },
+      "additionalProperties": false
     },
     "genome": {
       "description": "Genetic record produced by the genetics generator.",

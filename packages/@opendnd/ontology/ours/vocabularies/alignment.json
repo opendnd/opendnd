@@ -1,0 +1,136 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "alignment",
+  "url": "https://opendnd.org/ours/vocabularies/alignment.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Alignment",
+  "description": "A five-by-five alignment matrix: order (lawful, social, neutral, rebel, chaotic) by goodness (good, moral, neutral, impure, evil). Each axis maps to -2..+2 so alignments can be compared numerically.",
+  "codes": [
+    {
+      "code": "lawful-good",
+      "display": "Lawful Good",
+      "definition": "Order axis lawful (-2), goodness axis good (+2)."
+    },
+    {
+      "code": "lawful-moral",
+      "display": "Lawful Moral",
+      "definition": "Order axis lawful (-2), goodness axis moral (+1)."
+    },
+    {
+      "code": "lawful-neutral",
+      "display": "Lawful Neutral",
+      "definition": "Order axis lawful (-2), goodness axis neutral (+0)."
+    },
+    {
+      "code": "lawful-impure",
+      "display": "Lawful Impure",
+      "definition": "Order axis lawful (-2), goodness axis impure (-1)."
+    },
+    {
+      "code": "lawful-evil",
+      "display": "Lawful Evil",
+      "definition": "Order axis lawful (-2), goodness axis evil (-2)."
+    },
+    {
+      "code": "social-good",
+      "display": "Social Good",
+      "definition": "Order axis social (-1), goodness axis good (+2)."
+    },
+    {
+      "code": "social-moral",
+      "display": "Social Moral",
+      "definition": "Order axis social (-1), goodness axis moral (+1)."
+    },
+    {
+      "code": "social-neutral",
+      "display": "Social Neutral",
+      "definition": "Order axis social (-1), goodness axis neutral (+0)."
+    },
+    {
+      "code": "social-impure",
+      "display": "Social Impure",
+      "definition": "Order axis social (-1), goodness axis impure (-1)."
+    },
+    {
+      "code": "social-evil",
+      "display": "Social Evil",
+      "definition": "Order axis social (-1), goodness axis evil (-2)."
+    },
+    {
+      "code": "neutral-good",
+      "display": "Neutral Good",
+      "definition": "Order axis neutral (+0), goodness axis good (+2)."
+    },
+    {
+      "code": "neutral-moral",
+      "display": "Neutral Moral",
+      "definition": "Order axis neutral (+0), goodness axis moral (+1)."
+    },
+    {
+      "code": "true-neutral",
+      "display": "True Neutral",
+      "definition": "Order axis neutral (+0), goodness axis neutral (+0)."
+    },
+    {
+      "code": "neutral-impure",
+      "display": "Neutral Impure",
+      "definition": "Order axis neutral (+0), goodness axis impure (-1)."
+    },
+    {
+      "code": "neutral-evil",
+      "display": "Neutral Evil",
+      "definition": "Order axis neutral (+0), goodness axis evil (-2)."
+    },
+    {
+      "code": "rebel-good",
+      "display": "Rebel Good",
+      "definition": "Order axis rebel (+1), goodness axis good (+2)."
+    },
+    {
+      "code": "rebel-moral",
+      "display": "Rebel Moral",
+      "definition": "Order axis rebel (+1), goodness axis moral (+1)."
+    },
+    {
+      "code": "rebel-neutral",
+      "display": "Rebel Neutral",
+      "definition": "Order axis rebel (+1), goodness axis neutral (+0)."
+    },
+    {
+      "code": "rebel-impure",
+      "display": "Rebel Impure",
+      "definition": "Order axis rebel (+1), goodness axis impure (-1)."
+    },
+    {
+      "code": "rebel-evil",
+      "display": "Rebel Evil",
+      "definition": "Order axis rebel (+1), goodness axis evil (-2)."
+    },
+    {
+      "code": "chaotic-good",
+      "display": "Chaotic Good",
+      "definition": "Order axis chaotic (+2), goodness axis good (+2)."
+    },
+    {
+      "code": "chaotic-moral",
+      "display": "Chaotic Moral",
+      "definition": "Order axis chaotic (+2), goodness axis moral (+1)."
+    },
+    {
+      "code": "chaotic-neutral",
+      "display": "Chaotic Neutral",
+      "definition": "Order axis chaotic (+2), goodness axis neutral (+0)."
+    },
+    {
+      "code": "chaotic-impure",
+      "display": "Chaotic Impure",
+      "definition": "Order axis chaotic (+2), goodness axis impure (-1)."
+    },
+    {
+      "code": "chaotic-evil",
+      "display": "Chaotic Evil",
+      "definition": "Order axis chaotic (+2), goodness axis evil (-2)."
+    }
+  ]
+}

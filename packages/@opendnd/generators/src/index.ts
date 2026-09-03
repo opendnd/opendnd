@@ -11,6 +11,7 @@
  * - `person`: a whole Person from a Species and a Culture.
  */
 export * from './generator';
+export * from './alignment';
 export * from './names';
 export * from './genetics';
 export * from './person';
