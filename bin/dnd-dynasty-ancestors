@@ -1,3 +1,0 @@
-#!/usr/bin/env node
-
-require('../node_modules/dynastia/lib/program-ancestors');
