@@ -10,7 +10,11 @@
   "relationships": [
     {
       "predicate": "species",
-      "target": "Person"
+      "target": "Species"
+    },
+    {
+      "predicate": "culture",
+      "target": "Culture"
     },
     {
       "predicate": "memberOf",

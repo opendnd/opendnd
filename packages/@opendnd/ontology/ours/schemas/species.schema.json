@@ -1,0 +1,156 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/species.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Species",
+  "description": "A kind of creature and its biology: size, chromosome layout, trait dictionary, growth and lifespan tables. Rules content (abilities, features) lives in the rules layer, not here (World Anvil Species; schema.org Taxon).",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "size": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/size.json"
+    },
+    "parent": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The species this is a subspecies of."
+    },
+    "chromosomes": {
+      "description": "Chromosome number to the die rolled for each allele, or 'sex' for the sex chromosome.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^(d[0-9]+|sex)$"
+      }
+    },
+    "sexChromosomes": {
+      "description": "Dice rolled for the X and Y alleles of the sex chromosome.",
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "string",
+          "pattern": "^d[0-9]+$",
+          "description": "A die such as d8."
+        },
+        "y": {
+          "type": "string",
+          "pattern": "^d[0-9]+$",
+          "description": "A die such as d8."
+        }
+      },
+      "required": [
+        "x",
+        "y"
+      ],
+      "additionalProperties": false
+    },
+    "categories": {
+      "description": "Trait category (eyeColor, hairColor, ...) to the chromosome number that expresses it.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "traitDictionary": {
+      "description": "Gene key to trait. Common genes are '<category>:C<chromosome>:<dominant roll>'; rare genes are '<category>:C<chromosome>:<rollA>=<rollB>'.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "height": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "type": "integer",
+          "description": "Base height in inches."
+        },
+        "dice": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^d[0-9]+$",
+            "description": "A die such as d8."
+          },
+          "minItems": 1,
+          "description": "Height modifier dice; the total is added to base."
+        }
+      },
+      "required": [
+        "base",
+        "dice"
+      ],
+      "additionalProperties": false
+    },
+    "weight": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "type": "integer",
+          "description": "Base weight in pounds."
+        },
+        "dice": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^d[0-9]+$",
+            "description": "A die such as d8."
+          },
+          "description": "Weight modifier dice, multiplied by the height modifier."
+        },
+        "multiplier": {
+          "type": "number",
+          "description": "Fixed multiplier used instead of dice."
+        }
+      },
+      "required": [
+        "base"
+      ],
+      "additionalProperties": false
+    },
+    "ageRanges": {
+      "description": "Named age groups with their year bounds and generation dice.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "integer"
+          },
+          "max": {
+            "type": "integer"
+          },
+          "weight": {
+            "type": "number",
+            "description": "Relative likelihood of this age group."
+          },
+          "dice": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^d[0-9]+$",
+              "description": "A die such as d8."
+            }
+          }
+        },
+        "required": [
+          "min",
+          "max",
+          "weight"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "speed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Walking speed in feet."
+    }
+  },
+  "required": [
+    "size"
+  ],
+  "additionalProperties": false
+}

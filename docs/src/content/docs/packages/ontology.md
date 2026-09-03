@@ -11,6 +11,8 @@ The bundle lives in `packages/@opendnd/ontology/ours/`. It is data, not code: JS
 |---|---|---|
 | `world` | The fictional universe every other record belongs to | Wikidata fictional universe |
 | `calendar` | A temporal reference system: months, weekdays, leap rules, moons, eras | OWL-Time TRS, Kanka calendars |
+| `species` | A kind of creature and its biology: size, chromosomes, trait dictionary, growth and age tables | schema.org Taxon, World Anvil Species |
+| `culture` | A people's naming, languages and customs, separate from biology | World Anvil Ethnicity, Kanka |
 | `person` | A person, real to the world or legendary | schema.org Person, Wikidata fictional human, CIDOC E21, GEDCOM X |
 | `place` | A location at any scale, with optional geometry in the world's CRS | schema.org Place, CIDOC E53, GeoSPARQL Feature |
 | `organization` | State, dynasty, faction, guild, religion | schema.org Organization, CIDOC E74, W3C ORG |
@@ -27,4 +29,4 @@ Shared definitions also cover `Reference`, `TemporalPosition`, `TimeSpan`, GeoJS
 
 ## Vocabularies
 
-Canon status, perspective, sex, person status, place type, organization type, event type, relationship type, legitimacy, work type, belief value and temporal precision. Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.
+Canon status, perspective, sex, person status, place type, organization type, event type, relationship type, legitimacy, work type, belief value, temporal precision, creature size and name type. Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.

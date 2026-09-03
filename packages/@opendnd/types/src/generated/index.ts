@@ -59,6 +59,17 @@ export const legitimacyCodes = [
 export const legitimacySchema = z.enum(legitimacyCodes);
 export type Legitimacy = z.infer<typeof legitimacySchema>;
 
+/** Name type: Which list of a culture's names to draw from. */
+export const nameTypeCodes = [
+  "male",
+  "female",
+  "neuter",
+  "family",
+  "place",
+] as const;
+export const nameTypeSchema = z.enum(nameTypeCodes);
+export type NameType = z.infer<typeof nameTypeSchema>;
+
 /** Organization type: Kinds of organized group. */
 export const organizationTypeCodes = [
   "state",
@@ -157,6 +168,21 @@ export const sexCodes = [
 ] as const;
 export const sexSchema = z.enum(sexCodes);
 export type Sex = z.infer<typeof sexSchema>;
+
+/** Creature size: Size categories for creatures, from fine to colossal. */
+export const sizeCodes = [
+  "fine",
+  "diminutive",
+  "tiny",
+  "small",
+  "medium",
+  "large",
+  "huge",
+  "gargantuan",
+  "colossal",
+] as const;
+export const sizeSchema = z.enum(sizeCodes);
+export type Size = z.infer<typeof sizeSchema>;
 
 /** Work type: Kinds of in-world or out-of-world creative work. */
 export const workTypeCodes = [
@@ -389,6 +415,43 @@ export const claimSchema = z.strictObject({
 });
 export type Claim = z.infer<typeof claimSchema>;
 
+/** A people's shared naming, language and customs, separate from biology so one species can hold many cultures and one culture span species (World Anvil Ethnicity). */
+export const cultureSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  /** Seed lists the name generator learns from, by name type. */
+  names: z.strictObject({
+    male: z.array(z.string()).optional(),
+    female: z.array(z.string()).optional(),
+    neuter: z.array(z.string()).optional(),
+    family: z.array(z.string()).optional(),
+    place: z.array(z.string()).optional(),
+  }).optional(),
+  languages: z.array(referenceSchema).optional(),
+  /** Species that commonly belong to this culture. */
+  species: z.array(referenceSchema).optional(),
+  /** Prose on how names are formed and used. */
+  namingConventions: z.string().optional(),
+});
+export type Culture = z.infer<typeof cultureSchema>;
+
 /** Something that happened in-world, with participants in roles and optional cause links (schema.org Event, CIDOC E5, Dwarf Fortress historical events). */
 export const eventSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
@@ -494,8 +557,15 @@ export const personSchema = z.strictObject({
   memberOf: z.array(referenceSchema).optional(),
   residence: referenceSchema.optional(),
   occupation: z.string().optional(),
-  /** Chromosome record from the genetics generator. */
-  dna: z.string().optional(),
+  /** Genetic record produced by the genetics generator. */
+  genome: z.strictObject({
+    /** Chromosome number to allele pair, e.g. '3=9' or 'X1=Y3'. */
+    chromosomes: z.record(z.string(), z.string().regex(new RegExp("^[XY]?[0-9]+=[XY]?[0-9]+$"))),
+    /** Inches. */
+    height: z.int().optional(),
+    /** Pounds. */
+    weight: z.int().optional(),
+  }).optional(),
   traits: z.array(z.strictObject({
     gene: z.string(),
     trait: z.string(),
@@ -569,6 +639,70 @@ export const relationshipSchema = z.strictObject({
 });
 export type Relationship = z.infer<typeof relationshipSchema>;
 
+/** A kind of creature and its biology: size, chromosome layout, trait dictionary, growth and lifespan tables. Rules content (abilities, features) lives in the rules layer, not here (World Anvil Species; schema.org Taxon). */
+export const speciesSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  size: sizeSchema,
+  /** The species this is a subspecies of. */
+  parent: referenceSchema.optional(),
+  /** Chromosome number to the die rolled for each allele, or 'sex' for the sex chromosome. */
+  chromosomes: z.record(z.string(), z.string().regex(new RegExp("^(d[0-9]+|sex)$"))).optional(),
+  /** Dice rolled for the X and Y alleles of the sex chromosome. */
+  sexChromosomes: z.strictObject({
+    /** A die such as d8. */
+    x: z.string().regex(new RegExp("^d[0-9]+$")),
+    /** A die such as d8. */
+    y: z.string().regex(new RegExp("^d[0-9]+$")),
+  }).optional(),
+  /** Trait category (eyeColor, hairColor, ...) to the chromosome number that expresses it. */
+  categories: z.record(z.string(), z.string()).optional(),
+  /** Gene key to trait. Common genes are '<category>:C<chromosome>:<dominant roll>'; rare genes are '<category>:C<chromosome>:<rollA>=<rollB>'. */
+  traitDictionary: z.record(z.string(), z.string()).optional(),
+  height: z.strictObject({
+    /** Base height in inches. */
+    base: z.int(),
+    /** Height modifier dice; the total is added to base. */
+    dice: z.array(z.string().regex(new RegExp("^d[0-9]+$"))).min(1),
+  }).optional(),
+  weight: z.strictObject({
+    /** Base weight in pounds. */
+    base: z.int(),
+    /** Weight modifier dice, multiplied by the height modifier. */
+    dice: z.array(z.string().regex(new RegExp("^d[0-9]+$"))).optional(),
+    /** Fixed multiplier used instead of dice. */
+    multiplier: z.number().optional(),
+  }).optional(),
+  /** Named age groups with their year bounds and generation dice. */
+  ageRanges: z.record(z.string(), z.strictObject({
+    min: z.int(),
+    max: z.int(),
+    /** Relative likelihood of this age group. */
+    weight: z.number(),
+    dice: z.array(z.string().regex(new RegExp("^d[0-9]+$"))).optional(),
+  })).optional(),
+  /** Walking speed in feet. */
+  speed: z.int().min(0).optional(),
+});
+export type Species = z.infer<typeof speciesSchema>;
+
 /** A creative work, in-world (a chronicle, a legend) or out-of-world (an adventure module) (schema.org CreativeWork; NOnt narration). */
 export const workSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
@@ -634,11 +768,13 @@ export type World = z.infer<typeof worldSchema>;
 export const models = {
   calendar: calendarSchema,
   claim: claimSchema,
+  culture: cultureSchema,
   event: eventSchema,
   organization: organizationSchema,
   person: personSchema,
   place: placeSchema,
   relationship: relationshipSchema,
+  species: speciesSchema,
   work: workSchema,
   world: worldSchema,
 } as const;

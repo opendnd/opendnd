@@ -1,0 +1,47 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "size",
+  "url": "https://opendnd.org/ours/vocabularies/size.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Creature size",
+  "description": "Size categories for creatures, from fine to colossal.",
+  "codes": [
+    {
+      "code": "fine",
+      "display": "Fine"
+    },
+    {
+      "code": "diminutive",
+      "display": "Diminutive"
+    },
+    {
+      "code": "tiny",
+      "display": "Tiny"
+    },
+    {
+      "code": "small",
+      "display": "Small"
+    },
+    {
+      "code": "medium",
+      "display": "Medium"
+    },
+    {
+      "code": "large",
+      "display": "Large"
+    },
+    {
+      "code": "huge",
+      "display": "Huge"
+    },
+    {
+      "code": "gargantuan",
+      "display": "Gargantuan"
+    },
+    {
+      "code": "colossal",
+      "display": "Colossal"
+    }
+  ]
+}

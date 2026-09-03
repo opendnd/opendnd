@@ -1,0 +1,29 @@
+{
+  "resourceType": "Model",
+  "id": "species",
+  "url": "https://opendnd.org/ours/models/species.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Species",
+  "description": "A kind of creature and its biology.",
+  "schema": "https://opendnd.org/ours/schemas/species.schema.json",
+  "relationships": [
+    {
+      "predicate": "parent",
+      "target": "Species"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/Taxon",
+      "type": "partial"
+    },
+    {
+      "system": "https://www.worldanvil.com",
+      "schema": "https://www.worldanvil.com/learn/article-templates#species",
+      "type": "partial",
+      "comment": "World Anvil Species template"
+    }
+  ]
+}

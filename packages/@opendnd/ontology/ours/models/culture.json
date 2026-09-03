@@ -1,0 +1,29 @@
+{
+  "resourceType": "Model",
+  "id": "culture",
+  "url": "https://opendnd.org/ours/models/culture.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Culture",
+  "description": "A people's shared naming, language and customs.",
+  "schema": "https://opendnd.org/ours/schemas/culture.schema.json",
+  "relationships": [
+    {
+      "predicate": "species",
+      "target": "Species"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://www.worldanvil.com",
+      "schema": "https://www.worldanvil.com/learn/article-templates#ethnicity",
+      "type": "partial",
+      "comment": "World Anvil Ethnicity template"
+    },
+    {
+      "system": "https://kanka.io",
+      "schema": "https://app.kanka.io/api-docs/1.0/races",
+      "type": "partial"
+    }
+  ]
+}

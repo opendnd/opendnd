@@ -1,0 +1,69 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/culture.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Culture",
+  "description": "A people's shared naming, language and customs, separate from biology so one species can hold many cultures and one culture span species (World Anvil Ethnicity).",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "names": {
+      "description": "Seed lists the name generator learns from, by name type.",
+      "type": "object",
+      "properties": {
+        "male": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "female": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "neuter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "family": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "place": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "languages": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      }
+    },
+    "species": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "Species that commonly belong to this culture."
+    },
+    "namingConventions": {
+      "type": "string",
+      "description": "Prose on how names are formed and used."
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

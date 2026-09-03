@@ -13,11 +13,13 @@ describe('@opendnd/types', () => {
     expect(Object.keys(models).sort()).toEqual([
       'calendar',
       'claim',
+      'culture',
       'event',
       'organization',
       'person',
       'place',
       'relationship',
+      'species',
       'work',
       'world',
     ]);

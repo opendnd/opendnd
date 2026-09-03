@@ -72,9 +72,31 @@
     "occupation": {
       "type": "string"
     },
-    "dna": {
-      "type": "string",
-      "description": "Chromosome record from the genetics generator."
+    "genome": {
+      "description": "Genetic record produced by the genetics generator.",
+      "type": "object",
+      "properties": {
+        "chromosomes": {
+          "description": "Chromosome number to allele pair, e.g. '3=9' or 'X1=Y3'.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[XY]?[0-9]+=[XY]?[0-9]+$"
+          }
+        },
+        "height": {
+          "type": "integer",
+          "description": "Inches."
+        },
+        "weight": {
+          "type": "integer",
+          "description": "Pounds."
+        }
+      },
+      "required": [
+        "chromosomes"
+      ],
+      "additionalProperties": false
     },
     "traits": {
       "type": "array",

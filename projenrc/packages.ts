@@ -39,6 +39,17 @@ const packages: readonly PackageConfig[] = [
     devDeps: ['@opendnd/ours@workspace:*'],
   },
   {
+    name: '@opendnd/random',
+    description:
+      'Seeded, deterministic randomness: a xoshiro128** PRNG keyed by a seed string, dice notation, weighted picks, and UUID v5 derived ids.',
+  },
+  {
+    name: '@opendnd/generators',
+    description:
+      'Deterministic content generators (names, genetics, people) behind one Generator contract: input resources plus a seed path in, ontology resources with provenance out.',
+    deps: ['@opendnd/random@workspace:*', '@opendnd/types@workspace:*'],
+  },
+  {
     name: '@opendnd/types',
     description:
       'TypeScript types and Zod schemas generated from the @opendnd/ontology OURS bundle. Do not edit by hand; run `bun run generate`.',

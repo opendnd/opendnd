@@ -34,6 +34,27 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/@opendnd/generators": {
+      "name": "@opendnd/generators",
+      "version": "0.0.0",
+      "dependencies": {
+        "@opendnd/random": "workspace:*",
+        "@opendnd/types": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "*",
+        "@types/node": "ts5.9",
+        "@typescript-eslint/eslint-plugin": "^8",
+        "@typescript-eslint/parser": "^8",
+        "eslint": "^9",
+        "eslint-config-prettier": "*",
+        "eslint-import-resolver-typescript": "*",
+        "eslint-plugin-import": "*",
+        "eslint-plugin-prettier": "*",
+        "prettier": "*",
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/@opendnd/ontology": {
       "name": "@opendnd/ontology",
       "version": "0.0.0",
@@ -79,6 +100,23 @@
         "dotenv-mono": "^1.5.1",
         "projen": "^0.103.1",
       },
+      "devDependencies": {
+        "@types/bun": "*",
+        "@types/node": "ts5.9",
+        "@typescript-eslint/eslint-plugin": "^8",
+        "@typescript-eslint/parser": "^8",
+        "eslint": "^9",
+        "eslint-config-prettier": "*",
+        "eslint-import-resolver-typescript": "*",
+        "eslint-plugin-import": "*",
+        "eslint-plugin-prettier": "*",
+        "prettier": "*",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/@opendnd/random": {
+      "name": "@opendnd/random",
+      "version": "0.0.0",
       "devDependencies": {
         "@types/bun": "*",
         "@types/node": "ts5.9",
@@ -367,11 +405,15 @@
 
     "@opendnd/docs": ["@opendnd/docs@workspace:docs"],
 
+    "@opendnd/generators": ["@opendnd/generators@workspace:packages/@opendnd/generators"],
+
     "@opendnd/ontology": ["@opendnd/ontology@workspace:packages/@opendnd/ontology"],
 
     "@opendnd/ours": ["@opendnd/ours@workspace:packages/@opendnd/ours"],
 
     "@opendnd/projen": ["@opendnd/projen@workspace:packages/@opendnd/projen"],
+
+    "@opendnd/random": ["@opendnd/random@workspace:packages/@opendnd/random"],
 
     "@opendnd/types": ["@opendnd/types@workspace:packages/@opendnd/types"],
 
