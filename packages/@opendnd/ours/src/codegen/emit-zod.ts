@@ -53,11 +53,46 @@ export function emitZodModule(bundle: OursBundle): string {
       `export type ${pascal} = z.infer<typeof ${camel}Schema>;`,
       '',
     );
+    ctx.emitted.add(decl.name);
   }
 
   const models = [...bundle.models.values()].sort((a, b) =>
     a.id.localeCompare(b.id),
   );
+  /*
+   * The code lists with their display text.
+   *
+   * The Zod enums above are what validation needs; a form needs to show a
+   * person "Very poor" rather than `very-poor`, and it should not have to
+   * carry its own copy of the labels and let them drift from the ontology.
+   */
+  lines.push(
+    '/** Every code list, with the display text for each code. */',
+    'export const vocabularies = {',
+    ...vocabularies.map((v) =>
+      [
+        `  ${propertyKey(v.id)}: {`,
+        `    id: ${JSON.stringify(v.id)},`,
+        `    name: ${JSON.stringify(v.name)},`,
+        ...(v.description
+          ? [`    description: ${JSON.stringify(v.description)},`]
+          : []),
+        '    codes: [',
+        ...v.codes!.map(
+          (c) =>
+            `      { code: ${JSON.stringify(c.code)}, display: ${JSON.stringify(
+              c.display ?? c.code,
+            )} },`,
+        ),
+        '    ],',
+        '  },',
+      ].join('\n'),
+    ),
+    '} as const;',
+    'export type VocabularyId = keyof typeof vocabularies;',
+    '',
+  );
+
   lines.push(
     '/** Every model in the ontology, keyed by model id. */',
     'export const models = {',
@@ -81,6 +116,8 @@ interface Declaration {
 }
 
 class EmitContext {
+  /** Declarations already written, so a reference to anything else is deferred. */
+  readonly emitted = new Set<string>();
   /** Maps "<doc>#<pointer>" to the declaration name it resolves to. */
   private readonly refNames = new Map<string, string>();
 
@@ -251,6 +288,19 @@ class EmitContext {
       const comment = prop.description
         ? `${inner}/** ${prop.description} */\n`
         : '';
+      /*
+       * A property that refers to a schema not yet declared — the one being
+       * declared, or another in a cycle with it — is emitted as a getter, which
+       * is Zod's idiom for recursion: the reference is not evaluated until the
+       * schema is used, by which time the constant exists, and TypeScript can
+       * still infer the type without an annotation.
+       */
+      const deferred = this.dependenciesOf(prop, doc).some(
+        (dep) => !this.emitted.has(dep),
+      );
+      if (deferred) {
+        return `${comment}${inner}get ${propertyKey(name)}() {\n${inner}  return ${e};\n${inner}},`;
+      }
       return `${comment}${inner}${propertyKey(name)}: ${e},`;
     });
     const ctor =
@@ -394,11 +444,9 @@ function topologicalOrder(
   const out: Declaration[] = [];
   const visit = (d: Declaration, chain: string[]) => {
     if (done.has(d.name)) return;
-    if (visiting.has(d.name)) {
-      throw new Error(
-        `Recursive schema reference is not supported: ${[...chain, d.name].join(' -> ')}`,
-      );
-    }
+    // A cycle is left where it is: the declaration reached first is emitted
+    // first, and the reference back to it becomes a deferred property.
+    if (visiting.has(d.name)) return;
     visiting.add(d.name);
     for (const dep of deps(d)) {
       const target = byName.get(dep);

@@ -1,0 +1,66 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/quest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Quest",
+  "description": "Something a party is meant to do, and how far they have got with it. In-universe as the world's own errand, or out-of-universe as a thread the gamemaster is holding; the perspective field says which.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/quest-status.json"
+    },
+    "campaign": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The campaign it belongs to, when it belongs to one."
+    },
+    "giver": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "Who set it."
+    },
+    "objectives": {
+      "type": "array",
+      "description": "The steps it breaks into, each done or not.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "summary": {
+            "type": "string"
+          },
+          "done": {
+            "type": "boolean",
+            "default": false
+          },
+          "about": {
+            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+          }
+        },
+        "required": [
+          "summary"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "about": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "What it concerns: places, people, factions, other quests."
+    },
+    "reward": {
+      "type": "string"
+    },
+    "resolvedBy": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The event that finished it."
+    }
+  },
+  "required": [
+    "status"
+  ],
+  "additionalProperties": false
+}

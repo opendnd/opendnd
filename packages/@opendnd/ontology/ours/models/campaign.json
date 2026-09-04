@@ -1,0 +1,31 @@
+{
+  "resourceType": "Model",
+  "id": "campaign",
+  "url": "https://opendnd.org/ours/models/campaign.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Campaign",
+  "description": "A series of sessions a group plays in a world.",
+  "schema": "https://opendnd.org/ours/schemas/campaign.schema.json",
+  "relationships": [
+    {
+      "predicate": "party",
+      "target": "Faction"
+    },
+    {
+      "predicate": "setting",
+      "target": "Place"
+    },
+    {
+      "predicate": "characters",
+      "target": "Character"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/EventSeries",
+      "type": "one-to-one"
+    }
+  ]
+}

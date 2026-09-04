@@ -1,0 +1,25 @@
+# Local Postgres for the API. Production uses Neon; the dialect is the same.
+# The image carries pgvector, which the search work will need.
+services:
+  postgres:
+    image: pgvector/pgvector:pg18
+    container_name: opendnd-postgres
+    environment:
+      POSTGRES_USER: opendnd
+      POSTGRES_PASSWORD: opendnd
+      POSTGRES_DB: opendnd
+    ports:
+      - '5432:5432'
+    volumes:
+      # A named volume rather than a bind mount: the image creates a
+      # version-specific directory inside as its own user, which a host mount
+      # will not let it do. `docker compose down -v` resets the database.
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U opendnd -d opendnd']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  postgres-data:

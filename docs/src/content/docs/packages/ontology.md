@@ -19,6 +19,42 @@ The bundle lives in `packages/@opendnd/ontology/ours/`. It is data, not code: JS
 | `event` | Something that happened, with participants, roles and cause links | schema.org Event, CIDOC E5 |
 | `relationship` | A tie between two people with dated facts and succession fields | GEDCOM X Relationship |
 | `work` | A creative work in-world or out-of-world | schema.org CreativeWork, CIDOC E73 |
+| `language` | A language spoken or written in the world | schema.org Language, Wikidata language |
+
+### The campaign layer
+
+Records of play and preparation rather than of the world. All but `quest` are out-of-universe by default, stated in their own schemas so no client has to remember which is which. What happens at a table is still an `event`: an encounter that is played produces one, and a session references the events it produced. See [ADR-013](/adr/adr-013-campaign-layer/).
+
+| Model | | Aligns to |
+|---|---|---|
+| `campaign` | A series of sessions a group plays in a world | schema.org EventSeries |
+| `session` | One sitting, dated in real time | schema.org Event |
+| `character` | A person as played, and by whom | schema.org Role |
+| `quest` | Something a party is meant to do, and how far they have got | schema.org Action, CIDOC E7 |
+| `encounter` | A confrontation prepared for a party | CIDOC E7 |
+
+A dungeon is a `place` whose type is `dungeon` and a party is a `faction` whose type is `party`. Neither needed a model. A published adventure is a `module`, the content-addressed package, not a `work`: a `work` is something composed, and an adventure is a bundle of quests, encounters and places.
+
+### The rules layer
+
+Shapes only. No rules content ships in this repository; it arrives as modules that carry their own licence. The shapes follow the 5e SRD API's schemas, which are MIT-licensed code, so content written for that API converts to these records without reshaping. Its field names are `snake_case` and these are camelCase, which is a mechanical transform. See the [landscape](/research/landscape/) for why the data itself is not taken.
+
+| Model | | Follows |
+|---|---|---|
+| `item` | Equipment, magic items and poisons, one model; a world's named sword points at the kind it is through `instanceOf` | 5e `equipment`, `magic-items` |
+| `class` | A class and, through `subclassOf`, its subclasses; level progression is a table on the class | 5e `classes`, `subclasses`, `levels` |
+| `feature` | Anything a character gains from a class, species, background, feat or item; `source` says which | 5e `features`, `traits` |
+| `background` | Ability score increases, a feat and proficiencies, as the 2024 rules have it | 5e `backgrounds` |
+| `feat` | A talent taken in place of or alongside an ability score increase | 5e `feats` |
+| `spell` | Level, school, components, duration, what it does | 5e `spells` (2014 tree; the 2024 one is not yet published) |
+| `statblock` | The rules view of a creature, independent of `species` as the SRD treats it; may name the species or person it stands for | 5e `monsters` |
+| `condition` | A state that changes what a creature may do | 5e `conditions` |
+| `skill` | A skill and the ability its checks use | 5e `skills` |
+| `proficiency` | Being trained in a weapon, tool, skill or saving throw | 5e `proficiencies` |
+
+`Choice` joins the platform shapes: "pick two from this list", which the rules use everywhere and which nests. It is the first recursive shape in the ontology, and the codegen emits it as a Zod getter so the reference resolves lazily.
+
+A trap is an `encounter` whose `kind` is `trap`. A familiar is a `relationship` whose type is `familiar`. A vehicle is an `item` whose category is `mount`. A subspecies is a `species` with a `parent`. None of them needed a model.
 | `belief` | A belief a holder has about a proposition, for contested history | CRMinf Belief |
 | `title` | A seat of authority in a faction with a succession rule | W3C ORG Post |
 | `tenure` | One person's time in an title, with the events that began and ended it | W3C ORG Membership |
@@ -34,4 +70,4 @@ Shared definitions also cover `Reference`, `TemporalPosition`, `TimeSpan`, GeoJS
 
 ## Vocabularies
 
-Canon status, perspective, sex, person status, place type, faction type, event type, relationship type, legitimacy, work type, belief value, temporal precision, creature size, name type, succession law, a five-by-five alignment matrix (order by goodness, each axis -2 to +2), terrain, prosperity, claim basis, sixty-one natural resources and ninety-eight industries. Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.
+Canon status, perspective, sex, person status, place type, faction type, event type, relationship type, legitimacy, work type, belief value, temporal precision, creature size, name type, succession law, the nine SRD alignments on a three-by-three grid (order by goodness, each axis -1 to +1), terrain, prosperity, claim basis, campaign, character and quest status, encounter difficulty, sixty-one natural resources and ninety-eight industries. Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.

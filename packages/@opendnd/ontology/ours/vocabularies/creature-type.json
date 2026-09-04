@@ -1,0 +1,67 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "creature-type",
+  "url": "https://opendnd.org/ours/vocabularies/creature-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Creature type",
+  "description": "The rules category a creature belongs to, which spells and effects key off.",
+  "codes": [
+    {
+      "code": "aberration",
+      "display": "Aberration"
+    },
+    {
+      "code": "beast",
+      "display": "Beast"
+    },
+    {
+      "code": "celestial",
+      "display": "Celestial"
+    },
+    {
+      "code": "construct",
+      "display": "Construct"
+    },
+    {
+      "code": "dragon",
+      "display": "Dragon"
+    },
+    {
+      "code": "elemental",
+      "display": "Elemental"
+    },
+    {
+      "code": "fey",
+      "display": "Fey"
+    },
+    {
+      "code": "fiend",
+      "display": "Fiend"
+    },
+    {
+      "code": "giant",
+      "display": "Giant"
+    },
+    {
+      "code": "humanoid",
+      "display": "Humanoid"
+    },
+    {
+      "code": "monstrosity",
+      "display": "Monstrosity"
+    },
+    {
+      "code": "ooze",
+      "display": "Ooze"
+    },
+    {
+      "code": "plant",
+      "display": "Plant"
+    },
+    {
+      "code": "undead",
+      "display": "Undead"
+    }
+  ]
+}

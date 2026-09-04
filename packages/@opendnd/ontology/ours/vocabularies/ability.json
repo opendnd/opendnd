@@ -1,0 +1,35 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "ability",
+  "url": "https://opendnd.org/ours/vocabularies/ability.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Ability",
+  "description": "The six abilities every creature is measured by.",
+  "codes": [
+    {
+      "code": "strength",
+      "display": "Strength"
+    },
+    {
+      "code": "dexterity",
+      "display": "Dexterity"
+    },
+    {
+      "code": "constitution",
+      "display": "Constitution"
+    },
+    {
+      "code": "intelligence",
+      "display": "Intelligence"
+    },
+    {
+      "code": "wisdom",
+      "display": "Wisdom"
+    },
+    {
+      "code": "charisma",
+      "display": "Charisma"
+    }
+  ]
+}

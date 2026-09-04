@@ -5,7 +5,7 @@
   "version": "0.1.0",
   "system": "internal",
   "name": "Tenure",
-  "description": "One person's time in an office.",
+  "description": "One person's time holding a title.",
   "schema": "https://opendnd.org/ours/schemas/tenure.schema.json",
   "relationships": [
     {

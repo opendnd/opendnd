@@ -1,0 +1,94 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/character.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Character",
+  "description": "A person as played. The being itself is a person in the world; this is the out-of-universe record of who plays them, in which campaign, and how far they have come. It exists separately so that an NPC can become a player character without the world changing.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "perspective": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/perspective.json",
+      "default": "out-of-universe",
+      "description": "Out-of-universe by default: the being is a person in the world, this is the record of playing them."
+    },
+    "person": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The being in the world."
+    },
+    "campaign": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The campaign they are played in."
+    },
+    "player": {
+      "type": "string",
+      "description": "User id of whoever plays them. Absent for one the gamemaster runs."
+    },
+    "status": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/character-status.json"
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "experience": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "notes": {
+      "type": "string"
+    },
+    "classes": {
+      "type": "array",
+      "description": "The classes taken and the level in each; more than one for a multiclassed character.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "class": {
+            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+            "description": "The class."
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "class",
+          "level"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "background": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The background chosen."
+    },
+    "feats": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "Feats taken."
+    },
+    "statblock": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The sheet: ability scores, hit points, and what they can do."
+    },
+    "inventory": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "Items carried. Each item also names its owner; this is the character's own list, ordered as they keep it."
+    }
+  },
+  "required": [
+    "person"
+  ],
+  "additionalProperties": false
+}

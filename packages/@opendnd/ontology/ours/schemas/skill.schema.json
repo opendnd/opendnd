@@ -1,0 +1,22 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/skill.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Skill",
+  "description": "A skill, and the ability its checks are made against.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "ability": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json",
+      "description": "The ability a check with this skill uses."
+    }
+  },
+  "required": [
+    "ability"
+  ],
+  "additionalProperties": false
+}

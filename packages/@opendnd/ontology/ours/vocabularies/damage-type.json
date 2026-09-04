@@ -1,0 +1,63 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "damage-type",
+  "url": "https://opendnd.org/ours/vocabularies/damage-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Damage type",
+  "description": "How damage hurts, which decides what resists it.",
+  "codes": [
+    {
+      "code": "acid",
+      "display": "Acid"
+    },
+    {
+      "code": "bludgeoning",
+      "display": "Bludgeoning"
+    },
+    {
+      "code": "cold",
+      "display": "Cold"
+    },
+    {
+      "code": "fire",
+      "display": "Fire"
+    },
+    {
+      "code": "force",
+      "display": "Force"
+    },
+    {
+      "code": "lightning",
+      "display": "Lightning"
+    },
+    {
+      "code": "necrotic",
+      "display": "Necrotic"
+    },
+    {
+      "code": "piercing",
+      "display": "Piercing"
+    },
+    {
+      "code": "poison",
+      "display": "Poison"
+    },
+    {
+      "code": "psychic",
+      "display": "Psychic"
+    },
+    {
+      "code": "radiant",
+      "display": "Radiant"
+    },
+    {
+      "code": "slashing",
+      "display": "Slashing"
+    },
+    {
+      "code": "thunder",
+      "display": "Thunder"
+    }
+  ]
+}

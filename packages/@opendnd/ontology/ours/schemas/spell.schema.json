@@ -1,0 +1,137 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/spell.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Spell",
+  "description": "A spell. The shape follows the 5e SRD spell tree; that tree has not yet been published for the 2024 rules, so this is taken from the 2014 one, whose structure the 2024 rules keep.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "level": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9,
+      "description": "0 is a cantrip."
+    },
+    "school": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/spell-school.json"
+    },
+    "castingTime": {
+      "type": "string"
+    },
+    "range": {
+      "type": "string",
+      "description": "As the rules word it: self, touch, 60 feet."
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "V",
+          "S",
+          "M"
+        ]
+      }
+    },
+    "material": {
+      "type": "string",
+      "description": "What the material component is."
+    },
+    "duration": {
+      "type": "string"
+    },
+    "concentration": {
+      "type": "boolean"
+    },
+    "ritual": {
+      "type": "boolean"
+    },
+    "higherLevel": {
+      "type": "string",
+      "description": "What changes when cast with a higher slot."
+    },
+    "damage": {
+      "type": "object",
+      "properties": {
+        "damageDice": {
+          "type": "string",
+          "description": "Dice notation, e.g. 1d8."
+        },
+        "damageType": {
+          "type": "string",
+          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "Damage as dice and a type."
+    },
+    "damageAtSlotLevel": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Damage dice by slot level, keyed by the level as a string."
+    },
+    "savingThrow": {
+      "type": "object",
+      "properties": {
+        "ability": {
+          "type": "string",
+          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json"
+        },
+        "effectOnSave": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "The save it allows, if any."
+    },
+    "attackType": {
+      "type": "string",
+      "enum": [
+        "melee",
+        "ranged"
+      ]
+    },
+    "areaOfEffect": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "sphere",
+            "cube",
+            "cylinder",
+            "cone",
+            "line"
+          ]
+        },
+        "size": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "type",
+        "size"
+      ],
+      "additionalProperties": false
+    },
+    "classes": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "The classes whose lists it appears on."
+    }
+  },
+  "required": [
+    "level"
+  ],
+  "additionalProperties": false
+}

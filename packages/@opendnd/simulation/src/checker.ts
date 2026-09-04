@@ -56,10 +56,11 @@ export function checkHistory(record: HistoryRecord): Finding[] {
     for (const part of e.participants ?? []) {
       const died = deathYear.get(part.actor.id);
       if (died === undefined) continue;
-      // Dying, being widowed, and being succeeded may all fall in the death year.
-      const allowedInDeathYear =
-        e.eventType === 'death' || e.eventType === 'succession';
-      if (y > died || (y === died && !allowedInDeathYear)) {
+      // Strictly after, because the simulation's clock is the year: whether
+      // something happened before or after a death within the same year is
+      // not part of the record, so it cannot be contradicted by it. Only a
+      // later year proves anything.
+      if (y > died) {
         findings.push({
           rule: 'no-posthumous-participation',
           severity: 'error',

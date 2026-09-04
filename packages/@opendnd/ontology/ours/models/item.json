@@ -1,0 +1,48 @@
+{
+  "resourceType": "Model",
+  "id": "item",
+  "url": "https://opendnd.org/ours/models/item.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Item",
+  "description": "A thing that can be owned, carried or used: equipment, magic items and poisons alike.",
+  "schema": "https://opendnd.org/ours/schemas/item.schema.json",
+  "relationships": [
+    {
+      "predicate": "instanceOf",
+      "target": "Item"
+    },
+    {
+      "predicate": "owner",
+      "target": "Person"
+    },
+    {
+      "predicate": "location",
+      "target": "Place"
+    },
+    {
+      "predicate": "contains",
+      "target": "Item"
+    },
+    {
+      "predicate": "created",
+      "target": "Event"
+    },
+    {
+      "predicate": "ammunition",
+      "target": "Item"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://5e-bits.github.io/docs",
+      "schema": "https://5e-bits.github.io/docs/api-reference/equipment",
+      "type": "one-to-one"
+    },
+    {
+      "system": "https://5e-bits.github.io/docs",
+      "schema": "https://5e-bits.github.io/docs/api-reference/magic-items",
+      "type": "many-to-one"
+    }
+  ]
+}

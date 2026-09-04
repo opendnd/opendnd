@@ -1,0 +1,43 @@
+{
+  "resourceType": "Model",
+  "id": "character",
+  "url": "https://opendnd.org/ours/models/character.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Character",
+  "description": "A person as played, in one campaign.",
+  "schema": "https://opendnd.org/ours/schemas/character.schema.json",
+  "relationships": [
+    {
+      "predicate": "person",
+      "target": "Person"
+    },
+    {
+      "predicate": "campaign",
+      "target": "Campaign"
+    },
+    {
+      "predicate": "background",
+      "target": "Background"
+    },
+    {
+      "predicate": "feats",
+      "target": "Feat"
+    },
+    {
+      "predicate": "statblock",
+      "target": "Statblock"
+    },
+    {
+      "predicate": "inventory",
+      "target": "Item"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/Role",
+      "type": "one-to-one"
+    }
+  ]
+}

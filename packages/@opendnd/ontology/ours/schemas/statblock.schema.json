@@ -1,0 +1,252 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/statblock.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Statblock",
+  "description": "The rules view of a creature: what it can take, what it can do, and how dangerous it is. A model of its own rather than fields on `species`, because the 5e SRD treats a monster as an independent stat block and because a stat block is often a variant \u2014 a goblin boss, a veteran guard \u2014 with no species of its own. It may name the species it represents, and a person may name the stat block that represents them.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "creatureType": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/creature-type.json"
+    },
+    "species": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The species this represents, where it represents one."
+    },
+    "person": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The person this represents, for a statted individual."
+    },
+    "size": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/size.json"
+    },
+    "alignment": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/alignment.json"
+    },
+    "armorClass": {
+      "type": "integer"
+    },
+    "armorDescription": {
+      "type": "string",
+      "description": "What the armour class comes from: natural armor, plate, shield."
+    },
+    "hitPoints": {
+      "type": "integer"
+    },
+    "hitDice": {
+      "type": "string"
+    },
+    "speed": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Movement by kind: walk, fly, swim, burrow, climb."
+    },
+    "abilities": {
+      "type": "object",
+      "properties": {
+        "strength": {
+          "type": "integer"
+        },
+        "dexterity": {
+          "type": "integer"
+        },
+        "constitution": {
+          "type": "integer"
+        },
+        "intelligence": {
+          "type": "integer"
+        },
+        "wisdom": {
+          "type": "integer"
+        },
+        "charisma": {
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "The six ability scores."
+    },
+    "proficiencies": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "Saving throws and skills it is proficient in."
+    },
+    "damageVulnerabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+      }
+    },
+    "damageResistances": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+      }
+    },
+    "damageImmunities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+      }
+    },
+    "conditionImmunities": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "Conditions it cannot suffer."
+    },
+    "senses": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Darkvision, blindsight, passive perception and the rest."
+    },
+    "languages": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "Languages it knows."
+    },
+    "challengeRating": {
+      "type": "number"
+    },
+    "proficiencyBonus": {
+      "type": "integer"
+    },
+    "experience": {
+      "type": "integer"
+    },
+    "traits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Passive abilities."
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "attackBonus": {
+            "type": "integer"
+          },
+          "damage": {
+            "type": "object",
+            "properties": {
+              "damageDice": {
+                "type": "string",
+                "description": "Dice notation, e.g. 1d8."
+              },
+              "damageType": {
+                "type": "string",
+                "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+              }
+            },
+            "required": [],
+            "additionalProperties": false,
+            "description": "Damage as dice and a type."
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "bonusActions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "reactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "legendaryActions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

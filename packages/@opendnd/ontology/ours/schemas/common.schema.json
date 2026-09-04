@@ -377,6 +377,42 @@
         "canonStatus",
         "recorded"
       ]
+    },
+    "Choice": {
+      "description": "A choice the rules offer: pick `choose` from `from`, or from everything in a category. Options may themselves be choices, which is how the rules nest them.",
+      "type": "object",
+      "properties": {
+        "choose": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "note": {
+          "type": "string",
+          "description": "The wording of the choice, where it matters."
+        },
+        "from": {
+          "type": "array",
+          "items": {
+            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+          },
+          "description": "The things that may be chosen."
+        },
+        "fromCategory": {
+          "type": "string",
+          "description": "A category to choose from, when the list is open-ended."
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
+          },
+          "description": "Nested choices, for a choice between choices."
+        }
+      },
+      "required": [
+        "choose"
+      ],
+      "additionalProperties": false
     }
   }
 }

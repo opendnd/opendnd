@@ -1,0 +1,55 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/background.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Background",
+  "description": "Where a character came from before they began adventuring. Follows the 2024 rules, in which a background grants ability score increases and a feat rather than a personality table.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "abilityScores": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json"
+      },
+      "description": "The abilities it may raise."
+    },
+    "feat": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The feat it grants."
+    },
+    "proficiencies": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "Proficiencies it grants outright."
+    },
+    "proficiencyChoices": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
+      },
+      "description": "Proficiencies chosen from a list."
+    },
+    "startingEquipment": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "Equipment it grants."
+    },
+    "startingEquipmentOptions": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
+      },
+      "description": "Equipment chosen from a list."
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

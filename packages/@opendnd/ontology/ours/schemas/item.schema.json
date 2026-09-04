@@ -1,0 +1,222 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/item.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Item",
+  "description": "A thing that can be owned, carried or used. One model for equipment, magic items and poisons alike, because the rules treat them the same way and only the fields that apply are filled in. The shape follows the 5e SRD equipment tree so content written for it converts without reshaping; the field names are camelCase to match the rest of this ontology, which is a mechanical transform of theirs.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "itemCategory": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/item-category.json"
+    },
+    "instanceOf": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The kind this is one of: a world's named sword points at the longsword it is."
+    },
+    "owner": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "Who holds it: a person or a faction."
+    },
+    "location": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "Where it is, when nobody is carrying it."
+    },
+    "contains": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "What is inside it, for a container."
+    },
+    "created": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The event that made it: a forging, a gift, a discovery."
+    },
+    "cost": {
+      "type": "object",
+      "properties": {
+        "quantity": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unit": {
+          "type": "string",
+          "description": "Coin denomination, e.g. gp or cp."
+        }
+      },
+      "required": [
+        "quantity",
+        "unit"
+      ],
+      "additionalProperties": false,
+      "description": "A price in coin."
+    },
+    "weight": {
+      "type": "number",
+      "minimum": 0,
+      "description": "In pounds."
+    },
+    "quantity": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "rarity": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/rarity.json"
+    },
+    "requiresAttunement": {
+      "type": "boolean"
+    },
+    "properties": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/weapon-property.json"
+      },
+      "description": "Weapon properties."
+    },
+    "mastery": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/weapon-mastery.json",
+      "description": "The mastery property, for a weapon."
+    },
+    "damage": {
+      "type": "object",
+      "properties": {
+        "damageDice": {
+          "type": "string",
+          "description": "Dice notation, e.g. 1d8."
+        },
+        "damageType": {
+          "type": "string",
+          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "Damage as dice and a type."
+    },
+    "twoHandedDamage": {
+      "type": "object",
+      "properties": {
+        "damageDice": {
+          "type": "string",
+          "description": "Dice notation, e.g. 1d8."
+        },
+        "damageType": {
+          "type": "string",
+          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "Damage as dice and a type."
+    },
+    "range": {
+      "type": "object",
+      "properties": {
+        "normal": {
+          "type": "integer"
+        },
+        "long": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "normal"
+      ],
+      "additionalProperties": false,
+      "description": "Range in feet."
+    },
+    "throwRange": {
+      "type": "object",
+      "properties": {
+        "normal": {
+          "type": "integer"
+        },
+        "long": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "normal"
+      ],
+      "additionalProperties": false,
+      "description": "Range in feet."
+    },
+    "ammunition": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The item this one is loaded with."
+    },
+    "armorClass": {
+      "type": "object",
+      "properties": {
+        "base": {
+          "type": "integer"
+        },
+        "dexBonus": {
+          "type": "boolean"
+        },
+        "maxBonus": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "base"
+      ],
+      "additionalProperties": false,
+      "description": "Armor class it confers."
+    },
+    "strengthMinimum": {
+      "type": "integer",
+      "description": "Strength needed to wear it without penalty."
+    },
+    "stealthDisadvantage": {
+      "type": "boolean"
+    },
+    "donTime": {
+      "type": "string"
+    },
+    "doffTime": {
+      "type": "string"
+    },
+    "ability": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json",
+      "description": "The ability a tool is used with."
+    },
+    "utilize": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "dc": {
+            "type": "integer"
+          },
+          "ability": {
+            "type": "string",
+            "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false
+      },
+      "description": "What the item can be used to do, and how hard it is."
+    },
+    "sentient": {
+      "type": "boolean",
+      "description": "Whether it has a will of its own."
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

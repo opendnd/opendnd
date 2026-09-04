@@ -1,0 +1,28 @@
+{
+  "resourceType": "Model",
+  "id": "feature",
+  "url": "https://opendnd.org/ours/models/feature.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Feature",
+  "description": "Something a character gains from a class, species, background, feat or item.",
+  "schema": "https://opendnd.org/ours/schemas/feature.schema.json",
+  "relationships": [
+    {
+      "predicate": "from",
+      "target": "Class"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://5e-bits.github.io/docs",
+      "schema": "https://5e-bits.github.io/docs/api-reference/features",
+      "type": "one-to-one"
+    },
+    {
+      "system": "https://5e-bits.github.io/docs",
+      "schema": "https://5e-bits.github.io/docs/api-reference/traits",
+      "type": "many-to-one"
+    }
+  ]
+}

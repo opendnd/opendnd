@@ -1,0 +1,31 @@
+{
+  "resourceType": "Model",
+  "id": "background",
+  "url": "https://opendnd.org/ours/models/background.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Background",
+  "description": "Where a character came from before they began adventuring.",
+  "schema": "https://opendnd.org/ours/schemas/background.schema.json",
+  "relationships": [
+    {
+      "predicate": "feat",
+      "target": "Feat"
+    },
+    {
+      "predicate": "proficiencies",
+      "target": "Proficiency"
+    },
+    {
+      "predicate": "startingEquipment",
+      "target": "Item"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://5e-bits.github.io/docs",
+      "schema": "https://5e-bits.github.io/docs/api-reference/backgrounds",
+      "type": "one-to-one"
+    }
+  ]
+}

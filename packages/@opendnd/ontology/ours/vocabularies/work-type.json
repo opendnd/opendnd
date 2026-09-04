@@ -38,14 +38,6 @@
     {
       "code": "article",
       "display": "Article"
-    },
-    {
-      "code": "adventure",
-      "display": "Adventure"
-    },
-    {
-      "code": "rulebook",
-      "display": "Rulebook"
     }
   ]
 }

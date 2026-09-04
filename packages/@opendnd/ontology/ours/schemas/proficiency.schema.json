@@ -1,0 +1,25 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/proficiency.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proficiency",
+  "description": "Being trained in something: a weapon, a tool, a skill, a saving throw. A record of its own because classes, backgrounds and species all grant them and all need to point at the same thing.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "proficiencyType": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/proficiency-type.json"
+    },
+    "reference": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "What the proficiency is in: the skill, the item, the ability."
+    }
+  },
+  "required": [
+    "proficiencyType"
+  ],
+  "additionalProperties": false
+}

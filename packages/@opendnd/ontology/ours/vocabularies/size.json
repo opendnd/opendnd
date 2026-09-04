@@ -5,16 +5,8 @@
   "version": "0.1.0",
   "system": "internal",
   "name": "Creature size",
-  "description": "Size categories for creatures, from fine to colossal.",
+  "description": "Creature size categories, as SRD 5.2.1 defines them.",
   "codes": [
-    {
-      "code": "fine",
-      "display": "Fine"
-    },
-    {
-      "code": "diminutive",
-      "display": "Diminutive"
-    },
     {
       "code": "tiny",
       "display": "Tiny"
@@ -38,10 +30,6 @@
     {
       "code": "gargantuan",
       "display": "Gargantuan"
-    },
-    {
-      "code": "colossal",
-      "display": "Colossal"
     }
   ]
 }

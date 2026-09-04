@@ -1,0 +1,35 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "quest-status",
+  "url": "https://opendnd.org/ours/vocabularies/quest-status.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Quest status",
+  "description": "How far a quest has got.",
+  "codes": [
+    {
+      "code": "rumoured",
+      "display": "Rumoured"
+    },
+    {
+      "code": "available",
+      "display": "Available"
+    },
+    {
+      "code": "active",
+      "display": "Active"
+    },
+    {
+      "code": "completed",
+      "display": "Completed"
+    },
+    {
+      "code": "failed",
+      "display": "Failed"
+    },
+    {
+      "code": "abandoned",
+      "display": "Abandoned"
+    }
+  ]
+}

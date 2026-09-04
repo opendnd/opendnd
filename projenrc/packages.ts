@@ -1,5 +1,5 @@
 import { BunTestConfig, BunWorkspaceProject, versions } from '@opendnd/projen';
-import { Project } from 'projen';
+import { JsonFile, Project, TextFile } from 'projen';
 import { TypeScriptProject } from 'projen/lib/typescript';
 
 export interface PackageConfig {
@@ -9,6 +9,10 @@ export interface PackageConfig {
   readonly devDeps?: string[];
   /** Bun test timeout in ms. Raised for tests that synthesize whole projects. */
   readonly testTimeout?: number;
+  /** Command run before this package's tests, for anything they need running. */
+  readonly beforeTest?: string;
+  /** Entry point of a CDK app, which also gets a cdk.json. */
+  readonly cdkApp?: string;
   /** Extra projen tasks: name -> { description, exec }. */
   readonly tasks?: Record<string, { description: string; exec: string }>;
   /** Globs of generated source that eslint and prettier must leave alone. */
@@ -92,12 +96,90 @@ const packages: readonly PackageConfig[] = [
   },
 ];
 
+/** Deployables, under apps/. Same conventions as a package, different folder. */
+const apps: readonly PackageConfig[] = [
+  {
+    name: '@opendnd/api',
+    description:
+      'The headless API: one route set per ontology model, generated from the model registry, over a multi-tenant Postgres store in which a world is the tenant and content is layered from the world and the modules it enables.',
+    deps: [
+      `hono@${versions.hono}`,
+      `drizzle-orm@${versions['drizzle-orm']}`,
+      `pg@${versions.pg}`,
+      `zod@${versions.zod}`,
+      '@opendnd/types@workspace:*',
+      '@opendnd/generators@workspace:*',
+      '@opendnd/simulation@workspace:*',
+      '@opendnd/llm@workspace:*',
+      `@aws-sdk/client-eventbridge@${versions['@aws-sdk/client-eventbridge']}`,
+      `@aws-sdk/client-secrets-manager@${versions['@aws-sdk/client-secrets-manager']}`,
+    ],
+    devDeps: [
+      `drizzle-kit@${versions['drizzle-kit']}`,
+      `@types/pg@${versions['@types/pg']}`,
+    ],
+    // The API cannot be tested without a database, so its test task provides
+    // the one the repository ships. Already running is a no-op.
+    beforeTest:
+      'docker compose --file ../../../docker-compose.yml up --detach --wait postgres',
+    tasks: {
+      dev: {
+        description:
+          'Run the API against the local Postgres from docker-compose.',
+        exec: 'bun run --hot src/server.ts',
+      },
+      migrate: {
+        description: 'Apply the SQL migrations in migrations/ to DATABASE_URL.',
+        exec: 'bun run scripts/migrate.ts',
+      },
+    },
+  },
+  {
+    name: '@opendnd/infra',
+    description:
+      'The AWS deployment as CDK: the API on Lambda behind an HTTP API, a Cognito user pool, the outbox drained onto an EventBridge bus, and a bucket for tiles and assets. No VPC, because the database is reached over TLS.',
+    deps: [
+      `aws-cdk-lib@${versions['aws-cdk-lib']}`,
+      `constructs@${versions.constructs}`,
+      '@opendnd/api@workspace:*',
+    ],
+    devDeps: [`aws-cdk@${versions['aws-cdk']}`, `esbuild@${versions.esbuild}`],
+    cdkApp: 'src/main.ts',
+    testTimeout: 60000,
+    tasks: {
+      synth: {
+        description: 'Synthesize the CloudFormation templates into cdk.out.',
+        exec: 'cdk synth',
+      },
+      diff: {
+        description: 'Show what a deployment would change.',
+        exec: 'cdk diff',
+      },
+      deploy: {
+        description: 'Deploy every stack. Needs AWS credentials.',
+        exec: 'cdk deploy --all',
+      },
+    },
+  },
+];
+
 export function configurePackages(parent: Project): TypeScriptProject[] {
-  return packages.map((config) => {
+  return [
+    ...packages.map((config) => configureOne(parent, config, 'packages')),
+    ...apps.map((config) => configureOne(parent, config, 'apps')),
+  ];
+}
+
+function configureOne(
+  parent: Project,
+  config: PackageConfig,
+  folder: 'packages' | 'apps',
+): TypeScriptProject {
+  {
     const project = new BunWorkspaceProject({
       name: config.name,
       description: config.description,
-      outdir: `packages/${config.name}`,
+      outdir: `${folder}/${config.name}`,
       parent,
       deps: config.deps ?? [],
       devDeps: config.devDeps ?? [],
@@ -114,6 +196,7 @@ export function configurePackages(parent: Project): TypeScriptProject[] {
     new BunTestConfig(project, {
       sampleCode: false,
       ...(config.testTimeout ? { timeout: config.testTimeout } : {}),
+      ...(config.beforeTest ? { before: config.beforeTest } : {}),
     });
 
     for (const [name, task] of Object.entries(config.tasks ?? {})) {
@@ -130,9 +213,53 @@ export function configurePackages(parent: Project): TypeScriptProject[] {
     // Scratch space used by tests that need to import a generated module.
     project.gitignore.addPatterns('specs/.tmp-*');
 
+    if (config.cdkApp) {
+      new JsonFile(project, 'cdk.json', {
+        marker: false,
+        obj: {
+          app: `bun run ${config.cdkApp}`,
+          output: 'cdk.out',
+          watch: { include: ['src/**'] },
+          context: {
+            /*
+             * Stated rather than defaulted. Strong references stop a stack
+             * removing an export another stack still consumes, which is the
+             * behaviour worth having between the persistent stack and the
+             * service that reads from it.
+             */
+            '@aws-cdk/core:defaultCrossStackReferences': 'strong',
+          },
+        },
+      });
+      project.gitignore.addPatterns('cdk.out', '.cdk.staging');
+    }
+
+    /*
+     * A README generated from the description above, so the one npm shows is
+     * the one this file already states and cannot drift from it. The full
+     * documentation is a page on the docs site, which this points at.
+     */
+    const slug = config.name.replace('@opendnd/', '');
+    new TextFile(project, 'README.md', {
+      marker: false,
+      lines: [
+        `# ${config.name}`,
+        '',
+        config.description,
+        '',
+        `Part of [OpenDnD](https://github.com/opendnd/opendnd), an open ontology, headless API and toolset for building fictional worlds. A project of [OpenHI](https://openhi.org).`,
+        '',
+        `Documentation: https://docs.opendnd.org/packages/${slug}/`,
+        '',
+        'Code is MIT. See `CONTENT-LICENSE.md` in the repository root for the',
+        'licence covering game content.',
+        '',
+      ],
+    });
+
     project.package.addField('main', 'dist/src/index.js');
     project.package.addField('types', 'dist/src/index.d.ts');
 
     return project;
-  });
+  }
 }

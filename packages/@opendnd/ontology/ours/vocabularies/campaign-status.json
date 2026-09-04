@@ -1,0 +1,31 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "campaign-status",
+  "url": "https://opendnd.org/ours/vocabularies/campaign-status.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Campaign status",
+  "description": "Where a campaign stands as a piece of play.",
+  "codes": [
+    {
+      "code": "planned",
+      "display": "Planned"
+    },
+    {
+      "code": "running",
+      "display": "Running"
+    },
+    {
+      "code": "paused",
+      "display": "Paused"
+    },
+    {
+      "code": "finished",
+      "display": "Finished"
+    },
+    {
+      "code": "abandoned",
+      "display": "Abandoned"
+    }
+  ]
+}

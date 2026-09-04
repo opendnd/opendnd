@@ -12,6 +12,12 @@ export interface BunTestConfigOptions {
    * are slow by design, rather than loosening it for everyone.
    */
   readonly timeout?: number;
+  /**
+   * Command run before the tests, for a project whose tests need something
+   * standing up first. It is prefixed to `test` and `test:ci`, so the usual
+   * `bunx projen test` provides it rather than failing on its absence.
+   */
+  readonly before?: string;
 }
 
 /**
@@ -42,10 +48,11 @@ export class BunTestConfig extends Component {
     const testDir = options.testDir ?? './specs';
     const preloadArg = options.preload ? ` --preload ${options.preload}` : '';
     const timeoutArg = ` --timeout ${options.timeout ?? DEFAULT_TEST_TIMEOUT_MS}`;
+    const before = options.before ? `${options.before} && ` : '';
     const base = `bun test --pass-with-no-tests${timeoutArg}${preloadArg}`;
 
     project.addScripts({
-      test: `${base} ${testDir}`,
+      test: `${before}${base} ${testDir}`,
       'test:watch': `bun test --watch --pass-with-no-tests${timeoutArg}${preloadArg} ${testDir}`,
       /*
        * The same run, writing a JUnit report as well as console output.
@@ -56,7 +63,7 @@ export class BunTestConfig extends Component {
        * or asserted. This is what CI runs, so the report exists before anyone
        * needs to reproduce the problem.
        */
-      'test:ci': `${base} --reporter=junit --reporter-outfile=./test-results.xml ${testDir}`,
+      'test:ci': `${before}${base} --reporter=junit --reporter-outfile=./test-results.xml ${testDir}`,
     });
 
     project.gitignore.addPatterns('test-results.xml');

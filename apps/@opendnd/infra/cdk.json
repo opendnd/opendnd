@@ -1,0 +1,12 @@
+{
+  "app": "bun run src/main.ts",
+  "output": "cdk.out",
+  "watch": {
+    "include": [
+      "src/**"
+    ]
+  },
+  "context": {
+    "@aws-cdk/core:defaultCrossStackReferences": "strong"
+  }
+}

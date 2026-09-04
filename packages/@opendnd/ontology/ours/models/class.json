@@ -1,0 +1,45 @@
+{
+  "resourceType": "Model",
+  "id": "class",
+  "url": "https://opendnd.org/ours/models/class.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Class",
+  "description": "An adventuring class and its subclasses.",
+  "schema": "https://opendnd.org/ours/schemas/class.schema.json",
+  "relationships": [
+    {
+      "predicate": "subclassOf",
+      "target": "Class"
+    },
+    {
+      "predicate": "proficiencies",
+      "target": "Proficiency"
+    },
+    {
+      "predicate": "startingEquipment",
+      "target": "Item"
+    },
+    {
+      "predicate": "spells",
+      "target": "Spell"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://5e-bits.github.io/docs",
+      "schema": "https://5e-bits.github.io/docs/api-reference/classes",
+      "type": "one-to-one"
+    },
+    {
+      "system": "https://5e-bits.github.io/docs",
+      "schema": "https://5e-bits.github.io/docs/api-reference/subclasses",
+      "type": "many-to-one"
+    },
+    {
+      "system": "https://5e-bits.github.io/docs",
+      "schema": "https://5e-bits.github.io/docs/api-reference/levels",
+      "type": "one-to-many"
+    }
+  ]
+}

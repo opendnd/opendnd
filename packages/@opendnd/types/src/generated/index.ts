@@ -3,32 +3,28 @@
 
 import { z } from 'zod';
 
-/** Alignment: A five-by-five alignment matrix: order (lawful, social, neutral, rebel, chaotic) by goodness (good, moral, neutral, impure, evil). Each axis maps to -2..+2 so alignments can be compared numerically. */
+/** Ability: The six abilities every creature is measured by. */
+export const abilityCodes = [
+  "strength",
+  "dexterity",
+  "constitution",
+  "intelligence",
+  "wisdom",
+  "charisma",
+] as const;
+export const abilitySchema = z.enum(abilityCodes);
+export type Ability = z.infer<typeof abilitySchema>;
+
+/** Alignment: The nine alignments of SRD 5.2.1: order (lawful, neutral, chaotic) by goodness (good, neutral, evil). Each axis maps to -1..+1 so alignments can be compared numerically; the centre of the grid is plain neutral, as the SRD names it. */
 export const alignmentCodes = [
   "lawful-good",
-  "lawful-moral",
-  "lawful-neutral",
-  "lawful-impure",
-  "lawful-evil",
-  "social-good",
-  "social-moral",
-  "social-neutral",
-  "social-impure",
-  "social-evil",
   "neutral-good",
-  "neutral-moral",
-  "true-neutral",
-  "neutral-impure",
-  "neutral-evil",
-  "rebel-good",
-  "rebel-moral",
-  "rebel-neutral",
-  "rebel-impure",
-  "rebel-evil",
   "chaotic-good",
-  "chaotic-moral",
+  "lawful-neutral",
+  "neutral",
   "chaotic-neutral",
-  "chaotic-impure",
+  "lawful-evil",
+  "neutral-evil",
   "chaotic-evil",
 ] as const;
 export const alignmentSchema = z.enum(alignmentCodes);
@@ -43,6 +39,17 @@ export const beliefValueCodes = [
 export const beliefValueSchema = z.enum(beliefValueCodes);
 export type BeliefValue = z.infer<typeof beliefValueSchema>;
 
+/** Campaign status: Where a campaign stands as a piece of play. */
+export const campaignStatusCodes = [
+  "planned",
+  "running",
+  "paused",
+  "finished",
+  "abandoned",
+] as const;
+export const campaignStatusSchema = z.enum(campaignStatusCodes);
+export type CampaignStatus = z.infer<typeof campaignStatusSchema>;
+
 /** Canon status: How authoritative a record is within its world. */
 export const canonStatusCodes = [
   "canon",
@@ -55,6 +62,16 @@ export const canonStatusCodes = [
 export const canonStatusSchema = z.enum(canonStatusCodes);
 export type CanonStatus = z.infer<typeof canonStatusSchema>;
 
+/** Character status: Where a played character stands. */
+export const characterStatusCodes = [
+  "active",
+  "retired",
+  "dead",
+  "missing",
+] as const;
+export const characterStatusSchema = z.enum(characterStatusCodes);
+export type CharacterStatus = z.infer<typeof characterStatusSchema>;
+
 /** Claim basis: Why someone says a title is rightfully theirs. */
 export const claimBasisCodes = [
   "inheritance",
@@ -65,6 +82,68 @@ export const claimBasisCodes = [
 ] as const;
 export const claimBasisSchema = z.enum(claimBasisCodes);
 export type ClaimBasis = z.infer<typeof claimBasisSchema>;
+
+/** Creature type: The rules category a creature belongs to, which spells and effects key off. */
+export const creatureTypeCodes = [
+  "aberration",
+  "beast",
+  "celestial",
+  "construct",
+  "dragon",
+  "elemental",
+  "fey",
+  "fiend",
+  "giant",
+  "humanoid",
+  "monstrosity",
+  "ooze",
+  "plant",
+  "undead",
+] as const;
+export const creatureTypeSchema = z.enum(creatureTypeCodes);
+export type CreatureType = z.infer<typeof creatureTypeSchema>;
+
+/** Damage type: How damage hurts, which decides what resists it. */
+export const damageTypeCodes = [
+  "acid",
+  "bludgeoning",
+  "cold",
+  "fire",
+  "force",
+  "lightning",
+  "necrotic",
+  "piercing",
+  "poison",
+  "psychic",
+  "radiant",
+  "slashing",
+  "thunder",
+] as const;
+export const damageTypeSchema = z.enum(damageTypeCodes);
+export type DamageType = z.infer<typeof damageTypeSchema>;
+
+/** Encounter difficulty: How hard an encounter is meant to be for the party it is prepared for. */
+export const encounterDifficultyCodes = [
+  "trivial",
+  "easy",
+  "medium",
+  "hard",
+  "deadly",
+] as const;
+export const encounterDifficultySchema = z.enum(encounterDifficultyCodes);
+export type EncounterDifficulty = z.infer<typeof encounterDifficultySchema>;
+
+/** Encounter kind: What sort of encounter has been prepared. */
+export const encounterKindCodes = [
+  "combat",
+  "trap",
+  "hazard",
+  "social",
+  "exploration",
+  "puzzle",
+] as const;
+export const encounterKindSchema = z.enum(encounterKindCodes);
+export type EncounterKind = z.infer<typeof encounterKindSchema>;
 
 /** Event type: Kinds of event in a world's history. */
 export const eventTypeCodes = [
@@ -101,7 +180,6 @@ export const factionTypeCodes = [
   "state",
   "dynasty",
   "family",
-  "faction",
   "guild",
   "religion",
   "military",
@@ -112,6 +190,18 @@ export const factionTypeCodes = [
 ] as const;
 export const factionTypeSchema = z.enum(factionTypeCodes);
 export type FactionType = z.infer<typeof factionTypeSchema>;
+
+/** Feature source: Where a feature comes from, which decides when a character gains it. */
+export const featureSourceCodes = [
+  "class",
+  "subclass",
+  "species",
+  "background",
+  "feat",
+  "item",
+] as const;
+export const featureSourceSchema = z.enum(featureSourceCodes);
+export type FeatureSource = z.infer<typeof featureSourceSchema>;
 
 /** Industry: Trades and callings found in a settlement; each needs a number of people to support one business (after S. John Ross, Medieval Demographics Made Easy). */
 export const industryCodes = [
@@ -217,6 +307,34 @@ export const industryCodes = [
 export const industrySchema = z.enum(industryCodes);
 export type Industry = z.infer<typeof industrySchema>;
 
+/** Item category: What kind of thing an item is. Broad on purpose: the finer categories the rules use are references to other items. */
+export const itemCategoryCodes = [
+  "weapon",
+  "armor",
+  "shield",
+  "tool",
+  "gear",
+  "container",
+  "consumable",
+  "poison",
+  "mount",
+  "trade-good",
+  "treasure",
+  "wondrous",
+] as const;
+export const itemCategorySchema = z.enum(itemCategoryCodes);
+export type ItemCategory = z.infer<typeof itemCategorySchema>;
+
+/** Language status: Whether a language is still spoken, and in what setting. */
+export const languageStatusCodes = [
+  "living",
+  "dead",
+  "liturgical",
+  "secret",
+] as const;
+export const languageStatusSchema = z.enum(languageStatusCodes);
+export type LanguageStatus = z.infer<typeof languageStatusSchema>;
+
 /** Legitimacy: Standing of a child within a line of succession. */
 export const legitimacyCodes = [
   "legitimate",
@@ -258,10 +376,8 @@ export type Perspective = z.infer<typeof perspectiveSchema>;
 
 /** Place type: Kinds of place, from the whole world down to a single room. */
 export const placeTypeCodes = [
-  "world",
   "continent",
   "region",
-  "realm",
   "province",
   "city",
   "town",
@@ -297,6 +413,19 @@ export const precisionCodes = [
 export const precisionSchema = z.enum(precisionCodes);
 export type Precision = z.infer<typeof precisionSchema>;
 
+/** Proficiency type: What kind of thing a proficiency is in. */
+export const proficiencyTypeCodes = [
+  "armor",
+  "weapon",
+  "tool",
+  "skill",
+  "saving-throw",
+  "instrument",
+  "vehicle",
+] as const;
+export const proficiencyTypeSchema = z.enum(proficiencyTypeCodes);
+export type ProficiencyType = z.infer<typeof proficiencyTypeSchema>;
+
 /** Prosperity: How well a settlement is doing; scales how many people each business needs to survive. */
 export const prosperityCodes = [
   "booming",
@@ -306,6 +435,30 @@ export const prosperityCodes = [
 ] as const;
 export const prosperitySchema = z.enum(prosperityCodes);
 export type Prosperity = z.infer<typeof prosperitySchema>;
+
+/** Quest status: How far a quest has got. */
+export const questStatusCodes = [
+  "rumoured",
+  "available",
+  "active",
+  "completed",
+  "failed",
+  "abandoned",
+] as const;
+export const questStatusSchema = z.enum(questStatusCodes);
+export type QuestStatus = z.infer<typeof questStatusSchema>;
+
+/** Rarity: How rare a magic item is, which the rules use to price and gate it. */
+export const rarityCodes = [
+  "common",
+  "uncommon",
+  "rare",
+  "very-rare",
+  "legendary",
+  "artifact",
+] as const;
+export const raritySchema = z.enum(rarityCodes);
+export type Rarity = z.infer<typeof raritySchema>;
 
 /** Relationship type: Kinds of relationship between two people (GEDCOM X types plus feudal and social ties). */
 export const relationshipTypeCodes = [
@@ -320,6 +473,7 @@ export const relationshipTypeCodes = [
   "rival",
   "enemy",
   "friend",
+  "familiar",
 ] as const;
 export const relationshipTypeSchema = z.enum(relationshipTypeCodes);
 export type RelationshipType = z.infer<typeof relationshipTypeSchema>;
@@ -401,20 +555,31 @@ export const sexCodes = [
 export const sexSchema = z.enum(sexCodes);
 export type Sex = z.infer<typeof sexSchema>;
 
-/** Creature size: Size categories for creatures, from fine to colossal. */
+/** Creature size: Creature size categories, as SRD 5.2.1 defines them. */
 export const sizeCodes = [
-  "fine",
-  "diminutive",
   "tiny",
   "small",
   "medium",
   "large",
   "huge",
   "gargantuan",
-  "colossal",
 ] as const;
 export const sizeSchema = z.enum(sizeCodes);
 export type Size = z.infer<typeof sizeSchema>;
+
+/** School of magic: The school a spell belongs to. */
+export const spellSchoolCodes = [
+  "abjuration",
+  "conjuration",
+  "divination",
+  "enchantment",
+  "evocation",
+  "illusion",
+  "necromancy",
+  "transmutation",
+] as const;
+export const spellSchoolSchema = z.enum(spellSchoolCodes);
+export type SpellSchool = z.infer<typeof spellSchoolSchema>;
 
 /** Succession law: How a title passes from holder to holder. */
 export const successionLawCodes = [
@@ -449,6 +614,37 @@ export const terrainCodes = [
 export const terrainSchema = z.enum(terrainCodes);
 export type Terrain = z.infer<typeof terrainSchema>;
 
+/** Weapon mastery: The mastery property a weapon carries, introduced in the 2024 rules. */
+export const weaponMasteryCodes = [
+  "cleave",
+  "graze",
+  "nick",
+  "push",
+  "sap",
+  "slow",
+  "topple",
+  "vex",
+] as const;
+export const weaponMasterySchema = z.enum(weaponMasteryCodes);
+export type WeaponMastery = z.infer<typeof weaponMasterySchema>;
+
+/** Weapon property: What a weapon can do beyond dealing its damage. */
+export const weaponPropertyCodes = [
+  "ammunition",
+  "finesse",
+  "heavy",
+  "light",
+  "loading",
+  "range",
+  "reach",
+  "special",
+  "thrown",
+  "two-handed",
+  "versatile",
+] as const;
+export const weaponPropertySchema = z.enum(weaponPropertyCodes);
+export type WeaponProperty = z.infer<typeof weaponPropertySchema>;
+
 /** Work type: Kinds of in-world or out-of-world creative work. */
 export const workTypeCodes = [
   "chronicle",
@@ -459,8 +655,6 @@ export const workTypeCodes = [
   "report",
   "map",
   "article",
-  "adventure",
-  "rulebook",
 ] as const;
 export const workTypeSchema = z.enum(workTypeCodes);
 export type WorkType = z.infer<typeof workTypeSchema>;
@@ -474,6 +668,22 @@ export const referenceSchema = z.strictObject({
   name: z.string().optional(),
 });
 export type Reference = z.infer<typeof referenceSchema>;
+
+/** A choice the rules offer: pick `choose` from `from`, or from everything in a category. Options may themselves be choices, which is how the rules nest them. */
+export const choiceSchema = z.strictObject({
+  choose: z.int().min(1),
+  /** The wording of the choice, where it matters. */
+  note: z.string().optional(),
+  /** The things that may be chosen. */
+  from: z.array(referenceSchema).optional(),
+  /** A category to choose from, when the list is open-ended. */
+  fromCategory: z.string().optional(),
+  /** Nested choices, for a choice between choices. */
+  get options() {
+    return z.array(choiceSchema).optional();
+  },
+});
+export type Choice = z.infer<typeof choiceSchema>;
 
 /** Where a fact is attested inside the fiction: a Work and a locator within it. */
 export const citationSchema = z.strictObject({
@@ -595,6 +805,42 @@ export const resourceBaseSchema = z.object({
 });
 export type ResourceBase = z.infer<typeof resourceBaseSchema>;
 
+/** Where a character came from before they began adventuring. Follows the 2024 rules, in which a background grants ability score increases and a feat rather than a personality table. */
+export const backgroundSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  /** The abilities it may raise. */
+  abilityScores: z.array(abilitySchema).optional(),
+  /** The feat it grants. */
+  feat: referenceSchema.optional(),
+  /** Proficiencies it grants outright. */
+  proficiencies: z.array(referenceSchema).optional(),
+  /** Proficiencies chosen from a list. */
+  proficiencyChoices: z.array(choiceSchema).optional(),
+  /** Equipment it grants. */
+  startingEquipment: z.array(referenceSchema).optional(),
+  /** Equipment chosen from a list. */
+  startingEquipmentOptions: z.array(choiceSchema).optional(),
+});
+export type Background = z.infer<typeof backgroundSchema>;
+
 /** A belief held by a person or faction about a proposition, so contested history can be recorded without choosing a winner (CRMinf Belief). */
 export const beliefSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
@@ -680,6 +926,95 @@ export const calendarSchema = z.strictObject({
 });
 export type Calendar = z.infer<typeof calendarSchema>;
 
+/** A series of sessions a group plays in a world. Out-of-universe: a campaign is a record of play, not of the world, so it is marked out-of-universe and dated in real time rather than in a calendar of the fiction. */
+export const campaignSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  /** Out-of-universe by default: this is a record of play, not something that exists in the fiction. */
+  perspective: perspectiveSchema.default("out-of-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  status: campaignStatusSchema,
+  /** User id of whoever runs it. A user, not a person in the world: running a game is not something that happens in the fiction. */
+  gamemaster: z.string().optional(),
+  /** User ids of the players. */
+  players: z.array(z.string()).optional(),
+  /** The adventuring party, a faction whose factionType is party. */
+  party: referenceSchema.optional(),
+  /** Where in the world it is set, if it is bounded to one place. */
+  setting: referenceSchema.optional(),
+  /** Real-world date of the first session. */
+  beganOn: z.iso.date().optional(),
+  endedOn: z.iso.date().optional(),
+  /** Where the party currently stands in the world's own calendar. */
+  inWorldTime: temporalPositionSchema.optional(),
+  characters: z.array(referenceSchema).optional(),
+});
+export type Campaign = z.infer<typeof campaignSchema>;
+
+/** A person as played. The being itself is a person in the world; this is the out-of-universe record of who plays them, in which campaign, and how far they have come. It exists separately so that an NPC can become a player character without the world changing. */
+export const characterSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  /** Out-of-universe by default: the being is a person in the world, this is the record of playing them. */
+  perspective: perspectiveSchema.default("out-of-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  /** The being in the world. */
+  person: referenceSchema,
+  /** The campaign they are played in. */
+  campaign: referenceSchema.optional(),
+  /** User id of whoever plays them. Absent for one the gamemaster runs. */
+  player: z.string().optional(),
+  status: characterStatusSchema.optional(),
+  level: z.int().min(0).optional(),
+  experience: z.int().min(0).optional(),
+  notes: z.string().optional(),
+  /** The classes taken and the level in each; more than one for a multiclassed character. */
+  classes: z.array(z.strictObject({
+    /** The class. */
+    class: referenceSchema,
+    level: z.int().min(1),
+  })).optional(),
+  /** The background chosen. */
+  background: referenceSchema.optional(),
+  /** Feats taken. */
+  feats: z.array(referenceSchema).optional(),
+  /** The sheet: ability scores, hit points, and what they can do. */
+  statblock: referenceSchema.optional(),
+  /** Items carried. Each item also names its owner; this is the character's own list, ordered as they keep it. */
+  inventory: z.array(referenceSchema).optional(),
+});
+export type Character = z.infer<typeof characterSchema>;
+
 /** One person's asserted right to a title. A claim is the seed of a war: it can be pressed, won, lost, or left to descend to an heir. */
 export const claimSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
@@ -712,6 +1047,98 @@ export const claimSchema = z.strictObject({
   resolvedBy: referenceSchema.optional(),
 });
 export type Claim = z.infer<typeof claimSchema>;
+
+/** An adventuring class, and its subclasses through `subclassOf`. Level progression is held here as a table rather than as one record per level, because a class is read whole. */
+export const classSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  /** Sides of the hit die, e.g. 8 for d8. */
+  hitDie: z.int(),
+  /** The class this is a subclass of. */
+  subclassOf: referenceSchema.optional(),
+  /** The abilities the class is built on. */
+  primaryAbility: z.array(abilitySchema).optional(),
+  /** Saving throws it is proficient in. */
+  savingThrows: z.array(abilitySchema).optional(),
+  /** Proficiencies every member of the class has. */
+  proficiencies: z.array(referenceSchema).optional(),
+  /** Proficiencies chosen on taking the class. */
+  proficiencyChoices: z.array(choiceSchema).optional(),
+  /** Equipment every member starts with. */
+  startingEquipment: z.array(referenceSchema).optional(),
+  /** Equipment chosen at the start. */
+  startingEquipmentOptions: z.array(choiceSchema).optional(),
+  /** What is required to take the class as a second one, and what it grants. */
+  multiclassing: z.strictObject({
+    prerequisites: z.array(z.strictObject({
+      ability: abilitySchema,
+      minimumScore: z.int(),
+    })).optional(),
+    proficiencies: z.array(referenceSchema).optional(),
+  }).optional(),
+  /** How the class casts, where it casts. */
+  spellcasting: z.strictObject({
+    /** The level at which spellcasting begins. */
+    level: z.int().optional(),
+    ability: abilitySchema.optional(),
+    notes: z.array(z.string()).optional(),
+  }).optional(),
+  /** The spell list the class draws on. */
+  spells: z.array(referenceSchema).optional(),
+  /** What the class gains at each level. */
+  levels: z.array(z.strictObject({
+    level: z.int().min(1),
+    proficiencyBonus: z.int().optional(),
+    features: z.array(referenceSchema).optional(),
+    /** Slots by spell level, keyed by the level as a string. */
+    spellSlots: z.record(z.string(), z.int()).optional(),
+    cantripsKnown: z.int().optional(),
+  })).optional(),
+});
+export type Class = z.infer<typeof classSchema>;
+
+/** A state a creature can be in that changes what it may do: blinded, grappled, frightened. The rules text is the description on the base. */
+export const conditionSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  /** How it is removed, where the rules say. */
+  ends: z.string().optional(),
+});
+export type Condition = z.infer<typeof conditionSchema>;
 
 /** A people's shared naming, language and customs, separate from biology so one species can hold many cultures and one culture span species (World Anvil Ethnicity). */
 export const cultureSchema = z.strictObject({
@@ -785,6 +1212,49 @@ export const economySchema = z.strictObject({
 });
 export type Economy = z.infer<typeof economySchema>;
 
+/** A confrontation prepared for a party. It is preparation, not history: an encounter that is played produces an event in the world's record, and the encounter stays as the thing that was set up. */
+export const encounterSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  /** Out-of-universe by default: an encounter is preparation. Playing it produces an event, which is in-universe. */
+  perspective: perspectiveSchema.default("out-of-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  /** What sort of encounter it is. A trap is an encounter, not a thing of its own. */
+  kind: encounterKindSchema.optional(),
+  /** The campaign it is prepared for. */
+  campaign: referenceSchema.optional(),
+  /** Where it happens. */
+  place: referenceSchema,
+  /** Quadtree cell token of the battle map it is fought on. */
+  cell: z.string().optional(),
+  difficulty: encounterDifficultySchema.optional(),
+  /** What the party faces, and how many of each. */
+  adversaries: z.array(z.strictObject({
+    actor: referenceSchema,
+    count: z.int().min(1).default(1),
+  })).optional(),
+  /** The quest it belongs to. */
+  quest: referenceSchema.optional(),
+  /** The event it produced, once it has been played. */
+  played: referenceSchema.optional(),
+});
+export type Encounter = z.infer<typeof encounterSchema>;
+
 /** Something that happened in-world, with participants in roles and optional cause links (schema.org Event, CIDOC E5). */
 export const eventSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
@@ -850,6 +1320,163 @@ export const factionSchema = z.strictObject({
   sigil: z.url().optional(),
 });
 export type Faction = z.infer<typeof factionSchema>;
+
+/** A talent taken in place of, or alongside, an ability score increase. */
+export const featSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  /** Origin, general, fighting style, epic boon. */
+  category: z.string().optional(),
+  /** What must be true before it can be taken. */
+  prerequisites: z.array(choiceSchema).optional(),
+  /** Abilities it may raise. */
+  abilityScores: z.array(abilitySchema).optional(),
+  repeatable: z.boolean().optional(),
+});
+export type Feat = z.infer<typeof featSchema>;
+
+/** A thing that can be owned, carried or used. One model for equipment, magic items and poisons alike, because the rules treat them the same way and only the fields that apply are filled in. The shape follows the 5e SRD equipment tree so content written for it converts without reshaping; the field names are camelCase to match the rest of this ontology, which is a mechanical transform of theirs. */
+export const itemSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  itemCategory: itemCategorySchema.optional(),
+  /** The kind this is one of: a world's named sword points at the longsword it is. */
+  instanceOf: referenceSchema.optional(),
+  /** Who holds it: a person or a faction. */
+  owner: referenceSchema.optional(),
+  /** Where it is, when nobody is carrying it. */
+  location: referenceSchema.optional(),
+  /** What is inside it, for a container. */
+  contains: z.array(referenceSchema).optional(),
+  /** The event that made it: a forging, a gift, a discovery. */
+  created: referenceSchema.optional(),
+  /** A price in coin. */
+  cost: z.strictObject({
+    quantity: z.int().min(0),
+    /** Coin denomination, e.g. gp or cp. */
+    unit: z.string(),
+  }).optional(),
+  /** In pounds. */
+  weight: z.number().min(0).optional(),
+  quantity: z.int().min(1).optional(),
+  rarity: raritySchema.optional(),
+  requiresAttunement: z.boolean().optional(),
+  /** Weapon properties. */
+  properties: z.array(weaponPropertySchema).optional(),
+  /** The mastery property, for a weapon. */
+  mastery: weaponMasterySchema.optional(),
+  /** Damage as dice and a type. */
+  damage: z.strictObject({
+    /** Dice notation, e.g. 1d8. */
+    damageDice: z.string().optional(),
+    damageType: damageTypeSchema.optional(),
+  }).optional(),
+  /** Damage as dice and a type. */
+  twoHandedDamage: z.strictObject({
+    /** Dice notation, e.g. 1d8. */
+    damageDice: z.string().optional(),
+    damageType: damageTypeSchema.optional(),
+  }).optional(),
+  /** Range in feet. */
+  range: z.strictObject({
+    normal: z.int(),
+    long: z.int().optional(),
+  }).optional(),
+  /** Range in feet. */
+  throwRange: z.strictObject({
+    normal: z.int(),
+    long: z.int().optional(),
+  }).optional(),
+  /** The item this one is loaded with. */
+  ammunition: referenceSchema.optional(),
+  /** Armor class it confers. */
+  armorClass: z.strictObject({
+    base: z.int(),
+    dexBonus: z.boolean().optional(),
+    maxBonus: z.int().optional(),
+  }).optional(),
+  /** Strength needed to wear it without penalty. */
+  strengthMinimum: z.int().optional(),
+  stealthDisadvantage: z.boolean().optional(),
+  donTime: z.string().optional(),
+  doffTime: z.string().optional(),
+  /** The ability a tool is used with. */
+  ability: abilitySchema.optional(),
+  /** What the item can be used to do, and how hard it is. */
+  utilize: z.array(z.strictObject({
+    name: z.string(),
+    dc: z.int().optional(),
+    ability: abilitySchema.optional(),
+  })).optional(),
+  /** Whether it has a will of its own. */
+  sentient: z.boolean().optional(),
+});
+export type Item = z.infer<typeof itemSchema>;
+
+/** A language spoken or written in the world. Cultures point at the languages they speak, so a language has to be a record of its own rather than a loose string. */
+export const languageSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  status: languageStatusSchema.optional(),
+  /** The language this one descends from, if any. */
+  family: referenceSchema.optional(),
+  /** The writing system it is set in, where it has one. */
+  script: z.string().optional(),
+  /** A phrase in it, for flavour and for a font to be chosen against. */
+  sample: z.string().optional(),
+});
+export type Language = z.infer<typeof languageSchema>;
 
 /** A person in the world, real to it or legendary (schema.org Person, CIDOC E21, Wikidata fictional human). */
 export const personSchema = z.strictObject({
@@ -992,6 +1619,73 @@ export const populationSchema = z.strictObject({
 });
 export type Population = z.infer<typeof populationSchema>;
 
+/** Being trained in something: a weapon, a tool, a skill, a saving throw. A record of its own because classes, backgrounds and species all grant them and all need to point at the same thing. */
+export const proficiencySchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  proficiencyType: proficiencyTypeSchema,
+  /** What the proficiency is in: the skill, the item, the ability. */
+  reference: referenceSchema.optional(),
+});
+export type Proficiency = z.infer<typeof proficiencySchema>;
+
+/** Something a party is meant to do, and how far they have got with it. In-universe as the world's own errand, or out-of-universe as a thread the gamemaster is holding; the perspective field says which. */
+export const questSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  status: questStatusSchema,
+  /** The campaign it belongs to, when it belongs to one. */
+  campaign: referenceSchema.optional(),
+  /** Who set it. */
+  giver: referenceSchema.optional(),
+  /** The steps it breaks into, each done or not. */
+  objectives: z.array(z.strictObject({
+    summary: z.string(),
+    done: z.boolean().default(false),
+    about: referenceSchema.optional(),
+  })).optional(),
+  /** What it concerns: places, people, factions, other quests. */
+  about: z.array(referenceSchema).optional(),
+  reward: z.string().optional(),
+  /** The event that finished it. */
+  resolvedBy: referenceSchema.optional(),
+});
+export type Quest = z.infer<typeof questSchema>;
+
 /** A tie between two people, with dated facts (GEDCOM X Relationship extended for succession). */
 export const relationshipSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
@@ -1025,6 +1719,71 @@ export const relationshipSchema = z.strictObject({
   successionOrder: z.int().min(1).optional(),
 });
 export type Relationship = z.infer<typeof relationshipSchema>;
+
+/** One sitting of a campaign. Dated in real time, and the place to record what the group did: the in-world events it produced are referenced, not repeated. */
+export const sessionSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  /** Out-of-universe by default: this is a record of play, not something that exists in the fiction. */
+  perspective: perspectiveSchema.default("out-of-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  /** The campaign this belongs to. */
+  campaign: referenceSchema,
+  /** Its place in the sequence. */
+  number: z.int().min(1).optional(),
+  playedOn: z.iso.datetime().optional(),
+  durationMinutes: z.int().min(0).optional(),
+  /** User ids of who was there. */
+  attended: z.array(z.string()).optional(),
+  /** What happened, in the group's words. */
+  recap: z.string().optional(),
+  /** Events in the world's record that this session created. */
+  produced: z.array(referenceSchema).optional(),
+  /** The stretch of in-world time the session covered. */
+  coveredInWorld: timeSpanSchema.optional(),
+});
+export type Session = z.infer<typeof sessionSchema>;
+
+/** A skill, and the ability its checks are made against. */
+export const skillSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  /** The ability a check with this skill uses. */
+  ability: abilitySchema,
+});
+export type Skill = z.infer<typeof skillSchema>;
 
 /** A kind of creature and its biology: size, chromosome layout, trait dictionary, growth and lifespan tables. Rules content (abilities, features) lives in the rules layer, not here (World Anvil Species; schema.org Taxon). */
 export const speciesSchema = z.strictObject({
@@ -1099,6 +1858,154 @@ export const speciesSchema = z.strictObject({
   }).optional(),
 });
 export type Species = z.infer<typeof speciesSchema>;
+
+/** A spell. The shape follows the 5e SRD spell tree; that tree has not yet been published for the 2024 rules, so this is taken from the 2014 one, whose structure the 2024 rules keep. */
+export const spellSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  /** 0 is a cantrip. */
+  level: z.int().min(0).max(9),
+  school: spellSchoolSchema.optional(),
+  castingTime: z.string().optional(),
+  /** As the rules word it: self, touch, 60 feet. */
+  range: z.string().optional(),
+  components: z.array(z.enum(["V", "S", "M"])).optional(),
+  /** What the material component is. */
+  material: z.string().optional(),
+  duration: z.string().optional(),
+  concentration: z.boolean().optional(),
+  ritual: z.boolean().optional(),
+  /** What changes when cast with a higher slot. */
+  higherLevel: z.string().optional(),
+  /** Damage as dice and a type. */
+  damage: z.strictObject({
+    /** Dice notation, e.g. 1d8. */
+    damageDice: z.string().optional(),
+    damageType: damageTypeSchema.optional(),
+  }).optional(),
+  /** Damage dice by slot level, keyed by the level as a string. */
+  damageAtSlotLevel: z.record(z.string(), z.string()).optional(),
+  /** The save it allows, if any. */
+  savingThrow: z.strictObject({
+    ability: abilitySchema.optional(),
+    effectOnSave: z.string().optional(),
+  }).optional(),
+  attackType: z.enum(["melee", "ranged"]).optional(),
+  areaOfEffect: z.strictObject({
+    type: z.enum(["sphere", "cube", "cylinder", "cone", "line"]),
+    size: z.int(),
+  }).optional(),
+  /** The classes whose lists it appears on. */
+  classes: z.array(referenceSchema).optional(),
+});
+export type Spell = z.infer<typeof spellSchema>;
+
+/** The rules view of a creature: what it can take, what it can do, and how dangerous it is. A model of its own rather than fields on `species`, because the 5e SRD treats a monster as an independent stat block and because a stat block is often a variant — a goblin boss, a veteran guard — with no species of its own. It may name the species it represents, and a person may name the stat block that represents them. */
+export const statblockSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  creatureType: creatureTypeSchema.optional(),
+  /** The species this represents, where it represents one. */
+  species: referenceSchema.optional(),
+  /** The person this represents, for a statted individual. */
+  person: referenceSchema.optional(),
+  size: sizeSchema.optional(),
+  alignment: alignmentSchema.optional(),
+  armorClass: z.int().optional(),
+  /** What the armour class comes from: natural armor, plate, shield. */
+  armorDescription: z.string().optional(),
+  hitPoints: z.int().optional(),
+  hitDice: z.string().optional(),
+  /** Movement by kind: walk, fly, swim, burrow, climb. */
+  speed: z.record(z.string(), z.string()).optional(),
+  /** The six ability scores. */
+  abilities: z.strictObject({
+    strength: z.int().optional(),
+    dexterity: z.int().optional(),
+    constitution: z.int().optional(),
+    intelligence: z.int().optional(),
+    wisdom: z.int().optional(),
+    charisma: z.int().optional(),
+  }).optional(),
+  /** Saving throws and skills it is proficient in. */
+  proficiencies: z.array(referenceSchema).optional(),
+  damageVulnerabilities: z.array(damageTypeSchema).optional(),
+  damageResistances: z.array(damageTypeSchema).optional(),
+  damageImmunities: z.array(damageTypeSchema).optional(),
+  /** Conditions it cannot suffer. */
+  conditionImmunities: z.array(referenceSchema).optional(),
+  /** Darkvision, blindsight, passive perception and the rest. */
+  senses: z.record(z.string(), z.string()).optional(),
+  /** Languages it knows. */
+  languages: z.array(referenceSchema).optional(),
+  challengeRating: z.number().optional(),
+  proficiencyBonus: z.int().optional(),
+  experience: z.int().optional(),
+  /** Passive abilities. */
+  traits: z.array(z.strictObject({
+    name: z.string(),
+    description: z.string().optional(),
+  })).optional(),
+  actions: z.array(z.strictObject({
+    name: z.string(),
+    description: z.string().optional(),
+    attackBonus: z.int().optional(),
+    /** Damage as dice and a type. */
+    damage: z.strictObject({
+      /** Dice notation, e.g. 1d8. */
+      damageDice: z.string().optional(),
+      damageType: damageTypeSchema.optional(),
+    }).optional(),
+  })).optional(),
+  bonusActions: z.array(z.strictObject({
+    name: z.string(),
+    description: z.string().optional(),
+  })).optional(),
+  reactions: z.array(z.strictObject({
+    name: z.string(),
+    description: z.string().optional(),
+  })).optional(),
+  legendaryActions: z.array(z.strictObject({
+    name: z.string(),
+    description: z.string().optional(),
+    cost: z.int().optional(),
+  })).optional(),
+});
+export type Statblock = z.infer<typeof statblockSchema>;
 
 /** One person's time holding a title. The record's validTime is the tenure; a new record starts each time the title changes hands. */
 export const tenureSchema = z.strictObject({
@@ -1227,20 +2134,734 @@ export const worldSchema = z.strictObject({
 });
 export type World = z.infer<typeof worldSchema>;
 
+/** Every code list, with the display text for each code. */
+export const vocabularies = {
+  ability: {
+    id: "ability",
+    name: "Ability",
+    description: "The six abilities every creature is measured by.",
+    codes: [
+      { code: "strength", display: "Strength" },
+      { code: "dexterity", display: "Dexterity" },
+      { code: "constitution", display: "Constitution" },
+      { code: "intelligence", display: "Intelligence" },
+      { code: "wisdom", display: "Wisdom" },
+      { code: "charisma", display: "Charisma" },
+    ],
+  },
+  alignment: {
+    id: "alignment",
+    name: "Alignment",
+    description: "The nine alignments of SRD 5.2.1: order (lawful, neutral, chaotic) by goodness (good, neutral, evil). Each axis maps to -1..+1 so alignments can be compared numerically; the centre of the grid is plain neutral, as the SRD names it.",
+    codes: [
+      { code: "lawful-good", display: "Lawful Good" },
+      { code: "neutral-good", display: "Neutral Good" },
+      { code: "chaotic-good", display: "Chaotic Good" },
+      { code: "lawful-neutral", display: "Lawful Neutral" },
+      { code: "neutral", display: "Neutral" },
+      { code: "chaotic-neutral", display: "Chaotic Neutral" },
+      { code: "lawful-evil", display: "Lawful Evil" },
+      { code: "neutral-evil", display: "Neutral Evil" },
+      { code: "chaotic-evil", display: "Chaotic Evil" },
+    ],
+  },
+  "belief-value": {
+    id: "belief-value",
+    name: "Belief value",
+    description: "Whether a holder holds a proposition to be true (after CRMinf I6).",
+    codes: [
+      { code: "true", display: "Held true" },
+      { code: "false", display: "Held false" },
+      { code: "unknown", display: "Unknown" },
+    ],
+  },
+  "campaign-status": {
+    id: "campaign-status",
+    name: "Campaign status",
+    description: "Where a campaign stands as a piece of play.",
+    codes: [
+      { code: "planned", display: "Planned" },
+      { code: "running", display: "Running" },
+      { code: "paused", display: "Paused" },
+      { code: "finished", display: "Finished" },
+      { code: "abandoned", display: "Abandoned" },
+    ],
+  },
+  "canon-status": {
+    id: "canon-status",
+    name: "Canon status",
+    description: "How authoritative a record is within its world.",
+    codes: [
+      { code: "canon", display: "Canon" },
+      { code: "non-canon", display: "Non-canon" },
+      { code: "proposed", display: "Proposed" },
+      { code: "generated", display: "Generated" },
+      { code: "player-authored", display: "Player authored" },
+      { code: "retired", display: "Retired" },
+    ],
+  },
+  "character-status": {
+    id: "character-status",
+    name: "Character status",
+    description: "Where a played character stands.",
+    codes: [
+      { code: "active", display: "Active" },
+      { code: "retired", display: "Retired" },
+      { code: "dead", display: "Dead" },
+      { code: "missing", display: "Missing" },
+    ],
+  },
+  "claim-basis": {
+    id: "claim-basis",
+    name: "Claim basis",
+    description: "Why someone says a title is rightfully theirs.",
+    codes: [
+      { code: "inheritance", display: "Inheritance" },
+      { code: "marriage", display: "Marriage" },
+      { code: "conquest", display: "Conquest" },
+      { code: "grant", display: "Grant" },
+      { code: "usurpation", display: "Usurpation" },
+    ],
+  },
+  "creature-type": {
+    id: "creature-type",
+    name: "Creature type",
+    description: "The rules category a creature belongs to, which spells and effects key off.",
+    codes: [
+      { code: "aberration", display: "Aberration" },
+      { code: "beast", display: "Beast" },
+      { code: "celestial", display: "Celestial" },
+      { code: "construct", display: "Construct" },
+      { code: "dragon", display: "Dragon" },
+      { code: "elemental", display: "Elemental" },
+      { code: "fey", display: "Fey" },
+      { code: "fiend", display: "Fiend" },
+      { code: "giant", display: "Giant" },
+      { code: "humanoid", display: "Humanoid" },
+      { code: "monstrosity", display: "Monstrosity" },
+      { code: "ooze", display: "Ooze" },
+      { code: "plant", display: "Plant" },
+      { code: "undead", display: "Undead" },
+    ],
+  },
+  "damage-type": {
+    id: "damage-type",
+    name: "Damage type",
+    description: "How damage hurts, which decides what resists it.",
+    codes: [
+      { code: "acid", display: "Acid" },
+      { code: "bludgeoning", display: "Bludgeoning" },
+      { code: "cold", display: "Cold" },
+      { code: "fire", display: "Fire" },
+      { code: "force", display: "Force" },
+      { code: "lightning", display: "Lightning" },
+      { code: "necrotic", display: "Necrotic" },
+      { code: "piercing", display: "Piercing" },
+      { code: "poison", display: "Poison" },
+      { code: "psychic", display: "Psychic" },
+      { code: "radiant", display: "Radiant" },
+      { code: "slashing", display: "Slashing" },
+      { code: "thunder", display: "Thunder" },
+    ],
+  },
+  "encounter-difficulty": {
+    id: "encounter-difficulty",
+    name: "Encounter difficulty",
+    description: "How hard an encounter is meant to be for the party it is prepared for.",
+    codes: [
+      { code: "trivial", display: "Trivial" },
+      { code: "easy", display: "Easy" },
+      { code: "medium", display: "Medium" },
+      { code: "hard", display: "Hard" },
+      { code: "deadly", display: "Deadly" },
+    ],
+  },
+  "encounter-kind": {
+    id: "encounter-kind",
+    name: "Encounter kind",
+    description: "What sort of encounter has been prepared.",
+    codes: [
+      { code: "combat", display: "Combat" },
+      { code: "trap", display: "Trap" },
+      { code: "hazard", display: "Hazard" },
+      { code: "social", display: "Social" },
+      { code: "exploration", display: "Exploration" },
+      { code: "puzzle", display: "Puzzle" },
+    ],
+  },
+  "event-type": {
+    id: "event-type",
+    name: "Event type",
+    description: "Kinds of event in a world's history.",
+    codes: [
+      { code: "birth", display: "Birth" },
+      { code: "death", display: "Death" },
+      { code: "marriage", display: "Marriage" },
+      { code: "coronation", display: "Coronation" },
+      { code: "succession", display: "Succession" },
+      { code: "founding", display: "Founding" },
+      { code: "dissolution", display: "Dissolution" },
+      { code: "battle", display: "Battle" },
+      { code: "war", display: "War" },
+      { code: "treaty", display: "Treaty" },
+      { code: "disaster", display: "Disaster" },
+      { code: "discovery", display: "Discovery" },
+      { code: "migration", display: "Migration" },
+      { code: "journey", display: "Journey" },
+      { code: "construction", display: "Construction" },
+      { code: "plague", display: "Plague" },
+      { code: "festival", display: "Festival" },
+      { code: "other", display: "Other" },
+      { code: "abdication", display: "Abdication" },
+      { code: "deposition", display: "Deposition" },
+      { code: "annulment", display: "Annulment" },
+      { code: "siege", display: "Siege" },
+      { code: "rebellion", display: "Rebellion" },
+      { code: "session", display: "Play session" },
+    ],
+  },
+  "faction-type": {
+    id: "faction-type",
+    name: "Faction type",
+    description: "Kinds of organized group, from a realm to a guild.",
+    codes: [
+      { code: "state", display: "State" },
+      { code: "dynasty", display: "Dynasty" },
+      { code: "family", display: "Family" },
+      { code: "guild", display: "Guild" },
+      { code: "religion", display: "Religion" },
+      { code: "military", display: "Military" },
+      { code: "company", display: "Company" },
+      { code: "order", display: "Order" },
+      { code: "school", display: "School" },
+      { code: "party", display: "Adventuring party" },
+    ],
+  },
+  "feature-source": {
+    id: "feature-source",
+    name: "Feature source",
+    description: "Where a feature comes from, which decides when a character gains it.",
+    codes: [
+      { code: "class", display: "Class" },
+      { code: "subclass", display: "Subclass" },
+      { code: "species", display: "Species" },
+      { code: "background", display: "Background" },
+      { code: "feat", display: "Feat" },
+      { code: "item", display: "Item" },
+    ],
+  },
+  industry: {
+    id: "industry",
+    name: "Industry",
+    description: "Trades and callings found in a settlement; each needs a number of people to support one business (after S. John Ross, Medieval Demographics Made Easy).",
+    codes: [
+      { code: "miners", display: "Miners" },
+      { code: "hunters", display: "Hunters" },
+      { code: "produce-farmers", display: "Produce Farmers" },
+      { code: "horse-farmers", display: "Horse Farmers" },
+      { code: "cattle-farmers", display: "Cattle Farmers" },
+      { code: "poultry-farmers", display: "Poultry Farmers" },
+      { code: "pork-farmers", display: "Pork Farmers" },
+      { code: "goatherders", display: "Goatherders" },
+      { code: "shepherders", display: "Shepherders" },
+      { code: "butlers", display: "Butlers" },
+      { code: "maidservants", display: "Maidservants" },
+      { code: "cooks", display: "Cooks" },
+      { code: "groundskeepers", display: "Groundskeepers" },
+      { code: "chauffeurs", display: "Chauffeurs" },
+      { code: "nannies", display: "Nannies" },
+      { code: "bodyguards", display: "Bodyguards" },
+      { code: "majordomos", display: "Majordomos" },
+      { code: "cobblers", display: "Cobblers" },
+      { code: "shoemakers", display: "Shoemakers" },
+      { code: "furriers", display: "Furriers" },
+      { code: "tailors", display: "Tailors" },
+      { code: "barbers", display: "Barbers" },
+      { code: "jewelers", display: "Jewelers" },
+      { code: "taverns", display: "Taverns" },
+      { code: "clothiers", display: "Clothiers" },
+      { code: "glassblowers", display: "Glassblowers" },
+      { code: "pastrycooks", display: "Pastrycooks" },
+      { code: "masons", display: "Masons" },
+      { code: "carpenters", display: "Carpenters" },
+      { code: "weavers", display: "Weavers" },
+      { code: "chandlers", display: "Chandlers" },
+      { code: "mercers", display: "Mercers" },
+      { code: "coopers", display: "Coopers" },
+      { code: "bakers", display: "Bakers" },
+      { code: "watercarriers", display: "Watercarriers" },
+      { code: "armorers", display: "Armorers" },
+      { code: "scabbardmakers", display: "Scabbardmakers" },
+      { code: "wine-sellers", display: "Wine Sellers" },
+      { code: "tanners", display: "Tanners" },
+      { code: "skinners", display: "Skinners" },
+      { code: "leatherworkers", display: "Leatherworkers" },
+      { code: "hatmakers", display: "Hatmakers" },
+      { code: "saddlers", display: "Saddlers" },
+      { code: "chicken-butchers", display: "Chicken Butchers" },
+      { code: "pursemakers", display: "Pursemakers" },
+      { code: "woodsellers", display: "Woodsellers" },
+      { code: "magic-shops", display: "Magic Shops" },
+      { code: "bookbinders", display: "Bookbinders" },
+      { code: "butchers", display: "Butchers" },
+      { code: "fishmongers", display: "Fishmongers" },
+      { code: "shipwrights", display: "Shipwrights" },
+      { code: "beer-sellers", display: "Beer Sellers" },
+      { code: "buckle-makers", display: "Buckle Makers" },
+      { code: "plasterers", display: "Plasterers" },
+      { code: "spice-merchants", display: "Spice Merchants" },
+      { code: "blacksmiths", display: "Blacksmiths" },
+      { code: "painters", display: "Painters" },
+      { code: "roofers", display: "Roofers" },
+      { code: "locksmiths", display: "Locksmiths" },
+      { code: "finesmiths", display: "Finesmiths" },
+      { code: "bathers", display: "Bathers" },
+      { code: "potters", display: "Potters" },
+      { code: "tilemakers", display: "Tilemakers" },
+      { code: "ropemakers", display: "Ropemakers" },
+      { code: "inns", display: "Inns" },
+      { code: "copyists", display: "Copyists" },
+      { code: "sculptors", display: "Sculptors" },
+      { code: "rugmakers", display: "Rugmakers" },
+      { code: "harness-makers", display: "Harness Makers" },
+      { code: "bleachers", display: "Bleachers" },
+      { code: "hay-merchants", display: "Hay Merchants" },
+      { code: "cutlers", display: "Cutlers" },
+      { code: "glovemakers", display: "Glovemakers" },
+      { code: "woodcarvers", display: "Woodcarvers" },
+      { code: "booksellers", display: "Booksellers" },
+      { code: "surveyors", display: "Surveyors" },
+      { code: "cartographers", display: "Cartographers" },
+      { code: "illuminators", display: "Illuminators" },
+      { code: "master-artists", display: "Master Artists" },
+      { code: "alchemists", display: "Alchemists" },
+      { code: "astronomers", display: "Astronomers" },
+      { code: "scribes", display: "Scribes" },
+      { code: "librarians", display: "Librarians" },
+      { code: "scholars", display: "Scholars" },
+      { code: "apprentices", display: "Apprentices" },
+      { code: "advocates", display: "Advocates" },
+      { code: "healers", display: "Healers" },
+      { code: "doctors", display: "Doctors" },
+      { code: "clergy", display: "Clergy" },
+      { code: "priests", display: "Priests" },
+      { code: "nobles", display: "Nobles" },
+      { code: "guards", display: "Guards" },
+      { code: "urchins", display: "Urchins" },
+      { code: "hermits", display: "Hermits" },
+      { code: "folk-heroes", display: "Folk Heroes" },
+      { code: "charlatans", display: "Charlatans" },
+      { code: "criminals", display: "Criminals" },
+      { code: "entertainers", display: "Entertainers" },
+    ],
+  },
+  "item-category": {
+    id: "item-category",
+    name: "Item category",
+    description: "What kind of thing an item is. Broad on purpose: the finer categories the rules use are references to other items.",
+    codes: [
+      { code: "weapon", display: "Weapon" },
+      { code: "armor", display: "Armor" },
+      { code: "shield", display: "Shield" },
+      { code: "tool", display: "Tool" },
+      { code: "gear", display: "Adventuring gear" },
+      { code: "container", display: "Container" },
+      { code: "consumable", display: "Consumable" },
+      { code: "poison", display: "Poison" },
+      { code: "mount", display: "Mount or vehicle" },
+      { code: "trade-good", display: "Trade good" },
+      { code: "treasure", display: "Treasure" },
+      { code: "wondrous", display: "Wondrous item" },
+    ],
+  },
+  "language-status": {
+    id: "language-status",
+    name: "Language status",
+    description: "Whether a language is still spoken, and in what setting.",
+    codes: [
+      { code: "living", display: "Living" },
+      { code: "dead", display: "Dead" },
+      { code: "liturgical", display: "Liturgical" },
+      { code: "secret", display: "Secret" },
+    ],
+  },
+  legitimacy: {
+    id: "legitimacy",
+    name: "Legitimacy",
+    description: "Standing of a child within a line of succession.",
+    codes: [
+      { code: "legitimate", display: "Legitimate" },
+      { code: "illegitimate", display: "Illegitimate" },
+      { code: "legitimized", display: "Legitimized" },
+      { code: "adopted", display: "Adopted" },
+    ],
+  },
+  "name-type": {
+    id: "name-type",
+    name: "Name type",
+    description: "Which list of a culture's names to draw from.",
+    codes: [
+      { code: "male", display: "Male given name" },
+      { code: "female", display: "Female given name" },
+      { code: "neuter", display: "Neuter given name" },
+      { code: "family", display: "Family or dynasty name" },
+      { code: "place", display: "Place name" },
+    ],
+  },
+  "person-status": {
+    id: "person-status",
+    name: "Person status",
+    description: "Whether a person is living at the record's valid time.",
+    codes: [
+      { code: "alive", display: "Alive" },
+      { code: "dead", display: "Dead" },
+      { code: "undead", display: "Undead" },
+      { code: "unknown", display: "Unknown" },
+    ],
+  },
+  perspective: {
+    id: "perspective",
+    name: "Perspective",
+    description: "Whether a statement is made from inside the fiction or about it (after Wikidata P5102).",
+    codes: [
+      { code: "in-universe", display: "In-universe" },
+      { code: "out-of-universe", display: "Out-of-universe" },
+    ],
+  },
+  "place-type": {
+    id: "place-type",
+    name: "Place type",
+    description: "Kinds of place, from the whole world down to a single room.",
+    codes: [
+      { code: "continent", display: "Continent" },
+      { code: "region", display: "Region" },
+      { code: "province", display: "Province" },
+      { code: "city", display: "City" },
+      { code: "town", display: "Town" },
+      { code: "village", display: "Village" },
+      { code: "hamlet", display: "Hamlet" },
+      { code: "district", display: "District" },
+      { code: "building", display: "Building" },
+      { code: "room", display: "Room" },
+      { code: "dungeon", display: "Dungeon" },
+      { code: "landmark", display: "Landmark" },
+      { code: "wilderness", display: "Wilderness" },
+      { code: "route", display: "Route" },
+      { code: "water", display: "Body of water" },
+      { code: "metropolis", display: "Metropolis" },
+      { code: "county", display: "County" },
+      { code: "duchy", display: "Duchy" },
+      { code: "kingdom", display: "Kingdom" },
+    ],
+  },
+  precision: {
+    id: "precision",
+    name: "Temporal precision",
+    description: "The finest unit a temporal position is known to.",
+    codes: [
+      { code: "era", display: "Era" },
+      { code: "century", display: "Century" },
+      { code: "decade", display: "Decade" },
+      { code: "year", display: "Year" },
+      { code: "month", display: "Month" },
+      { code: "day", display: "Day" },
+      { code: "hour", display: "Hour" },
+      { code: "minute", display: "Minute" },
+    ],
+  },
+  "proficiency-type": {
+    id: "proficiency-type",
+    name: "Proficiency type",
+    description: "What kind of thing a proficiency is in.",
+    codes: [
+      { code: "armor", display: "Armor" },
+      { code: "weapon", display: "Weapon" },
+      { code: "tool", display: "Tool" },
+      { code: "skill", display: "Skill" },
+      { code: "saving-throw", display: "Saving throw" },
+      { code: "instrument", display: "Musical instrument" },
+      { code: "vehicle", display: "Vehicle" },
+    ],
+  },
+  prosperity: {
+    id: "prosperity",
+    name: "Prosperity",
+    description: "How well a settlement is doing; scales how many people each business needs to survive.",
+    codes: [
+      { code: "booming", display: "Booming" },
+      { code: "prosperous", display: "Prosperous" },
+      { code: "poor", display: "Poor" },
+      { code: "very-poor", display: "Very poor" },
+    ],
+  },
+  "quest-status": {
+    id: "quest-status",
+    name: "Quest status",
+    description: "How far a quest has got.",
+    codes: [
+      { code: "rumoured", display: "Rumoured" },
+      { code: "available", display: "Available" },
+      { code: "active", display: "Active" },
+      { code: "completed", display: "Completed" },
+      { code: "failed", display: "Failed" },
+      { code: "abandoned", display: "Abandoned" },
+    ],
+  },
+  rarity: {
+    id: "rarity",
+    name: "Rarity",
+    description: "How rare a magic item is, which the rules use to price and gate it.",
+    codes: [
+      { code: "common", display: "Common" },
+      { code: "uncommon", display: "Uncommon" },
+      { code: "rare", display: "Rare" },
+      { code: "very-rare", display: "Very rare" },
+      { code: "legendary", display: "Legendary" },
+      { code: "artifact", display: "Artifact" },
+    ],
+  },
+  "relationship-type": {
+    id: "relationship-type",
+    name: "Relationship type",
+    description: "Kinds of relationship between two people (GEDCOM X types plus feudal and social ties).",
+    codes: [
+      { code: "parent-child", display: "Parent and child" },
+      { code: "adoptive-parent-child", display: "Adoptive parent and child" },
+      { code: "foster-parent-child", display: "Foster parent and child" },
+      { code: "couple", display: "Couple" },
+      { code: "sibling", display: "Siblings" },
+      { code: "liege-vassal", display: "Liege and vassal" },
+      { code: "mentor-student", display: "Mentor and student" },
+      { code: "ally", display: "Allies" },
+      { code: "rival", display: "Rivals" },
+      { code: "enemy", display: "Enemies" },
+      { code: "friend", display: "Friends" },
+      { code: "familiar", display: "Familiar" },
+    ],
+  },
+  resource: {
+    id: "resource",
+    name: "Natural resource",
+    description: "Raw materials, crops, animals and luxuries a place can yield.",
+    codes: [
+      { code: "aluminum", display: "Aluminum" },
+      { code: "amber", display: "Amber" },
+      { code: "bananas", display: "Bananas" },
+      { code: "bronze", display: "Bronze" },
+      { code: "camels", display: "Camels" },
+      { code: "cattle", display: "Cattle" },
+      { code: "chickens", display: "Chickens" },
+      { code: "cinnamon", display: "Cinnamon" },
+      { code: "citrus", display: "Citrus" },
+      { code: "clay", display: "Clay" },
+      { code: "cloves", display: "Cloves" },
+      { code: "coal", display: "Coal" },
+      { code: "cobalt", display: "Cobalt" },
+      { code: "cocoa", display: "Cocoa" },
+      { code: "coffee", display: "Coffee" },
+      { code: "copper", display: "Copper" },
+      { code: "cosmetics", display: "Cosmetics" },
+      { code: "cotton", display: "Cotton" },
+      { code: "crabs", display: "Crabs" },
+      { code: "deer", display: "Deer" },
+      { code: "diamonds", display: "Diamonds" },
+      { code: "ducks", display: "Ducks" },
+      { code: "dyes", display: "Dyes" },
+      { code: "fish", display: "Fish" },
+      { code: "furs", display: "Furs" },
+      { code: "geese", display: "Geese" },
+      { code: "goats", display: "Goats" },
+      { code: "gold", display: "Gold" },
+      { code: "gypsum", display: "Gypsum" },
+      { code: "honey", display: "Honey" },
+      { code: "horses", display: "Horses" },
+      { code: "incense", display: "Incense" },
+      { code: "iron", display: "Iron" },
+      { code: "ivory", display: "Ivory" },
+      { code: "jade", display: "Jade" },
+      { code: "marble", display: "Marble" },
+      { code: "mercury", display: "Mercury" },
+      { code: "obsidian", display: "Obsidian" },
+      { code: "peacocks", display: "Peacocks" },
+      { code: "pearls", display: "Pearls" },
+      { code: "perfume", display: "Perfume" },
+      { code: "pigs", display: "Pigs" },
+      { code: "platinum", display: "Platinum" },
+      { code: "rice", display: "Rice" },
+      { code: "salt", display: "Salt" },
+      { code: "sheep", display: "Sheep" },
+      { code: "silk", display: "Silk" },
+      { code: "silver", display: "Silver" },
+      { code: "spices", display: "Spices" },
+      { code: "springs", display: "Springs" },
+      { code: "stone", display: "Stone" },
+      { code: "sugar", display: "Sugar" },
+      { code: "sulphur", display: "Sulphur" },
+      { code: "tea", display: "Tea" },
+      { code: "tobacco", display: "Tobacco" },
+      { code: "truffles", display: "Truffles" },
+      { code: "whales", display: "Whales" },
+      { code: "wheat", display: "Wheat" },
+      { code: "wine", display: "Wine" },
+      { code: "wood", display: "Wood" },
+      { code: "wool", display: "Wool" },
+    ],
+  },
+  sex: {
+    id: "sex",
+    name: "Sex",
+    description: "Biological sex as used by the genetics generator.",
+    codes: [
+      { code: "male", display: "Male" },
+      { code: "female", display: "Female" },
+      { code: "neuter", display: "Neuter" },
+      { code: "unknown", display: "Unknown" },
+    ],
+  },
+  size: {
+    id: "size",
+    name: "Creature size",
+    description: "Creature size categories, as SRD 5.2.1 defines them.",
+    codes: [
+      { code: "tiny", display: "Tiny" },
+      { code: "small", display: "Small" },
+      { code: "medium", display: "Medium" },
+      { code: "large", display: "Large" },
+      { code: "huge", display: "Huge" },
+      { code: "gargantuan", display: "Gargantuan" },
+    ],
+  },
+  "spell-school": {
+    id: "spell-school",
+    name: "School of magic",
+    description: "The school a spell belongs to.",
+    codes: [
+      { code: "abjuration", display: "Abjuration" },
+      { code: "conjuration", display: "Conjuration" },
+      { code: "divination", display: "Divination" },
+      { code: "enchantment", display: "Enchantment" },
+      { code: "evocation", display: "Evocation" },
+      { code: "illusion", display: "Illusion" },
+      { code: "necromancy", display: "Necromancy" },
+      { code: "transmutation", display: "Transmutation" },
+    ],
+  },
+  "succession-law": {
+    id: "succession-law",
+    name: "Succession law",
+    description: "How a title passes from holder to holder.",
+    codes: [
+      { code: "primogeniture", display: "Primogeniture" },
+      { code: "male-preference", display: "Male-preference primogeniture" },
+      { code: "agnatic", display: "Agnatic" },
+      { code: "seniority", display: "Seniority" },
+      { code: "elective", display: "Elective" },
+      { code: "appointed", display: "Appointed" },
+    ],
+  },
+  terrain: {
+    id: "terrain",
+    name: "Terrain",
+    description: "The dominant terrain of a place, which decides what natural resources it can have.",
+    codes: [
+      { code: "coastal", display: "Coastal" },
+      { code: "desert", display: "Desert" },
+      { code: "grassland", display: "Grassland" },
+      { code: "hills", display: "Hills" },
+      { code: "mountains", display: "Mountains" },
+      { code: "plains", display: "Plains" },
+      { code: "snow", display: "Snow" },
+      { code: "tundra", display: "Tundra" },
+      { code: "forest", display: "Forest" },
+      { code: "river", display: "River" },
+      { code: "jungle", display: "Jungle" },
+      { code: "marsh", display: "Marsh" },
+      { code: "flood-plains", display: "Flood Plains" },
+      { code: "lakes", display: "Lakes" },
+      { code: "oasis", display: "Oasis" },
+    ],
+  },
+  "weapon-mastery": {
+    id: "weapon-mastery",
+    name: "Weapon mastery",
+    description: "The mastery property a weapon carries, introduced in the 2024 rules.",
+    codes: [
+      { code: "cleave", display: "Cleave" },
+      { code: "graze", display: "Graze" },
+      { code: "nick", display: "Nick" },
+      { code: "push", display: "Push" },
+      { code: "sap", display: "Sap" },
+      { code: "slow", display: "Slow" },
+      { code: "topple", display: "Topple" },
+      { code: "vex", display: "Vex" },
+    ],
+  },
+  "weapon-property": {
+    id: "weapon-property",
+    name: "Weapon property",
+    description: "What a weapon can do beyond dealing its damage.",
+    codes: [
+      { code: "ammunition", display: "Ammunition" },
+      { code: "finesse", display: "Finesse" },
+      { code: "heavy", display: "Heavy" },
+      { code: "light", display: "Light" },
+      { code: "loading", display: "Loading" },
+      { code: "range", display: "Range" },
+      { code: "reach", display: "Reach" },
+      { code: "special", display: "Special" },
+      { code: "thrown", display: "Thrown" },
+      { code: "two-handed", display: "Two-handed" },
+      { code: "versatile", display: "Versatile" },
+    ],
+  },
+  "work-type": {
+    id: "work-type",
+    name: "Work type",
+    description: "Kinds of in-world or out-of-world creative work.",
+    codes: [
+      { code: "chronicle", display: "Chronicle" },
+      { code: "legend", display: "Legend" },
+      { code: "myth", display: "Myth" },
+      { code: "song", display: "Song" },
+      { code: "letter", display: "Letter" },
+      { code: "report", display: "Report" },
+      { code: "map", display: "Map" },
+      { code: "article", display: "Article" },
+    ],
+  },
+} as const;
+export type VocabularyId = keyof typeof vocabularies;
+
 /** Every model in the ontology, keyed by model id. */
 export const models = {
+  background: backgroundSchema,
   belief: beliefSchema,
   calendar: calendarSchema,
+  campaign: campaignSchema,
+  character: characterSchema,
   claim: claimSchema,
+  class: classSchema,
+  condition: conditionSchema,
   culture: cultureSchema,
   economy: economySchema,
+  encounter: encounterSchema,
   event: eventSchema,
   faction: factionSchema,
+  feat: featSchema,
+  feature: featureSchema,
+  item: itemSchema,
+  language: languageSchema,
   person: personSchema,
   place: placeSchema,
   population: populationSchema,
+  proficiency: proficiencySchema,
+  quest: questSchema,
   relationship: relationshipSchema,
+  session: sessionSchema,
+  skill: skillSchema,
   species: speciesSchema,
+  spell: spellSchema,
+  statblock: statblockSchema,
   tenure: tenureSchema,
   title: titleSchema,
   work: workSchema,

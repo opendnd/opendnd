@@ -1,0 +1,55 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "weapon-property",
+  "url": "https://opendnd.org/ours/vocabularies/weapon-property.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Weapon property",
+  "description": "What a weapon can do beyond dealing its damage.",
+  "codes": [
+    {
+      "code": "ammunition",
+      "display": "Ammunition"
+    },
+    {
+      "code": "finesse",
+      "display": "Finesse"
+    },
+    {
+      "code": "heavy",
+      "display": "Heavy"
+    },
+    {
+      "code": "light",
+      "display": "Light"
+    },
+    {
+      "code": "loading",
+      "display": "Loading"
+    },
+    {
+      "code": "range",
+      "display": "Range"
+    },
+    {
+      "code": "reach",
+      "display": "Reach"
+    },
+    {
+      "code": "special",
+      "display": "Special"
+    },
+    {
+      "code": "thrown",
+      "display": "Thrown"
+    },
+    {
+      "code": "two-handed",
+      "display": "Two-handed"
+    },
+    {
+      "code": "versatile",
+      "display": "Versatile"
+    }
+  ]
+}

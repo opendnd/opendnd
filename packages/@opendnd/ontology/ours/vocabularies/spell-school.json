@@ -1,0 +1,43 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "spell-school",
+  "url": "https://opendnd.org/ours/vocabularies/spell-school.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "School of magic",
+  "description": "The school a spell belongs to.",
+  "codes": [
+    {
+      "code": "abjuration",
+      "display": "Abjuration"
+    },
+    {
+      "code": "conjuration",
+      "display": "Conjuration"
+    },
+    {
+      "code": "divination",
+      "display": "Divination"
+    },
+    {
+      "code": "enchantment",
+      "display": "Enchantment"
+    },
+    {
+      "code": "evocation",
+      "display": "Evocation"
+    },
+    {
+      "code": "illusion",
+      "display": "Illusion"
+    },
+    {
+      "code": "necromancy",
+      "display": "Necromancy"
+    },
+    {
+      "code": "transmutation",
+      "display": "Transmutation"
+    }
+  ]
+}

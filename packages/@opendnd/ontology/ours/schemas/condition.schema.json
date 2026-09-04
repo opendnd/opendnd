@@ -1,0 +1,19 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/condition.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Condition",
+  "description": "A state a creature can be in that changes what it may do: blinded, grappled, frightened. The rules text is the description on the base.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "ends": {
+      "type": "string",
+      "description": "How it is removed, where the rules say."
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

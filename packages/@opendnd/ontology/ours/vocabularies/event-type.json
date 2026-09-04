@@ -82,12 +82,12 @@
     {
       "code": "abdication",
       "display": "Abdication",
-      "definition": "A holder gives up an office voluntarily."
+      "definition": "A holder gives up a title voluntarily."
     },
     {
       "code": "deposition",
       "display": "Deposition",
-      "definition": "A holder is removed from an office by others."
+      "definition": "A holder is removed from a title by others."
     },
     {
       "code": "annulment",

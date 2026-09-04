@@ -1,0 +1,35 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "rarity",
+  "url": "https://opendnd.org/ours/vocabularies/rarity.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Rarity",
+  "description": "How rare a magic item is, which the rules use to price and gate it.",
+  "codes": [
+    {
+      "code": "common",
+      "display": "Common"
+    },
+    {
+      "code": "uncommon",
+      "display": "Uncommon"
+    },
+    {
+      "code": "rare",
+      "display": "Rare"
+    },
+    {
+      "code": "very-rare",
+      "display": "Very rare"
+    },
+    {
+      "code": "legendary",
+      "display": "Legendary"
+    },
+    {
+      "code": "artifact",
+      "display": "Artifact"
+    }
+  ]
+}

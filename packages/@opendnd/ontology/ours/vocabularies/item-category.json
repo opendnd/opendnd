@@ -1,0 +1,59 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "item-category",
+  "url": "https://opendnd.org/ours/vocabularies/item-category.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Item category",
+  "description": "What kind of thing an item is. Broad on purpose: the finer categories the rules use are references to other items.",
+  "codes": [
+    {
+      "code": "weapon",
+      "display": "Weapon"
+    },
+    {
+      "code": "armor",
+      "display": "Armor"
+    },
+    {
+      "code": "shield",
+      "display": "Shield"
+    },
+    {
+      "code": "tool",
+      "display": "Tool"
+    },
+    {
+      "code": "gear",
+      "display": "Adventuring gear"
+    },
+    {
+      "code": "container",
+      "display": "Container"
+    },
+    {
+      "code": "consumable",
+      "display": "Consumable"
+    },
+    {
+      "code": "poison",
+      "display": "Poison"
+    },
+    {
+      "code": "mount",
+      "display": "Mount or vehicle"
+    },
+    {
+      "code": "trade-good",
+      "display": "Trade good"
+    },
+    {
+      "code": "treasure",
+      "display": "Treasure"
+    },
+    {
+      "code": "wondrous",
+      "display": "Wondrous item"
+    }
+  ]
+}

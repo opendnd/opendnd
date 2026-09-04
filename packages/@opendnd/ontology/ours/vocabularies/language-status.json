@@ -1,0 +1,31 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "language-status",
+  "url": "https://opendnd.org/ours/vocabularies/language-status.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Language status",
+  "description": "Whether a language is still spoken, and in what setting.",
+  "codes": [
+    {
+      "code": "living",
+      "display": "Living",
+      "definition": "In everyday use."
+    },
+    {
+      "code": "dead",
+      "display": "Dead",
+      "definition": "No longer spoken, though it may still be read."
+    },
+    {
+      "code": "liturgical",
+      "display": "Liturgical",
+      "definition": "Kept for rite and scripture rather than conversation."
+    },
+    {
+      "code": "secret",
+      "display": "Secret",
+      "definition": "Known only to those admitted to it."
+    }
+  ]
+}

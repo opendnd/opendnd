@@ -1,0 +1,55 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/feature.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Feature",
+  "description": "Something a character gains from a class, a subclass, a species, a background, a feat or an item. One model for all of them, because they differ only in where they come from, which `source` records. The 5e SRD keeps class features and species traits in separate collections; both land here.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "source": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/feature-source.json"
+    },
+    "from": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The class, species, background or feat that grants it."
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "The level at which it is gained, for a class feature."
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
+      },
+      "description": "What must be true before it can be taken."
+    },
+    "uses": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "per": {
+          "type": "string",
+          "description": "short rest, long rest, day."
+        },
+        "ability": {
+          "type": "string",
+          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json",
+          "description": "The ability whose modifier sets the count, where it does."
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "description": "How often it can be used."
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

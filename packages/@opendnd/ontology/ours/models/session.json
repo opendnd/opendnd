@@ -1,0 +1,27 @@
+{
+  "resourceType": "Model",
+  "id": "session",
+  "url": "https://opendnd.org/ours/models/session.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Session",
+  "description": "One sitting of a campaign.",
+  "schema": "https://opendnd.org/ours/schemas/session.schema.json",
+  "relationships": [
+    {
+      "predicate": "campaign",
+      "target": "Campaign"
+    },
+    {
+      "predicate": "produced",
+      "target": "Event"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/Event",
+      "type": "one-to-one"
+    }
+  ]
+}

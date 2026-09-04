@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'bun:test';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { join } from 'node:path';
 import { emitZodModule, loadOursDirectory } from 'src';
 
@@ -54,5 +60,51 @@ describe('emitZodModule', () => {
     expect(ok.data.mood).toBe('happy');
     const bad = mod.petSchema.safeParse({ id: 'nope', name: 'Rex', legs: 4 });
     expect(bad.success).toBe(false);
+  });
+  it('emits a self-referential schema as a getter, which Zod resolves lazily', async () => {
+    // A copy of the fixture with one recursive shape added: kin who have kin.
+    const dir = mkdtempSync(join(__dirname, '.tmp-emit-'));
+    try {
+      cpSync(FIXTURE, dir, { recursive: true });
+      const commonPath = join(dir, 'schemas', 'common.schema.json');
+      const common = JSON.parse(readFileSync(commonPath, 'utf8'));
+      common.$defs.Kin = {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          kin: { type: 'array', items: { $ref: '#/$defs/Kin' } },
+        },
+        required: ['name'],
+        additionalProperties: false,
+      };
+      writeFileSync(commonPath, JSON.stringify(common));
+      const petPath = join(dir, 'schemas', 'pet.schema.json');
+      const pet = JSON.parse(readFileSync(petPath, 'utf8'));
+      pet.properties.family = {
+        $ref: 'https://example.test/ours/schemas/common.schema.json#/$defs/Kin',
+      };
+      writeFileSync(petPath, JSON.stringify(pet));
+
+      const emitted = emitZodModule(loadOursDirectory(dir));
+      // The back-reference is deferred; the forward one is not.
+      expect(emitted).toContain('get kin() {');
+      expect(emitted).toContain('family: kinSchema.optional()');
+
+      const file = join(dir, 'generated.ts');
+      writeFileSync(file, emitted);
+      const mod: Record<string, any> = await import(file);
+      const deep = mod.kinSchema.safeParse({
+        name: 'Ociaman',
+        kin: [{ name: 'Apiustu', kin: [{ name: 'Sesti' }] }],
+      });
+      expect(deep.success).toBe(true);
+      const bad = mod.kinSchema.safeParse({
+        name: 'Ociaman',
+        kin: [{ kin: [] }],
+      });
+      expect(bad.success).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

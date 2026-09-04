@@ -1,0 +1,39 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "proficiency-type",
+  "url": "https://opendnd.org/ours/vocabularies/proficiency-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Proficiency type",
+  "description": "What kind of thing a proficiency is in.",
+  "codes": [
+    {
+      "code": "armor",
+      "display": "Armor"
+    },
+    {
+      "code": "weapon",
+      "display": "Weapon"
+    },
+    {
+      "code": "tool",
+      "display": "Tool"
+    },
+    {
+      "code": "skill",
+      "display": "Skill"
+    },
+    {
+      "code": "saving-throw",
+      "display": "Saving throw"
+    },
+    {
+      "code": "instrument",
+      "display": "Musical instrument"
+    },
+    {
+      "code": "vehicle",
+      "display": "Vehicle"
+    }
+  ]
+}

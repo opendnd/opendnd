@@ -1,0 +1,65 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/campaign.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Campaign",
+  "description": "A series of sessions a group plays in a world. Out-of-universe: a campaign is a record of play, not of the world, so it is marked out-of-universe and dated in real time rather than in a calendar of the fiction.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "perspective": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/perspective.json",
+      "default": "out-of-universe",
+      "description": "Out-of-universe by default: this is a record of play, not something that exists in the fiction."
+    },
+    "status": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/campaign-status.json"
+    },
+    "gamemaster": {
+      "type": "string",
+      "description": "User id of whoever runs it. A user, not a person in the world: running a game is not something that happens in the fiction."
+    },
+    "players": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "User ids of the players."
+    },
+    "party": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The adventuring party, a faction whose factionType is party."
+    },
+    "setting": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "Where in the world it is set, if it is bounded to one place."
+    },
+    "beganOn": {
+      "type": "string",
+      "format": "date",
+      "description": "Real-world date of the first session."
+    },
+    "endedOn": {
+      "type": "string",
+      "format": "date"
+    },
+    "inWorldTime": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition",
+      "description": "Where the party currently stands in the world's own calendar."
+    },
+    "characters": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      }
+    }
+  },
+  "required": [
+    "status"
+  ],
+  "additionalProperties": false
+}

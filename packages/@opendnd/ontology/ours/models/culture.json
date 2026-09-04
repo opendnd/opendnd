@@ -9,6 +9,10 @@
   "schema": "https://opendnd.org/ours/schemas/culture.schema.json",
   "relationships": [
     {
+      "predicate": "languages",
+      "target": "Language"
+    },
+    {
       "predicate": "species",
       "target": "Species"
     }

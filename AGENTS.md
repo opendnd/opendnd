@@ -13,7 +13,7 @@ OpenDnD is an open ontology, headless event-driven API and toolset for building 
 | `/docs` | The single Starlight docs site: research, ADRs, guides, package docs. |
 | `/packages/@opendnd/<name>` | Shared libraries. |
 | `/apps/@opendnd/<name>` | Deployables: the API, generation workers, CDK stacks, desktop app. |
-| `/sites/@opendnd/<name>` | Web front ends (Studio, Atlas, Codex). |
+| `/sites/@opendnd/<name>` | Web front ends. The map, wiki, characters and campaigns are features of one application, not separate ones. |
 
 Every sub-project is named `@opendnd/<name>` with a descriptive English name. Never hand-roll a sub-project: add it in `projenrc/packages.ts` and run `bunx projen`.
 
@@ -42,6 +42,9 @@ bun run dev                  # start apps and sites in dev mode
 - Generators live in `packages/@opendnd/generators/src/<name>/` and implement the `Generator` contract. They never call `Math.random`; they take the context's `Rng` and stamp output with provenance.
 - Generators that call a language model implement `Author` instead, are asynchronous, and name a task (`chronicle`, `describe`, `author`, `review`, `embed`). Never choose a model in code: pass through the caller's choice, or leave it to the task's configuration.
 - Every model call is priced and recorded. Any new path that calls a model goes through `Models`, or it is spend nobody is billed for.
-- Postgres dialect everywhere (Docker locally, Neon in the cloud). Never introduce a second database engine.
-- Code is MIT. Game content is CC-BY-4.0 SRD 5.2.1 with the Wizards of the Coast notice in `CONTENT-LICENSE.md`. No ORC or OGL material in the core corpus.
+- Postgres dialect everywhere (Docker locally, Neon in the cloud). Never introduce a second database engine. `docker compose up --detach --wait postgres` provides the local one; the API's test task does it for you.
+- A world is the tenant. Content is reached through a world-scoped transaction (`inWorld`), and row-level security restricts it to the layers that world reads. Never widen a content query to work around it, and never serve as a database superuser or table owner: both bypass the policies.
+- The API's route table comes from the ontology's model registry. Never name a model in the API.
+- The deployment is CDK in `apps/@opendnd/infra`. There is no VPC and nothing charged by the hour; adding either needs an ADR. The API's function serves as `opendnd_app`, never the database owner.
+- Code is MIT. The ontology ships shapes, not rules content: schemas may align to any published format, including ones whose data is OGL, because structure is interoperability and the licensed expression is the data. No rules content ships in this repository; it arrives as modules carrying their own licence. The one CC-BY-4.0 fixture carries the Wizards of the Coast notice in `CONTENT-LICENSE.md`. No ORC or OGL material in the core corpus.
 - ADRs are `docs/src/content/docs/adr/ADR-NNN-<slug>.md`, sequential, never date-based.

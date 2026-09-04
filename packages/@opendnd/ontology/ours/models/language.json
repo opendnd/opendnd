@@ -1,0 +1,28 @@
+{
+  "resourceType": "Model",
+  "id": "language",
+  "url": "https://opendnd.org/ours/models/language.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Language",
+  "description": "A language spoken or written in the world.",
+  "schema": "https://opendnd.org/ours/schemas/language.schema.json",
+  "relationships": [
+    {
+      "predicate": "family",
+      "target": "Language"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/Language",
+      "type": "one-to-one"
+    },
+    {
+      "system": "https://www.wikidata.org",
+      "schema": "https://www.wikidata.org/entity/Q34770",
+      "type": "one-to-one"
+    }
+  ]
+}

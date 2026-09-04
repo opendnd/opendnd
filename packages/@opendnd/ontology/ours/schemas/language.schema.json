@@ -1,0 +1,31 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/language.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Language",
+  "description": "A language spoken or written in the world. Cultures point at the languages they speak, so a language has to be a record of its own rather than a loose string.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "status": {
+      "type": "string",
+      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/language-status.json"
+    },
+    "family": {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The language this one descends from, if any."
+    },
+    "script": {
+      "type": "string",
+      "description": "The writing system it is set in, where it has one."
+    },
+    "sample": {
+      "type": "string",
+      "description": "A phrase in it, for flavour and for a font to be chosen against."
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

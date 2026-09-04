@@ -8,20 +8,12 @@
   "description": "Kinds of place, from the whole world down to a single room.",
   "codes": [
     {
-      "code": "world",
-      "display": "World"
-    },
-    {
       "code": "continent",
       "display": "Continent"
     },
     {
       "code": "region",
       "display": "Region"
-    },
-    {
-      "code": "realm",
-      "display": "Realm"
     },
     {
       "code": "province",

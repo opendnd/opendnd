@@ -1,0 +1,37 @@
+{
+  "$id": "https://opendnd.org/ours/schemas/feat.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Feat",
+  "description": "A talent taken in place of, or alongside, an ability score increase.",
+  "allOf": [
+    {
+      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "category": {
+      "type": "string",
+      "description": "Origin, general, fighting style, epic boon."
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": {
+        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
+      },
+      "description": "What must be true before it can be taken."
+    },
+    "abilityScores": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json"
+      },
+      "description": "Abilities it may raise."
+    },
+    "repeatable": {
+      "type": "boolean"
+    }
+  },
+  "required": [],
+  "additionalProperties": false
+}

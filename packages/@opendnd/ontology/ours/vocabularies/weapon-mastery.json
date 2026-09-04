@@ -1,0 +1,43 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "weapon-mastery",
+  "url": "https://opendnd.org/ours/vocabularies/weapon-mastery.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Weapon mastery",
+  "description": "The mastery property a weapon carries, introduced in the 2024 rules.",
+  "codes": [
+    {
+      "code": "cleave",
+      "display": "Cleave"
+    },
+    {
+      "code": "graze",
+      "display": "Graze"
+    },
+    {
+      "code": "nick",
+      "display": "Nick"
+    },
+    {
+      "code": "push",
+      "display": "Push"
+    },
+    {
+      "code": "sap",
+      "display": "Sap"
+    },
+    {
+      "code": "slow",
+      "display": "Slow"
+    },
+    {
+      "code": "topple",
+      "display": "Topple"
+    },
+    {
+      "code": "vex",
+      "display": "Vex"
+    }
+  ]
+}

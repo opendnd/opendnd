@@ -50,6 +50,11 @@
     {
       "code": "friend",
       "display": "Friends"
+    },
+    {
+      "code": "familiar",
+      "display": "Familiar",
+      "definition": "A creature bound to a person as a companion and servant."
     }
   ]
 }

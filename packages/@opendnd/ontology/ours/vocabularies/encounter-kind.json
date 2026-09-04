@@ -1,0 +1,35 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "encounter-kind",
+  "url": "https://opendnd.org/ours/vocabularies/encounter-kind.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Encounter kind",
+  "description": "What sort of encounter has been prepared.",
+  "codes": [
+    {
+      "code": "combat",
+      "display": "Combat"
+    },
+    {
+      "code": "trap",
+      "display": "Trap"
+    },
+    {
+      "code": "hazard",
+      "display": "Hazard"
+    },
+    {
+      "code": "social",
+      "display": "Social"
+    },
+    {
+      "code": "exploration",
+      "display": "Exploration"
+    },
+    {
+      "code": "puzzle",
+      "display": "Puzzle"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "resourceType": "Model",
+  "id": "statblock",
+  "url": "https://opendnd.org/ours/models/statblock.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Statblock",
+  "description": "The rules view of a creature: what it can take, what it can do, and how dangerous it is.",
+  "schema": "https://opendnd.org/ours/schemas/statblock.schema.json",
+  "relationships": [
+    {
+      "predicate": "species",
+      "target": "Species"
+    },
+    {
+      "predicate": "person",
+      "target": "Person"
+    },
+    {
+      "predicate": "proficiencies",
+      "target": "Proficiency"
+    },
+    {
+      "predicate": "conditionImmunities",
+      "target": "Condition"
+    },
+    {
+      "predicate": "languages",
+      "target": "Language"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://5e-bits.github.io/docs",
+      "schema": "https://5e-bits.github.io/docs/api-reference/monsters",
+      "type": "one-to-one"
+    }
+  ]
+}

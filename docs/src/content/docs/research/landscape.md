@@ -10,10 +10,11 @@ Consolidated from three research passes: TTRPG data standards, general ontologie
 
 | Project | Scope | Format | License | Verdict |
 |---|---|---|---|---|
-| [5e-database / 5e-SRD-API](https://github.com/5e-bits/5e-database) | 2014 + 2024 rules, 24 collections | JSON + TypeScript schemas, OpenAPI | MIT code, CC-BY-4.0 SRD data | **Align rules shapes to the 2024 tree** |
+| [5e-database / 5e-SRD-API](https://github.com/5e-bits/5e-database) | `src/2014` and `src/2024` trees | JSON + TypeScript schemas, OpenAPI | MIT code, **OGL 1.0a data** | **Shapes only.** The data is OGL, which the core corpus excludes; the tree is still the best reference for field names and structure |
 | [Open5e API v2](https://github.com/open5e/open5e-api) | 34 resources incl. `documents`, `licenses`, `publishers`, `gamesystems`, `rulesets` | Django REST / OpenAPI | Modified MIT | **Adopt its publisher/document/license provenance model** |
 | [5etools homebrew schema](https://github.com/TheGiddyLimit/5etools-utils/tree/master/schema/brew) | Broadest rules coverage, edition-aware | JSON Schema | Utils repo unlicensed; data DMCA'd 2024 | Reference only |
 | [Foundry VTT dnd5e](https://github.com/foundryvtt/dnd5e) | Actor/Item type split, runtime-validated DataModels | JS | MIT code, CC-BY SRD | Sanity check for VTT consumption |
+| [dnd-5e-srd-markdown](https://github.com/downfallx/dnd-5e-srd-markdown) | Complete SRD 5.2.1: 13 files, ~1.9 MB, 500+ spells, 400+ monsters | Markdown prose with tables for stat blocks | **CC-BY-4.0** | **The content source.** The only complete 2024 SRD in a form that may be redistributed |
 | [Datasworn](https://github.com/rsek/datasworn) | Ironsworn; JSON Schema as source of truth, multi-language codegen, per-object `source` | JSON Schema + JTD | MIT | **Borrow the discipline** |
 | [Universal VTT (.dd2vtt)](https://arkenforge.com/universal-vtt-files/) | Battlemap geometry, LOS, lights, portals | JSON | Informal de facto | **Adopt verbatim for battlemaps** |
 | OrcPub `.orcbrew`, D&D Beyond JSON, Roll20, TTS | Various | EDN / undocumented JSON | Mixed / proprietary | Skip |
@@ -54,6 +55,7 @@ Consolidated from three research passes: TTRPG data standards, general ontologie
 ## 3. Content licensing
 
 - SRD 5.1 and SRD 5.2/5.2.1 (May 2025) are CC-BY-4.0 and irrevocable. Excluded: beholder, mind flayer, Strahd, Tiamat, Artificer, Aasimar, all setting lore.
+- **The well-shaped rules datasets are not redistributable and the redistributable one is not well shaped.** 5e-database's JSON is OGL 1.0a; the 5etools schema was taken down in 2024; the complete CC-BY-4.0 SRD 5.2.1 exists as Markdown prose. So the rules layer takes its *shapes* from the 5e-database 2024 tree, which is interoperability rather than content, and its *content* from the CC-BY Markdown through an importer. No OGL material enters the corpus.
 - Ship SRD data with the Foundry-style notice: "This work includes material taken from the System Reference Document 5.2.1 ('SRD 5.2.1') by Wizards of the Coast LLC ... licensed under CC-BY-4.0."
 - Keep code (MIT) and content (CC-BY) licenses in separate files.
 - ORC is share-alike and cannot be relicensed as CC-BY; OGL 1.0a is reputationally dead. Exclude both from the core corpus; allow as third-party modules with their own notices.

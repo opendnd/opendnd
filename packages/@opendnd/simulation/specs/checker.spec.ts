@@ -68,6 +68,22 @@ describe('checkHistory', () => {
     expect(findings[0].resources).toEqual(['e2', A]);
   });
 
+  it('allows anything in the year of a death, which the clock cannot order', () => {
+    // A founder who dies in the year their house is founded is not a
+    // contradiction: the simulation counts whole years, so it does not know
+    // and does not claim which came first.
+    const findings = checkHistory({
+      people: [person(A, 'Alaric', 1000, 1050)],
+      relationships: [],
+      events: [
+        event('e1', 'death', 1050, [[A, 'deceased']]),
+        event('e2', 'other', 1050, [[A, 'founder']]),
+      ],
+      tenures: [],
+    });
+    expect(findings).toEqual([]);
+  });
+
   it('flags a death year that disagrees between event and record', () => {
     const findings = checkHistory({
       people: [person(A, 'Alaric', 1000, 1050)],

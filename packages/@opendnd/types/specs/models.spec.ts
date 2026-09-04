@@ -11,23 +11,76 @@ const world = '3c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a11';
 describe('@opendnd/types', () => {
   it('exposes every model in the registry', () => {
     expect(Object.keys(models).sort()).toEqual([
+      'background',
       'belief',
       'calendar',
+      'campaign',
+      'character',
       'claim',
+      'class',
+      'condition',
       'culture',
       'economy',
+      'encounter',
       'event',
       'faction',
+      'feat',
+      'feature',
+      'item',
+      'language',
       'person',
       'place',
       'population',
+      'proficiency',
+      'quest',
       'relationship',
+      'session',
+      'skill',
       'species',
+      'spell',
+      'statblock',
       'tenure',
       'title',
       'work',
       'world',
     ]);
+  });
+
+  it('marks play and preparation as out-of-universe, and the world as in it', () => {
+    const base = {
+      id: world,
+      world,
+      name: 'x',
+      canonStatus: 'canon' as const,
+      recorded: {
+        createdAt: '2026-09-04T00:00:00Z',
+        updatedAt: '2026-09-04T00:00:00Z',
+        revision: 1,
+      },
+    };
+    // A campaign, a session, a character and an encounter are records about
+    // the world rather than parts of it, and the ontology says so rather than
+    // leaving every client to remember it.
+    expect(
+      models.campaign.parse({ ...base, status: 'running' }).perspective,
+    ).toBe('out-of-universe');
+    expect(
+      models.character.parse({
+        ...base,
+        person: { model: 'person', id: world },
+      }).perspective,
+    ).toBe('out-of-universe');
+    expect(
+      models.encounter.parse({ ...base, place: { model: 'place', id: world } })
+        .perspective,
+    ).toBe('out-of-universe');
+    // A quest can be the world's own errand, so it keeps the base default.
+    expect(models.quest.parse({ ...base, status: 'active' }).perspective).toBe(
+      'in-universe',
+    );
+    expect(models.place.parse({ ...base, placeType: 'town' }).perspective).toBe(
+      'in-universe',
+    );
   });
 
   it('applies platform defaults from the base', () => {

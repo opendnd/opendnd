@@ -1,0 +1,31 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "encounter-difficulty",
+  "url": "https://opendnd.org/ours/vocabularies/encounter-difficulty.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Encounter difficulty",
+  "description": "How hard an encounter is meant to be for the party it is prepared for.",
+  "codes": [
+    {
+      "code": "trivial",
+      "display": "Trivial"
+    },
+    {
+      "code": "easy",
+      "display": "Easy"
+    },
+    {
+      "code": "medium",
+      "display": "Medium"
+    },
+    {
+      "code": "hard",
+      "display": "Hard"
+    },
+    {
+      "code": "deadly",
+      "display": "Deadly"
+    }
+  ]
+}

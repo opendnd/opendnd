@@ -38,4 +38,5 @@ jspm_packages/
 !/.eslintrc.json
 test-results.xml
 specs/.tmp-*
+!/README.md
 !/tsconfig.spec.json
