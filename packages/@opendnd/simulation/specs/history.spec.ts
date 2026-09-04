@@ -8,6 +8,7 @@ import {
 } from '@opendnd/generators';
 import {
   calendarSchema,
+  claimSchema,
   cultureSchema,
   economySchema,
   eventSchema,
@@ -107,14 +108,20 @@ describe('historyGenerator', () => {
     }
   });
 
-  it('links successions to the deaths that caused them', () => {
+  it('links every succession to what caused it', () => {
     const successions = out.events.filter((e) => e.eventType === 'succession');
     expect(successions.length).toBeGreaterThan(0);
+    const causes = new Set<string>();
     for (const s of successions) {
+      // A vacancy has no cause when the line simply ran out in an earlier year.
+      if (s.outcome === 'vacant' && s.causedBy === undefined) continue;
       expect(s.causedBy?.length).toBe(1);
       const cause = out.events.find((e) => e.id === s.causedBy![0].id);
-      expect(cause?.eventType).toBe('death');
+      // A title changes hands when its holder dies, or is deposed by war.
+      expect(['death', 'deposition']).toContain(cause!.eventType);
+      causes.add(cause!.eventType);
     }
+    expect(causes.has('death')).toBe(true);
   });
 
   it('ties vassals to their lieges, and only between living holders', () => {
@@ -148,6 +155,57 @@ describe('historyGenerator', () => {
     for (const e of dynastic) {
       const [, a, b] = /A match between (.+) and (.+)\./.exec(e.description!)!;
       expect(a).not.toBe(b);
+    }
+  });
+
+  it('presses claims into wars of battles, and settles the title', () => {
+    expect(out.claims.length).toBeGreaterThan(0);
+    for (const c of out.claims) claimSchema.parse(c);
+    // Claims come from lines a law passed over, so the claimant is a daughter
+    // of the holder the title went past.
+    for (const c of out.claims) {
+      expect(c.basis).toBe('inheritance');
+      const claimant = out.people.find((p) => p.id === c.claimant.id)!;
+      expect(claimant.sex).toBe('female');
+      expect(c.through).toBeDefined();
+    }
+
+    const wars = out.events.filter((e) => e.eventType === 'war');
+    expect(wars.length).toBeGreaterThan(0);
+    const battles = out.events.filter((e) => e.eventType === 'battle');
+    expect(battles.length).toBeGreaterThan(0);
+    const warIds = new Set(wars.map((w) => w.id));
+    for (const b of battles) {
+      expect(warIds.has(b.partOf!.id)).toBe(true);
+      // Fought at a place, not at a rank.
+      expect(b.name).not.toContain('of County of');
+    }
+
+    for (const war of wars) {
+      const own = battles.filter((b) => b.partOf!.id === war.id);
+      expect(own.length).toBeLessThanOrEqual(8);
+      // A concluded war is dated to its last battle or later, and says how it ended.
+      if (war.outcome !== undefined) {
+        expect(war.when.end?.year).toBeGreaterThanOrEqual(war.when.begin!.year);
+      }
+      const wins = own.filter((b) => b.outcome === 'attacker').length;
+      if (war.outcome === 'attacker') expect(wins).toBe(2);
+      if (war.outcome === 'defender') expect(own.length - wins).toBe(2);
+    }
+
+    // A won war deposes the sitting holder and seats the claimant.
+    const won = wars.filter((w) => w.outcome === 'attacker');
+    for (const war of won) {
+      const deposition = out.events.find(
+        (e) => e.eventType === 'deposition' && e.partOf?.id === war.id,
+      );
+      expect(deposition).toBeDefined();
+      const deposed = deposition!.participants!.find(
+        (p) => p.role === 'deposed',
+      )!.actor.id;
+      const ended = out.tenures.find((t) => t.ended?.id === deposition!.id)!;
+      expect(ended.holder.id).toBe(deposed);
+      expect(ended.validTime?.end?.year).toBe(deposition!.when.begin?.year);
     }
   });
 

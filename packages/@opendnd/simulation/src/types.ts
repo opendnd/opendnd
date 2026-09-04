@@ -1,5 +1,6 @@
 import type {
   Calendar,
+  Claim,
   Culture,
   Economy,
   Event,
@@ -47,6 +48,12 @@ export interface HistoryParams {
   readonly lineageDepth: number;
   /** Safety cap on living tracked figures per house. */
   readonly maxFiguresPerHouse: number;
+  /** Yearly chance a living claimant presses an unresolved claim by force. */
+  readonly warChance: number;
+  /** Battles one side must win to carry a war. */
+  readonly battlesToWin: number;
+  /** After this many years a war ends inconclusively, exhausted. */
+  readonly maxWarYears: number;
 }
 
 export const DEFAULT_PARAMS: HistoryParams = {
@@ -66,6 +73,9 @@ export const DEFAULT_PARAMS: HistoryParams = {
   populationSnapshotEvery: 50,
   lineageDepth: 2,
   maxFiguresPerHouse: 40,
+  warChance: 0.08,
+  battlesToWin: 2,
+  maxWarYears: 8,
 };
 
 export interface HistoryInput {
@@ -105,6 +115,7 @@ export interface HistoryOutput {
   readonly relationships: Relationship[];
   readonly events: Event[];
   readonly tenures: Tenure[];
+  readonly claims: Claim[];
   readonly populations: Population[];
   readonly economies: Economy[];
   /** Consistency findings over the produced history. Empty when all is well. */

@@ -16,6 +16,7 @@ import {
   yearOf,
 } from './resources';
 import { HistoryState } from './state';
+import { conflict } from './systems/conflict';
 import { demographics } from './systems/demographics';
 import { settlements } from './systems/settlements';
 import { succession } from './systems/succession';
@@ -26,21 +27,29 @@ const LOCALITIES = new Set<string>(LOCALITY_TIERS);
 /**
  * The history simulation: a yearly clock over a realm of settlements, houses
  * and titles. Each year the systems run in a fixed order (deaths, marriages,
- * births, then succession, then settlements) with their own child seeds,
+ * births, then succession, conflict and settlements) with their own child seeds,
  * appending events and resources. Authored people and events are fixed
  * points; everything else is generated.
  */
 export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
   ...HISTORY_GENERATOR,
   description:
-    'Simulates years of births, marriages, deaths, successions and settlement fortunes across a realm, emitting events and resources.',
+    'Simulates years of births, marriages, deaths, successions, wars and settlement fortunes across a realm, emitting events and resources.',
 
   generate(input: HistoryInput, ctx: GeneratorContext): HistoryOutput {
     const params = { ...DEFAULT_PARAMS, ...(input.params ?? {}) };
     const lifecycle = lifecycleOf(input.species);
     const state = new HistoryState(input.startYear);
 
-    for (const place of input.places) state.places.set(place.id, place);
+    for (const place of input.places) {
+      state.places.set(place.id, place);
+      const house = place.controlledBy?.id;
+      if (house !== undefined) {
+        const held = state.holdings.get(house) ?? [];
+        held.push(place.id);
+        state.holdings.set(house, held);
+      }
+    }
     for (const house of input.factions) state.houses.set(house.id, house);
     for (const title of input.titles) state.titlesById.set(title.id, title);
 
@@ -88,6 +97,7 @@ export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
         childContext(ctx, 'demographics'),
       );
       succession(state, input, lifecycle, childContext(ctx, 'succession'));
+      conflict(state, input, params, childContext(ctx, 'conflict'));
       settlements(
         state,
         input,
@@ -106,6 +116,7 @@ export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
       relationships: state.relationships,
       events,
       tenures: state.tenures,
+      claims: state.claims,
       populations: state.populations,
       economies: state.economies,
       endYear,

@@ -100,6 +100,21 @@ export function checkHistory(record: HistoryRecord): Finding[] {
     }
   }
 
+  // Every battle belongs to a war, so a chronicle can tell the whole story.
+  const byId = new Map(record.events.map((e) => [e.id, e]));
+  for (const e of record.events) {
+    if (e.eventType !== 'battle') continue;
+    const parent = e.partOf ? byId.get(e.partOf.id) : undefined;
+    if (!parent || parent.eventType !== 'war') {
+      findings.push({
+        rule: 'battle-belongs-to-a-war',
+        severity: 'error',
+        message: `"${e.name}" is a battle with no war to belong to`,
+        resources: [e.id],
+      });
+    }
+  }
+
   // One holder per title at a time, and holders are alive while they hold.
   const byTitle = new Map<string, Tenure[]>();
   for (const t of record.tenures) {
@@ -115,6 +130,15 @@ export function checkHistory(record: HistoryRecord): Finding[] {
         severity: 'error',
         message: `${name(people, t.holder.id)} holds ${t.title.name ?? t.title.id} past their death in ${died}`,
         resources: [t.id, t.holder.id],
+      });
+    }
+    const endedBy = t.ended ? byId.get(t.ended.id) : undefined;
+    if (endedBy && endedBy.when.begin?.year !== end) {
+      findings.push({
+        rule: 'tenure-ends-when-its-event-says',
+        severity: 'error',
+        message: `Tenure ${t.name} ends in ${end} but "${endedBy.name}" is dated ${endedBy.when.begin?.year}`,
+        resources: [t.id, endedBy.id],
       });
     }
     if (begin !== undefined && end !== undefined && end < begin) {

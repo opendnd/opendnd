@@ -1,6 +1,8 @@
 import { GeneratorContext, childContext, stamp } from '@opendnd/generators';
 import type {
   Calendar,
+  Claim,
+  ClaimBasis,
   Event,
   EventType,
   Person,
@@ -99,6 +101,26 @@ export function makeTenure(
     holder: ref('person', holder),
     validTime: { begin: yearOf(calendar, year) },
     ...(began ? { began: ref('event', began) } : {}),
+  };
+}
+
+export function makeClaim(
+  ctx: GeneratorContext,
+  label: string,
+  claimant: Person,
+  title: Reference,
+  basis: ClaimBasis,
+  through?: Person,
+): Claim {
+  return {
+    ...stamp(HISTORY_GENERATOR, childContext(ctx, label)),
+    name: `${claimant.name}'s claim to ${title.name ?? 'a title'}`,
+    perspective: 'in-universe',
+    claimant: ref('person', claimant),
+    title,
+    basis,
+    pressed: false,
+    ...(through ? { through: ref('person', through) } : {}),
   };
 }
 

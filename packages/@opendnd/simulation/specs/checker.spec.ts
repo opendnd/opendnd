@@ -136,6 +136,45 @@ describe('checkHistory', () => {
     expect(rules).toContain('parent-alive-at-birth');
   });
 
+  it('flags a battle with no war', () => {
+    const findings = checkHistory({
+      people: [person(A, 'Alaric', 1000)],
+      relationships: [],
+      events: [event('e1', 'battle', 1030, [[A, 'victor']])],
+      tenures: [],
+    });
+    expect(findings.map((f) => f.rule)).toContain('battle-belongs-to-a-war');
+  });
+
+  it('flags a tenure whose ending event is dated elsewhere', () => {
+    const deposition = event('e1', 'deposition', 1040, [[A, 'deposed']]);
+    const findings = checkHistory({
+      people: [person(A, 'Alaric', 1000)],
+      relationships: [],
+      events: [deposition],
+      tenures: [
+        {
+          id: 't1',
+          world,
+          name: 't1',
+          canonStatus: 'canon',
+          perspective: 'in-universe',
+          recorded,
+          title: { model: 'title', id: 'o1', name: 'Lord' },
+          holder: { model: 'person', id: A },
+          validTime: {
+            begin: { trs, year: 1020, precision: 'year' },
+            end: { trs, year: 1035, precision: 'year' },
+          },
+          ended: { model: 'event', id: 'e1' },
+        },
+      ],
+    });
+    expect(findings.map((f) => f.rule)).toContain(
+      'tenure-ends-when-its-event-says',
+    );
+  });
+
   it('is silent on a clean record', () => {
     const findings = checkHistory({
       people: [person(A, 'Alaric', 1000, 1050), person(B, 'Berta', 1010)],

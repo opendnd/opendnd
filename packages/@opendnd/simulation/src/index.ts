@@ -8,5 +8,6 @@ export * from './state';
 export * from './resources';
 export * from './checker';
 export * from './history';
+export { conflict } from './systems/conflict';
 export { demographics } from './systems/demographics';
 export { succession, chooseHeir } from './systems/succession';

@@ -23,6 +23,7 @@ The bundle lives in `packages/@opendnd/ontology/ours/`. It is data, not code: JS
 | `title` | A seat of authority in a faction with a succession rule | W3C ORG Post |
 | `tenure` | One person's time in an title, with the events that began and ended it | W3C ORG Membership |
 | `population` | An aggregate head count at a place and time | schema.org Observation |
+| `claim` | One person's asserted right to a title, and the seed of a war | schema.org Claim, CIDOC E30 Right |
 | `economy` | A snapshot of a settlement's prosperity, businesses and livestock at a time | schema.org Observation |
 
 ## The base every model extends
@@ -33,4 +34,4 @@ Shared definitions also cover `Reference`, `TemporalPosition`, `TimeSpan`, GeoJS
 
 ## Vocabularies
 
-Canon status, perspective, sex, person status, place type, faction type, event type, relationship type, legitimacy, work type, belief value, temporal precision, creature size, name type, succession law, a five-by-five alignment matrix (order by goodness, each axis -2 to +2), terrain, prosperity, sixty-one natural resources and ninety-eight industries. Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.
+Canon status, perspective, sex, person status, place type, faction type, event type, relationship type, legitimacy, work type, belief value, temporal precision, creature size, name type, succession law, a five-by-five alignment matrix (order by goodness, each axis -2 to +2), terrain, prosperity, claim basis, sixty-one natural resources and ninety-eight industries. Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.

@@ -95,6 +95,16 @@
       "definition": "A marriage is declared void."
     },
     {
+      "code": "siege",
+      "display": "Siege",
+      "definition": "A fortified place is invested and pressed to surrender."
+    },
+    {
+      "code": "rebellion",
+      "display": "Rebellion",
+      "definition": "A vassal takes arms against their liege."
+    },
+    {
       "code": "session",
       "display": "Play session"
     }

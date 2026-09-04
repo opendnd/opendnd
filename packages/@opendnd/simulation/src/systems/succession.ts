@@ -8,6 +8,7 @@ import type {
 } from '@opendnd/types';
 import { Lifecycle, isAdult } from '../lifecycle';
 import {
+  makeClaim,
   makeEvent,
   makeRelationship,
   makeTenure,
@@ -133,10 +134,54 @@ export function succession(
         event,
       ),
     );
+    recordClaims(state, title, predecessor, heir, yctx);
     changed.push(title);
   }
 
   for (const title of changed) homage(state, input, title, yctx);
+}
+
+/**
+ * A law that prefers sons does not persuade the daughters it passes over.
+ * Each keeps a claim to the title, which their line may one day press.
+ */
+function recordClaims(
+  state: HistoryState,
+  title: Title,
+  predecessor: Person | undefined,
+  heir: Person,
+  yctx: GeneratorContext,
+): void {
+  if (!predecessor) return;
+  if (
+    title.successionLaw !== 'male-preference' &&
+    title.successionLaw !== 'agnatic'
+  ) {
+    return;
+  }
+  const heirBorn = heir.birth?.time?.year ?? 0;
+  for (const child of state.children(predecessor.id)) {
+    if (child.id === heir.id || !state.isAlive(child)) continue;
+    if (child.sex === 'male') continue;
+    if ((child.birth?.time?.year ?? 0) >= heirBorn) continue;
+    const already = state.claims.some(
+      (c) =>
+        c.claimant.id === child.id &&
+        c.title.id === title.id &&
+        c.resolvedBy === undefined,
+    );
+    if (already) continue;
+    state.claims.push(
+      makeClaim(
+        yctx,
+        `claim/${title.id}/${child.id}`,
+        child,
+        ref('title', title),
+        'inheritance',
+        predecessor,
+      ),
+    );
+  }
 }
 
 /**

@@ -55,6 +55,17 @@ export const canonStatusCodes = [
 export const canonStatusSchema = z.enum(canonStatusCodes);
 export type CanonStatus = z.infer<typeof canonStatusSchema>;
 
+/** Claim basis: Why someone says a title is rightfully theirs. */
+export const claimBasisCodes = [
+  "inheritance",
+  "marriage",
+  "conquest",
+  "grant",
+  "usurpation",
+] as const;
+export const claimBasisSchema = z.enum(claimBasisCodes);
+export type ClaimBasis = z.infer<typeof claimBasisSchema>;
+
 /** Event type: Kinds of event in a world's history. */
 export const eventTypeCodes = [
   "birth",
@@ -78,6 +89,8 @@ export const eventTypeCodes = [
   "abdication",
   "deposition",
   "annulment",
+  "siege",
+  "rebellion",
   "session",
 ] as const;
 export const eventTypeSchema = z.enum(eventTypeCodes);
@@ -667,6 +680,39 @@ export const calendarSchema = z.strictObject({
 });
 export type Calendar = z.infer<typeof calendarSchema>;
 
+/** One person's asserted right to a title. A claim is the seed of a war: it can be pressed, won, lost, or left to descend to an heir. */
+export const claimSchema = z.strictObject({
+  /** Random v4. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. */
+  module: z.string().optional(),
+  claimant: referenceSchema,
+  title: referenceSchema,
+  basis: claimBasisSchema,
+  /** The person the claim descends from, when it comes by inheritance or marriage. */
+  through: referenceSchema.optional(),
+  /** Whether the claim has been pressed by force. */
+  pressed: z.boolean().default(false),
+  /** The event that made the claim good or void. */
+  resolvedBy: referenceSchema.optional(),
+});
+export type Claim = z.infer<typeof claimSchema>;
+
 /** A people's shared naming, language and customs, separate from biology so one species can hold many cultures and one culture span species (World Anvil Ethnicity). */
 export const cultureSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
@@ -1185,6 +1231,7 @@ export type World = z.infer<typeof worldSchema>;
 export const models = {
   belief: beliefSchema,
   calendar: calendarSchema,
+  claim: claimSchema,
   culture: cultureSchema,
   economy: economySchema,
   event: eventSchema,

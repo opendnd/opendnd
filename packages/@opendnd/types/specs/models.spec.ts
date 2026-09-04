@@ -13,6 +13,7 @@ describe('@opendnd/types', () => {
     expect(Object.keys(models).sort()).toEqual([
       'belief',
       'calendar',
+      'claim',
       'culture',
       'economy',
       'event',

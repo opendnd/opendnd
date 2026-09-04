@@ -1,4 +1,5 @@
 import type {
+  Claim,
   Economy,
   Event,
   Faction,
@@ -11,6 +12,20 @@ import type {
   Tenure,
   Title,
 } from '@opendnd/types';
+
+/** A war in progress, with the tally of battles won on each side. */
+export interface War {
+  readonly event: Event;
+  readonly titleId: string;
+  readonly claim: Claim;
+  readonly claimantId: string;
+  /** House pressing the claim, and the house holding the title. */
+  readonly attacker: string;
+  readonly defender: string;
+  readonly startedIn: number;
+  attackerWins: number;
+  defenderWins: number;
+}
 
 /** What the settlements system tracks for one locality between snapshots. */
 export interface SettlementState {
@@ -32,6 +47,9 @@ export class HistoryState {
   readonly tenures: Tenure[] = [];
   readonly populations: Population[] = [];
   readonly economies: Economy[] = [];
+  readonly claims: Claim[] = [];
+  /** Wars still being fought, in declaration order. */
+  readonly wars: War[] = [];
 
   /** The realm, indexed once so systems do not rescan the input each year. */
   readonly houses = new Map<string, Faction>();
@@ -39,6 +57,10 @@ export class HistoryState {
   readonly places = new Map<string, Place>();
   /** Aggregate head count and prosperity per settlement. */
   readonly settlements = new Map<string, SettlementState>();
+  /** House id -> the places it controls directly. */
+  readonly holdings = new Map<string, string[]>();
+  private strengthCache = new Map<string, number>();
+  private strengthYear = -1;
 
   /** Titles already recorded as vacant, so the record says so only once. */
   readonly vacant = new Set<string>();
@@ -120,6 +142,31 @@ export class HistoryState {
       this.people.set(person.id, { ...person, ...patch });
     }
     this.setHouse(person.id, houseId);
+  }
+
+  /**
+   * The people a house can put in the field: everyone living in the places it
+   * holds, and in the places its vassals hold. Land is the only measure of
+   * power the simulation has, which is close enough to the medieval truth.
+   */
+  strengthOf(houseId: string): number {
+    if (this.strengthYear !== this.year) {
+      this.strengthCache = new Map();
+      this.strengthYear = this.year;
+    }
+    const cached = this.strengthCache.get(houseId);
+    if (cached !== undefined) return cached;
+    this.strengthCache.set(houseId, 0); // guard against a cycle of lieges
+    let total = 0;
+    for (const placeId of this.holdings.get(houseId) ?? []) {
+      total += this.settlements.get(placeId)?.count ?? 0;
+    }
+    for (const house of this.houses.values()) {
+      if (house.parent?.id === houseId) total += this.strengthOf(house.id);
+    }
+    const rounded = Math.round(total);
+    this.strengthCache.set(houseId, rounded);
+    return rounded;
   }
 
   addRelationship(rel: Relationship): void {
