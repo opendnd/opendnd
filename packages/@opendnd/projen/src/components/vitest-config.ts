@@ -1,7 +1,7 @@
 import { Component, FileBase, SampleFile } from 'projen';
 import { ReactTypeScriptProject } from 'projen/lib/web';
 import { synthesizePackagePathsPluginSource } from './vite-package-paths-plugin';
-import { versions } from 'src/versions';
+import { versions } from '../versions';
 
 export interface VitestConfigOptions {
   readonly watch?: boolean;

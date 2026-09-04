@@ -22,13 +22,8 @@ import {
   TERRAIN_RESOURCES,
   TIERS,
 } from './data';
-import {
-  Generator,
-  GeneratorContext,
-  childContext,
-  stamp,
-} from 'src/generator';
-import { NameGenerator } from 'src/names';
+import { Generator, GeneratorContext, childContext, stamp } from '../generator';
+import { NameGenerator } from '../names';
 
 export interface SettlementInput {
   /** hamlet, village, town, city or metropolis. */

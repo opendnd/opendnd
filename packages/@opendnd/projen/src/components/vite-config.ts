@@ -1,7 +1,7 @@
 import { Component, FileBase } from 'projen';
 import { ReactTypeScriptProject } from 'projen/lib/web';
 import { synthesizePackagePathsPluginSource } from './vite-package-paths-plugin';
-import { versions } from 'src/versions';
+import { versions } from '../versions';
 
 export interface ViteProxyTarget {
   /** Backend target URL (e.g. 'http://localhost:4080') */

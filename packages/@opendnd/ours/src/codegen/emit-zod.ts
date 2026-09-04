@@ -1,7 +1,7 @@
 import { toCamelCase, toPascalCase, propertyKey } from './naming';
-import { OursBundle } from 'src/bundle';
-import { JsonSchema, JsonSchemaType } from 'src/resources';
-import { splitRef } from 'src/validate';
+import { OursBundle } from '../bundle';
+import { JsonSchema, JsonSchemaType } from '../resources';
+import { splitRef } from '../validate';
 
 /**
  * Emit one TypeScript module containing a Zod schema and inferred type for

@@ -8,18 +8,19 @@ import {
   toPersonFields,
 } from '@opendnd/generators';
 import type { Person, Reference, Sex } from '@opendnd/types';
-import { Lifecycle, isAdult, isFertile, mortality } from 'src/lifecycle';
-import { makeEvent, makeRelationship, ref, yearOf } from 'src/resources';
-import { HistoryState } from 'src/state';
-import type { HistoryInput, HistoryParams } from 'src/types';
+import { Lifecycle, isAdult, isFertile, mortality } from '../lifecycle';
+import { makeEvent, makeRelationship, ref, yearOf } from '../resources';
+import { HistoryState } from '../state';
+import type { HistoryInput, HistoryParams } from '../types';
 
 /**
- * Births, marriages and deaths among the house's figures for one year.
+ * Births, marriages and deaths across every house for one year.
  *
- * Spouses are drawn from the settlement's aggregate population and
- * instantiated on demand as generated people; children inherit a genome from
- * both parents. Deaths honour canon fixed points: a person with an authored
- * death year dies in that year and not before.
+ * A marriage is either dynastic, joining two houses through living figures,
+ * or local, drawing a commoner from the seat's aggregate population and
+ * instantiating them on demand. Children inherit a genome from both parents
+ * and join their father's house. Deaths honour canon fixed points: a person
+ * with an authored death year dies in that year and not before.
  */
 export function demographics(
   state: HistoryState,
@@ -30,10 +31,28 @@ export function demographics(
 ): void {
   const year = state.year;
   const yctx = childContext(ctx, `y${year}`);
-  const place = ref('place', input.settlement);
-  const house = ref('faction', input.house);
 
-  // Deaths first, so nobody marries or reproduces in the year they die.
+  deaths(state, input, lifecycle, params, yctx);
+
+  // Only figures close to a seat of power carry a line forward; the rest live
+  // out their lives and their descendants stay in the aggregate population.
+  // Before any title is held (the founding year) everyone counts.
+  const kinship = state.kinshipToHolders(params.lineageDepth);
+  const notable = (person: Person) =>
+    kinship.size === 0 || kinship.has(person.id);
+
+  marriages(state, input, lifecycle, params, yctx, notable);
+  births(state, input, lifecycle, params, yctx, notable);
+}
+
+function deaths(
+  state: HistoryState,
+  input: HistoryInput,
+  lifecycle: Lifecycle,
+  params: HistoryParams,
+  yctx: GeneratorContext,
+): void {
+  const year = state.year;
   for (const person of state.living()) {
     const age = state.age(person);
     if (age === undefined) continue;
@@ -44,6 +63,8 @@ export function demographics(
         : yctx.rng.child(`death/${person.id}`).next() <
           mortality(age, lifecycle, params);
     if (!dies) continue;
+
+    const place = placeOf(state, person);
     const spouse = state.spouse(person.id);
     // An authored death event already records this; do not add a second one.
     const authored = state.events.some(
@@ -66,86 +87,116 @@ export function demographics(
               ? [{ actor: ref('person', spouse), role: 'widowed' }]
               : []),
           ],
-          locations: [place],
+          ...(place ? { locations: [place] } : {}),
         }),
       );
     }
-    if (state.generated.has(person.id)) {
-      const mutable = person as {
-        death?: Person['death'];
-        status?: Person['status'];
-      };
-      mutable.death = { time: yearOf(input.calendar, year), place };
-      mutable.status = 'dead';
-    } else {
-      // Authored people are not rewritten; the event carries the fact.
-      state.people.set(person.id, {
-        ...person,
-        death: { time: yearOf(input.calendar, year), place },
-        status: 'dead',
-      });
-    }
+    update(state, person, {
+      death: {
+        time: yearOf(input.calendar, year),
+        ...(place ? { place } : {}),
+      },
+      status: 'dead',
+    });
     state.widow(person.id);
   }
+}
 
-  // Only figures close to a seat of power carry the line forward; the rest
-  // live out their lives and their descendants stay in the aggregate. Before
-  // any title is held (the founding year) everyone counts.
-  const kinship = state.kinshipToHolders(params.lineageDepth);
-  const notable = (person: Person) =>
-    kinship.size === 0 || kinship.has(person.id);
-  const roomFor = (n: number) =>
-    state.living().length + n <= params.maxLivingFigures;
+function marriages(
+  state: HistoryState,
+  input: HistoryInput,
+  lifecycle: Lifecycle,
+  params: HistoryParams,
+  yctx: GeneratorContext,
+  notable: (p: Person) => boolean,
+): void {
+  const year = state.year;
+  const eligible = state
+    .living()
+    .filter(
+      (p) =>
+        notable(p) &&
+        isAdult(state.age(p) ?? -1, lifecycle) &&
+        state.spouse(p.id) === undefined &&
+        state.houseOf(p.id) !== undefined,
+    );
+  const wed = new Set<string>();
 
-  // Marriages: unmarried notable adults find a spouse in the population.
-  for (const person of state.living()) {
-    const age = state.age(person);
-    if (age === undefined || !isAdult(age, lifecycle)) continue;
-    if (state.spouse(person.id) !== undefined) continue;
-    if (!isMember(person, input.house.id) || !notable(person)) continue;
-    if (!roomFor(1)) break;
+  for (const person of eligible) {
+    if (wed.has(person.id)) continue;
+    const houseId = state.houseOf(person.id)!;
+    if (state.livingMembers(houseId).length >= params.maxFiguresPerHouse) {
+      continue;
+    }
     const prng = yctx.rng.child(`marry/${person.id}`);
     if (prng.next() >= params.marriageChance) continue;
 
-    const spouseSex: Sex = person.sex === 'female' ? 'male' : 'female';
-    const spouseAge = Math.max(
-      lifecycle.maturity,
-      age + prng.int(-params.spouseAgeSpread, params.spouseAgeSpread),
-    );
-    const sctx = childContext(yctx, `spouse/${person.id}`);
-    const spouse: Person = {
-      ...personGenerator.generate(
-        { species: input.species, culture: input.culture, sex: spouseSex },
-        sctx,
-      ),
-      birth: { time: yearOf(input.calendar, year - spouseAge), place },
-      residence: place,
-      memberOf: [house],
-    };
-    state.addPerson(spouse, true);
+    const wantSex: Sex = person.sex === 'female' ? 'male' : 'female';
+    const match =
+      prng.next() < params.dynasticMarriageChance
+        ? eligible.find(
+            (other) =>
+              !wed.has(other.id) &&
+              other.id !== person.id &&
+              other.sex === wantSex &&
+              state.houseOf(other.id) !== houseId,
+          )
+        : undefined;
 
-    const wedding = makeEvent(yctx, `marriage/${person.id}`, input.calendar, {
-      type: 'marriage',
-      year,
-      name: `Marriage of ${person.name} and ${spouse.name}`,
-      participants: [
-        { actor: ref('person', person), role: 'spouse' },
-        { actor: ref('person', spouse), role: 'spouse' },
-      ],
-      locations: [place],
-    });
-    state.addEvent(wedding);
+    const spouse =
+      match ?? commoner(state, input, lifecycle, params, person, prng, yctx);
+    wed.add(person.id);
+    wed.add(spouse.id);
+
+    // Name both houses before anyone moves, or the match reads as a house
+    // marrying itself.
+    const joined = match
+      ? `A match between ${houseName(state, state.houseOf(person.id))} and ${houseName(state, state.houseOf(spouse.id))}.`
+      : undefined;
+
+    // The partner from the lesser house joins the greater one, so a line and
+    // its title stay together.
+    const [keeper, mover] = seniority(state, person, spouse);
+    state.movePersonToHouse(mover, state.houseOf(keeper.id)!);
+
+    const place = placeOf(state, keeper);
+    state.addEvent(
+      makeEvent(yctx, `marriage/${person.id}`, input.calendar, {
+        type: 'marriage',
+        year,
+        name: `Marriage of ${person.name} and ${spouse.name}`,
+        ...(joined ? { description: joined } : {}),
+        participants: [
+          { actor: ref('person', person), role: 'spouse' },
+          { actor: ref('person', spouse), role: 'spouse' },
+        ],
+        ...(place ? { locations: [place] } : {}),
+      }),
+    );
     state.addRelationship(
       makeRelationship(yctx, `couple/${person.id}`, 'couple', person, spouse, {
         facts: [
-          { type: 'marriage', time: yearOf(input.calendar, year), place },
+          {
+            type: 'marriage',
+            time: yearOf(input.calendar, year),
+            ...(place ? { place } : {}),
+          },
         ],
         validTime: { begin: yearOf(input.calendar, year) },
       }),
     );
   }
+}
 
-  // Births: each couple with a fertile mother may have a child.
+function births(
+  state: HistoryState,
+  input: HistoryInput,
+  lifecycle: Lifecycle,
+  params: HistoryParams,
+  yctx: GeneratorContext,
+  notable: (p: Person) => boolean,
+): void {
+  const year = state.year;
   const seen = new Set<string>();
   for (const person of state.living()) {
     const spouse = state.spouse(person.id);
@@ -156,9 +207,14 @@ export function demographics(
     const father = mother === person ? spouse : person;
     if (mother.sex !== 'female' || father.sex !== 'male') continue;
     if (!notable(mother) && !notable(father)) continue;
-    if (!roomFor(1)) break;
     const motherAge = state.age(mother);
     if (motherAge === undefined || !isFertile(motherAge, lifecycle)) continue;
+
+    const houseId = state.houseOf(father.id) ?? state.houseOf(mother.id);
+    if (houseId === undefined) continue;
+    if (state.livingMembers(houseId).length >= params.maxFiguresPerHouse) {
+      continue;
+    }
     const brng = yctx.rng.child(`birth/${mother.id}`);
     if (brng.next() >= params.birthChance) continue;
 
@@ -168,28 +224,34 @@ export function demographics(
       { species: input.species, culture: input.culture, sex: genome.sex },
       cctx,
     );
+    const house = state.houses.get(houseId);
+    const place = house?.seat ?? placeOf(state, father);
     const child: Person = {
       ...base,
       ...toPersonFields(genome),
       name: `${base.name.split(' ')[0]} ${familyName(father) ?? familyName(mother) ?? ''}`.trim(),
-      birth: { time: yearOf(input.calendar, year), place },
-      residence: place,
-      memberOf: [house],
+      birth: {
+        time: yearOf(input.calendar, year),
+        ...(place ? { place } : {}),
+      },
+      ...(place ? { residence: place } : {}),
+      memberOf: [ref('faction', { id: houseId, name: house?.name })],
     };
     state.addPerson(child, true);
 
-    const birth = makeEvent(yctx, `birth/${mother.id}`, input.calendar, {
-      type: 'birth',
-      year,
-      name: `Birth of ${child.name}`,
-      participants: [
-        { actor: ref('person', child), role: 'child' },
-        { actor: ref('person', mother), role: 'mother' },
-        { actor: ref('person', father), role: 'father' },
-      ],
-      locations: [place],
-    });
-    state.addEvent(birth);
+    state.addEvent(
+      makeEvent(yctx, `birth/${mother.id}`, input.calendar, {
+        type: 'birth',
+        year,
+        name: `Birth of ${child.name}`,
+        participants: [
+          { actor: ref('person', child), role: 'child' },
+          { actor: ref('person', mother), role: 'mother' },
+          { actor: ref('person', father), role: 'father' },
+        ],
+        ...(place ? { locations: [place] } : {}),
+      }),
+    );
     const order = state.children(father.id).length + 1;
     for (const parent of [father, mother]) {
       state.addRelationship(
@@ -203,13 +265,72 @@ export function demographics(
             legitimacy: 'legitimate',
             successionOrder: order,
             facts: [
-              { type: 'birth', time: yearOf(input.calendar, year), place },
+              {
+                type: 'birth',
+                time: yearOf(input.calendar, year),
+                ...(place ? { place } : {}),
+              },
             ],
           },
         ),
       );
     }
   }
+}
+
+/** A spouse drawn from the seat's aggregate population and made real. */
+function commoner(
+  state: HistoryState,
+  input: HistoryInput,
+  lifecycle: Lifecycle,
+  params: HistoryParams,
+  match: Person,
+  prng: GeneratorContext['rng'],
+  yctx: GeneratorContext,
+): Person {
+  const houseId = state.houseOf(match.id)!;
+  const house = state.houses.get(houseId);
+  const place = house?.seat ?? placeOf(state, match);
+  // Never below the age of majority: a spouse drawn from the crowd is an
+  // adult, and a child bride would make the next birth impossible.
+  const age = Math.max(
+    lifecycle.maturity,
+    (state.age(match) ?? lifecycle.maturity) +
+      prng.int(-params.spouseAgeSpread, params.spouseAgeSpread),
+  );
+  const sctx = childContext(yctx, `spouse/${match.id}`);
+  const spouse: Person = {
+    ...personGenerator.generate(
+      {
+        species: input.species,
+        culture: input.culture,
+        sex: match.sex === 'female' ? 'male' : 'female',
+      },
+      sctx,
+    ),
+    birth: {
+      time: yearOf(input.calendar, state.year - age),
+      ...(place ? { place } : {}),
+    },
+    ...(place ? { residence: place } : {}),
+    memberOf: [ref('faction', { id: houseId, name: house?.name })],
+  };
+  state.addPerson(spouse, true);
+  return spouse;
+}
+
+/** The couple ordered so the member of the senior house comes first. */
+function seniority(
+  state: HistoryState,
+  a: Person,
+  b: Person,
+): [Person, Person] {
+  const rank = (p: Person) => {
+    const houseId = state.houseOf(p.id);
+    const title = houseId ? state.titleOfHouse(houseId) : undefined;
+    return title?.rank ?? Number.MAX_SAFE_INTEGER;
+  };
+  return rank(b) < rank(a) ? [b, a] : [a, b];
 }
 
 function childGenome(
@@ -242,8 +363,27 @@ function childGenome(
   });
 }
 
-function isMember(person: Person, houseId: string): boolean {
-  return (person.memberOf ?? []).some((m: Reference) => m.id === houseId);
+/** Where a person is, by their house's seat or their own residence. */
+function placeOf(state: HistoryState, person: Person): Reference | undefined {
+  const houseId = state.houseOf(person.id);
+  return (houseId ? state.seatOf(houseId) : undefined) ?? person.residence;
+}
+
+function houseName(state: HistoryState, houseId: string | undefined): string {
+  return (houseId ? state.houses.get(houseId)?.name : undefined) ?? 'a house';
+}
+
+/** Apply a patch, mutating generated people and replacing authored ones. */
+function update(
+  state: HistoryState,
+  person: Person,
+  patch: Partial<Person>,
+): void {
+  if (state.generated.has(person.id)) {
+    Object.assign(person, patch);
+  } else {
+    state.people.set(person.id, { ...person, ...patch });
+  }
 }
 
 function familyName(person: Person): string | undefined {

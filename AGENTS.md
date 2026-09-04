@@ -24,7 +24,7 @@ Every sub-project is named `@opendnd/<name>` with a descriptive English name. Ne
 - Never `bun add` a dependency. Add it to `projenrc/packages.ts` (versions come from `packages/@opendnd/projen/src/versions.ts`) and run `bunx projen`, then `bun install`.
 - Cross-package dependencies are `workspace:*` and resolve through built output; turbo builds dependencies before tests and before `generate`.
 - Tests are Bun tests in each package's `specs/` directory, imported as `bun:test`. Use `__dirname`, not `import.meta.dir`; packages compile as CommonJS.
-- Inside a package, import across folders with the `src/*` alias, never `../`.
+- Inside `src`, import across folders with relative paths (`../generator`). The `src/*` alias is for `specs` only: it survives into emitted declarations, where a consuming package would resolve it against its own `src` and silently get `any`.
 
 ## Commands
 

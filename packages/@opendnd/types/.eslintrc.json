@@ -115,21 +115,30 @@
           "method"
         ]
       }
-    ],
-    "no-restricted-imports": [
-      "error",
-      {
-        "patterns": [
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "specs/**/*.ts",
+        "specs/**/*.tsx"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
           {
-            "group": [
-              "../*",
-              "../**"
-            ],
-            "message": "Use src/* or specs/* absolute imports instead of parent-relative paths (../). Same-folder ./ imports are allowed."
+            "patterns": [
+              {
+                "group": [
+                  "../*",
+                  "../**"
+                ],
+                "message": "Use the src/* alias instead of parent-relative paths (../) in specs."
+              }
+            ]
           }
         ]
       }
-    ]
-  },
-  "overrides": []
+    }
+  ]
 }

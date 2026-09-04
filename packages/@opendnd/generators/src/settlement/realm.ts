@@ -18,13 +18,8 @@ import {
   TIERS,
 } from './data';
 import { drawPopulation, placeName, settlementGenerator } from './settlement';
-import {
-  Generator,
-  GeneratorContext,
-  childContext,
-  stamp,
-} from 'src/generator';
-import { NameGenerator } from 'src/names';
+import { Generator, GeneratorContext, childContext, stamp } from '../generator';
+import { NameGenerator } from '../names';
 
 export type DemesneTier = 'county' | 'duchy' | 'kingdom';
 

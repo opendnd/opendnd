@@ -1,7 +1,7 @@
 import type { Culture, NameType, Person, Sex, Species } from '@opendnd/types';
-import { Generator, GeneratorContext, stamp } from 'src/generator';
-import { generate as generateGenome, toPersonFields } from 'src/genetics';
-import { NameGenerator } from 'src/names';
+import { Generator, GeneratorContext, stamp } from '../generator';
+import { generate as generateGenome, toPersonFields } from '../genetics';
+import { NameGenerator } from '../names';
 
 export interface PersonInput {
   readonly species: Species;

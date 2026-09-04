@@ -6,7 +6,7 @@ import {
   TypeScriptProjectOptions,
 } from 'projen/lib/typescript';
 import { AgentDocsConfig } from './agent-docs-config';
-import { versions } from 'src/versions';
+import { versions } from '../versions';
 
 /**
  * Options for the root Bun monorepo project

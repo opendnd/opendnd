@@ -148,18 +148,23 @@ export function checkHistory(record: HistoryRecord): Finding[] {
     }
   }
 
-  // A couple relationship needs two living adults at the time it starts.
+  // A dated relationship needs both parties alive when it begins: you cannot
+  // marry, nor swear homage, after your death.
   for (const r of record.relationships) {
-    if (r.relationshipType !== 'couple') continue;
     const y = r.validTime?.begin?.year;
     if (y === undefined) continue;
+    const couple = r.relationshipType === 'couple';
     for (const who of [r.person1, r.person2]) {
       const died = deathYear.get(who.id);
       if (died !== undefined && died < y) {
         findings.push({
-          rule: 'spouse-alive-at-marriage',
+          rule: couple
+            ? 'spouse-alive-at-marriage'
+            : 'parties-alive-when-bond-begins',
           severity: 'error',
-          message: `${name(people, who.id)} marries in ${y} after dying in ${died}`,
+          message: couple
+            ? `${name(people, who.id)} marries in ${y} after dying in ${died}`
+            : `${name(people, who.id)} enters a ${r.relationshipType} bond in ${y} after dying in ${died}`,
           resources: [r.id, who.id],
         });
       }

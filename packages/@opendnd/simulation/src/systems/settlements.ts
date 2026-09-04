@@ -6,24 +6,24 @@ import {
   livestockFor,
   stamp,
 } from '@opendnd/generators';
-import type { Economy, Prosperity } from '@opendnd/types';
+import type { Economy, Place, Prosperity } from '@opendnd/types';
 import {
   HISTORY_GENERATOR,
   makeEvent,
   makePopulation,
   ref,
   yearOf,
-} from 'src/resources';
-import { HistoryState } from 'src/state';
-import type { HistoryInput, HistoryParams } from 'src/types';
+} from '../resources';
+import { HistoryState } from '../state';
+import type { HistoryInput, HistoryParams } from '../types';
 
 /**
- * The settlement's aggregate life for one year: the population grows or
- * shrinks with prosperity, prosperity itself drifts now and then (with an
- * event so the chronicle can say "hard times came to Thornehold"), and on
- * snapshot years a Population and an Economy record are emitted. The economy
- * is recomputed from the current count, prosperity and the place's natural
- * resources, so a town that grows gains businesses.
+ * The aggregate life of every settlement for one year: each population grows
+ * or shrinks with its own prosperity, prosperity itself drifts a step now and
+ * then (with an event, so a chronicle can say hard times came to a town), and
+ * on snapshot years a Population and an Economy record are emitted. The
+ * economy is recomputed from the current count, prosperity and the place's
+ * natural resources, so a town that grows gains businesses.
  */
 export function settlements(
   state: HistoryState,
@@ -34,47 +34,29 @@ export function settlements(
 ): void {
   const year = initial ? state.year : state.year + 1;
   const yctx = childContext(ctx, `y${year}`);
-  const place = ref('place', input.settlement);
-
-  if (!initial) {
-    // Prosperity drift, one step at a time.
-    const drift = yctx.rng.child('drift');
-    if (drift.next() < params.prosperityDrift) {
-      const index = PROSPERITIES.indexOf(state.prosperity);
-      const up = drift.chance();
-      const next: Prosperity | undefined = up
-        ? PROSPERITIES[index - 1]
-        : PROSPERITIES[index + 1];
-      if (next !== undefined) {
-        state.prosperity = next;
-        state.addEvent(
-          makeEvent(yctx, 'prosperity', input.calendar, {
-            type: 'other',
-            year,
-            name: up
-              ? `Fortune returns to ${input.settlement.name}`
-              : `Hard times come to ${input.settlement.name}`,
-            description: `${input.settlement.name} is now ${next.replace('-', ' ')}.`,
-            participants: [],
-            locations: [place],
-            outcome: next,
-          }),
-        );
-      }
-    }
-    state.populationCount *= 1 + params.populationGrowth[state.prosperity];
-  }
-
   const elapsed = year - input.startYear;
   const last = year === input.startYear + input.years;
-  if (initial || elapsed % params.populationSnapshotEvery === 0 || last) {
-    const count = Math.round(state.populationCount);
+  const snapshot =
+    initial || elapsed % params.populationSnapshotEvery === 0 || last;
+
+  for (const [placeId, settlement] of state.settlements) {
+    const place = state.places.get(placeId)!;
+    const pctx = childContext(yctx, placeId);
+
+    if (!initial) {
+      drift(state, input, params, place, settlement, year, pctx);
+      settlement.count *= 1 + params.populationGrowth[settlement.prosperity];
+    }
+    if (!snapshot) continue;
+
+    const placeRef = ref('place', place);
+    const count = Math.max(0, Math.round(settlement.count));
     state.populations.push(
       makePopulation(
-        yctx,
+        pctx,
         'population',
         input.calendar,
-        place,
+        placeRef,
         ref('species', input.species),
         ref('culture', input.culture),
         count,
@@ -82,20 +64,54 @@ export function settlements(
       ),
     );
     const economy: Economy = {
-      ...stamp(HISTORY_GENERATOR, childContext(yctx, 'economy')),
-      name: `${input.settlement.name} economy, ${year}`,
+      ...stamp(HISTORY_GENERATOR, childContext(pctx, 'economy')),
+      name: `${place.name} economy, ${year}`,
       perspective: 'in-universe',
-      place,
+      place: placeRef,
       at: yearOf(input.calendar, year),
-      prosperity: state.prosperity,
+      prosperity: settlement.prosperity,
       industries: industriesFor(
         count,
-        state.prosperity,
-        input.settlement.resources ?? [],
-        yctx.rng.child('industries'),
+        settlement.prosperity,
+        place.resources ?? [],
+        pctx.rng.child('industries'),
       ),
       livestock: livestockFor(count),
     };
     state.economies.push(economy);
   }
+}
+
+/** Move a settlement's prosperity one step, and say so in the record. */
+function drift(
+  state: HistoryState,
+  input: HistoryInput,
+  params: HistoryParams,
+  place: Place,
+  settlement: { prosperity: Prosperity },
+  year: number,
+  pctx: GeneratorContext,
+): void {
+  const rng = pctx.rng.child('drift');
+  if (rng.next() >= params.prosperityDrift) return;
+  const index = PROSPERITIES.indexOf(settlement.prosperity);
+  const up = rng.chance();
+  const next: Prosperity | undefined = up
+    ? PROSPERITIES[index - 1]
+    : PROSPERITIES[index + 1];
+  if (next === undefined) return;
+  settlement.prosperity = next;
+  state.addEvent(
+    makeEvent(pctx, 'prosperity', input.calendar, {
+      type: 'other',
+      year,
+      name: up
+        ? `Fortune returns to ${place.name}`
+        : `Hard times come to ${place.name}`,
+      description: `${place.name} is now ${next.replace('-', ' ')}.`,
+      participants: [],
+      locations: [ref('place', place)],
+      outcome: next,
+    }),
+  );
 }

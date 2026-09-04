@@ -11,7 +11,7 @@ import {
 import { ViteConfig } from './vite-config';
 import type { ViteProxyTarget } from './vite-config';
 import { VitestConfig } from './vitest-config';
-import { versions } from 'src/versions';
+import { versions } from '../versions';
 
 const DEFAULT_OPTIONS: Partial<TypeScriptProjectOptions> = {
   defaultReleaseBranch: 'main',
@@ -60,19 +60,29 @@ function applyCommonConfig(project: TypeScriptProject) {
       'node_modules',
       rootNodeModules,
     ]);
-    eslintConfig.addOverride('rules.no-restricted-imports', [
-      'error',
-      {
-        patterns: [
-          {
-            group: ['../*', '../**'],
-            message:
-              'Use src/* or specs/* absolute imports instead of parent-relative paths (../). Same-folder ./ imports are allowed.',
-          },
-        ],
-      },
-    ]);
   }
+
+  // Parent-relative imports are banned in specs, where the `src` alias is the
+  // point. Inside `src` they are required: the `src/*` alias survives into
+  // emitted .d.ts files, where a consuming package resolves it against its own
+  // `src` and silently gets `any`, because skipLibCheck hides the error.
+  project.eslint?.addOverride({
+    files: ['specs/**/*.ts', 'specs/**/*.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../*', '../**'],
+              message:
+                'Use the src/* alias instead of parent-relative paths (../) in specs.',
+            },
+          ],
+        },
+      ],
+    },
+  });
 }
 
 export interface BunWorkspaceProjectOptions extends Omit<

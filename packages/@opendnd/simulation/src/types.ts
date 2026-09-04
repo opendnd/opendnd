@@ -3,7 +3,6 @@ import type {
   Culture,
   Economy,
   Event,
-  Title,
   Faction,
   Person,
   Place,
@@ -12,12 +11,19 @@ import type {
   Relationship,
   Species,
   Tenure,
+  Title,
 } from '@opendnd/types';
 
-/** Tunable rates. Defaults suit a pre-industrial human settlement. */
+/** Tunable rates. Defaults suit a pre-industrial human realm. */
 export interface HistoryParams {
-  /** Yearly chance an unmarried adult of the house marries. */
+  /** Yearly chance an unmarried notable adult marries. */
   readonly marriageChance: number;
+  /**
+   * Share of those marriages made with another house rather than a commoner
+   * drawn from the local population. A dynastic match ties two houses
+   * together and is how alliances form.
+   */
+  readonly dynasticMarriageChance: number;
   /** Yearly chance a married couple in fertile years has a child. */
   readonly birthChance: number;
   /** Extra yearly mortality under age five. */
@@ -26,11 +32,11 @@ export interface HistoryParams {
   readonly baseMortality: number;
   /** Largest age gap, in years, when a spouse is drawn from the population. */
   readonly spouseAgeSpread: number;
-  /** Yearly growth of the aggregate population by prosperity. */
+  /** Yearly growth of a settlement's aggregate population by prosperity. */
   readonly populationGrowth: Record<Prosperity, number>;
-  /** Yearly chance the settlement's prosperity moves one step up or down. */
+  /** Yearly chance a settlement's prosperity moves one step up or down. */
   readonly prosperityDrift: number;
-  /** Emit a Population record this often, in years. */
+  /** Emit Population and Economy records this often, in years. */
   readonly populationSnapshotEvery: number;
   /**
    * Kinship steps (parent, child or spouse edges) from a current title
@@ -39,12 +45,13 @@ export interface HistoryParams {
    * their descendants live on in the aggregate population.
    */
   readonly lineageDepth: number;
-  /** Safety cap on living tracked figures; beyond it no new figures are created. */
-  readonly maxLivingFigures: number;
+  /** Safety cap on living tracked figures per house. */
+  readonly maxFiguresPerHouse: number;
 }
 
 export const DEFAULT_PARAMS: HistoryParams = {
   marriageChance: 0.2,
+  dynasticMarriageChance: 0.35,
   birthChance: 0.3,
   infantMortality: 0.03,
   baseMortality: 0.004,
@@ -58,22 +65,28 @@ export const DEFAULT_PARAMS: HistoryParams = {
   prosperityDrift: 0.02,
   populationSnapshotEvery: 50,
   lineageDepth: 2,
-  maxLivingFigures: 300,
+  maxFiguresPerHouse: 40,
 };
 
 export interface HistoryInput {
   readonly calendar: Calendar;
   readonly species: Species;
   readonly culture: Culture;
-  /** The settlement everything happens in. */
-  readonly settlement: Place;
-  /** The house or dynasty whose figures are tracked. */
-  readonly house: Faction;
-  /** Seats of authority in the house. The first is the sovereign one. */
-  readonly titles: readonly Title[];
   /**
-   * Authored people to start from. When absent, a founding couple is
-   * generated. Their existing birth and death fields are respected.
+   * Every place in the realm. Localities (hamlet through metropolis) carry a
+   * population and an economy; demesnes (county, duchy, kingdom) are
+   * containers whose population is the sum of what they hold.
+   */
+  readonly places: readonly Place[];
+  /** The houses. A house's `seat` is where its figures live, its `parent` is its liege. */
+  readonly factions: readonly Faction[];
+  /** Titles, each belonging to a house and held by one person at a time. */
+  readonly titles: readonly Title[];
+  /** Economy snapshots that seed each settlement's starting prosperity. */
+  readonly economies?: readonly Economy[];
+  /**
+   * Authored people to start from. Any house with no living member gets a
+   * founding couple instead. Existing birth and death fields are respected.
    */
   readonly founders?: readonly Person[];
   /**
@@ -82,10 +95,6 @@ export interface HistoryInput {
    * kill them earlier.
    */
   readonly canonEvents?: readonly Event[];
-  /** Aggregate population of the settlement at the start. */
-  readonly initialPopulation: number;
-  /** Prosperity at the start. Defaults to prosperous. */
-  readonly prosperity?: Prosperity;
   readonly startYear: number;
   readonly years: number;
   readonly params?: Partial<HistoryParams>;
