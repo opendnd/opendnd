@@ -1,6 +1,6 @@
 {
-  "name": "@opendnd/generators",
-  "description": "Content generators behind two contracts: Generator, which is deterministic and synchronous (names, genetics, people, settlements, realms), and Author, which is asynchronous and calls a language model through @opendnd/llm. Both stamp their output with provenance.",
+  "name": "@opendnd/llm",
+  "description": "One interface to language models: providers for Ollama, Bedrock and any OpenAI-compatible or Anthropic endpoint, named tasks whose model comes from configuration or the call, a content-addressed cache, Zod-validated structured output and per-call cost accounting. Domain-agnostic.",
   "scripts": {
     "build": "projen build",
     "compile": "projen compile",
@@ -29,9 +29,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@opendnd/llm": "workspace:*",
-    "@opendnd/random": "workspace:*",
-    "@opendnd/types": "workspace:*"
+    "zod": "^4.3.6"
   },
   "devEngines": {
     "packageManager": {

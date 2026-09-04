@@ -17,20 +17,17 @@ export interface BunTestConfigOptions {
 /**
  * Per-test timeout, set rather than inherited.
  *
- * Bun's default has moved between versions: a stalled test failed at 10s under
- * one and 5s under another, in the same repository on the same day, because two
- * bun versions were installed. Setting it here means a bun upgrade cannot
- * silently change what a timeout means.
+ * Bun's default has moved between versions, so setting it here means a bun
+ * upgrade cannot silently change what a timeout means.
  *
- * 5s is sized from measurement, not taste. Across 894 tests, everything outside
- * `@opendnd/projen` finishes in under 150ms; projen's own tests synthesize
- * whole projects and reach 2.2s. So this leaves the slowest legitimate test
- * better than a 2x margin while failing a genuine stall in half the time it
- * used to take.
+ * 5s is sized from measurement. Every test outside `@opendnd/simulation`
+ * finishes well under 200ms; the simulation runs centuries of history in one
+ * test and reaches about a second. That leaves the slowest legitimate test a
+ * comfortable margin while still failing a genuine stall quickly.
  *
  * A single test that is slow by design can carry its own limit as a third
- * argument, `it('...', fn, 120_000)`, which is the narrower tool and preferable
- * to raising this.
+ * argument, `it('...', fn, 120_000)`, which is the narrower tool and
+ * preferable to raising this.
  */
 const DEFAULT_TEST_TIMEOUT_MS = 5000;
 
@@ -53,11 +50,11 @@ export class BunTestConfig extends Component {
       /*
        * The same run, writing a JUnit report as well as console output.
        *
-       * Console output is fine when you can rerun the failure. It is useless for
-       * an intermittent one in CI, where you get a single line and no way to look
-       * closer: which test, how long it actually took, whether it timed out or
-       * asserted. This is what CI runs, so the report is there when it is needed
-       * rather than after somebody reproduces the problem.
+       * Console output is enough for a failure that can be rerun. It is not
+       * enough for an intermittent one in CI, which leaves a single line and no
+       * way to look closer: which test, how long it took, whether it timed out
+       * or asserted. This is what CI runs, so the report exists before anyone
+       * needs to reproduce the problem.
        */
       'test:ci': `${base} --reporter=junit --reporter-outfile=./test-results.xml ${testDir}`,
     });

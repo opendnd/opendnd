@@ -1,9 +1,11 @@
 ---
 title: "@opendnd/generators"
-description: Deterministic content generators behind one contract.
+description: Content generators behind two contracts, one deterministic and one that calls a model.
 ---
 
-Every generator, procedural today and AI-assisted later, implements the same contract:
+There are two contracts here, and the line between them matters. A **generator** is synchronous and reproducible. An **author** calls a language model, so it is asynchronous, costs money, and will not return the same words twice.
+
+Every generator implements:
 
 ```ts
 interface Generator<Input, Output> {
@@ -15,6 +17,26 @@ interface Generator<Input, Output> {
 ```
 
 `GeneratorContext` carries the `world`, a `seedPath` such as `dynasty/thorne/3`, an `Rng` seeded from `world/seedPath`, and optionally `now` and `requestedBy`. `createContext()` builds one. `stamp(generator, ctx)` supplies the platform fields on any resource a generator emits: a reproducible `id`, `derivedId = uuidV5(world, seedPath)`, `canonStatus: generated`, `recorded`, and `provenance` with generator, seed and derivation. See [ADR-005](/adr/adr-005-deterministic-generation/).
+
+## The Author contract
+
+```ts
+interface Author<Input, Output> {
+  id: string;
+  version: string;
+  description: string;
+  task: string; // a task in @opendnd/llm: 'chronicle', 'author', ...
+  author(input: Input, ctx: AuthorContext): Promise<Output>;
+}
+```
+
+`AuthorContext` is a `GeneratorContext` with a `Models` on it, and optionally the `model` the person asking chose. An author names a task and passes that choice through; it never picks a model itself, so the same author runs against a model on the user's own machine or a hosted one depending only on configuration and what was asked for. `stampAuthored(author, ctx, response)` supplies the platform fields plus the hash of the prompt and, in `provenance.parameters.model`, the model that answered; `derivedFrom` names the records it was written from.
+
+An author is deliberately not a `Generator`. A `Generator` promises that the same seed gives the same output for ever, which is what lets a region be filled on demand and refilled identically; an author cannot promise that and should not pretend to. What it does promise is the same as any other generator: output stamped `generated`, traceable to the code and the model that made it, and reviewable before it becomes canon. The record's *identity* is still stable, because `id` and `derivedId` come from the seed path — re-authoring an article replaces it rather than adding a second one. See [ADR-010](/adr/adr-010-language-models/).
+
+## article
+
+`articleAuthor.author({ subject, title, facts, sources, workType, words }, ctx)` returns a `work` about one record, for the Codex. Everything the model is allowed to say arrives in `facts`, so the article is a rendering of the record rather than a new source of truth, and the events behind it are named in `provenance.derivedFrom`. A `chronicle` is written as if from inside the world and marked in-universe; an `article` is written about the world and marked out-of-universe.
 
 ## names
 

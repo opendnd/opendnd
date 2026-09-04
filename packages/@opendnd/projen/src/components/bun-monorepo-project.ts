@@ -348,14 +348,15 @@ export class BunMonorepoProject extends TypeScriptProject {
   /**
    * Keep a bare `bun test` at the root honest.
    *
-   * The two React sites test with vitest under jsdom, and their specs cannot
-   * run under `bun test` at all: they fail on `document is not defined`, which
-   * reads as a broken repository rather than as the wrong runner. The supported
-   * command is `bunx projen test`, but `bun test` is what people type, so it
-   * should either work or not collect files it cannot run.
+   * Front ends under `sites` test with vitest under jsdom, and their specs
+   * cannot run under `bun test` at all: they fail on `document is not
+   * defined`, which reads as a broken repository rather than as the wrong
+   * runner. The supported command is `bunx projen test`, but `bun test` is
+   * what people type, so it should either work or not collect files it cannot
+   * run.
    *
-   * Everything else, packages and services alike, does use `bun test` and stays
-   * included.
+   * Everything else, packages and services alike, does use `bun test` and
+   * stays included.
    */
   private configureBunTest() {
     new TomlFile(this, 'bunfig.toml', {

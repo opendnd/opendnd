@@ -14,8 +14,8 @@ export interface PersonInput {
 
 /**
  * A whole person: a genome from the species and a name from the culture,
- * stamped with provenance. The first resource-producing generator, and the
- * shape every later one (dynasties, settlements) follows.
+ * stamped with provenance. This is the shape every resource-producing
+ * generator follows: compose the smaller generators and stamp the result.
  */
 export const personGenerator: Generator<PersonInput, Person> = {
   id: 'person',

@@ -520,7 +520,7 @@ export type Feature = z.infer<typeof featureSchema>;
 
 /** How this record came to exist (PROV-O), including the generator seed when it was produced procedurally or by AI. */
 export const provenanceSchema = z.strictObject({
-  /** Generator id and version, e.g. dynastia@2.0.0 or bedrock:anthropic.claude-sonnet-5. */
+  /** Generator or author id and version, e.g. person@1.0.0. For an AI-authored record this is still the author, and the model that served it is in parameters.model. */
   generatedBy: z.string().optional(),
   /** Deterministic seed path. Same seed and generator yields the same derivedId. */
   seed: z.string().optional(),
@@ -785,7 +785,7 @@ export const economySchema = z.strictObject({
 });
 export type Economy = z.infer<typeof economySchema>;
 
-/** Something that happened in-world, with participants in roles and optional cause links (schema.org Event, CIDOC E5, Dwarf Fortress historical events). */
+/** Something that happened in-world, with participants in roles and optional cause links (schema.org Event, CIDOC E5). */
 export const eventSchema = z.strictObject({
   /** Random v4. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),

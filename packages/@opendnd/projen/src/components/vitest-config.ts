@@ -17,8 +17,8 @@ export interface VitestConfigOptions {
    *
    * Without them a spec that reaches a workspace package gets that package's
    * `dist` build, whose compiled `src/*` requires resolve against the wrong
-   * root and throw at import time. The app config has always had these; the
-   * test config did not, which made those packages untestable from here.
+   * root and throw at import time. The test config needs the same aliases as
+   * the app config, or those packages cannot be imported from a spec.
    */
   readonly workspaceAliases?: Record<string, string>;
 }
@@ -120,10 +120,10 @@ export class VitestConfig extends Component {
       /*
        * The CI variant, which must exist on every project that has a `test`.
        *
-       * The root test task runs `turbo run test:ci`, so a project without this
-       * script is simply not tested in CI. Adding the task without adding this
-       * quietly dropped three packages from the run, which is the kind of silent
-       * coverage loss that is hard to notice and easy to cause.
+       * The root test task runs `turbo run test:ci`, so a project with a
+       * `test` script but no `test:ci` is simply not tested in CI. That is a
+       * silent loss of coverage: nothing fails, the project is just absent
+       * from the run.
        */
       'test:ci': `bunx vitest run --passWithNoTests --reporter=junit --outputFile=test-results.xml ${testDir}`,
       'test:watch': `bunx vitest ${testDir}`,

@@ -2,7 +2,7 @@
   "$id": "https://opendnd.org/ours/schemas/event.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Event",
-  "description": "Something that happened in-world, with participants in roles and optional cause links (schema.org Event, CIDOC E5, Dwarf Fortress historical events).",
+  "description": "Something that happened in-world, with participants in roles and optional cause links (schema.org Event, CIDOC E5).",
   "allOf": [
     {
       "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"

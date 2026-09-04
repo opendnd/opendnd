@@ -40,6 +40,8 @@ bun run dev                  # start apps and sites in dev mode
 
 - The ontology in `packages/@opendnd/ontology/ours/` is the source of truth. `@opendnd/types` is generated from it and drift-checked; never edit `src/generated`.
 - Generators live in `packages/@opendnd/generators/src/<name>/` and implement the `Generator` contract. They never call `Math.random`; they take the context's `Rng` and stamp output with provenance.
+- Generators that call a language model implement `Author` instead, are asynchronous, and name a task (`chronicle`, `describe`, `author`, `review`, `embed`). Never choose a model in code: pass through the caller's choice, or leave it to the task's configuration.
+- Every model call is priced and recorded. Any new path that calls a model goes through `Models`, or it is spend nobody is billed for.
 - Postgres dialect everywhere (Docker locally, Neon in the cloud). Never introduce a second database engine.
 - Code is MIT. Game content is CC-BY-4.0 SRD 5.2.1 with the Wizards of the Coast notice in `CONTENT-LICENSE.md`. No ORC or OGL material in the core corpus.
 - ADRs are `docs/src/content/docs/adr/ADR-NNN-<slug>.md`, sequential, never date-based.

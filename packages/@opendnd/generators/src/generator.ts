@@ -22,9 +22,11 @@ export interface GeneratorContext {
 }
 
 /**
- * The contract every generator implements, procedural or AI: typed input in,
+ * The contract every deterministic generator implements: typed input in,
  * typed output out, and a stable id and version that go into provenance so
- * any generated record can be traced to the code that made it.
+ * any generated record can be traced to the code that made it. A generator
+ * that calls a language model implements `Author` instead, which is
+ * asynchronous.
  */
 export interface Generator<Input, Output> {
   readonly id: string;

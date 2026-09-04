@@ -38,8 +38,29 @@
       "name": "@opendnd/generators",
       "version": "0.0.0",
       "dependencies": {
+        "@opendnd/llm": "workspace:*",
         "@opendnd/random": "workspace:*",
         "@opendnd/types": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "*",
+        "@types/node": "ts5.9",
+        "@typescript-eslint/eslint-plugin": "^8",
+        "@typescript-eslint/parser": "^8",
+        "eslint": "^9",
+        "eslint-config-prettier": "*",
+        "eslint-import-resolver-typescript": "*",
+        "eslint-plugin-import": "*",
+        "eslint-plugin-prettier": "*",
+        "prettier": "*",
+        "typescript": "^5.9.3",
+      },
+    },
+    "packages/@opendnd/llm": {
+      "name": "@opendnd/llm",
+      "version": "0.0.0",
+      "dependencies": {
+        "zod": "^4.3.6",
       },
       "devDependencies": {
         "@types/bun": "*",
@@ -446,6 +467,8 @@
     "@opendnd/docs": ["@opendnd/docs@workspace:docs"],
 
     "@opendnd/generators": ["@opendnd/generators@workspace:packages/@opendnd/generators"],
+
+    "@opendnd/llm": ["@opendnd/llm@workspace:packages/@opendnd/llm"],
 
     "@opendnd/ontology": ["@opendnd/ontology@workspace:packages/@opendnd/ontology"],
 

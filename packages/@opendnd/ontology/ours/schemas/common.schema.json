@@ -222,7 +222,7 @@
       "properties": {
         "generatedBy": {
           "type": "string",
-          "description": "Generator id and version, e.g. dynastia@2.0.0 or bedrock:anthropic.claude-sonnet-5."
+          "description": "Generator or author id and version, e.g. person@1.0.0. For an AI-authored record this is still the author, and the model that served it is in parameters.model."
         },
         "seed": {
           "type": "string",

@@ -7,7 +7,7 @@ export interface PackageConfig {
   readonly description: string;
   readonly deps?: string[];
   readonly devDeps?: string[];
-  /** Bun test timeout in ms. Projen synth tests need more than the default. */
+  /** Bun test timeout in ms. Raised for tests that synthesize whole projects. */
   readonly testTimeout?: number;
   /** Extra projen tasks: name -> { description, exec }. */
   readonly tasks?: Record<string, { description: string; exec: string }>;
@@ -39,6 +39,12 @@ const packages: readonly PackageConfig[] = [
     devDeps: ['@opendnd/ours@workspace:*'],
   },
   {
+    name: '@opendnd/llm',
+    description:
+      'One interface to language models: providers for Ollama, Bedrock and any OpenAI-compatible or Anthropic endpoint, named tasks whose model comes from configuration or the call, a content-addressed cache, Zod-validated structured output and per-call cost accounting. Domain-agnostic.',
+    deps: [`zod@${versions.zod}`],
+  },
+  {
     name: '@opendnd/random',
     description:
       'Seeded, deterministic randomness: a xoshiro128** PRNG keyed by a seed string, dice notation, weighted picks, and UUID v5 derived ids.',
@@ -52,8 +58,12 @@ const packages: readonly PackageConfig[] = [
   {
     name: '@opendnd/generators',
     description:
-      'Deterministic content generators (names, genetics, people) behind one Generator contract: input resources plus a seed path in, ontology resources with provenance out.',
-    deps: ['@opendnd/random@workspace:*', '@opendnd/types@workspace:*'],
+      'Content generators behind two contracts: Generator, which is deterministic and synchronous (names, genetics, people, settlements, realms), and Author, which is asynchronous and calls a language model through @opendnd/llm. Both stamp their output with provenance.',
+    deps: [
+      '@opendnd/llm@workspace:*',
+      '@opendnd/random@workspace:*',
+      '@opendnd/types@workspace:*',
+    ],
   },
   {
     name: '@opendnd/simulation',

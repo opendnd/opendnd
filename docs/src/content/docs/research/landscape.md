@@ -36,7 +36,7 @@ Consolidated from three research passes: TTRPG data standards, general ontologie
 | Geometry | GeoJSON RFC 7946 geometry + explicit `crs` (IRI, or `{type: "planar", mapId}`); GeoSPARQL Feature/Geometry split; optional S2 cell ids | GeoJSON hard-codes CRS84 so CRS must be out-of-band; H3 is Earth-welded, S2 is planet-agnostic |
 | Provenance | PROV-O `wasGeneratedBy`, `wasDerivedFrom`, `wasRevisionOf`, `wasAttributedTo` | Authoring-side lineage incl. generator seed and prompt |
 | Texts / works | schema.org `CreativeWork` + NOnt fabula / narration / reference triad | World-events vs the works that tell them vs the mapping |
-| Generated history | Dwarf Fortress legends: `historical_events` + `historical_event_collections` (war ⊃ battles), `hf_link` / `entity_link` | Best "generated history" model in the wild |
+| Generated history | Simulation-game legends formats: individual `historical_events` plus event *collections* that contain them (a war contains its battles), and link tables from events to figures and entities | The pattern to copy: the collection is what makes a run of events tell one story |
 | Procedural geography | Azgaar FMG: `states, provinces, burgs, cultures, religions, rivers, routes, markers, zones`, 8-valued diplomacy matrix, regiments, `options.year/era` | Best "generated geography" model in the wild |
 
 **Practitioner requirements (Kanka, World Anvil, Campfire):** Characters, Locations, Families, Organisations, Items, Events, Calendars, Timelines/Eras, Races/Species *separate from* Ethnicity/Culture, Quests, Journals, Maps (real lat/lon vs image/pixel), Myth/Legend as explicitly untrue in-world content, Conflicts, Titles/Ranks, Languages, Religions.

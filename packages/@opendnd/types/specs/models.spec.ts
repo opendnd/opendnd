@@ -63,7 +63,7 @@ describe('@opendnd/types', () => {
       canonStatus: 'generated',
       recorded,
       birth: { time: { trs: world, year: 1203, month: 4, precision: 'month' } },
-      provenance: { generatedBy: 'dynastia@2.0.0', seed: 'aerath/thorne/3' },
+      provenance: { generatedBy: 'person@1.0.0', seed: 'aerath/thorne/3' },
     });
     expect(p.status).toBe('alive');
     expect(p.birth?.time?.precision).toBe('month');
