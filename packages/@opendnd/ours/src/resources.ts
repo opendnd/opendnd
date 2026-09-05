@@ -130,8 +130,21 @@ export interface JsonSchema {
   anyOf?: JsonSchema[];
   oneOf?: JsonSchema[];
   default?: unknown;
+  /**
+   * Draft 2020-12's answer to `additionalProperties` for a schema that
+   * extends another through `allOf`: properties the base declares count as
+   * evaluated, so a conformant validator accepts them.
+   */
+  unevaluatedProperties?: boolean;
+  /** The server sets this field; a request body may omit it. */
+  readOnly?: boolean;
   /** OURS extension: the URL of a Vocabulary whose codes constrain this string. */
   'x-ours-vocabulary'?: string;
+  /**
+   * OURS extension, on a model schema: the properties that give a record its
+   * in-world valid time when `validTime` is not stated. Dotted paths.
+   */
+  'x-ours-valid-time'?: { begin: string; end?: string };
 }
 export type JsonSchemaType =
   'object' | 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'null';

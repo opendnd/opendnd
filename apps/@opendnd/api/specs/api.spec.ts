@@ -1,9 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
 import type { Pool } from 'pg';
-import { createApp } from 'src/app';
+import { MODEL_IDS, createApp } from 'src/app';
 import { inWorld } from 'src/db';
 import { DevIdentityResolver } from 'src/identity';
-import { type OutboxEvent, publishWorld } from 'src/outbox';
+import { openApiDocument } from 'src/openapi';
+import { type OutboxEvent, publishAll, publishWorld } from 'src/outbox';
 import { connect } from './support';
 
 /** The API as a caller sees it: requests in, JSON out. */
@@ -12,9 +13,11 @@ function client(app: ReturnType<typeof createApp>, subject?: string) {
     method: string,
     path: string,
     body?: unknown,
-  ): Promise<{ status: number; body: unknown }> => {
+    extra: Record<string, string> = {},
+  ): Promise<{ status: number; body: unknown; headers: Headers }> => {
     const headers: Record<string, string> = {
       'content-type': 'application/json',
+      ...extra,
     };
     if (subject) headers.authorization = `Bearer dev:${subject}`;
     const response = await app.request(`http://api${path}`, {
@@ -26,14 +29,16 @@ function client(app: ReturnType<typeof createApp>, subject?: string) {
     return {
       status: response.status,
       body: text.length > 0 ? (JSON.parse(text) as unknown) : undefined,
+      headers: response.headers,
     };
   };
+  type H = Record<string, string>;
   return {
-    get: (p: string) => call('GET', p),
-    post: (p: string, b?: unknown) => call('POST', p, b),
-    put: (p: string, b: unknown) => call('PUT', p, b),
-    patch: (p: string, b: unknown) => call('PATCH', p, b),
-    delete: (p: string) => call('DELETE', p),
+    get: (p: string, h?: H) => call('GET', p, undefined, h),
+    post: (p: string, b?: unknown, h?: H) => call('POST', p, b, h),
+    put: (p: string, b: unknown, h?: H) => call('PUT', p, b, h),
+    patch: (p: string, b: unknown, h?: H) => call('PATCH', p, b, h),
+    delete: (p: string, h?: H) => call('DELETE', p, undefined, h),
   };
 }
 
@@ -397,6 +402,9 @@ describe('the API: actions', () => {
     expect(Object.keys(doc.components.schemas).length).toBeGreaterThanOrEqual(
       16,
     );
+    // A recursive shape must not leave document-local pointers behind: an
+    // OpenAPI reader resolves them against the root, which has no $defs.
+    expect(JSON.stringify(doc)).not.toContain('#/$defs/');
   });
 
   it('runs a history and returns it without saving anything', async () => {
@@ -643,7 +651,7 @@ describe('the API: what a front end needs', () => {
       worlds: { id: string; role: string }[];
     };
     expect(me.subject).toBe('drew-frontend');
-    expect(me.email).toBe('drew-frontend@localhost');
+    expect(me.email).toBe('drew-frontend@dev.invalid');
     expect(me.worlds.find((w) => w.id === world)?.role).toBe('owner');
     expect((await client(app).get('/v1/me')).status).toBe(401);
   });
@@ -1084,5 +1092,386 @@ describe('the API: the campaign layer', () => {
     expect(
       (session.body as { produced: unknown[] }).produced.length,
     ).toBeGreaterThan(0);
+  });
+});
+
+describe('the API: hardening', () => {
+  let pool: Pool;
+  let app: ReturnType<typeof createApp>;
+  let drew: ReturnType<typeof client>;
+  let other: ReturnType<typeof client>;
+  let anonymous: ReturnType<typeof client>;
+  let world: string;
+  const created: string[] = [];
+  const subjects = ['drew-h', 'other-h', 'newcomer-h'];
+  const trs = 'c0000000-0000-4000-8000-000000000001';
+
+  const makeWorld = async (body: Record<string, unknown>) => {
+    const made = await drew.post('/v1/worlds', body);
+    expect(made.status).toBe(201);
+    const id = (made.body as { id: string }).id;
+    created.push(id);
+    return id;
+  };
+
+  beforeAll(async () => {
+    pool = await connect();
+    app = createApp({ pool, identity: new DevIdentityResolver() });
+    drew = client(app, 'drew-h');
+    other = client(app, 'other-h');
+    anonymous = client(app);
+    world = await makeWorld({ name: 'Hardened' });
+  });
+
+  afterAll(async () => {
+    if (!pool) return;
+    for (const id of created) {
+      await pool.query('delete from layer where id = $1', [id]);
+    }
+    await pool.query('delete from app_user where subject = any($1)', [
+      subjects,
+    ]);
+    await pool.end();
+  });
+
+  it('refuses a malformed parameter with a 400 and a code, not a database error', async () => {
+    for (const path of [
+      `/v1/worlds/${world}/place?limit=0`,
+      `/v1/worlds/${world}/place?limit=abc`,
+      `/v1/worlds/${world}/place?at=soon`,
+      `/v1/worlds/${world}/place?asOf=yesterday`,
+      `/v1/worlds/${world}/place?cell=xyz`,
+      `/v1/worlds/${world}/place/not-an-id`,
+      '/v1/worlds/not-a-world/place',
+    ]) {
+      const { status, body } = await drew.get(path);
+      const problem = body as { code: string; requestId: string };
+      expect([path, status]).toEqual([path, 400]);
+      expect(problem.code).toBe('validation');
+      expect(typeof problem.requestId).toBe('string');
+    }
+  });
+
+  it('answers with the revision as an ETag and refuses a write that has not seen it', async () => {
+    const made = await drew.post(`/v1/worlds/${world}/place`, {
+      name: 'Itumeist',
+      placeType: 'town',
+    });
+    expect(made.status).toBe(201);
+    expect(made.headers.get('etag')).toBe('"1"');
+    const id = (made.body as { id: string }).id;
+
+    const replaced = await drew.put(
+      `/v1/worlds/${world}/place/${id}`,
+      { name: 'Itumeist', placeType: 'city' },
+      { 'if-match': '"1"' },
+    );
+    expect(replaced.status).toBe(200);
+    expect(replaced.headers.get('etag')).toBe('"2"');
+
+    // A second editor who still holds revision 1 does not overwrite the city.
+    const stale = await drew.put(
+      `/v1/worlds/${world}/place/${id}`,
+      { name: 'Itumeist', placeType: 'village' },
+      { 'if-match': '"1"' },
+    );
+    expect(stale.status).toBe(412);
+    expect((stale.body as { code: string }).code).toBe('stale');
+    const now = await drew.get(`/v1/worlds/${world}/place/${id}`);
+    expect((now.body as { placeType: string }).placeType).toBe('city');
+    expect(now.headers.get('etag')).toBe('"2"');
+
+    const nonsense = await drew.put(
+      `/v1/worlds/${world}/place/${id}`,
+      { name: 'Itumeist', placeType: 'city' },
+      { 'if-match': 'whenever' },
+    );
+    expect(nonsense.status).toBe(400);
+  });
+
+  it('answers a second POST of the same id with a conflict, not a quiet replacement', async () => {
+    const id = crypto.randomUUID();
+    const first = await drew.post(`/v1/worlds/${world}/place`, {
+      id,
+      name: 'Once',
+      placeType: 'village',
+    });
+    expect(first.status).toBe(201);
+    const second = await drew.post(`/v1/worlds/${world}/place`, {
+      id,
+      name: 'Twice',
+      placeType: 'village',
+    });
+    expect(second.status).toBe(409);
+    expect((second.body as { code: string }).code).toBe('conflict');
+    const kept = await drew.get(`/v1/worlds/${world}/place/${id}`);
+    expect((kept.body as { name: string }).name).toBe('Once');
+  });
+
+  it('continues the revision after a delete, so a history never restarts', async () => {
+    const id = crypto.randomUUID();
+    await drew.post(`/v1/worlds/${world}/place`, {
+      id,
+      name: 'Phoenix',
+      placeType: 'village',
+    });
+    expect((await drew.delete(`/v1/worlds/${world}/place/${id}`)).status).toBe(
+      204,
+    );
+    const again = await drew.post(`/v1/worlds/${world}/place`, {
+      id,
+      name: 'Phoenix, rebuilt',
+      placeType: 'town',
+    });
+    expect(again.status).toBe(201);
+    expect(again.headers.get('etag')).toBe('"3"');
+
+    const history = await drew.get(`/v1/worlds/${world}/place/${id}/history`);
+    const versions = (
+      history.body as { history: { revision: number; deleted: boolean }[] }
+    ).history;
+    expect(versions.map((v) => [v.revision, v.deleted])).toEqual([
+      [3, false],
+      [2, true],
+      [1, false],
+    ]);
+  });
+
+  it('applies a merge patch: null clears a field and objects merge', async () => {
+    const made = await drew.post(`/v1/worlds/${world}/place`, {
+      name: 'Patched',
+      placeType: 'village',
+      description: 'to be removed',
+      validTime: { begin: { trs, year: 100 } },
+    });
+    const id = (made.body as { id: string }).id;
+    const patched = await drew.patch(`/v1/worlds/${world}/place/${id}`, {
+      description: null,
+      validTime: { end: { trs, year: 200 } },
+    });
+    expect(patched.status).toBe(200);
+    const body = patched.body as {
+      description?: string;
+      validTime: { begin?: { year: number }; end?: { year: number } };
+    };
+    expect(body.description).toBeUndefined();
+    expect(body.validTime.begin?.year).toBe(100);
+    expect(body.validTime.end?.year).toBe(200);
+  });
+
+  it('derives the valid time from birth and death, so a read at a year sees who was alive', async () => {
+    const elder = await drew.post(`/v1/worlds/${world}/person`, {
+      name: 'Apiustu',
+      birth: { time: { trs, year: 900 } },
+      death: { time: { trs, year: 950 } },
+    });
+    expect(elder.status).toBe(201);
+    expect(
+      (
+        elder.body as {
+          validTime: { begin: { year: number }; end: { year: number } };
+        }
+      ).validTime,
+    ).toMatchObject({ begin: { year: 900 }, end: { year: 950 } });
+    await drew.post(`/v1/worlds/${world}/person`, {
+      name: 'Ociaman',
+      birth: { time: { trs, year: 990 } },
+    });
+
+    const names = async (at: number) =>
+      (
+        (await drew.get(`/v1/worlds/${world}/person?at=${at}`)).body as {
+          resources: { name: string }[];
+        }
+      ).resources.map((p) => p.name);
+    expect(await names(920)).toEqual(['Apiustu']);
+    expect(await names(1000)).toEqual(['Ociaman']);
+    expect(await names(800)).toEqual([]);
+  });
+
+  it('sorts a page by name, continues it, and fetches a set of ids at once', async () => {
+    const orchard = await makeWorld({ name: 'Orchard' });
+    const ids: Record<string, string> = {};
+    for (const name of ['Cedar', 'Ash', 'Birch']) {
+      const made = await drew.post(`/v1/worlds/${orchard}/place`, {
+        name,
+        placeType: 'village',
+      });
+      ids[name] = (made.body as { id: string }).id;
+    }
+    const first = await drew.get(
+      `/v1/worlds/${orchard}/place?sort=name&limit=2`,
+    );
+    const page = first.body as { resources: { name: string }[]; next?: string };
+    expect(page.resources.map((p) => p.name)).toEqual(['Ash', 'Birch']);
+    expect(page.next).toBeDefined();
+    const second = await drew.get(
+      `/v1/worlds/${orchard}/place?sort=name&limit=2&cursor=${page.next}`,
+    );
+    expect(
+      (
+        second.body as { resources: { name: string }[]; next?: string }
+      ).resources.map((p) => p.name),
+    ).toEqual(['Cedar']);
+    // A cursor from one order is refused by another.
+    expect(
+      (
+        await drew.get(
+          `/v1/worlds/${orchard}/place?sort=id&cursor=${page.next}`,
+        )
+      ).status,
+    ).toBe(400);
+
+    const some = await drew.get(
+      `/v1/worlds/${orchard}/place?ids=${ids.Ash},${ids.Cedar}`,
+    );
+    expect(
+      (some.body as { resources: { name: string }[] }).resources
+        .map((p) => p.name)
+        .sort(),
+    ).toEqual(['Ash', 'Cedar']);
+  });
+
+  it('keeps what a world has spent to its owners, even on a public world', async () => {
+    const shared = await makeWorld({ name: 'Shared', visibility: 'public' });
+    expect((await anonymous.get(`/v1/worlds/${shared}/usage`)).status).toBe(
+      401,
+    );
+    expect((await other.get(`/v1/worlds/${shared}/usage`)).status).toBe(403);
+    expect((await drew.get(`/v1/worlds/${shared}/usage`)).status).toBe(200);
+    // And `link` is no longer a visibility that means nothing.
+    expect(
+      (await drew.post('/v1/worlds', { name: 'Linked', visibility: 'link' }))
+        .status,
+    ).toBe(400);
+  });
+
+  it('will not let the last owner demote themself', async () => {
+    const demoted = await drew.post(`/v1/worlds/${world}/members`, {
+      subject: 'drew-h',
+      role: 'editor',
+    });
+    expect(demoted.status).toBe(409);
+    expect(
+      (await drew.post(`/v1/worlds/${world}/members`, { role: 'editor' }))
+        .status,
+    ).toBe(400);
+  });
+
+  it('invites by email and seats the person the first time they sign in', async () => {
+    const invited = await drew.post(`/v1/worlds/${world}/members`, {
+      email: 'Newcomer-H@dev.invalid',
+      role: 'editor',
+    });
+    expect(invited.status).toBe(202);
+    const before = await drew.get(`/v1/worlds/${world}/members`);
+    expect(
+      (before.body as { invitations: { email: string }[] }).invitations.map(
+        (i) => i.email,
+      ),
+    ).toEqual(['newcomer-h@dev.invalid']);
+
+    const newcomer = client(app, 'newcomer-h');
+    const me = await newcomer.get('/v1/me');
+    expect(
+      (me.body as { worlds: { id: string; role: string }[] }).worlds,
+    ).toContainEqual(expect.objectContaining({ id: world, role: 'editor' }));
+    const after = await drew.get(`/v1/worlds/${world}/members`);
+    const body = after.body as {
+      members: { subject: string; role: string }[];
+      invitations: unknown[];
+    };
+    expect(body.invitations).toEqual([]);
+    expect(body.members).toContainEqual(
+      expect.objectContaining({ subject: 'newcomer-h', role: 'editor' }),
+    );
+  });
+
+  it('lets an owner list archived worlds and restore one', async () => {
+    const attic = await makeWorld({ name: 'Attic' });
+    expect((await drew.delete(`/v1/worlds/${attic}`)).status).toBe(204);
+    const listed = (await drew.get('/v1/worlds')).body as {
+      worlds: { id: string }[];
+    };
+    expect(listed.worlds.some((w) => w.id === attic)).toBe(false);
+    const archived = (await drew.get('/v1/worlds?archived=true')).body as {
+      worlds: { id: string; archivedAt?: string }[];
+    };
+    expect(
+      archived.worlds.find((w) => w.id === attic)?.archivedAt,
+    ).toBeDefined();
+    expect((await drew.get(`/v1/worlds/${attic}/place`)).status).toBe(404);
+
+    // Not the owner: refused, like any other change to the world.
+    expect((await other.post(`/v1/worlds/${attic}/$restore`)).status).toBe(403);
+    expect((await drew.post(`/v1/worlds/${attic}/$restore`)).status).toBe(204);
+    expect((await drew.get(`/v1/worlds/${attic}/place`)).status).toBe(200);
+  });
+
+  it('bounds what an anonymous caller may generate', async () => {
+    const realm = await anonymous.post('/v1/place/$generate', {
+      tier: 'kingdom',
+    });
+    expect(realm.status).toBe(400);
+    expect((realm.body as { code: string }).code).toBe('validation');
+  });
+
+  it('drains every world from outside any world, as the publisher does', async () => {
+    const published: OutboxEvent[] = [];
+    const sink = {
+      publish: async (events: readonly OutboxEvent[]) => {
+        published.push(...events);
+      },
+    };
+    let drained = 0;
+    for (let i = 0; i < 50; i++) {
+      const n = await publishAll(pool, sink);
+      if (n === 0) break;
+      drained += n;
+    }
+    expect(drained).toBeGreaterThan(0);
+    expect(published.some((e) => e.world === world)).toBe(true);
+    const { rows } = await inWorld(pool, world, (c) =>
+      c.query<{ n: string }>(
+        'select count(*) as n from event_outbox where published_at is null',
+      ),
+    );
+    expect(Number(rows[0]!.n)).toBe(0);
+  });
+
+  it('describes every route it mounts, and asks a client only for what it may send', () => {
+    const doc = openApiDocument();
+    const documented = doc.paths as Record<string, Record<string, unknown>>;
+    for (const route of app.routes) {
+      if (route.method === 'ALL') continue;
+      const path = route.path.replace(/:(\w+)/g, '{$1}');
+      const candidates = path.includes('{model}')
+        ? [path, ...MODEL_IDS.map((id) => path.replace('{model}', id))]
+        : [path];
+      const found = candidates.filter((p) => documented[p] !== undefined);
+      expect([route.method, path, found.length > 0]).toEqual([
+        route.method,
+        path,
+        true,
+      ]);
+      const method = route.method.toLowerCase();
+      expect(found.some((p) => documented[p]![method] !== undefined)).toBe(
+        true,
+      );
+    }
+    const schemas = doc.components.schemas as Record<
+      string,
+      { properties?: Record<string, unknown>; required?: string[] }
+    >;
+    expect(schemas.person!.properties!.id).toBeDefined();
+    expect(schemas.personInput!.properties!.id).toBeUndefined();
+    expect(schemas.personInput!.required ?? []).not.toContain('world');
+    expect(schemas.personInput!.required ?? []).not.toContain('recorded');
+  });
+
+  it('reports the database in its health check', async () => {
+    const health = await anonymous.get('/health');
+    expect(health.status).toBe(200);
+    expect(health.body).toEqual({ ok: true, database: 'ok' });
   });
 });

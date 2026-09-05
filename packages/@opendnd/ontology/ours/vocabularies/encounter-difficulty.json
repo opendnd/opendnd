@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "encounter-difficulty",
-  "url": "https://opendnd.org/ours/vocabularies/encounter-difficulty.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/encounter-difficulty.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Encounter difficulty",

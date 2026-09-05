@@ -15,7 +15,16 @@ export function configureDocsSite(parent: Project): Project {
     parent,
   });
 
-  project.gitignore.addPatterns('dist/', '.astro/');
+  // Generated into the site by `bun run generate`: the OpenAPI description,
+  // the published OURS bundle and the reference pages built from it.
+  project.gitignore.addPatterns(
+    'dist/',
+    '.astro/',
+    'public/openapi.json',
+    'public/ours/',
+    'public/.well-known/',
+    'src/content/docs/reference/',
+  );
 
   new JsonFile(project, 'package.json', {
     obj: {
@@ -35,8 +44,10 @@ export function configureDocsSite(parent: Project): Project {
       },
       dependencies: {
         '@astrojs/starlight': versions['@astrojs/starlight'],
+        '@astrojs/markdown-satteri': versions['@astrojs/markdown-satteri'],
         astro: versions.astro,
         sharp: versions.sharp,
+        'starlight-openapi': versions['starlight-openapi'],
       },
       devDependencies: {
         '@astrojs/check': versions['@astrojs/check'],

@@ -5,6 +5,7 @@ import type {
   ClaimBasis,
   Event,
   EventType,
+  ParticipantRole,
   Person,
   Population,
   Reference,
@@ -35,7 +36,10 @@ export interface EventSpec {
   readonly year: number;
   readonly name: string;
   readonly description?: string;
-  readonly participants: ReadonlyArray<{ actor: Reference; role: string }>;
+  readonly participants: ReadonlyArray<{
+    actor: Reference;
+    role: ParticipantRole;
+  }>;
   readonly locations?: Reference[];
   readonly causedBy?: Reference[];
   readonly partOf?: Reference;
@@ -67,19 +71,19 @@ export function makeRelationship(
   ctx: GeneratorContext,
   label: string,
   type: RelationshipType,
-  person1: Person,
-  person2: Person,
+  party1: Person,
+  party2: Person,
   extra: Partial<
     Pick<Relationship, 'facts' | 'legitimacy' | 'successionOrder' | 'validTime'>
   > = {},
 ): Relationship {
   return {
     ...stamp(HISTORY_GENERATOR, childContext(ctx, label)),
-    name: `${person1.name} and ${person2.name}: ${type}`,
+    name: `${party1.name} and ${party2.name}: ${type}`,
     perspective: 'in-universe',
     relationshipType: type,
-    person1: ref('person', person1),
-    person2: ref('person', person2),
+    party1: ref('person', party1),
+    party2: ref('person', party2),
     ...extra,
   };
 }

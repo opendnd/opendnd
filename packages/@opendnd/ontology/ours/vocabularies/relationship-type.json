@@ -1,11 +1,11 @@
 {
   "resourceType": "Vocabulary",
   "id": "relationship-type",
-  "url": "https://opendnd.org/ours/vocabularies/relationship-type.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/relationship-type.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Relationship type",
-  "description": "Kinds of relationship between two people (GEDCOM X types plus feudal and social ties).",
+  "description": "Kinds of relationship between two people (GEDCOM X types plus feudal and social ties). The parties may be people, factions or places; the asymmetric types name the senior party first.",
   "codes": [
     {
       "code": "parent-child",
@@ -55,6 +55,16 @@
       "code": "familiar",
       "display": "Familiar",
       "definition": "A creature bound to a person as a companion and servant."
+    },
+    {
+      "code": "member-of",
+      "display": "Member of",
+      "definition": "A person belongs to a faction, for the span of the record."
+    },
+    {
+      "code": "resident-of",
+      "display": "Resident of",
+      "definition": "A person lives at a place, for the span of the record."
     }
   ]
 }

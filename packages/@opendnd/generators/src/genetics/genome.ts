@@ -1,9 +1,9 @@
 import type { Person, Reference, Sex, Size } from '@opendnd/types';
 
-/** One expressed trait: the gene key that produced it and the trait text. */
-export interface Trait {
+/** One expressed gene: the gene key and what it expresses as. */
+export interface Expression {
   readonly gene: string;
-  readonly trait: string;
+  readonly expression: string;
 }
 
 /** Chromosome number -> allele pair, e.g. `"3=9"` or `"X1=Y3"`. */
@@ -14,8 +14,10 @@ export interface Genome {
   readonly species: Reference;
   readonly sex: Sex;
   readonly chromosomes: Chromosomes;
-  readonly traits: Readonly<Record<string, Trait>>;
-  readonly size: Size;
+  /** The phenotype, by category: what each expressed gene shows as. */
+  readonly phenotype: Readonly<Record<string, Expression>>;
+  /** The species' size category, when it declares one. */
+  readonly size?: Size;
   /** Inches. */
   readonly height: number;
   /** Pounds. */
@@ -37,7 +39,7 @@ export function alleleValue(allele: string): number {
 /** The fields of a Person that a genome fills in. */
 export function toPersonFields(
   genome: Genome,
-): Pick<Person, 'species' | 'sex' | 'genome' | 'traits'> {
+): Pick<Person, 'species' | 'sex' | 'genome' | 'phenotype'> {
   return {
     species: genome.species,
     sex: genome.sex,
@@ -46,6 +48,6 @@ export function toPersonFields(
       height: genome.height,
       weight: genome.weight,
     },
-    traits: Object.values(genome.traits).map((t) => ({ ...t })),
+    phenotype: Object.values(genome.phenotype).map((e) => ({ ...e })),
   };
 }

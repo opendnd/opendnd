@@ -27,7 +27,7 @@ describe('@opendnd/ontology', () => {
       const schema = bundle.schemas.get(model.schema)!;
       const refs = (schema.allOf ?? []).map((s) => s.$ref);
       expect(refs).toContain(
-        'https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase',
+        'https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase',
       );
     }
   });

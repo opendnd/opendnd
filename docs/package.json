@@ -15,8 +15,10 @@
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.3",
+    "@astrojs/markdown-satteri": "^0.4.0",
     "astro": "~7.2.10",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "starlight-openapi": "^0.26.2"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",

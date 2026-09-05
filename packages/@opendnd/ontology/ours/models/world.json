@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "world",
-  "url": "https://opendnd.org/ours/models/world.json",
+  "url": "https://docs.opendnd.org/ours/models/world.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "World",
   "description": "A fictional universe: the root every other resource belongs to.",
-  "schema": "https://opendnd.org/ours/schemas/world.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/world.schema.json",
   "relationships": [
     {
       "predicate": "calendar",

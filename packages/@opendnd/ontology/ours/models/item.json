@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "item",
-  "url": "https://opendnd.org/ours/models/item.json",
+  "url": "https://docs.opendnd.org/ours/models/item.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Item",
   "description": "A thing that can be owned, carried or used: equipment, magic items and poisons alike.",
-  "schema": "https://opendnd.org/ours/schemas/item.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/item.schema.json",
   "relationships": [
     {
       "predicate": "instanceOf",
@@ -30,6 +30,10 @@
     },
     {
       "predicate": "ammunition",
+      "target": "Item"
+    },
+    {
+      "predicate": "variants",
       "target": "Item"
     }
   ],

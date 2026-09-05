@@ -79,13 +79,22 @@ export function toPublishedBundles(bundle: OursBundle) {
       type: 'collection',
       entry: [...resources]
         .sort((a, b) => a.id.localeCompare(b.id))
-        .map((resource) => ({ fullUrl: resource.url, resource })),
+        .map((resource) => ({
+          fullUrl: resource.url,
+          resource: typeFirst(resource),
+        })),
     });
   return {
-    ontology: bundle.ontology,
+    ontology: typeFirst(bundle.ontology),
     models: collect(bundle.models.values()),
     vocabularies: collect(bundle.vocabularies.values()),
   };
+}
+
+/** A resource with `resourceType` as its first member, as FHIR readers expect. */
+function typeFirst<T extends { resourceType: string }>(resource: T): T {
+  const { resourceType, ...rest } = resource;
+  return { resourceType, ...rest } as T;
 }
 
 function readResources(dir: string): unknown[] {

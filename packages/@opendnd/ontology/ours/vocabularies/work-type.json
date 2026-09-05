@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "work-type",
-  "url": "https://opendnd.org/ours/vocabularies/work-type.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/work-type.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Work type",

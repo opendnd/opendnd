@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "place",
-  "url": "https://opendnd.org/ours/models/place.json",
+  "url": "https://docs.opendnd.org/ours/models/place.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Place",
   "description": "A location at any scale.",
-  "schema": "https://opendnd.org/ours/schemas/place.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/place.schema.json",
   "relationships": [
     {
       "predicate": "parent",

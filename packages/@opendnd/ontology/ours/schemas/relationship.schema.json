@@ -1,23 +1,26 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/relationship.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/relationship.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Relationship",
-  "description": "A tie between two people, with dated facts (GEDCOM X Relationship extended for succession).",
+  "type": "object",
+  "description": "A tie between two parties, with dated facts (GEDCOM X Relationship extended for succession and for parties that are not people). Either party may be a person, a faction or a place, so the same record carries a marriage, a house's vassalage to a crown, or a person's membership of a guild.",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "relationshipType": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/relationship-type.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/relationship-type.json"
     },
-    "person1": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    "party1": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The first party. For an asymmetric type this is the senior side: the parent, the liege, the mentor."
     },
-    "person2": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    "party2": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The second party."
     },
     "facts": {
       "type": "array",
@@ -25,13 +28,14 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "string"
+            "type": "string",
+            "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/relationship-fact-type.json"
           },
           "time": {
-            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
           },
           "place": {
-            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
           }
         },
         "required": [
@@ -42,7 +46,7 @@
     },
     "legitimacy": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/legitimacy.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/legitimacy.json"
     },
     "successionOrder": {
       "type": "integer",
@@ -51,8 +55,8 @@
   },
   "required": [
     "relationshipType",
-    "person1",
-    "person2"
+    "party1",
+    "party2"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

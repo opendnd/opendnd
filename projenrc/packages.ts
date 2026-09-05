@@ -40,7 +40,14 @@ const packages: readonly PackageConfig[] = [
     name: '@opendnd/ontology',
     description:
       'The OpenDnD worldbuilding ontology authored in OURS: models, JSON Schemas, vocabularies and alignment mappings.',
-    devDeps: ['@opendnd/ours@workspace:*'],
+    devDeps: ['@opendnd/ours@workspace:*', `ajv@${versions.ajv}`],
+    tasks: {
+      generate: {
+        description:
+          'Publish the OURS bundle and the reference pages built from it into the docs site.',
+        exec: 'bun run scripts/publish.ts',
+      },
+    },
   },
   {
     name: '@opendnd/llm',
@@ -131,6 +138,10 @@ const apps: readonly PackageConfig[] = [
       migrate: {
         description: 'Apply the SQL migrations in migrations/ to DATABASE_URL.',
         exec: 'bun run scripts/migrate.ts',
+      },
+      generate: {
+        description: 'Write the OpenAPI description into the docs site.',
+        exec: 'bun run scripts/openapi.ts',
       },
     },
   },

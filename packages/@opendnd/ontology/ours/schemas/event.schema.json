@@ -1,25 +1,26 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/event.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/event.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Event",
+  "type": "object",
   "description": "Something that happened in-world, with participants in roles and optional cause links (schema.org Event, CIDOC E5).",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "eventType": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/event-type.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/event-type.json"
     },
     "when": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TimeSpan"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TimeSpan"
     },
     "locations": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       }
     },
     "participants": {
@@ -28,10 +29,11 @@
         "type": "object",
         "properties": {
           "actor": {
-            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
           },
           "role": {
-            "type": "string"
+            "type": "string",
+            "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/participant-role.json"
           }
         },
         "required": [
@@ -42,12 +44,12 @@
       }
     },
     "partOf": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "causedBy": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       }
     },
     "outcome": {
@@ -58,5 +60,9 @@
     "eventType",
     "when"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false,
+  "x-ours-valid-time": {
+    "begin": "when.begin",
+    "end": "when.end"
+  }
 }

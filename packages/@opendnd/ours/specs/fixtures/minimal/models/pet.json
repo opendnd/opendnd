@@ -7,7 +7,7 @@
   "name": "Pet",
   "description": "A companion animal.",
   "schema": "https://example.test/ours/schemas/pet.schema.json",
-  "relationships": [{ "predicate": "ownedBy", "target": "Pet" }],
+  "relationships": [{ "predicate": "owner", "target": "Pet" }],
   "mapsTo": [
     { "system": "https://schema.org", "schema": "https://schema.org/Thing", "type": "partial" }
   ]

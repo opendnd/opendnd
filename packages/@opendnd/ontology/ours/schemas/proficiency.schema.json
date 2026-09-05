@@ -1,25 +1,31 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/proficiency.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/proficiency.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Proficiency",
+  "type": "object",
   "description": "Being trained in something: a weapon, a tool, a skill, a saving throw. A record of its own because classes, backgrounds and species all grant them and all need to point at the same thing.",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "proficiencyType": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/proficiency-type.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/proficiency-type.json"
     },
     "reference": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
-      "description": "What the proficiency is in: the skill, the item, the ability."
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "What the proficiency is in when it is a thing: a skill or an item. A saving throw names an ability instead."
+    },
+    "ability": {
+      "type": "string",
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/ability.json",
+      "description": "The ability, for a saving-throw proficiency."
     }
   },
   "required": [
     "proficiencyType"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

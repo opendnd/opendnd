@@ -22,7 +22,7 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 |---|---|
 | `GET /v1/models` | The models this deployment serves, which is the ontology it was built from. |
 | `GET`/`POST` `/v1/worlds` | The caller's worlds, and creating one. |
-| `POST /v1/worlds/{world}/members` | Admit someone. Owners only. |
+| `POST /v1/worlds/{world}/members` | Admit someone by subject or by email, or change their role. Owners only. |
 | `GET`/`POST` `/v1/worlds/{world}/{model}` | List and create. |
 | `GET`/`PUT`/`PATCH`/`DELETE` `/v1/worlds/{world}/{model}/{id}` | One resource. |
 | `POST /v1/{model}/$generate` | Generate without a world and without an account. |
@@ -32,21 +32,29 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 | `GET /v1/openapi.json` | This API, described from the ontology. |
 | `GET /v1/vocabularies` | Every code list with its display text, for a form. |
 | `GET /v1/me` | The caller and the worlds they may open. |
-| `GET`/`DELETE` `/v1/worlds/{world}/members[/{subject}]` | Who belongs, and removing them. |
-| `DELETE /v1/worlds/{world}` | Archive a world. |
+| `GET`/`DELETE` `/v1/worlds/{world}/members[/{subject}]` | Who belongs and who is invited, and removing someone. |
+| `DELETE /v1/worlds/{world}` | Archive a world. `GET /v1/worlds?archived=true` lists the archived ones to their owners. |
+| `POST /v1/worlds/{world}/$restore` | Bring an archived world back. |
+| `GET /health` | Up, and able to reach the database. |
 | `POST /v1/worlds/{world}/$import` | Save many resources in one request. |
 | `GET /v1/worlds/{world}/$search?q=` | One search box across every model. |
 | `GET /v1/worlds/{world}/{model}/{id}/references` | Everything that points at a record. |
 | `GET /v1/worlds/{world}/{model}/{id}/history` | Every version of a record. |
-| `GET /v1/worlds/{world}/usage` | What has been spent on model calls. |
+| `GET /v1/worlds/{world}/usage` | What has been spent on model calls. Owners only. |
 
-Adding a model to the ontology adds its route set. Nothing in the API names a model.
+Adding a model to the ontology adds its route set. Nothing in the API names a model, and a test holds the route table and the OpenAPI description together: every mounted route is described.
+
+### Errors
+
+Every failure has one shape: `{ error, code, requestId }`, with `issues` on a validation failure. The `code` is one of `validation`, `no-generator`, `unauthorized`, `forbidden`, `not-found`, `conflict`, `stale` or `internal`, and the request id is also the `x-request-id` header on every response. A malformed parameter is a `400` with the field named, not a database error.
 
 ### Reads
 
 `?at=` is in-world time, counted in years of the world's calendar: it returns the state that held then, filtering on each record's valid-time interval. `?asOf=` is transaction time: it returns each record as it was authored at that moment, from the append-only version table. The Atlas and the Codex are both views over those two parameters.
 
-Also `?canonStatus=`, `?perspective=`, `?module=`, `?generatedBy=`, `?name=` (prefix), `?limit=` and `?cursor=`. A review queue for generated content is `?canonStatus=generated`, which is a query rather than a feature.
+`validTime` is filled in by the store from the fields the schema names for it (a person's birth and death, a faction's founding and dissolution, an event's span, a snapshot's moment), so a writer need not know about it; see [ADR-014](/adr/adr-014-valid-time/).
+
+Also `?canonStatus=`, `?perspective=`, `?module=`, `?generatedBy=`, `?name=` (prefix), `?ids=` (a set of ids, for what a page refers to), `?sort=id|name|updatedAt`, `?limit=` and `?cursor=`. A cursor is opaque and bound to the sort it came from. A review queue for generated content is `?canonStatus=generated`, which is a query rather than a feature.
 
 `?cell=` takes a quadtree cell token and returns everything at or inside it, at any depth. That is how a map asks for what is in view: a cell's descendants are a contiguous range of ids, so a bounding cell is two comparisons on an indexed column rather than a walk down the tree, at any zoom level.
 
@@ -62,7 +70,9 @@ Also `?canonStatus=`, `?perspective=`, `?module=`, `?generatedBy=`, `?name=` (pr
 
 `$import` saves many resources in one request, validated individually and written in one transaction, so a batch lands whole or not at all. It exists because generating a realm produces upwards of a thousand resources and keeping what was just generated should not be a thousand requests.
 
-The platform fields belong to the API. It sets `world` from the path, `id` when the client does not supply one, and `recorded` — created time, updated time and revision — from the request and the stored record, so a client cannot backdate a change or claim a revision it did not make. A resource created through the API is `proposed` unless it says otherwise, because content arriving over HTTP is not canon by default.
+The platform fields belong to the API. It sets `world` from the path, `model` from the route, `id` when the client does not supply one, and `recorded` — created time, updated time and revision — from the request and the stored record, so a client cannot backdate a change or claim a revision it did not make. Those fields are `readOnly` in the schemas and absent from the request-body shapes in the OpenAPI description. A resource created through the API is `proposed` unless it says otherwise, because content arriving over HTTP is not canon by default.
+
+Every read of one resource carries its revision as an `ETag`. Send it back as `If-Match` on a `PUT` or `PATCH` and the write is refused with `412` if the record has changed since; leave it off and the write still cannot silently lose another's, because the store names the revision it replaces. `POST` with an id that already exists is a `409`; `PUT` replaces. `PATCH` is a JSON merge patch: `null` clears a field, objects merge, arrays replace. The revision continues across a delete, so a record created again under the same id keeps its whole history.
 
 `DELETE` marks rather than removes. The authoring history has to stay readable through `asOf`, and a delete has to be able to hide a record that arrived from a module, which cannot itself be deleted.
 
@@ -94,6 +104,8 @@ Every write appends to the outbox in the same transaction as the write itself. A
 
 The sink is called before the rows are marked, so a sink that throws leaves them to be picked up again. That means an event can be delivered twice and cannot be lost, which is the right way round: a subscriber that tolerates a duplicate is cheaper to build than one that recovers from a gap.
 
+The publisher finds the worlds with events waiting through a database function, `pending_worlds`, because row-level security is forced on the outbox and a scan from outside any world would otherwise see nothing. The function returns ids and counts; the events are read inside each world.
+
 ## Storage
 
 ```
@@ -110,4 +122,4 @@ A world is also a `world` resource in its own layer, so its calendar, its coordi
 
 ## Identity
 
-Cognito. Tokens are verified in-process against the pool's published key set: an RS256 signature check with `node:crypto`, then the issuer, the token use, the app client and the expiry. Both token kinds are accepted — an access token is what an API is normally given, and an id token carries the email worth having when a user is first seen. A user row appears the first time a subject is seen.
+Cognito. Tokens are verified in-process against the pool's published key set: an RS256 signature check with `node:crypto`, then the issuer, the token use, the app client and the expiry. Both token kinds are accepted — an access token is what an API is normally given, and an id token carries the email worth having when a user is first seen. A user row appears the first time a subject is seen, and any invitation waiting on that email becomes a membership then. An unknown key id triggers a refresh of the key set at most once every thirty seconds, so forged tokens cannot turn the API into a client of the pool.

@@ -24,4 +24,7 @@ Everything is free to use. Features that cost money to run, such as AI token spe
 - [Authoring the ontology](/guides/authoring-the-ontology/): how to add a model.
 - [Research](/research/landscape/): what already exists and what we align to.
 - [Ontology coverage](/research/coverage/): every concept the old repositories named, and where it lives now.
+- [Models](/reference/models/) and [Vocabularies](/reference/vocabularies/): every model, field and code, generated from the published bundle.
+- [The published ontology](/reference/ontology/): where the OURS bundle is served, and how to discover it.
+- [API reference](/api/): every route, generated from the same schemas the API validates with.
 - [Architecture decisions](/adr/adr-001-monorepo-tooling/): the choices, in order.

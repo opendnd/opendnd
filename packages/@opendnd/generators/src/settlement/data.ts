@@ -604,7 +604,7 @@ export const INDUSTRIES: Record<
   maidservants: { supportValue: 200, advantages: [] },
   cooks: { supportValue: 200, advantages: [] },
   groundskeepers: { supportValue: 200, advantages: [] },
-  chauffeurs: { supportValue: 2000, advantages: [] },
+  carters: { supportValue: 2000, advantages: [] },
   nannies: { supportValue: 400, advantages: [] },
   bodyguards: { supportValue: 200, advantages: [] },
   majordomos: { supportValue: 4000, advantages: [] },
@@ -752,17 +752,7 @@ export const INDUSTRIES: Record<
   },
   clergy: { supportValue: 40, advantages: ['incense', 'gold', 'spices'] },
   priests: { supportValue: 1200, advantages: ['incense', 'gold'] },
-  nobles: {
-    supportValue: 200,
-    advantages: ['cosmetics', 'tobacco', 'tea', 'perfume'],
-  },
   guards: { supportValue: 150, advantages: ['silver', 'gold', 'platinum'] },
-  urchins: { supportValue: 320, advantages: [] },
-  hermits: { supportValue: 160, advantages: [] },
-  'folk-heroes': { supportValue: 60000, advantages: [] },
-  charlatans: { supportValue: 650, advantages: [] },
-  criminals: { supportValue: 350, advantages: [] },
-  entertainers: { supportValue: 1000, advantages: [] },
 };
 
 /** Prosperity as a multiplier on support values: booming needs fewest people per business. */

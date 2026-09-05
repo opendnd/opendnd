@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "perspective",
-  "url": "https://opendnd.org/ours/vocabularies/perspective.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/perspective.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Perspective",

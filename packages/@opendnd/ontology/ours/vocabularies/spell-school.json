@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "spell-school",
-  "url": "https://opendnd.org/ours/vocabularies/spell-school.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/spell-school.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "School of magic",

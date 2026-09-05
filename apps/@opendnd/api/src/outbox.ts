@@ -77,20 +77,17 @@ export async function publishWorld(
 /**
  * The worlds with events waiting.
  *
- * This runs outside any world, so it reads the table directly rather than
- * through the policies; it returns only ids and counts, never content.
+ * This runs outside any world, and row-level security is forced on the
+ * outbox, so a plain query here would see nothing. The database provides a
+ * function for exactly this question; it returns ids and counts, never an
+ * event, and the events themselves are still read inside their world.
  */
 export async function worldsWithPending(
   pool: Pool,
   limit = 100,
 ): Promise<{ world: string; pending: number }[]> {
   const { rows } = await pool.query<{ world: string; pending: string }>(
-    `select world_id as world, count(*) as pending
-     from event_outbox
-     where published_at is null
-     group by world_id
-     order by min(seq)
-     limit $1`,
+    'select world_id as world, pending from pending_worlds($1)',
     [limit],
   );
   return rows.map((r) => ({ world: r.world, pending: Number(r.pending) }));

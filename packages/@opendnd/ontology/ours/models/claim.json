@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "claim",
-  "url": "https://opendnd.org/ours/models/claim.json",
+  "url": "https://docs.opendnd.org/ours/models/claim.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Claim",
   "description": "One person's asserted right to a title.",
-  "schema": "https://opendnd.org/ours/schemas/claim.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/claim.schema.json",
   "relationships": [
     {
       "predicate": "claimant",

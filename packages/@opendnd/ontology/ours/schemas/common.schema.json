@@ -1,5 +1,5 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/common.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/common.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "OpenDnD common definitions",
   "description": "Shared building blocks: references, in-world time, geometry, provenance, and the base every resource extends.",
@@ -59,19 +59,30 @@
         },
         "precision": {
           "type": "string",
-          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/precision.json",
+          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/precision.json",
           "default": "year"
         },
         "nominal": {
           "type": "string",
-          "description": "A named position when no numeric one is known, e.g. 'the Age of Ash'."
+          "description": "A named position when no numeric one is known, e.g. 'the Age of Ash'. A position carries a year, a nominal name, or both."
         }
       },
       "required": [
-        "trs",
-        "year"
+        "trs"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "year"
+          ]
+        },
+        {
+          "required": [
+            "nominal"
+          ]
+        }
+      ]
     },
     "TimeSpan": {
       "description": "An interval of in-world time with optional fuzzy bounds (CIDOC-CRM E52 Time-Span).",
@@ -250,6 +261,33 @@
           "type": "string",
           "format": "uuid",
           "description": "The record this one supersedes."
+        },
+        "source": {
+          "description": "The published work this record's content is taken from and the licence it is used under. Content that ships in a module carries this so attribution survives export, override and re-publication.",
+          "type": "object",
+          "properties": {
+            "document": {
+              "type": "string",
+              "description": "Title of the source document, e.g. a system reference document."
+            },
+            "publisher": {
+              "type": "string"
+            },
+            "license": {
+              "type": "string",
+              "description": "SPDX identifier where one exists, e.g. CC-BY-4.0; otherwise the licence name."
+            },
+            "url": {
+              "type": "string",
+              "format": "uri",
+              "description": "Where the source or its licence is published."
+            },
+            "system": {
+              "type": "string",
+              "description": "The game system and edition the content is written for, e.g. 5e-2024."
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
@@ -309,7 +347,13 @@
         "id": {
           "type": "string",
           "format": "uuid",
-          "description": "Random v4. Never derived from mutable content, so renames never break references."
+          "description": "Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references.",
+          "readOnly": true
+        },
+        "model": {
+          "type": "string",
+          "readOnly": true,
+          "description": "The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels."
         },
         "derivedId": {
           "type": "string",
@@ -319,7 +363,8 @@
         "world": {
           "type": "string",
           "format": "uuid",
-          "description": "The World this resource belongs to."
+          "description": "The World this resource belongs to.",
+          "readOnly": true
         },
         "name": {
           "type": "string",
@@ -336,11 +381,11 @@
         },
         "canonStatus": {
           "type": "string",
-          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/canon-status.json"
+          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/canon-status.json"
         },
         "perspective": {
           "type": "string",
-          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/perspective.json",
+          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/perspective.json",
           "default": "in-universe"
         },
         "validTime": {
@@ -348,7 +393,8 @@
           "description": "When this assertion holds in-world. Absent means always."
         },
         "recorded": {
-          "$ref": "#/$defs/Recorded"
+          "$ref": "#/$defs/Recorded",
+          "readOnly": true
         },
         "provenance": {
           "$ref": "#/$defs/Provenance"
@@ -367,7 +413,8 @@
         },
         "module": {
           "type": "string",
-          "description": "Content-addressed id of the module this record ships in, when it is not native to the world."
+          "description": "Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through.",
+          "readOnly": true
         }
       },
       "required": [
@@ -379,7 +426,7 @@
       ]
     },
     "Choice": {
-      "description": "A choice the rules offer: pick `choose` from `from`, or from everything in a category. Options may themselves be choices, which is how the rules nest them.",
+      "description": "A choice the rules offer: pick `choose` from `from`, from everything in a category, or between nested choices. One of those three must be present. Options may themselves be choices, which is how the rules nest them.",
       "type": "object",
       "properties": {
         "choose": {
@@ -393,18 +440,18 @@
         "from": {
           "type": "array",
           "items": {
-            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
           },
           "description": "The things that may be chosen."
         },
         "fromCategory": {
           "type": "string",
-          "description": "A category to choose from, when the list is open-ended."
+          "description": "A category to choose from when the list is open-ended, named as a model id optionally qualified by a code, e.g. `skill` or `item:martial-weapon`."
         },
         "options": {
           "type": "array",
           "items": {
-            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
           },
           "description": "Nested choices, for a choice between choices."
         }
@@ -412,7 +459,29 @@
       "required": [
         "choose"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "required": [
+            "from"
+          ]
+        },
+        {
+          "required": [
+            "fromCategory"
+          ]
+        },
+        {
+          "required": [
+            "options"
+          ]
+        }
+      ]
+    },
+    "Cell": {
+      "description": "A quadtree cell token: the cell id in hex with trailing zero nibbles removed. Containment is a prefix relationship. See ADR-006.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{1,16}$"
     }
   }
 }

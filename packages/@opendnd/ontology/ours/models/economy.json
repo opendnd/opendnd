@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "economy",
-  "url": "https://opendnd.org/ours/models/economy.json",
+  "url": "https://docs.opendnd.org/ours/models/economy.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Economy",
   "description": "A snapshot of a settlement's economy at a point in time.",
-  "schema": "https://opendnd.org/ours/schemas/economy.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/economy.schema.json",
   "relationships": [
     {
       "predicate": "place",

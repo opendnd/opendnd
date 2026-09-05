@@ -21,7 +21,7 @@ export const personGenerator: Generator<PersonInput, Person> = {
   id: 'person',
   version: '1.0.0',
   description:
-    'Generates a Person with genome and traits from a Species and a name from a Culture.',
+    'Generates a Person with a genome and phenotype from a Species and a name from a Culture.',
 
   generate(input: PersonInput, ctx: GeneratorContext): Person {
     const { species, culture } = input;

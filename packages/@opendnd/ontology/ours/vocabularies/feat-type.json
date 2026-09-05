@@ -1,0 +1,27 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "feat-type",
+  "url": "https://docs.opendnd.org/ours/vocabularies/feat-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Feat type",
+  "description": "Categories of feat in the 2024 rules.",
+  "codes": [
+    {
+      "code": "origin",
+      "display": "Origin"
+    },
+    {
+      "code": "general",
+      "display": "General"
+    },
+    {
+      "code": "fighting-style",
+      "display": "Fighting style"
+    },
+    {
+      "code": "epic-boon",
+      "display": "Epic boon"
+    }
+  ]
+}

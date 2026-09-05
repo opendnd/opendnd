@@ -1,11 +1,12 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/class.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/class.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Class",
+  "type": "object",
   "description": "An adventuring class, and its subclasses through `subclassOf`. Level progression is held here as a table rather than as one record per level, because a class is read whole.",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
@@ -14,14 +15,14 @@
       "description": "Sides of the hit die, e.g. 8 for d8."
     },
     "subclassOf": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The class this is a subclass of."
     },
     "primaryAbility": {
       "type": "array",
       "items": {
         "type": "string",
-        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json"
+        "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/ability.json"
       },
       "description": "The abilities the class is built on."
     },
@@ -29,35 +30,28 @@
       "type": "array",
       "items": {
         "type": "string",
-        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json"
+        "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/ability.json"
       },
       "description": "Saving throws it is proficient in."
     },
     "proficiencies": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Proficiencies every member of the class has."
     },
     "proficiencyChoices": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
       },
       "description": "Proficiencies chosen on taking the class."
-    },
-    "startingEquipment": {
-      "type": "array",
-      "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
-      },
-      "description": "Equipment every member starts with."
     },
     "startingEquipmentOptions": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
       },
       "description": "Equipment chosen at the start."
     },
@@ -71,7 +65,7 @@
             "properties": {
               "ability": {
                 "type": "string",
-                "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json"
+                "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/ability.json"
               },
               "minimumScore": {
                 "type": "integer"
@@ -87,7 +81,7 @@
         "proficiencies": {
           "type": "array",
           "items": {
-            "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
           }
         }
       },
@@ -104,13 +98,26 @@
         },
         "ability": {
           "type": "string",
-          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json"
+          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/ability.json"
         },
-        "notes": {
+        "info": {
           "type": "array",
           "items": {
-            "type": "string"
-          }
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": false
+          },
+          "description": "How the class casts, in the rules' own sections."
         }
       },
       "required": [],
@@ -120,12 +127,13 @@
     "spells": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "The spell list the class draws on."
     },
     "levels": {
       "type": "array",
+      "description": "What the class gains at each level.",
       "items": {
         "type": "object",
         "properties": {
@@ -133,36 +141,58 @@
             "type": "integer",
             "minimum": 1
           },
+          "subclass": {
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+            "description": "The subclass this row belongs to, for a subclass-specific level."
+          },
           "proficiencyBonus": {
             "type": "integer"
           },
           "features": {
             "type": "array",
             "items": {
-              "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+              "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
             }
           },
-          "spellSlots": {
+          "classSpecific": {
             "type": "object",
-            "additionalProperties": {
-              "type": "integer"
-            },
-            "description": "Slots by spell level, keyed by the level as a string."
+            "additionalProperties": true,
+            "description": "Counters particular to the class at this level: rage count, sneak attack dice, sorcery points."
           },
-          "cantripsKnown": {
-            "type": "integer"
+          "spellcasting": {
+            "type": "object",
+            "properties": {
+              "cantripsKnown": {
+                "type": "integer"
+              },
+              "preparedSpells": {
+                "type": "integer"
+              },
+              "spellSlots": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "description": "Slots by spell level, keyed by the level as a string."
+              }
+            },
+            "required": [],
+            "additionalProperties": false
           }
         },
         "required": [
           "level"
         ],
         "additionalProperties": false
-      },
-      "description": "What the class gains at each level."
+      }
+    },
+    "primaryAbilityOptions": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice",
+      "description": "A choice of primary ability, for a class that offers one."
     }
   },
   "required": [
     "hitDie"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

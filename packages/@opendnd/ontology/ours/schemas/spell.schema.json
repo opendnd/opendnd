@@ -1,11 +1,12 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/spell.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/spell.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Spell",
-  "description": "A spell. The shape follows the 5e SRD spell tree; that tree has not yet been published for the 2024 rules, so this is taken from the 2014 one, whose structure the 2024 rules keep.",
+  "type": "object",
+  "description": "A spell. The shape follows the 5e SRD 2024 spell records as published so far (pull request 1178): a single description and higher-level text, damage as a type with dice by slot level, and no subclass lists. The saving throw and area of effect are kept beyond what those records carry, because every spell's rules text has them and a character sheet needs them.",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
@@ -17,7 +18,7 @@
     },
     "school": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/spell-school.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/spell-school.json"
     },
     "castingTime": {
       "type": "string"
@@ -57,34 +58,34 @@
     "damage": {
       "type": "object",
       "properties": {
-        "damageDice": {
-          "type": "string",
-          "description": "Dice notation, e.g. 1d8."
-        },
         "damageType": {
           "type": "string",
-          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
+        },
+        "atSlotLevel": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Damage dice by slot level, keyed by the level as a string."
         }
       },
       "required": [],
       "additionalProperties": false,
-      "description": "Damage as dice and a type."
-    },
-    "damageAtSlotLevel": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string"
-      },
-      "description": "Damage dice by slot level, keyed by the level as a string."
+      "description": "What it deals, and how that scales."
     },
     "savingThrow": {
       "type": "object",
       "properties": {
         "ability": {
           "type": "string",
-          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json"
+          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/ability.json"
         },
-        "effectOnSave": {
+        "onSuccess": {
+          "type": "string",
+          "description": "What happens on a successful save: none, half."
+        },
+        "description": {
           "type": "string"
         }
       },
@@ -125,7 +126,7 @@
     "classes": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "The classes whose lists it appears on."
     }
@@ -133,5 +134,5 @@
   "required": [
     "level"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

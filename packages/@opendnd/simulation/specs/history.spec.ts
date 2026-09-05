@@ -131,18 +131,18 @@ describe('historyGenerator', () => {
     expect(homage.length).toBeGreaterThan(0);
     const holders = new Set(out.tenures.map((t) => t.holder.id));
     for (const bond of homage) {
-      expect(holders.has(bond.person1.id)).toBe(true);
-      expect(holders.has(bond.person2.id)).toBe(true);
-      expect(bond.person1.id).not.toBe(bond.person2.id);
+      expect(holders.has(bond.party1.id)).toBe(true);
+      expect(holders.has(bond.party2.id)).toBe(true);
+      expect(bond.party1.id).not.toBe(bond.party2.id);
     }
-    // The duke's house is liege to the counts', so the duke appears as person1.
+    // The duke's house is liege to the counts', so the duke appears as party1.
     const dukeTitle = realm.titles.find((t) => t.rank === 1)!;
     const dukes = new Set(
       out.tenures
         .filter((t) => t.title.id === dukeTitle.id)
         .map((t) => t.holder.id),
     );
-    expect(homage.some((h) => dukes.has(h.person1.id))).toBe(true);
+    expect(homage.some((h) => dukes.has(h.party1.id))).toBe(true);
   });
 
   it('makes matches between houses as well as with commoners', () => {
@@ -186,7 +186,9 @@ describe('historyGenerator', () => {
       expect(own.length).toBeLessThanOrEqual(8);
       // A concluded war is dated to its last battle or later, and says how it ended.
       if (war.outcome !== undefined) {
-        expect(war.when.end?.year).toBeGreaterThanOrEqual(war.when.begin!.year);
+        expect(war.when.end?.year).toBeGreaterThanOrEqual(
+          war.when.begin!.year!,
+        );
       }
       const wins = own.filter((b) => b.outcome === 'attacker').length;
       if (war.outcome === 'attacker') expect(wins).toBe(2);

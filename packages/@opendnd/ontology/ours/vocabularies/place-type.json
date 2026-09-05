@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "place-type",
-  "url": "https://opendnd.org/ours/vocabularies/place-type.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/place-type.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Place type",
@@ -70,22 +70,22 @@
     {
       "code": "metropolis",
       "display": "Metropolis",
-      "definition": "A city of twenty thousand or more."
+      "definition": "The largest kind of city."
     },
     {
       "code": "county",
       "display": "County",
-      "definition": "A demesne of several localities, about 800 square miles."
+      "definition": "The lands of a count: several localities and the country between them."
     },
     {
       "code": "duchy",
       "display": "Duchy",
-      "definition": "A demesne of several counties, about 16,000 square miles."
+      "definition": "The lands of a duke: several counties."
     },
     {
       "code": "kingdom",
       "display": "Kingdom",
-      "definition": "A realm of several duchies, about 80,000 square miles."
+      "definition": "The lands of a crown: several duchies."
     }
   ]
 }

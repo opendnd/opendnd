@@ -25,6 +25,13 @@ export class NoGeneratorError extends Error {
 const LOCALITY = ['hamlet', 'village', 'town', 'city', 'metropolis'];
 
 /**
+ * The place tiers a caller with no account may generate. A settlement or a
+ * county is a moment of processor time; a kingdom is seconds of it, which is
+ * more than an anonymous request should be able to ask for.
+ */
+export const ANONYMOUS_TIERS: readonly string[] = [...LOCALITY, 'county'];
+
+/**
  * Run the generator for a model.
  *
  * `place` dispatches on the tier asked for: the localities are settlements,

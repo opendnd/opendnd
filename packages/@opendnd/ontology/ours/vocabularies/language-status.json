@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "language-status",
-  "url": "https://opendnd.org/ours/vocabularies/language-status.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/language-status.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Language status",

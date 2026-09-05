@@ -8,7 +8,7 @@ import {
   generate,
   generateChild,
   generateParents,
-  generateTraits,
+  generatePhenotype,
   toPersonFields,
   validateChromosomes,
 } from 'src/genetics';
@@ -35,10 +35,10 @@ describe('generate', () => {
     const m = generate({ species: human, sex: 'male', rng: new Rng('m') });
     expect(f.chromosomes['23']).toMatch(/^X\d+=X\d+$/);
     expect(m.chromosomes['23']).toMatch(/^X\d+=Y\d+$/);
-    expect(f.traits.hairFacial).toBeUndefined();
+    expect(f.phenotype.hairFacial).toBeUndefined();
   });
 
-  it('gives SRD-consistent height and weight', () => {
+  it('rolls height and weight from the species tables', () => {
     const g = generate({ species: human, rng: new Rng('body') });
     const h = human.height!;
     const maxMod = h.dice.reduce((s, d) => s + sidesOf(d), 0);
@@ -47,17 +47,17 @@ describe('generate', () => {
     expect(g.weight).toBeGreaterThan(human.weight!.base);
   });
 
-  it('resolves traits from the dictionary, rare over common', () => {
+  it('resolves the phenotype from the species expressions, rare over common', () => {
     const chromosomes = {
       ...generate({ species: human, sex: 'male', rng: new Rng('t') })
         .chromosomes,
       '1': '20=3',
     };
-    const traits = generateTraits(human, 'male', chromosomes);
-    const dictionary = human.traitDictionary!;
+    const phenotype = generatePhenotype(human, 'male', chromosomes);
+    const dictionary = human.expressions!;
     const expected =
       dictionary['general:C1:20=3'] ?? dictionary['general:C1:20'];
-    expect(traits.general?.trait).toBe(expected);
+    expect(phenotype.general?.expression).toBe(expected);
   });
 
   it('fills a Person that the ontology accepts', () => {

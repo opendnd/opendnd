@@ -1,19 +1,19 @@
 {
   "resourceType": "Model",
   "id": "event",
-  "url": "https://opendnd.org/ours/models/event.json",
+  "url": "https://docs.opendnd.org/ours/models/event.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Event",
   "description": "Something that happened in-world.",
-  "schema": "https://opendnd.org/ours/schemas/event.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/event.schema.json",
   "relationships": [
     {
       "predicate": "locations",
       "target": "Place"
     },
     {
-      "predicate": "participants",
+      "predicate": "participants.actor",
       "target": "Person"
     },
     {

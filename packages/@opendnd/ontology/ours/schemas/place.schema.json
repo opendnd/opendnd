@@ -1,27 +1,27 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/place.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/place.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Place",
+  "type": "object",
   "description": "A location at any scale, optionally with geometry in the world's CRS (schema.org Place, CIDOC E53, GeoSPARQL Feature).",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "placeType": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/place-type.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/place-type.json"
     },
     "parent": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "feature": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Feature"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Feature"
     },
     "cell": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{1,16}$",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Cell",
       "description": "Quadtree cell token for this place at its own scale (a realm at a coarse level, a building at a fine one). Containment is a prefix relationship. See ADR-006."
     },
     "population": {
@@ -33,13 +33,13 @@
     },
     "terrain": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/terrain.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/terrain.json"
     },
     "resources": {
       "type": "array",
       "items": {
         "type": "string",
-        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/resource.json"
+        "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/resource.json"
       },
       "description": "Natural resources the place yields."
     },
@@ -66,14 +66,17 @@
       "additionalProperties": false
     },
     "controlledBy": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "founded": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
     }
   },
   "required": [
     "placeType"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false,
+  "x-ours-valid-time": {
+    "begin": "founded"
+  }
 }

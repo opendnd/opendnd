@@ -15,6 +15,8 @@ export const versions = {
   astro: '~7.2.10',
   '@astrojs/starlight': '^0.41.3',
   '@astrojs/check': '^0.9.4',
+  'starlight-openapi': '^0.26.2',
+  '@astrojs/markdown-satteri': '^0.4.0',
   sharp: '^0.35.3',
 
   // Sites (Vite + React + Vitest)
@@ -32,6 +34,7 @@ export const versions = {
 
   // Shared runtime libraries
   zod: '^4.3.6',
+  ajv: '^8.17.1',
 
   // Infrastructure
   'aws-cdk-lib': '^2.268.0',

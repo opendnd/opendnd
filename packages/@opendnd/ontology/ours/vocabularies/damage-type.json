@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "damage-type",
-  "url": "https://opendnd.org/ours/vocabularies/damage-type.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/damage-type.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Damage type",

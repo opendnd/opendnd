@@ -44,6 +44,14 @@ export interface CognitoOptions {
   readonly fetch?: typeof globalThis.fetch;
   /** How long a fetched key set is trusted. Default one hour. */
   readonly cacheMs?: number;
+  /**
+   * How long an unknown key id is refused without fetching the key set
+   * again. Default thirty seconds. Without a floor, anyone could make the API
+   * fetch the key set once per request by sending tokens with made-up ids.
+   */
+  readonly minRefreshMs?: number;
+  /** How long a key set fetch may take. Default five seconds. */
+  readonly fetchTimeoutMs?: number;
   /** Clock skew allowed on `exp` and `nbf`, in seconds. Default 60. */
   readonly clockSkewSeconds?: number;
   readonly now?: () => number;
@@ -79,6 +87,8 @@ export class CognitoVerifier implements IdentityResolver {
   private readonly issuer: string;
   private readonly fetchImpl: typeof globalThis.fetch;
   private readonly cacheMs: number;
+  private readonly minRefreshMs: number;
+  private readonly fetchTimeoutMs: number;
   private readonly skew: number;
   private readonly now: () => number;
   private keys = new Map<string, Jwk>();
@@ -88,6 +98,8 @@ export class CognitoVerifier implements IdentityResolver {
     this.issuer = `https://cognito-idp.${options.region}.amazonaws.com/${options.userPoolId}`;
     this.fetchImpl = options.fetch ?? globalThis.fetch;
     this.cacheMs = options.cacheMs ?? 60 * 60 * 1000;
+    this.minRefreshMs = options.minRefreshMs ?? 30 * 1000;
+    this.fetchTimeoutMs = options.fetchTimeoutMs ?? 5000;
     this.skew = options.clockSkewSeconds ?? 60;
     this.now = options.now ?? (() => Date.now());
   }
@@ -169,11 +181,15 @@ export class CognitoVerifier implements IdentityResolver {
   /**
    * The signing key for a key id. A key id that is not in the cache is
    * treated as a signal that the pool has rotated its keys, so the set is
-   * fetched again before the token is rejected.
+   * fetched again before the token is rejected, but not more often than the
+   * refresh floor allows: a rotation happens rarely, a flood of forged key
+   * ids can happen any time.
    */
   private async keyFor(kid: string): Promise<Jwk> {
-    const stale = this.now() - this.fetchedAt > this.cacheMs;
-    if (stale || !this.keys.has(kid)) await this.refresh();
+    const age = this.now() - this.fetchedAt;
+    const stale = age > this.cacheMs;
+    const unknown = !this.keys.has(kid) && age > this.minRefreshMs;
+    if (stale || unknown) await this.refresh();
     const jwk = this.keys.get(kid);
     if (!jwk) throw new UnauthorizedError('token was signed by an unknown key');
     return jwk;
@@ -182,6 +198,7 @@ export class CognitoVerifier implements IdentityResolver {
   private async refresh(): Promise<void> {
     const response = await this.fetchImpl(
       `${this.issuer}/.well-known/jwks.json`,
+      { signal: AbortSignal.timeout(this.fetchTimeoutMs) },
     );
     if (!response.ok) {
       throw new UnauthorizedError(
@@ -210,7 +227,7 @@ export class DevIdentityResolver implements IdentityResolver {
     if (token === undefined || !token.startsWith('dev:')) return undefined;
     const subject = token.slice(4);
     if (subject.length === 0) return undefined;
-    return { subject, name: subject, email: `${subject}@localhost` };
+    return { subject, name: subject, email: `${subject}@dev.invalid` };
   }
 }
 

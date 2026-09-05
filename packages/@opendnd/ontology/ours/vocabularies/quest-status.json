@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "quest-status",
-  "url": "https://opendnd.org/ours/vocabularies/quest-status.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/quest-status.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Quest status",

@@ -31,3 +31,21 @@ Two things complicate the obvious implementation. The first is modules. Paid con
 - Filtering happens after layer resolution, because a world that overrides a record decides that record's name and canon status. That costs an index on the resolved set, which is acceptable at the page sizes the API serves and can be revisited with a materialised resolution if it stops being.
 - Row-level security is checked on every content row, which adds a subquery per read. The alternative was trusting every query ever written against this database.
 - A deployment that connects as the database owner silently loses the isolation. The specs assert that the serving role is neither a superuser nor able to bypass the policies, so this cannot regress quietly.
+
+## Hardened, decided 2026-09-05
+
+An adversarial review of the API before the first application is built against it. What it found, and what changed:
+
+- **Writes are revision-checked.** Every read of one resource answers with its revision as an `ETag`; a `PUT` or `PATCH` that sends it back as `If-Match` is refused with `412` if the record has moved on. Without the header a write still cannot lose an update silently: the update names the revision it replaces and the version insert is a plain insert, so two writers who both read revision 3 cannot both produce revision 4. The revision continues from the last one ever written under an id, deleted or not, so a record created again after a delete carries its whole history.
+- **`POST` with an id that exists is a conflict**, `409`, not a quiet replacement. `PUT` is the verb that replaces.
+- **`PATCH` is a JSON merge patch** (RFC 7396): objects merge member by member, `null` removes a field, anything else replaces. A form can now clear a field.
+- **An import continues each record's history too.** Generated content arrives with its own ids; the store assigns the next revision under each id in the same statement that writes it, so importing over an edited record does not rewind it.
+- **The world record is written through the store**, so creating a world produces a version and an event like every other write.
+- **The publisher reads the outbox through a function.** Row-level security is forced on the outbox for the owner as much as for the serving role, so the scan that asked "which worlds have events waiting" from outside any world returned nothing, and a deployment would never have published. The scan is now a database function that switches a setting on for the length of its own call, with a policy that honours it; it returns world ids and counts, and the events are still read inside their world. A test drives the whole publisher as the serving role.
+- **Members are invited by email.** An application rarely knows another person's Cognito subject. Someone named by email who has signed in becomes a member at once; someone who has not is invited, and the invitation becomes a membership the first time they are seen. The last owner can no longer demote themself, for the reason they could not remove themself.
+- **Two visibilities.** `link` was accepted and behaved as `private`; until a share token exists it is gone rather than stored meaning nothing.
+- **Owners see what a world has spent.** Usage was readable by anyone who could read a public world.
+- **An archived world can be listed and restored** by its owners. Archiving was reversible only in SQL.
+- **Every parameter is checked at the edge.** A zero limit, a non-uuid id, an unparseable date or a bad cell token is a `400` with a machine-readable `code` and the request id, where before it reached the database and came back as a `500`. Every error has the same shape, and every response carries `x-request-id`.
+- **Anonymous generation is bounded** to settlements and counties. A kingdom is seconds of processor time, which is more than a request with no account should command.
+- **Lists sort and fetch by id.** `?sort=name|updatedAt`, with a cursor bound to its sort, and `?ids=` for the references a page needs in one request. Search terms are made literal before they reach `like`.

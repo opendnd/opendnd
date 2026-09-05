@@ -1,16 +1,17 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/world.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/world.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "World",
+  "type": "object",
   "description": "A fictional universe: the root every other resource belongs to (Wikidata narrative universe).",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "calendar": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "crs": {
       "type": "string",
@@ -24,7 +25,7 @@
       "type": "string"
     },
     "currentTime": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
     },
     "owner": {
       "type": "string",
@@ -32,5 +33,5 @@
     }
   },
   "required": [],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

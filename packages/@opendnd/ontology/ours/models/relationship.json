@@ -1,19 +1,19 @@
 {
   "resourceType": "Model",
   "id": "relationship",
-  "url": "https://opendnd.org/ours/models/relationship.json",
+  "url": "https://docs.opendnd.org/ours/models/relationship.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Relationship",
   "description": "A tie between two people.",
-  "schema": "https://opendnd.org/ours/schemas/relationship.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/relationship.schema.json",
   "relationships": [
     {
-      "predicate": "person1",
+      "predicate": "party1",
       "target": "Person"
     },
     {
-      "predicate": "person2",
+      "predicate": "party2",
       "target": "Person"
     }
   ],

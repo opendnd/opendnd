@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "skill",
-  "url": "https://opendnd.org/ours/models/skill.json",
+  "url": "https://docs.opendnd.org/ours/models/skill.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Skill",
   "description": "A skill, and the ability its checks are made against.",
-  "schema": "https://opendnd.org/ours/schemas/skill.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/skill.schema.json",
   "relationships": [],
   "mapsTo": [
     {

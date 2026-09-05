@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import type { Event, Person, Tenure } from '@opendnd/types';
+import type { Event, ParticipantRole, Person, Tenure } from '@opendnd/types';
 import { checkHistory } from 'src';
 
 const world = '3c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a11';
@@ -28,7 +28,7 @@ const event = (
   id: string,
   type: Event['eventType'],
   year: number,
-  participants: Array<[string, string]>,
+  participants: Array<[string, ParticipantRole]>,
 ): Event => ({
   id,
   world,

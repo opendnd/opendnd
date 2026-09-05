@@ -46,16 +46,16 @@ The chain learns word count, word length, initial letters and letter transitions
 
 ## genetics
 
-The d20 genetic system, driven by a `Species` resource. A species declares up to 32 chromosomes, each with the die rolled for its two alleles, plus a sex chromosome with separate X and Y dice; a genome stores each pair as `"3=9"` or `"X1=Y3"`. Trait categories map to chromosomes and a trait dictionary is keyed by gene: a common gene is the dominant (higher) allele, `eyeColor:C2:9`; a rare gene is the exact pair, `eyeColor:C2:3=9`, and wins. Height and weight follow the SRD tables: base height plus a modifier roll, and base weight plus that same modifier times the weight dice. One fix over the 2019 code: weight used total height instead of the modifier.
+The d20 genetic system, driven by a `Species` resource. A species declares up to 32 chromosomes, each with the die rolled for its two alleles, plus a sex chromosome with separate X and Y dice; a genome stores each pair as `"3=9"` or `"X1=Y3"`. Categories map to chromosomes, and the species' `expressions` map each gene to what it shows as — a common gene is the dominant (higher) allele, `eyeColor:C2:9`; a rare gene is the exact pair, `eyeColor:C2:3=9`, and wins. The result is the person's phenotype. Height and weight are rolled from the species' own tables: base height plus a modifier roll, and base weight plus that same modifier times the weight dice. One fix over the 2019 code: weight used total height instead of the modifier.
 
 - `generate({ species, sex?, rng, chromosomes?, mutation? })`
 - `generateChild({ species, mother, father, sex?, rng, mutation? })`: one allele from each parent; the father's X or Y sets the child's sex chromosome.
 - `generateParents({ species, child, rng })`: a mother and father who could have produced the child.
-- `generateTraits`, `generateHeightAndWeight`, `validateChromosomes`, `toPersonFields(genome)`.
+- `generatePhenotype`, `generateHeightAndWeight`, `validateChromosomes`, `toPersonFields(genome)`.
 
 ## person
 
-The first resource-producing generator and the template for the rest. `personGenerator.generate({ species, culture, sex?, name? }, ctx)` returns a complete `Person`: genome and traits from the species, a given and family name from the culture, references to both, and the stamped platform fields. Every later generator (dynasties, settlements) composes smaller ones the same way and emits ontology resources rather than free-standing data.
+The first resource-producing generator and the template for the rest. `personGenerator.generate({ species, culture, sex?, name? }, ctx)` returns a complete `Person`: genome and phenotype from the species, a given and family name from the culture, references to both, and the stamped platform fields. Every later generator (dynasties, settlements) composes smaller ones the same way and emits ontology resources rather than free-standing data.
 
 ## settlement and realm
 
@@ -71,4 +71,4 @@ Helpers over the 25-code alignment vocabulary: `alignmentAxes(code)` gives the n
 
 ## Species and culture data
 
-Trait dictionaries and name lists are world content on `species` and `culture` resources, not code. The test fixtures are one human species and one culture converted from the 2019 SRD data. The plan is to author the full set with LLM assistance and hold it to tests: schema validity, every category resolving to a trait for every possible roll, and distribution checks over many generated genomes.
+Trait dictionaries and name lists are world content on `species` and `culture` resources, not code. The test fixtures are one invented human species and one culture of Roman-style names; neither reproduces published game content. The plan is to author the full set with LLM assistance and hold it to tests: schema validity, every category resolving to a trait for every possible roll, and distribution checks over many generated genomes.

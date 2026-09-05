@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "proficiency",
-  "url": "https://opendnd.org/ours/models/proficiency.json",
+  "url": "https://docs.opendnd.org/ours/models/proficiency.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Proficiency",
   "description": "Being trained in a weapon, a tool, a skill or a saving throw.",
-  "schema": "https://opendnd.org/ours/schemas/proficiency.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/proficiency.schema.json",
   "relationships": [
     {
       "predicate": "reference",

@@ -1,33 +1,34 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/statblock.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/statblock.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Statblock",
+  "type": "object",
   "description": "The rules view of a creature: what it can take, what it can do, and how dangerous it is. A model of its own rather than fields on `species`, because the 5e SRD treats a monster as an independent stat block and because a stat block is often a variant \u2014 a goblin boss, a veteran guard \u2014 with no species of its own. It may name the species it represents, and a person may name the stat block that represents them.",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "creatureType": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/creature-type.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/creature-type.json"
     },
     "species": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The species this represents, where it represents one."
     },
     "person": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The person this represents, for a statted individual."
     },
     "size": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/size.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/size.json"
     },
     "alignment": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/alignment.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/alignment.json"
     },
     "armorClass": {
       "type": "integer"
@@ -78,7 +79,7 @@
     "proficiencies": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Saving throws and skills it is proficient in."
     },
@@ -86,27 +87,27 @@
       "type": "array",
       "items": {
         "type": "string",
-        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+        "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
       }
     },
     "damageResistances": {
       "type": "array",
       "items": {
         "type": "string",
-        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+        "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
       }
     },
     "damageImmunities": {
       "type": "array",
       "items": {
         "type": "string",
-        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+        "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
       }
     },
     "conditionImmunities": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Conditions it cannot suffer."
     },
@@ -120,7 +121,7 @@
     "languages": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Languages it knows."
     },
@@ -175,7 +176,7 @@
               },
               "damageType": {
                 "type": "string",
-                "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+                "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
               }
             },
             "required": [],
@@ -248,5 +249,5 @@
     }
   },
   "required": [],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

@@ -1,16 +1,20 @@
 {
   "resourceType": "Model",
   "id": "feature",
-  "url": "https://opendnd.org/ours/models/feature.json",
+  "url": "https://docs.opendnd.org/ours/models/feature.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Feature",
   "description": "Something a character gains from a class, species, background, feat or item.",
-  "schema": "https://opendnd.org/ours/schemas/feature.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/feature.schema.json",
   "relationships": [
     {
-      "predicate": "from",
+      "predicate": "grantedBy",
       "target": "Class"
+    },
+    {
+      "predicate": "spells.spell",
+      "target": "Spell"
     }
   ],
   "mapsTo": [

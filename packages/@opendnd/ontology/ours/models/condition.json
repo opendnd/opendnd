@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "condition",
-  "url": "https://opendnd.org/ours/models/condition.json",
+  "url": "https://docs.opendnd.org/ours/models/condition.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Condition",
   "description": "A state a creature can be in that changes what it may do.",
-  "schema": "https://opendnd.org/ours/schemas/condition.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/condition.schema.json",
   "relationships": [],
   "mapsTo": [
     {

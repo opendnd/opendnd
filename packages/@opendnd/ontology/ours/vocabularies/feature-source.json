@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "feature-source",
-  "url": "https://opendnd.org/ours/vocabularies/feature-source.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/feature-source.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Feature source",

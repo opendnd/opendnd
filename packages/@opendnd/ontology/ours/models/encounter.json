@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "encounter",
-  "url": "https://opendnd.org/ours/models/encounter.json",
+  "url": "https://docs.opendnd.org/ours/models/encounter.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Encounter",
   "description": "A confrontation prepared for a party.",
-  "schema": "https://opendnd.org/ours/schemas/encounter.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/encounter.schema.json",
   "relationships": [
     {
       "predicate": "place",

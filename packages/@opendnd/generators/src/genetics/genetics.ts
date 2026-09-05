@@ -1,6 +1,12 @@
 import { Rng, sidesOf } from '@opendnd/random';
 import type { Reference, Sex, Species } from '@opendnd/types';
-import { Chromosomes, Genome, Trait, alleleValue, alleles } from './genome';
+import {
+  Chromosomes,
+  Expression,
+  Genome,
+  alleleValue,
+  alleles,
+} from './genome';
 
 const SEX = 'sex';
 const HAIR_FACIAL = 'hairFacial';
@@ -29,8 +35,8 @@ export function generate(options: GenerateOptions): Genome {
     species: speciesRef(species),
     sex,
     chromosomes,
-    traits: generateTraits(species, sex, chromosomes),
-    size: species.size,
+    phenotype: generatePhenotype(species, sex, chromosomes),
+    ...(species.size ? { size: species.size } : {}),
     height,
     weight,
   };
@@ -160,19 +166,19 @@ export function generateParents(options: {
 }
 
 /**
- * Resolve traits from chromosomes. For each category the species maps to a
+ * Resolve the phenotype from chromosomes. For each category the species maps to a
  * chromosome, a rare gene (the exact allele pair, e.g. `eyeColor:C2:3=9`) wins
  * over a common gene (the dominant allele, e.g. `eyeColor:C2:9`).
  */
-export function generateTraits(
+export function generatePhenotype(
   species: Species,
   sex: Sex,
   chromosomes: Chromosomes,
-): Record<string, Trait> {
-  const dictionary = species.traitDictionary;
+): Record<string, Expression> {
+  const dictionary = species.expressions;
   const categories = species.categories ?? {};
-  const traits: Record<string, Trait> = {};
-  if (!dictionary) return traits;
+  const phenotype: Record<string, Expression> = {};
+  if (!dictionary) return phenotype;
 
   for (const [category, chromosome] of Object.entries(categories)) {
     if (sex === 'female' && category === HAIR_FACIAL) continue;
@@ -187,23 +193,23 @@ export function generateTraits(
       sex === 'female' && category === SEX
         ? `${prefix}X${dominant}`
         : `${prefix}${dominant}`;
-    const rareTrait = dictionary[rare];
-    if (rareTrait !== undefined) {
-      traits[category] = { gene: rare, trait: rareTrait };
+    const rareExpression = dictionary[rare];
+    if (rareExpression !== undefined) {
+      phenotype[category] = { gene: rare, expression: rareExpression };
       continue;
     }
-    const commonTrait = dictionary[common];
-    if (commonTrait !== undefined) {
-      traits[category] = { gene: common, trait: commonTrait };
+    const commonExpression = dictionary[common];
+    if (commonExpression !== undefined) {
+      phenotype[category] = { gene: common, expression: commonExpression };
     }
   }
-  return traits;
+  return phenotype;
 }
 
 /**
- * Height and weight per the SRD tables: the height modifier roll is added to
- * base height in inches, and that same modifier times the weight dice (or a
- * fixed multiplier) is added to base weight in pounds.
+ * Height and weight from the species tables: the height modifier roll is
+ * added to base height in inches, and that same modifier times the weight
+ * dice (or a fixed multiplier) is added to base weight in pounds.
  */
 export function generateHeightAndWeight(
   species: Species,

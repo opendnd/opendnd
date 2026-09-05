@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "population",
-  "url": "https://opendnd.org/ours/models/population.json",
+  "url": "https://docs.opendnd.org/ours/models/population.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Population",
   "description": "An aggregate head count at a place and time.",
-  "schema": "https://opendnd.org/ours/schemas/population.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/population.schema.json",
   "relationships": [
     {
       "predicate": "place",

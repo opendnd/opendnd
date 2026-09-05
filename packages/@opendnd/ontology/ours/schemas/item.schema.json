@@ -1,39 +1,40 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/item.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/item.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Item",
-  "description": "A thing that can be owned, carried or used. One model for equipment, magic items and poisons alike, because the rules treat them the same way and only the fields that apply are filled in. The shape follows the 5e SRD equipment tree so content written for it converts without reshaping; the field names are camelCase to match the rest of this ontology, which is a mechanical transform of theirs.",
+  "type": "object",
+  "description": "A thing that can be owned, carried or used. One model for equipment, magic items and poisons alike, because the rules treat them the same way and only the fields that apply are filled in. The shape follows the 5e SRD equipment tree so content written for it converts without reshaping; the field names are camelCase to match the rest of this ontology, which is a mechanical transform of theirs. A record may describe a kind of thing or one particular thing: an instance names its kind in `instanceOf`, and any field set on the instance overrides the kind's.",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "itemCategory": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/item-category.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/item-category.json"
     },
     "instanceOf": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The kind this is one of: a world's named sword points at the longsword it is."
     },
     "owner": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "Who holds it: a person or a faction."
     },
     "location": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "Where it is, when nobody is carrying it."
     },
     "contains": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "What is inside it, for a container."
     },
     "created": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The event that made it: a forging, a gift, a discovery."
     },
     "cost": {
@@ -66,22 +67,19 @@
     },
     "rarity": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/rarity.json"
-    },
-    "requiresAttunement": {
-      "type": "boolean"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/rarity.json"
     },
     "properties": {
       "type": "array",
       "items": {
         "type": "string",
-        "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/weapon-property.json"
+        "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/weapon-property.json"
       },
       "description": "Weapon properties."
     },
     "mastery": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/weapon-mastery.json",
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/weapon-mastery.json",
       "description": "The mastery property, for a weapon."
     },
     "damage": {
@@ -93,7 +91,7 @@
         },
         "damageType": {
           "type": "string",
-          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
         }
       },
       "required": [],
@@ -109,7 +107,7 @@
         },
         "damageType": {
           "type": "string",
-          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/damage-type.json"
+          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
         }
       },
       "required": [],
@@ -149,7 +147,7 @@
       "description": "Range in feet."
     },
     "ammunition": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The item this one is loaded with."
     },
     "armorClass": {
@@ -186,7 +184,7 @@
     },
     "ability": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json",
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/ability.json",
       "description": "The ability a tool is used with."
     },
     "utilize": {
@@ -202,7 +200,7 @@
           },
           "ability": {
             "type": "string",
-            "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json"
+            "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/ability.json"
           }
         },
         "required": [
@@ -215,8 +213,36 @@
     "sentient": {
       "type": "boolean",
       "description": "Whether it has a will of its own."
+    },
+    "attunement": {
+      "type": "boolean",
+      "description": "Whether it must be attuned to before it works."
+    },
+    "variant": {
+      "type": "boolean",
+      "description": "Whether this is one form of a family of items, a +1 sword among +X swords."
+    },
+    "variants": {
+      "type": "array",
+      "items": {
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "The forms this item comes in."
+    },
+    "limitedTo": {
+      "type": "string",
+      "description": "Who may use it, where the rules restrict it."
+    },
+    "poisonType": {
+      "type": "string",
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/poison-type.json",
+      "description": "How a poison is delivered."
+    },
+    "image": {
+      "type": "string",
+      "format": "uri"
     }
   },
   "required": [],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

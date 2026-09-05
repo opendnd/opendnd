@@ -7,6 +7,7 @@
     "default": "projen default",
     "dev": "projen dev",
     "eslint": "projen eslint",
+    "generate": "projen generate",
     "migrate": "projen migrate",
     "package": "projen package",
     "post-compile": "projen post-compile",

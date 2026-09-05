@@ -84,7 +84,7 @@ function deaths(
           participants: [
             { actor: ref('person', person), role: 'deceased' },
             ...(spouse
-              ? [{ actor: ref('person', spouse), role: 'widowed' }]
+              ? [{ actor: ref('person', spouse), role: 'widowed' as const }]
               : []),
           ],
           ...(place ? { locations: [place] } : {}),
@@ -350,8 +350,8 @@ function childGenome(
     species: ref('species', input.species),
     sex,
     chromosomes: p.genome?.chromosomes ?? {},
-    traits: {},
-    size: input.species.size,
+    phenotype: {},
+    ...(input.species.size ? { size: input.species.size } : {}),
     height: p.genome?.height ?? 0,
     weight: p.genome?.weight ?? 0,
   });

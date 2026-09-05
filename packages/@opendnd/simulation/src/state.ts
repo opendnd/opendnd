@@ -171,8 +171,8 @@ export class HistoryState {
 
   addRelationship(rel: Relationship): void {
     this.relationships.push(rel);
-    const a = rel.person1.id;
-    const b = rel.person2.id;
+    const a = rel.party1.id;
+    const b = rel.party2.id;
     switch (rel.relationshipType) {
       case 'parent-child':
       case 'adoptive-parent-child':

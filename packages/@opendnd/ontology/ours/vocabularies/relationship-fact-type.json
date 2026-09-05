@@ -1,0 +1,70 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "relationship-fact-type",
+  "url": "https://docs.opendnd.org/ours/vocabularies/relationship-fact-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Relationship fact type",
+  "description": "Dated facts recorded on a relationship (GEDCOM X fact types, extended for oaths and homage).",
+  "codes": [
+    {
+      "code": "birth",
+      "display": "Birth",
+      "definition": "The birth of the child, on a parent-child tie."
+    },
+    {
+      "code": "marriage",
+      "display": "Marriage"
+    },
+    {
+      "code": "betrothal",
+      "display": "Betrothal"
+    },
+    {
+      "code": "divorce",
+      "display": "Divorce"
+    },
+    {
+      "code": "annulment",
+      "display": "Annulment"
+    },
+    {
+      "code": "separation",
+      "display": "Separation"
+    },
+    {
+      "code": "adoption",
+      "display": "Adoption"
+    },
+    {
+      "code": "fostering",
+      "display": "Fostering"
+    },
+    {
+      "code": "oath",
+      "display": "Oath",
+      "definition": "An oath sworn between the parties."
+    },
+    {
+      "code": "homage",
+      "display": "Homage",
+      "definition": "Homage rendered by the junior party to the senior."
+    },
+    {
+      "code": "pact",
+      "display": "Pact"
+    },
+    {
+      "code": "betrayal",
+      "display": "Betrayal"
+    },
+    {
+      "code": "reconciliation",
+      "display": "Reconciliation"
+    },
+    {
+      "code": "estrangement",
+      "display": "Estrangement"
+    }
+  ]
+}

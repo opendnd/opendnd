@@ -11,13 +11,13 @@ The bundle lives in `packages/@opendnd/ontology/ours/`. It is data, not code: JS
 |---|---|---|
 | `world` | The fictional universe every other record belongs to | Wikidata fictional universe |
 | `calendar` | A temporal reference system: months, weekdays, leap rules, moons, eras | OWL-Time TRS, Kanka calendars |
-| `species` | A kind of creature and its biology: size, chromosomes, trait dictionary, growth and age tables | schema.org Taxon, World Anvil Species |
+| `species` | A kind of creature and its biology: size, chromosomes, gene expressions, growth and age tables | schema.org Taxon, World Anvil Species |
 | `culture` | A people's naming, languages and customs, separate from biology | World Anvil Ethnicity, Kanka |
 | `person` | A person, real to the world or legendary | schema.org Person, Wikidata fictional human, CIDOC E21, GEDCOM X |
 | `place` | A location at any scale, with optional geometry in the world's CRS | schema.org Place, CIDOC E53, GeoSPARQL Feature |
 | `faction` | State, dynasty, faction, guild, religion | schema.org Organization, CIDOC E74, W3C ORG |
 | `event` | Something that happened, with participants, roles and cause links | schema.org Event, CIDOC E5 |
-| `relationship` | A tie between two people with dated facts and succession fields | GEDCOM X Relationship |
+| `relationship` | A tie between two parties (people, factions or places) with dated facts and succession fields | GEDCOM X Relationship |
 | `work` | A creative work in-world or out-of-world | schema.org CreativeWork, CIDOC E73 |
 | `language` | A language spoken or written in the world | schema.org Language, Wikidata language |
 
@@ -64,10 +64,12 @@ A trap is an `encounter` whose `kind` is `trap`. A familiar is a `relationship` 
 
 ## The base every model extends
 
-`common.schema.json#/$defs/ResourceBase` gives every record: a random v4 `id` and a deterministic `derivedId`; the `world` it belongs to; `canonStatus` and `perspective`; `validTime` for when the assertion holds in-world; `recorded` for when the record was written; `provenance` with generator, seed and derivation; `citations` into in-world works; and the `module` it shipped in.
+`common.schema.json#/$defs/ResourceBase` gives every record: a random v4 `id` and a deterministic `derivedId`; the `model` it is an instance of; the `world` it belongs to; `canonStatus` and `perspective`; `validTime` for when the assertion holds in-world, derived by the store from the properties the schema names in `x-ours-valid-time` when a record does not state it ([ADR-014](/adr/adr-014-valid-time/)); `recorded` for when the record was written; `provenance` with generator, seed, derivation and the `source` document and licence of module content; `citations` into in-world works; and the `module` it shipped in. `id`, `model`, `world`, `recorded` and `module` are `readOnly`: the API sets them.
 
-Shared definitions also cover `Reference`, `TemporalPosition`, `TimeSpan`, GeoJSON `Geometry` and `Feature` with an explicit CRS, `Provenance`, `Recorded` and `Citation`.
+Shared definitions also cover `Reference`, `TemporalPosition` (a year, a named position, or both), `TimeSpan`, `Cell` for quadtree tokens, GeoJSON `Geometry` and `Feature` with an explicit CRS, `Provenance`, `Recorded`, `Citation` and the recursive `Choice`.
+
+Every model schema extends the base through `allOf` and closes itself with `unevaluatedProperties: false`, which is how draft 2020-12 closes a schema that inherits properties. A test compiles every schema in Ajv's strict mode and validates the fixtures with it, so the published schemas mean the same thing to any validator as they do to the code generator.
 
 ## Vocabularies
 
-Canon status, perspective, sex, person status, place type, faction type, event type, relationship type, legitimacy, work type, belief value, temporal precision, creature size, name type, succession law, the nine SRD alignments on a three-by-three grid (order by goodness, each axis -1 to +1), terrain, prosperity, claim basis, campaign, character and quest status, encounter difficulty, sixty-one natural resources and ninety-eight industries. Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.
+Canon status, perspective, sex, person status, place type, faction type, event type, participant role, relationship type, relationship fact type, legitimacy, work type, belief value, temporal precision, creature size, name type, succession law, the nine SRD alignments on a three-by-three grid (order by goodness, each axis -1 to +1), terrain, prosperity, claim basis, campaign, character and quest status, encounter difficulty, feat type, sixty-one natural resources and ninety-one industries. Each is an OURS `Vocabulary` with inline codes, referenced from schemas through `x-ours-vocabulary`.

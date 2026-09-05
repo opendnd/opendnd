@@ -1,0 +1,124 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "participant-role",
+  "url": "https://docs.opendnd.org/ours/vocabularies/participant-role.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Participant role",
+  "description": "How an actor took part in an event.",
+  "codes": [
+    {
+      "code": "attacker",
+      "display": "Attacker"
+    },
+    {
+      "code": "besieged",
+      "display": "Besieged"
+    },
+    {
+      "code": "besieger",
+      "display": "Besieger"
+    },
+    {
+      "code": "child",
+      "display": "Child"
+    },
+    {
+      "code": "claimant",
+      "display": "Claimant"
+    },
+    {
+      "code": "deceased",
+      "display": "Deceased"
+    },
+    {
+      "code": "defeated",
+      "display": "Defeated"
+    },
+    {
+      "code": "defender",
+      "display": "Defender"
+    },
+    {
+      "code": "deposed",
+      "display": "Deposed"
+    },
+    {
+      "code": "envoy",
+      "display": "Envoy"
+    },
+    {
+      "code": "father",
+      "display": "Father"
+    },
+    {
+      "code": "founder",
+      "display": "Founder"
+    },
+    {
+      "code": "guest",
+      "display": "Guest"
+    },
+    {
+      "code": "heir",
+      "display": "Heir"
+    },
+    {
+      "code": "holder",
+      "display": "Holder"
+    },
+    {
+      "code": "host",
+      "display": "Host"
+    },
+    {
+      "code": "leader",
+      "display": "Leader"
+    },
+    {
+      "code": "mother",
+      "display": "Mother"
+    },
+    {
+      "code": "participant",
+      "display": "Participant",
+      "definition": "Took part, in no more specific role."
+    },
+    {
+      "code": "perpetrator",
+      "display": "Perpetrator"
+    },
+    {
+      "code": "predecessor",
+      "display": "Predecessor"
+    },
+    {
+      "code": "signatory",
+      "display": "Signatory"
+    },
+    {
+      "code": "spouse",
+      "display": "Spouse"
+    },
+    {
+      "code": "successor",
+      "display": "Successor"
+    },
+    {
+      "code": "victim",
+      "display": "Victim"
+    },
+    {
+      "code": "victor",
+      "display": "Victor"
+    },
+    {
+      "code": "widowed",
+      "display": "Widowed"
+    },
+    {
+      "code": "witness",
+      "display": "Witness"
+    }
+  ]
+}

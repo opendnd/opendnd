@@ -9,16 +9,16 @@ description: Domain-agnostic tooling for the OURS ontology format.
 
 - **Resource shapes** as Zod schemas and TypeScript types: `Ontology`, `Model`, `Vocabulary`, `Bundle`, `MapsTo`, `Relationship`.
 - **A directory loader**, `loadOursDirectory(dir)`, that reads `ontology.json`, `models/`, `vocabularies/` and `schemas/` into an in-memory bundle keyed by URL, and `toPublishedBundles()` to render the FHIR-style collection Bundles OURS publishes.
-- **A validator**, `validateBundle()`, for the checks Zod cannot do alone: every model's schema resolves, every relationship target is a model, every `$ref` and `x-ours-vocabulary` resolves, ids and codes are unique.
+- **A validator**, `validateBundle()`, for the checks Zod cannot do alone: every model's schema resolves, every relationship target is a model and every relationship predicate is a `Reference`-typed property of the schema, every `$ref` and `x-ours-vocabulary` resolves, every `x-ours-valid-time` path leads to a `TemporalPosition`, ids and codes are unique.
 - **A code generator**, `emitZodModule()`, that turns the bundle into one TypeScript module of Zod schemas and inferred types. Output is deterministic and topologically ordered.
 
 ## The JSON Schema subset
 
-Models may use: `object` with `properties`, `required` and `additionalProperties`; `string` with `enum`, `const`, `format` (`uuid`, `uri`, `date-time`, `date`), `pattern`, `minLength`, `maxLength`; `integer` and `number` with bounds; `boolean`; `null` via type arrays; `array` with `items` and bounds; `$ref` to `#/$defs/X` or to another document's `$defs`; `allOf` for extension (flattened); `oneOf` and `anyOf` as unions; `default`.
+Models may use: `object` with `properties`, `required`, `additionalProperties` and `unevaluatedProperties`; `string` with `enum`, `const`, `format` (`uuid`, `uri`, `date-time`, `date`), `pattern`, `minLength`, `maxLength`; `integer` and `number` with bounds; `boolean`; `null` via type arrays; `array` with `items` and bounds; `$ref` to `#/$defs/X` or to another document's `$defs`; `allOf` for extension (flattened); `oneOf` and `anyOf` as unions, except that an `anyOf` made only of `required` lists is emitted as a refinement on one object ("one of these fields is present"); `readOnly` as an annotation; `default`.
 
 Two conventions are OURS-specific:
 
 - `x-ours-vocabulary: <Vocabulary url>` on a string constrains it to that vocabulary's codes and emits a shared enum.
 - `allOf: [{ $ref: ...ResourceBase }]` is how a model extends a base. The generator flattens it into one object so the emitted type is flat.
 
-Recursive references are not supported and fail generation with the cycle named.
+A schema may refer to itself. The reference is emitted as a Zod getter, which is Zod's idiom for recursion; when such a schema also carries a refinement, the object is declared first and the refinement layered on the exported name, because a refinement on a self-referential declaration defeats TypeScript's inference. The generated module also exports `readOnlyFields`, the fields the server sets, and `validTimeFields`, the `x-ours-valid-time` declarations by model.

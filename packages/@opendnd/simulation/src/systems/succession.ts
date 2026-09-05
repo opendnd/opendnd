@@ -92,7 +92,12 @@ export function succession(
               ? `No heir could be found after the death of ${predecessor.name}.`
               : 'No eligible holder could be found.',
             participants: predecessor
-              ? [{ actor: ref('person', predecessor), role: 'predecessor' }]
+              ? [
+                  {
+                    actor: ref('person', predecessor),
+                    role: 'predecessor' as const,
+                  },
+                ]
               : [],
             ...(seat ? { locations: [seat] } : {}),
             ...(deathEvent ? { causedBy: [ref('event', deathEvent)] } : {}),
@@ -116,7 +121,12 @@ export function succession(
       participants: [
         { actor: ref('person', heir), role: 'successor' },
         ...(predecessor
-          ? [{ actor: ref('person', predecessor), role: 'predecessor' }]
+          ? [
+              {
+                actor: ref('person', predecessor),
+                role: 'predecessor' as const,
+              },
+            ]
           : []),
       ],
       ...(seat ? { locations: [seat] } : {}),
@@ -250,8 +260,8 @@ function bond(
   const already = state.relationships.some(
     (r) =>
       r.relationshipType === 'liege-vassal' &&
-      r.person1.id === liege.id &&
-      r.person2.id === vassal.id,
+      r.party1.id === liege.id &&
+      r.party2.id === vassal.id,
   );
   if (already) return;
   state.addRelationship(

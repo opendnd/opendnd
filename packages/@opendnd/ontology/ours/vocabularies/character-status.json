@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "character-status",
-  "url": "https://opendnd.org/ours/vocabularies/character-status.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/character-status.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Character status",

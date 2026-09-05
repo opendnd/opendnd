@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "sex",
-  "url": "https://opendnd.org/ours/vocabularies/sex.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/sex.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Sex",

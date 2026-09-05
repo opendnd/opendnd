@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "work",
-  "url": "https://opendnd.org/ours/models/work.json",
+  "url": "https://docs.opendnd.org/ours/models/work.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Work",
   "description": "A creative work in-world or out-of-world.",
-  "schema": "https://opendnd.org/ours/schemas/work.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/work.schema.json",
   "relationships": [
     {
       "predicate": "author",

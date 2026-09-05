@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "calendar",
-  "url": "https://opendnd.org/ours/models/calendar.json",
+  "url": "https://docs.opendnd.org/ours/models/calendar.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Calendar",
   "description": "A temporal reference system for in-world dates.",
-  "schema": "https://opendnd.org/ours/schemas/calendar.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/calendar.schema.json",
   "relationships": [],
   "mapsTo": [
     {

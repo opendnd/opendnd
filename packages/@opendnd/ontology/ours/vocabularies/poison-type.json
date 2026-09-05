@@ -1,0 +1,27 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "poison-type",
+  "url": "https://docs.opendnd.org/ours/vocabularies/poison-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Poison type",
+  "description": "How a poison is delivered.",
+  "codes": [
+    {
+      "code": "contact",
+      "display": "Contact"
+    },
+    {
+      "code": "ingested",
+      "display": "Ingested"
+    },
+    {
+      "code": "inhaled",
+      "display": "Inhaled"
+    },
+    {
+      "code": "injury",
+      "display": "Injury"
+    }
+  ]
+}

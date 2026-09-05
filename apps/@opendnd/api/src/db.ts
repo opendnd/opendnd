@@ -16,9 +16,21 @@ export const DEFAULT_DATABASE_URL = `postgres://${APP_ROLE}:${APP_ROLE}@localhos
 export const DEFAULT_ADMIN_URL =
   'postgres://opendnd:opendnd@localhost:5432/opendnd';
 
-/** A connection pool for serving requests. One per process. */
+/**
+ * A connection pool for serving requests. One per process.
+ *
+ * The size is small by default in a deployment, because every warm Lambda
+ * container holds its own pool against the same database; a request that
+ * cannot get a connection fails in seconds rather than waiting out the
+ * gateway's timeout.
+ */
 export function createPool(url = process.env.DATABASE_URL): Pool {
-  return new Pool({ connectionString: url ?? DEFAULT_DATABASE_URL });
+  return new Pool({
+    connectionString: url ?? DEFAULT_DATABASE_URL,
+    max: Number(process.env.PG_POOL_MAX ?? 10),
+    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 30000,
+  });
 }
 
 /** A connection pool for migrating and granting. */
@@ -40,12 +52,18 @@ export async function inTransaction<T>(
     await client.query('begin');
     const result = await work(client);
     await client.query('commit');
+    client.release();
     return result;
   } catch (error) {
-    await client.query('rollback');
+    try {
+      await client.query('rollback');
+      client.release();
+    } catch {
+      // A connection that cannot roll back is not one to hand to the next
+      // request; releasing with an error destroys it instead of pooling it.
+      client.release(true);
+    }
     throw error;
-  } finally {
-    client.release();
   }
 }
 
@@ -145,5 +163,11 @@ export async function ensureAppRole(
   );
   await pool.query(
     `alter default privileges in schema public grant usage, select on sequences to ${APP_ROLE}`,
+  );
+  await pool.query(
+    `grant execute on all functions in schema public to ${APP_ROLE}`,
+  );
+  await pool.query(
+    `alter default privileges in schema public grant execute on functions to ${APP_ROLE}`,
   );
 }

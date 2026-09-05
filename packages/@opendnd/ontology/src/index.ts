@@ -18,7 +18,8 @@ import { resolve } from 'node:path';
  *
  * Load it with `loadOursDirectory(OURS_DIR)` from `@opendnd/ours`. See ADR-002.
  */
-export const ONTOLOGY_URL = 'https://opendnd.org/ours/ontology.json' as const;
+export const ONTOLOGY_URL =
+  'https://docs.opendnd.org/ours/ontology.json' as const;
 
 /** Absolute path to the OURS bundle directory, valid from source and from dist. */
 export const OURS_DIR: string = (() => {

@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "belief",
-  "url": "https://opendnd.org/ours/models/belief.json",
+  "url": "https://docs.opendnd.org/ours/models/belief.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Belief",
   "description": "A belief held about a proposition.",
-  "schema": "https://opendnd.org/ours/schemas/belief.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/belief.schema.json",
   "relationships": [
     {
       "predicate": "holder",

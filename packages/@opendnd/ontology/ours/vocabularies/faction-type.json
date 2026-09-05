@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "faction-type",
-  "url": "https://opendnd.org/ours/vocabularies/faction-type.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/faction-type.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Faction type",

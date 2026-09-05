@@ -74,7 +74,7 @@ Twenty-three types were declared as `extends IResource {}` with no body. They ar
 | Old | Now | |
 |---|---|---|
 | Standing scores: power, honour, piety, reputation | `person.standing` | field |
-| Trait dictionary and traits | `species.traitDictionary`, `person.traits` | field |
+| Trait dictionary and traits | `species.expressions`, `person.phenotype` | field, renamed: in the rules, a trait is a species feature |
 | Age groups | `species.ageRanges` | field |
 | Expanded alignment matrix | `alignment` | code list, now the SRD nine |
 | `nomina`, name generation | `culture.names` and `@opendnd/generators` | package |

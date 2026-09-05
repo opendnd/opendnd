@@ -1,55 +1,63 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/feature.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/feature.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Feature",
+  "type": "object",
   "description": "Something a character gains from a class, a subclass, a species, a background, a feat or an item. One model for all of them, because they differ only in where they come from, which `source` records. The 5e SRD keeps class features and species traits in separate collections; both land here.",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "source": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/feature-source.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/feature-source.json"
     },
-    "from": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
-      "description": "The class, species, background or feat that grants it."
+    "grantedBy": {
+      "type": "array",
+      "items": {
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "The classes, subclasses, species or backgrounds that grant it. A species trait such as darkvision is shared by several species."
     },
     "level": {
       "type": "integer",
       "minimum": 0,
-      "description": "The level at which it is gained, for a class feature."
+      "description": "The level at which it is gained, for a class or subclass feature."
     },
-    "prerequisites": {
+    "spells": {
       "type": "array",
+      "description": "Spells the feature grants, and how often they may be cast.",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
-      },
-      "description": "What must be true before it can be taken."
+        "type": "object",
+        "properties": {
+          "spell": {
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+            "description": "The spell."
+          },
+          "uses": {
+            "type": "string"
+          },
+          "recovery": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "spell"
+        ],
+        "additionalProperties": false
+      }
     },
-    "uses": {
-      "type": "object",
-      "properties": {
-        "count": {
-          "type": "integer"
-        },
-        "per": {
-          "type": "string",
-          "description": "short rest, long rest, day."
-        },
-        "ability": {
-          "type": "string",
-          "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/ability.json",
-          "description": "The ability whose modifier sets the count, where it does."
-        }
-      },
-      "required": [],
-      "additionalProperties": false,
-      "description": "How often it can be used."
+    "proficiencyChoices": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice",
+      "description": "Proficiencies the feature lets a character choose."
+    },
+    "speed": {
+      "type": "integer",
+      "description": "A speed the feature sets, where it does."
     }
   },
   "required": [],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

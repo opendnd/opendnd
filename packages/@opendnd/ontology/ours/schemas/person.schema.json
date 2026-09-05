@@ -1,23 +1,24 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/person.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/person.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Person",
+  "type": "object",
   "description": "A person in the world, real to it or legendary (schema.org Person, CIDOC E21, Wikidata fictional human).",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "species": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "culture": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "sex": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/sex.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/sex.json"
     },
     "pronouns": {
       "type": "string"
@@ -28,21 +29,21 @@
     },
     "alignment": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/alignment.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/alignment.json"
     },
     "status": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/person-status.json",
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/person-status.json",
       "default": "alive"
     },
     "birth": {
       "type": "object",
       "properties": {
         "time": {
-          "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
         },
         "place": {
-          "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
         }
       },
       "additionalProperties": false
@@ -51,10 +52,10 @@
       "type": "object",
       "properties": {
         "time": {
-          "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
         },
         "place": {
-          "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
         },
         "cause": {
           "type": "string"
@@ -62,20 +63,14 @@
       },
       "additionalProperties": false
     },
-    "titles": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
     "memberOf": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       }
     },
     "residence": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "occupation": {
       "type": "string"
@@ -137,7 +132,7 @@
       ],
       "additionalProperties": false
     },
-    "traits": {
+    "phenotype": {
       "type": "array",
       "items": {
         "type": "object",
@@ -145,16 +140,18 @@
           "gene": {
             "type": "string"
           },
-          "trait": {
-            "type": "string"
+          "expression": {
+            "type": "string",
+            "description": "What the gene expresses as: blue eyes, a heavy build."
           }
         },
         "required": [
           "gene",
-          "trait"
+          "expression"
         ],
         "additionalProperties": false
-      }
+      },
+      "description": "The phenotype: what each of this person's genes expresses as. Distinct from a species feature such as darkvision, which is a feature."
     },
     "portrait": {
       "type": "string",
@@ -162,5 +159,9 @@
     }
   },
   "required": [],
-  "additionalProperties": false
+  "unevaluatedProperties": false,
+  "x-ours-valid-time": {
+    "begin": "birth.time",
+    "end": "death.time"
+  }
 }

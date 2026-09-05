@@ -1,22 +1,23 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/session.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/session.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Session",
+  "type": "object",
   "description": "One sitting of a campaign. Dated in real time, and the place to record what the group did: the in-world events it produced are referenced, not repeated.",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "perspective": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/perspective.json",
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/perspective.json",
       "default": "out-of-universe",
       "description": "Out-of-universe by default: this is a record of play, not something that exists in the fiction."
     },
     "campaign": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The campaign this belongs to."
     },
     "number": {
@@ -46,17 +47,17 @@
     "produced": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Events in the world's record that this session created."
     },
     "coveredInWorld": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TimeSpan",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TimeSpan",
       "description": "The stretch of in-world time the session covered."
     }
   },
   "required": [
     "campaign"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

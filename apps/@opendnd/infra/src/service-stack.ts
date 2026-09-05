@@ -8,6 +8,7 @@ import {
   Tags,
 } from 'aws-cdk-lib';
 import {
+  CfnStage,
   CorsHttpMethod,
   HttpApi,
   HttpMethod,
@@ -69,6 +70,9 @@ export class ServiceStack extends Stack {
       COGNITO_CLIENT_IDS: props.userPoolClient.userPoolClientId,
       EVENT_BUS_NAME: this.bus.eventBusName,
       ASSETS_BUCKET: assets.bucketName,
+      // Every warm container holds its own pool against one database, so
+      // each keeps few connections and gives up quickly when none is free.
+      PG_POOL_MAX: '2',
       // A deployment has no Ollama on the box, so the local-first default
       // would find nothing. Bedrock serves it instead.
       OPENDND_LLM_LOCAL: 'off',
@@ -215,6 +219,16 @@ export class ServiceStack extends Stack {
       path: '/{proxy+}',
       methods: [HttpMethod.ANY],
       integration: new HttpLambdaIntegration('ApiIntegration', api),
+    });
+
+    // Throttled at the edge, so a flood is turned away before it costs a
+    // function invocation. The construct has no property for it; the stage
+    // resource does.
+    const stage = this.api.defaultStage?.node.defaultChild as
+      CfnStage | undefined;
+    stage?.addPropertyOverride('DefaultRouteSettings', {
+      ThrottlingRateLimit: config.throttle?.rate ?? 50,
+      ThrottlingBurstLimit: config.throttle?.burst ?? 100,
     });
 
     new Rule(this, 'PublishSchedule', {

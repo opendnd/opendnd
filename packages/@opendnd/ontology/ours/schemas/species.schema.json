@@ -1,20 +1,21 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/species.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/species.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Species",
+  "type": "object",
   "description": "A kind of creature and its biology: size, chromosome layout, trait dictionary, growth and lifespan tables. Rules content (abilities, features) lives in the rules layer, not here (World Anvil Species; schema.org Taxon).",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "size": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/size.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/size.json"
     },
     "parent": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The species this is a subspecies of."
     },
     "chromosomes": {
@@ -53,8 +54,8 @@
         "type": "string"
       }
     },
-    "traitDictionary": {
-      "description": "Gene key to trait. Common genes are '<category>:C<chromosome>:<dominant roll>'; rare genes are '<category>:C<chromosome>:<rollA>=<rollB>'.",
+    "expressions": {
+      "description": "Gene key to the phenotype it expresses. Common genes are '<category>:C<chromosome>:<dominant roll>'; rare genes are '<category>:C<chromosome>:<rollA>=<rollB>'.",
       "type": "object",
       "additionalProperties": {
         "type": "string"
@@ -183,10 +184,16 @@
         "maximumAge"
       ],
       "additionalProperties": false
+    },
+    "creatureType": {
+      "type": "string",
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/creature-type.json",
+      "description": "The rules category the species falls under, humanoid for most."
+    },
+    "sizeOptions": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice",
+      "description": "A choice of size, for a species that offers one."
     }
   },
-  "required": [
-    "size"
-  ],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

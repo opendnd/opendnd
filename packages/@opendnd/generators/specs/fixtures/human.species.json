@@ -2,7 +2,7 @@
   "id": "7a1d2c3e-4b5f-4a6d-8e9f-0a1b2c3d4e5f",
   "world": "3c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a11",
   "name": "Human",
-  "description": "It\u2019s hard to make generalizations about humans, but your human character has these traits.",
+  "description": "The most widespread and varied of peoples: short-lived by the measure of elder folk, quick to adapt, and found in every climate and every trade.",
   "canonStatus": "canon",
   "recorded": {
     "createdAt": "2026-09-03T12:00:00Z",
@@ -56,7 +56,7 @@
     "skinAging": "13",
     "sex": "23"
   },
-  "traitDictionary": {
+  "expressions": {
     "general:C1:20": "big",
     "general:C1:19": "large",
     "general:C1:18": "strong",
@@ -623,17 +623,17 @@
     "sex:C23:X6=X8": "seductress"
   },
   "height": {
-    "base": 56,
+    "base": 58,
     "dice": [
-      "d10",
-      "d10"
+      "d8",
+      "d8"
     ]
   },
   "weight": {
-    "base": 110,
+    "base": 100,
     "dice": [
-      "d4",
-      "d4"
+      "d6",
+      "d6"
     ]
   },
   "ageRanges": {

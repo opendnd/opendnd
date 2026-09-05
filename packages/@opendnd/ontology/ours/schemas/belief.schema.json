@@ -1,16 +1,17 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/belief.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/belief.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Belief",
+  "type": "object",
   "description": "A belief held by a person or faction about a proposition, so contested history can be recorded without choosing a winner (CRMinf Belief).",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "holder": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "proposition": {
       "type": "string"
@@ -18,12 +19,12 @@
     "about": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       }
     },
     "value": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/belief-value.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/belief-value.json"
     },
     "basis": {
       "type": "string",
@@ -35,5 +36,5 @@
     "proposition",
     "value"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

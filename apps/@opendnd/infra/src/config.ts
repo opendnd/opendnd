@@ -19,6 +19,12 @@ export interface StageConfig {
   readonly publishEveryMinutes?: number;
   /** Whether a deployment may delete the bucket and the user pool with it. */
   readonly destroyable?: boolean;
+  /**
+   * Requests per second the gateway lets through, and the burst above it.
+   * Default 50 and 100. This is the only thing between an anonymous
+   * generation request and the function's processor time.
+   */
+  readonly throttle?: { readonly rate: number; readonly burst: number };
 }
 
 export const DEFAULT_STAGE: StageConfig = {

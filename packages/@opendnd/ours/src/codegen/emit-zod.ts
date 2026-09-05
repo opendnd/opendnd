@@ -48,11 +48,36 @@ export function emitZodModule(bundle: OursBundle): string {
     const camel = toCamelCase(decl.name);
     const doc = decl.schema.description ?? decl.description;
     if (doc) lines.push(`/** ${doc.replace(/\*\//g, '* /')} */`);
-    lines.push(
-      `export const ${camel}Schema = ${ctx.emit(decl.schema, decl.doc, 0)};`,
-      `export type ${pascal} = z.infer<typeof ${camel}Schema>;`,
-      '',
-    );
+    const alternatives = decl.schema.anyOf;
+    const selfReferential = ctx
+      .dependenciesOf(decl.schema, decl.doc)
+      .includes(decl.name);
+    if (
+      selfReferential &&
+      alternatives &&
+      isRequiredAlternatives(alternatives)
+    ) {
+      /*
+       * A refinement on a schema that refers to itself leaves TypeScript
+       * unable to infer its type, so the object is declared first, referring
+       * to its own unrefined form, and the refinement is layered on the
+       * exported name. The constraint therefore holds at the top level of a
+       * value and not inside its nested occurrences; the JSON Schema states
+       * it at every level.
+       */
+      const { anyOf: _alternatives, ...rest } = decl.schema;
+      ctx.selfRaw = decl.name;
+      lines.push(
+        `const ${camel}RawSchema = ${ctx.emit(rest, decl.doc, 0)};`,
+        `export const ${camel}Schema = ${camel}RawSchema${requireOneOf(alternatives)};`,
+      );
+      ctx.selfRaw = undefined;
+    } else {
+      lines.push(
+        `export const ${camel}Schema = ${ctx.emit(decl.schema, decl.doc, 0)};`,
+      );
+    }
+    lines.push(`export type ${pascal} = z.infer<typeof ${camel}Schema>;`, '');
     ctx.emitted.add(decl.name);
   }
 
@@ -104,6 +129,36 @@ export function emitZodModule(bundle: OursBundle): string {
     '',
   );
 
+  /*
+   * What the schemas say about the platform's part in a record: the fields
+   * the server sets, and the properties a record's in-world valid time is
+   * read from when it does not state one.
+   */
+  const readOnly = new Set<string>();
+  const validTime: string[] = [];
+  for (const model of models) {
+    const schema = bundle.schemas.get(model.schema)!;
+    for (const [name, prop] of Object.entries(
+      ctx.topLevelProperties(schema, model.schema),
+    )) {
+      if (prop.readOnly) readOnly.add(name);
+    }
+    const fields = schema['x-ours-valid-time'];
+    if (fields) {
+      validTime.push(`  ${propertyKey(model.id)}: ${JSON.stringify(fields)},`);
+    }
+  }
+  lines.push(
+    '/** Fields the API sets itself. A request may omit them and cannot override them. */',
+    `export const readOnlyFields = ${JSON.stringify([...readOnly].sort())} as const;`,
+    '',
+    "/** The properties a record's in-world valid time is derived from when it states none, by model. Dotted paths. */",
+    'export const validTimeFields = {',
+    ...validTime,
+    '} as const satisfies Partial<Record<ModelId, { begin: string; end?: string }>>;',
+    '',
+  );
+
   return lines.join('\n');
 }
 
@@ -118,6 +173,8 @@ interface Declaration {
 class EmitContext {
   /** Declarations already written, so a reference to anything else is deferred. */
   readonly emitted = new Set<string>();
+  /** The declaration being emitted in two steps, whose self-references use the raw form. */
+  selfRaw: string | undefined;
   /** Maps "<doc>#<pointer>" to the declaration name it resolves to. */
   private readonly refNames = new Map<string, string>();
 
@@ -154,6 +211,23 @@ class EmitContext {
     return decls;
   }
 
+  /** A model's properties, including those inherited through `allOf`. */
+  topLevelProperties(
+    schema: JsonSchema,
+    doc: string,
+  ): Record<string, JsonSchema> {
+    const out: Record<string, JsonSchema> = {};
+    for (const part of schema.allOf ?? []) {
+      const resolved = this.resolveObject(part, doc);
+      Object.assign(
+        out,
+        this.topLevelProperties(resolved.schema, resolved.doc),
+      );
+    }
+    Object.assign(out, schema.properties ?? {});
+    return out;
+  }
+
   dependenciesOf(schema: JsonSchema, doc: string): string[] {
     const deps = new Set<string>();
     const visit = (node: JsonSchema) => {
@@ -177,10 +251,19 @@ class EmitContext {
     const inner = '  '.repeat(indent + 1);
 
     if (schema.$ref !== undefined) {
-      return `${toCamelCase(this.refName(schema.$ref, doc))}Schema`;
+      const name = this.refName(schema.$ref, doc);
+      const suffix = name === this.selfRaw ? 'RawSchema' : 'Schema';
+      return `${toCamelCase(name)}${suffix}`;
     }
     if (schema.allOf) {
       return this.emitAllOf(schema, doc, indent);
+    }
+    if (schema.anyOf && isRequiredAlternatives(schema.anyOf)) {
+      // `anyOf` made only of `required` lists says "at least one of these
+      // sets of fields is present", which is a constraint on one object
+      // rather than a choice between shapes, so it becomes a refinement.
+      const { anyOf, ...rest } = schema;
+      return `${this.emit(rest, doc, indent)}${requireOneOf(anyOf)}`;
     }
     if (schema.oneOf || schema.anyOf) {
       const parts = (schema.oneOf ?? schema.anyOf)!;
@@ -303,8 +386,7 @@ class EmitContext {
       }
       return `${comment}${inner}${propertyKey(name)}: ${e},`;
     });
-    const ctor =
-      schema.additionalProperties === false ? 'z.strictObject' : 'z.object';
+    const ctor = isClosed(schema) ? 'z.strictObject' : 'z.object';
     return `${ctor}({\n${fields.join('\n')}\n${pad}})`;
   }
 
@@ -317,7 +399,9 @@ class EmitContext {
       type: 'object',
       properties: {},
       required: [],
-      additionalProperties: schema.additionalProperties,
+      additionalProperties: isClosed(schema)
+        ? false
+        : schema.additionalProperties,
       description: schema.description,
     };
     const parts = [...schema.allOf!];
@@ -400,6 +484,39 @@ function rehome(schema: JsonSchema, doc: string): JsonSchema {
   return copy;
 }
 
+/**
+ * Whether a schema admits no properties beyond the ones it declares. Draft
+ * 2020-12 says it with `unevaluatedProperties` when the schema extends another
+ * through `allOf`, and with `additionalProperties` otherwise.
+ */
+function isClosed(schema: JsonSchema): boolean {
+  return (
+    schema.additionalProperties === false ||
+    schema.unevaluatedProperties === false
+  );
+}
+
+function isRequiredAlternatives(parts: JsonSchema[]): boolean {
+  return (
+    parts.length > 0 &&
+    parts.every(
+      (part) =>
+        Object.keys(part).every((key) => key === 'required') &&
+        (part.required?.length ?? 0) > 0,
+    )
+  );
+}
+
+function requireOneOf(alternatives: JsonSchema[]): string {
+  const sets = alternatives.map((a) => a.required ?? []);
+  const label = sets.map((set) => set.join(' and ')).join(', or ');
+  return (
+    `.refine((value) => ${JSON.stringify(sets)}.some((keys) => ` +
+    `keys.every((key) => (value as Record<string, unknown>)[key] !== undefined)), ` +
+    `{ error: ${JSON.stringify(`one of ${label} is required`)} })`
+  );
+}
+
 function emitString(schema: JsonSchema): string {
   switch (schema.format) {
     case 'uuid':
@@ -426,7 +543,11 @@ function emitString(schema: JsonSchema): string {
 function normaliseTypes(schema: JsonSchema): JsonSchemaType[] {
   if (Array.isArray(schema.type)) return schema.type;
   if (schema.type) return [schema.type];
-  if (schema.properties || schema.additionalProperties !== undefined) {
+  if (
+    schema.properties ||
+    schema.additionalProperties !== undefined ||
+    schema.unevaluatedProperties !== undefined
+  ) {
     return ['object'];
   }
   if (schema.items) return ['array'];

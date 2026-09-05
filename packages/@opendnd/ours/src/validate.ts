@@ -36,11 +36,33 @@ export function validateBundle(bundle: OursBundle): ValidationIssue[] {
     }
   }
   for (const model of bundle.models.values()) {
+    const schema = bundle.schemas.get(model.schema);
     for (const rel of model.relationships ?? []) {
       if (!modelNames.has(rel.target)) {
         error(
           model.url,
           `relationship "${rel.predicate}" targets unknown model "${rel.target}"`,
+        );
+      }
+      // A relationship is a claim about the schema, so it has to be true of
+      // the schema: the predicate must be a property holding a Reference.
+      if (
+        schema &&
+        !isReferencePath(bundle, schema, model.schema, rel.predicate)
+      ) {
+        error(
+          model.url,
+          `relationship "${rel.predicate}" is not a Reference-typed property of the schema`,
+        );
+      }
+    }
+    const validTime = schema?.['x-ours-valid-time'];
+    for (const [bound, path] of Object.entries(validTime ?? {})) {
+      const leaf = schema && propertyAt(bundle, schema, model.schema, path);
+      if (!leaf || !/\/TemporalPosition$/.test(leaf.$ref ?? '')) {
+        error(
+          model.schema,
+          `x-ours-valid-time.${bound} names ${path}, which is not a TemporalPosition property`,
         );
       }
     }
@@ -106,6 +128,79 @@ export function walkSchema(
       walkSchema(sub, visit, `${path}/${key}/${i}`),
     );
   }
+}
+
+/**
+ * The schema of a property named by a dotted path, unresolved, so the caller
+ * can see what it refers to. Arrays are looked through, and properties a
+ * schema inherits through `allOf` count as its own.
+ */
+export function propertyAt(
+  bundle: OursBundle,
+  schema: JsonSchema,
+  doc: string,
+  path: string,
+): JsonSchema | undefined {
+  let node: JsonSchema | undefined = schema;
+  let nodeDoc = doc;
+  for (const segment of path.split('.')) {
+    const here = deref(bundle, node, nodeDoc);
+    if (!here) return undefined;
+    const inner = here.node.items
+      ? deref(bundle, here.node.items, here.doc)
+      : here;
+    if (!inner) return undefined;
+    node = allProperties(bundle, inner.node, inner.doc)[segment];
+    nodeDoc = inner.doc;
+    if (!node) return undefined;
+  }
+  return node;
+}
+
+function isReferencePath(
+  bundle: OursBundle,
+  schema: JsonSchema,
+  doc: string,
+  path: string,
+): boolean {
+  const leaf = propertyAt(bundle, schema, doc, path);
+  const target = leaf?.items ?? leaf;
+  return /\/Reference$/.test(target?.$ref ?? '');
+}
+
+/** Own properties plus those of every `allOf` part, nearest last. */
+function allProperties(
+  bundle: OursBundle,
+  schema: JsonSchema,
+  doc: string,
+): Record<string, JsonSchema> {
+  const out: Record<string, JsonSchema> = {};
+  for (const part of schema.allOf ?? []) {
+    const resolved = deref(bundle, part, doc);
+    if (resolved) {
+      Object.assign(out, allProperties(bundle, resolved.node, resolved.doc));
+    }
+  }
+  Object.assign(out, schema.properties ?? {});
+  return out;
+}
+
+/** Follow one `$ref`, or return the node as it is. */
+function deref(
+  bundle: OursBundle,
+  node: JsonSchema,
+  doc: string,
+): { node: JsonSchema; doc: string } | undefined {
+  if (node.$ref === undefined) return { node, doc };
+  const { doc: targetDoc, pointer } = splitRef(node.$ref, doc);
+  const target = bundle.schemas.get(targetDoc);
+  if (!target) return undefined;
+  if (pointer === '' || pointer === '/') {
+    return { node: target, doc: targetDoc };
+  }
+  const m = /^\/\$defs\/([^/]+)$/.exec(pointer);
+  const def = m && target.$defs?.[m[1]];
+  return def ? { node: def, doc: targetDoc } : undefined;
 }
 
 /** Split a `$ref` into the document URL (or undefined for local) and pointer. */

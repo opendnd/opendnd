@@ -1,25 +1,26 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/work.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/work.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Work",
+  "type": "object",
   "description": "A creative work, in-world (a chronicle, a legend) or out-of-world (an adventure module) (schema.org CreativeWork; NOnt narration).",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "workType": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/work-type.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/work-type.json"
     },
     "author": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "about": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       }
     },
     "text": {
@@ -32,5 +33,5 @@
   "required": [
     "workType"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

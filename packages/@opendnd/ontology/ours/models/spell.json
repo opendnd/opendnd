@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "spell",
-  "url": "https://opendnd.org/ours/models/spell.json",
+  "url": "https://docs.opendnd.org/ours/models/spell.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Spell",
   "description": "A spell, its components, and what it does.",
-  "schema": "https://opendnd.org/ours/schemas/spell.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/spell.schema.json",
   "relationships": [
     {
       "predicate": "classes",
@@ -16,7 +16,7 @@
   "mapsTo": [
     {
       "system": "https://5e-bits.github.io/docs",
-      "schema": "https://5e-bits.github.io/docs/api-reference/spells",
+      "schema": "https://github.com/5e-bits/5e-database/pull/1178",
       "type": "one-to-one"
     }
   ]

@@ -7,8 +7,8 @@ export function configureRootProject() {
       'An open ontology, headless API and toolset for building fictional worlds. An OpenHI project.',
 
     /**
-     * Code is MIT. Game content shipped in this repo (SRD 5.2.1) is CC-BY-4.0
-     * and carries its own notice in CONTENT-LICENSE.md.
+     * Code is MIT. This release ships shapes and vocabularies, not game
+     * content; CONTENT-LICENSE.md carries the notice for any content that does.
      */
     licensed: true,
     license: 'MIT',

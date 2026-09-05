@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "quest",
-  "url": "https://opendnd.org/ours/models/quest.json",
+  "url": "https://docs.opendnd.org/ours/models/quest.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Quest",
   "description": "Something a party is meant to do.",
-  "schema": "https://opendnd.org/ours/schemas/quest.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/quest.schema.json",
   "relationships": [
     {
       "predicate": "giver",

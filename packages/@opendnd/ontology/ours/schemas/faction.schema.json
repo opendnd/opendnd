@@ -1,32 +1,30 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/faction.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/faction.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Faction",
+  "type": "object",
   "description": "An organized group of any kind: realm, dynasty, guild, religion, order, company, adventuring party.",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "factionType": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/faction-type.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/faction-type.json"
     },
     "parent": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "seat": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
-    },
-    "leader": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "founded": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
     },
     "dissolved": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
     },
     "motto": {
       "type": "string"
@@ -39,5 +37,9 @@
   "required": [
     "factionType"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false,
+  "x-ours-valid-time": {
+    "begin": "founded",
+    "end": "dissolved"
+  }
 }

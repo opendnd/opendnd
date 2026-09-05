@@ -1,16 +1,17 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/title.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/title.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Title",
+  "type": "object",
   "description": "A title: a seat of authority in a faction, with a rank and the law by which it passes from holder to holder.",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "faction": {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The faction this title belongs to."
     },
     "rank": {
@@ -20,7 +21,7 @@
     },
     "successionLaw": {
       "type": "string",
-      "x-ours-vocabulary": "https://opendnd.org/ours/vocabularies/succession-law.json"
+      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/succession-law.json"
     },
     "styleMale": {
       "type": "string",
@@ -39,5 +40,5 @@
     "faction",
     "successionLaw"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

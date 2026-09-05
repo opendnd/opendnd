@@ -1,11 +1,12 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/calendar.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/calendar.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Calendar",
+  "type": "object",
   "description": "A temporal reference system: months, weekdays, leap rules, moons and eras (after Kanka; OWL-Time TRS).",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
@@ -152,5 +153,5 @@
   "required": [
     "months"
   ],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

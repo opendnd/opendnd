@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "belief-value",
-  "url": "https://opendnd.org/ours/vocabularies/belief-value.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/belief-value.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Belief value",

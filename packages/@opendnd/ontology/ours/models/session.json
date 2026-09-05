@@ -1,12 +1,12 @@
 {
   "resourceType": "Model",
   "id": "session",
-  "url": "https://opendnd.org/ours/models/session.json",
+  "url": "https://docs.opendnd.org/ours/models/session.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Session",
   "description": "One sitting of a campaign.",
-  "schema": "https://opendnd.org/ours/schemas/session.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/session.schema.json",
   "relationships": [
     {
       "predicate": "campaign",

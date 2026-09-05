@@ -6,4 +6,8 @@ node_modules/
 !/.projen/files.json
 dist/
 .astro/
+public/openapi.json
+public/ours/
+public/.well-known/
+src/content/docs/reference/
 !/package.json

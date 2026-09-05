@@ -26,6 +26,15 @@ The infrastructure also has to be described in code, in this repository, alongsi
 - **Only the API may spend on models.** The Bedrock permission is on the function that answers requests and on nothing else.
 - **Log groups are declared.** Created implicitly they have no retention and keep everything for ever, which costs money quietly, and they outlive the function that made them.
 - **Stages are enumerated in code.** A stage name that is not defined is refused rather than defaulted, because what differs between stages includes whether the data can be deleted.
+- **Each container keeps a small pool, and gives up quickly.** Every warm container holds its own pool against one database, so the function runs with `PG_POOL_MAX=2` and a five-second connection timeout rather than the driver's ten connections and no timeout, which would let a handful of warm containers exhaust the database and a saturated pool wait out the gateway.
+- **Throttled at the edge.** The gateway stage carries a rate and burst limit, so a flood is turned away before it costs an invocation. Inside the function, the key-set fetch that a token with an unknown key id can trigger has a floor of thirty seconds between fetches and a timeout.
+- **The health check reaches the database.** A bad secret shows up on `/health` as a `503`, not on the first user's request.
+
+## Domains, decided 2026-09-04
+
+- **`docs.opendnd.org`** serves the documentation site, and with it the published OURS bundle at `/ours/ontology.json`, `/ours/models.json`, `/ours/vocabularies.json`, `/ours/mappings.json` and `/ours/schemas/*.json`, plus the Ontology resource again at `/.well-known/ours.json`, so a client that fetches the conventional location has the document OURS prescribes, and the OpenAPI description at `/openapi.json`. Every `url` and `$id` in the ontology names that host, so fetching any of them resolves against the live site, which is what OURS discovery depends on.
+- **`api.opendnd.org`** serves the API, and is the `servers` entry in the published OpenAPI description.
+- Both are generated into the site by `bun run generate` from the same sources the code is built from, so the machine-readable publications cannot drift from the schemas the API validates with.
 
 ## Consequences
 

@@ -1,11 +1,12 @@
 {
-  "$id": "https://opendnd.org/ours/schemas/culture.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/culture.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Culture",
+  "type": "object",
   "description": "A people's shared naming, language and customs, separate from biology so one species can hold many cultures and one culture span species (World Anvil Ethnicity).",
   "allOf": [
     {
-      "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
@@ -49,13 +50,13 @@
     "languages": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       }
     },
     "species": {
       "type": "array",
       "items": {
-        "$ref": "https://opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Species that commonly belong to this culture."
     },
@@ -65,5 +66,5 @@
     }
   },
   "required": [],
-  "additionalProperties": false
+  "unevaluatedProperties": false
 }

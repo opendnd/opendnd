@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "industry",
-  "url": "https://opendnd.org/ours/vocabularies/industry.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/industry.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Industry",
@@ -60,8 +60,8 @@
       "display": "Groundskeepers"
     },
     {
-      "code": "chauffeurs",
-      "display": "Chauffeurs"
+      "code": "carters",
+      "display": "Carters"
     },
     {
       "code": "nannies",
@@ -368,36 +368,8 @@
       "display": "Priests"
     },
     {
-      "code": "nobles",
-      "display": "Nobles"
-    },
-    {
       "code": "guards",
       "display": "Guards"
-    },
-    {
-      "code": "urchins",
-      "display": "Urchins"
-    },
-    {
-      "code": "hermits",
-      "display": "Hermits"
-    },
-    {
-      "code": "folk-heroes",
-      "display": "Folk Heroes"
-    },
-    {
-      "code": "charlatans",
-      "display": "Charlatans"
-    },
-    {
-      "code": "criminals",
-      "display": "Criminals"
-    },
-    {
-      "code": "entertainers",
-      "display": "Entertainers"
     }
   ]
 }

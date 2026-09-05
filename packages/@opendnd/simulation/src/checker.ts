@@ -174,12 +174,12 @@ export function checkHistory(record: HistoryRecord): Finding[] {
   }
 
   // A dated relationship needs both parties alive when it begins: you cannot
-  // marry, nor swear homage, after your death.
+  // marry, nor swear homage, after their death.
   for (const r of record.relationships) {
     const y = r.validTime?.begin?.year;
     if (y === undefined) continue;
     const couple = r.relationshipType === 'couple';
-    for (const who of [r.person1, r.person2]) {
+    for (const who of [r.party1, r.party2]) {
       const died = deathYear.get(who.id);
       if (died !== undefined && died < y) {
         findings.push({

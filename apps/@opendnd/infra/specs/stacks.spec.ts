@@ -95,6 +95,21 @@ describe('the deployment', () => {
     }
   });
 
+  it('throttles at the edge and keeps each container to a small pool', () => {
+    service.hasResourceProperties('AWS::ApiGatewayV2::Stage', {
+      DefaultRouteSettings: Match.objectLike({
+        ThrottlingRateLimit: 50,
+        ThrottlingBurstLimit: 100,
+      }),
+    });
+    service.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'opendnd-dev-api',
+      Environment: {
+        Variables: Match.objectLike({ PG_POOL_MAX: '2' }),
+      },
+    });
+  });
+
   it('turns the local-first default off, because a deployment has no Ollama', () => {
     service.hasResourceProperties('AWS::Lambda::Function', {
       FunctionName: 'opendnd-dev-api',

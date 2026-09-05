@@ -1,7 +1,7 @@
 {
   "resourceType": "Vocabulary",
   "id": "claim-basis",
-  "url": "https://opendnd.org/ours/vocabularies/claim-basis.json",
+  "url": "https://docs.opendnd.org/ours/vocabularies/claim-basis.json",
   "version": "0.1.0",
   "system": "internal",
   "name": "Claim basis",

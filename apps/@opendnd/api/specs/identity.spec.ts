@@ -158,6 +158,27 @@ describe('CognitoVerifier', () => {
     expect(fetches).toBe(1);
   });
 
+  it('does not fetch the key set again for every unknown key id', async () => {
+    const first = pool('key-1');
+    const forged = pool('key-9');
+    let fetches = 0;
+    const v = verifier([first.jwk], {
+      onFetch: () => {
+        fetches++;
+      },
+    });
+    await v.verify(first.sign(claims()));
+    // Unknown ids arriving inside the refresh floor are refused without a
+    // fetch each; otherwise a stream of forged tokens is a stream of requests
+    // to the pool.
+    for (let i = 0; i < 5; i++) {
+      await expect(v.verify(forged.sign(claims()))).rejects.toThrow(
+        'unknown key',
+      );
+    }
+    expect(fetches).toBe(1);
+  });
+
   it('comes from the environment only when a pool and a client are named', () => {
     expect(CognitoVerifier.fromEnv({ AWS_REGION: REGION })).toBeUndefined();
     expect(
