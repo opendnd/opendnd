@@ -31,6 +31,21 @@ export const versions = {
   '@types/react-dom': '^19.2.0',
   tailwindcss: '^4.2.2',
   '@tailwindcss/vite': '^4.2.2',
+  'react-router': '^8.3.1',
+  // The component library: shadcn/ui on Base UI. Components are copied into
+  // the site by its CLI and owned there; these are what they import.
+  shadcn: '^4.21.0',
+  '@base-ui/react': '^1.8.0',
+  'class-variance-authority': '^0.7.1',
+  cn: '^0.2.5',
+  'lucide-react': '^1.41.0',
+  'tw-animate-css': '^1.4.0',
+  '@fontsource-variable/geist': '^5.3.0',
+  jsdom: '^30.0.1',
+  '@testing-library/react': '^16.3.3',
+  '@testing-library/dom': '^10.4.1',
+  '@testing-library/jest-dom': '^7.0.1',
+  '@testing-library/user-event': '^14.6.7',
 
   // Shared runtime libraries
   zod: '^4.3.6',

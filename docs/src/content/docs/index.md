@@ -27,4 +27,5 @@ Everything is free to use. Features that cost money to run, such as AI token spe
 - [Models](/reference/models/) and [Vocabularies](/reference/vocabularies/): every model, field and code, generated from the published bundle.
 - [The published ontology](/reference/ontology/): where the OURS bundle is served, and how to discover it.
 - [API reference](/api/): every route, generated from the same schemas the API validates with.
+- [The application](/packages/app/): running it against a local API, and how its pages come from the ontology.
 - [Architecture decisions](/adr/adr-001-monorepo-tooling/): the choices, in order.

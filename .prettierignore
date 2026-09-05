@@ -10,3 +10,6 @@ build
 *.generated.ts
 **/src/generated/**
 **/.astro
+sites/**/src/components/ui/**
+sites/**/src/hooks/use-mobile.ts
+sites/**/src/lib/utils.ts

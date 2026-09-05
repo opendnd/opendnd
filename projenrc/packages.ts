@@ -245,32 +245,40 @@ function configureOne(
       project.gitignore.addPatterns('cdk.out', '.cdk.staging');
     }
 
-    /*
-     * A README generated from the description above, so the one npm shows is
-     * the one this file already states and cannot drift from it. The full
-     * documentation is a page on the docs site, which this points at.
-     */
-    const slug = config.name.replace('@opendnd/', '');
-    new TextFile(project, 'README.md', {
-      marker: false,
-      lines: [
-        `# ${config.name}`,
-        '',
-        config.description,
-        '',
-        `Part of [OpenDnD](https://github.com/opendnd/opendnd), an open ontology, headless API and toolset for building fictional worlds. A project of [OpenHI](https://openhi.org).`,
-        '',
-        `Documentation: https://docs.opendnd.org/packages/${slug}/`,
-        '',
-        'Code is MIT. See `CONTENT-LICENSE.md` in the repository root for the',
-        'licence covering game content.',
-        '',
-      ],
-    });
+    describeInReadme(project, config.name, config.description);
 
     project.package.addField('main', 'dist/src/index.js');
     project.package.addField('types', 'dist/src/index.d.ts');
 
     return project;
   }
+}
+
+/**
+ * A README generated from the description in this file, so the one npm shows
+ * is the one already stated here and cannot drift from it. The full
+ * documentation is a page on the docs site, which the README points at.
+ */
+export function describeInReadme(
+  project: Project,
+  name: string,
+  description: string,
+): void {
+  const slug = name.replace('@opendnd/', '');
+  new TextFile(project, 'README.md', {
+    marker: false,
+    lines: [
+      `# ${name}`,
+      '',
+      description,
+      '',
+      `Part of [OpenDnD](https://github.com/opendnd/opendnd), an open ontology, headless API and toolset for building fictional worlds. A project of [OpenHI](https://openhi.org).`,
+      '',
+      `Documentation: https://docs.opendnd.org/packages/${slug}/`,
+      '',
+      'Code is MIT. See `CONTENT-LICENSE.md` in the repository root for the',
+      'licence covering game content.',
+      '',
+    ],
+  });
 }

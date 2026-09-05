@@ -1,0 +1,33 @@
+---
+title: "ADR-015: One application, built from what the API describes"
+description: A single-page application that learns the models, their shapes and their code lists from the API at run time, signs in through Cognito or a development mode, and renders every resource through pages generated from its schema.
+---
+
+**Status:** Accepted, 2026-09-05
+
+## Context
+
+The API is generated from the ontology: a model added to the ontology has its routes, its validation and its place in the OpenAPI description with no change to the API ([ADR-009](/adr/adr-009-api-shape/)). The campaign layer was the first test of that property, and it held ([ADR-013](/adr/adr-013-campaign-layer/)). An application built on top now has to decide whether to keep it. An application that knows the models by name loses it at once: every new model becomes application work, and the ontology stops being the one place a change is made.
+
+Two further things are settled before any page is drawn. Working on the application needs a way to sign in without a user pool, because the pool is a deployment and the application should run against a database on the same machine. And the application needs a component library, because building accessible menus, popovers, dialogs and comboboxes is a project of its own and not this one.
+
+## Decision
+
+- **One application, in `sites/@opendnd/app`.** A single-page React application bundled by Vite into static files. The map, the wiki, characters and campaigns are features of it rather than separate sites, because they are views of one ontology and an edit in any of them is an edit to the same record.
+- **It learns the ontology from the API at run time.** On sign-in it reads `/v1/models`, `/v1/openapi.json` and `/v1/vocabularies` once and builds every page from them. It has no dependency on the ontology package, the generated types or the schema files: the API's own description is its contract. A test holds the application to this with an invented model, and no model of the ontology is named anywhere in it.
+- **Pages are generated from schemas.** A resource's article and its form come from the same schema. The renderer understands strings and their formats, numbers, booleans, code lists, references, lists and objects; every shape it understands gets a control, and anything else gets an editor for the raw value, so that nothing the ontology can express is something the application cannot author. Fields the server sets are shown and never edited. Fields about the record rather than the thing are folded away beneath the fields an author came for.
+- **Code lists get their display text from the vocabularies, by their codes.** A schema binds a property to a vocabulary with a plain `$ref`, and the OpenAPI description inlines that as an enumeration. The application finds the vocabulary again by the set of codes: exactly one vocabulary with exactly those codes labels the field, and when two share a set neither does. No extension keyword is needed on either side.
+- **Two ways to sign in, chosen by build configuration.** `dev` sends `Bearer dev:<name>`, which the API accepts only when started with `OPENDND_DEV_AUTH=on`; it is the default under the development server and nowhere else, and a production build that asks for Cognito without naming a pool refuses to sign anyone in rather than falling back. `cognito` is the hosted sign-in with the authorization code grant and PKCE, written against the platform's `crypto` and `fetch` because it is two hashes and two requests. The id token is what goes to the API: both token kinds verify there, and the id token carries the email address that a membership invitation is matched on. Tokens are refreshed before they expire, and signing out ends the hosted session too.
+- **Components come from shadcn/ui on Base UI.** Its command-line tool copies each component into the repository, where it is owned like any other source and styled through Tailwind's tokens. Those files are treated as generated code: never edited by hand, excused from the linters, and updated by running the tool again. The dependencies it installs are pinned in the repository's one versions file like everything else.
+- **Writes carry `If-Match`.** The form keeps the `ETag` the resource came with and sends it back on save, so a change made by someone else in the meantime is refused by the API and shown as such rather than overwritten.
+- **In-world time and revisions are addresses.** A record page takes `?at=<year>` and `?asOf=<time>`, so a state of the world or an earlier revision can be linked to, and the page reads the same API parameters the ontology defined them with ([ADR-014](/adr/adr-014-valid-time/)).
+- **Hosting is static files behind a CDN.** The application will be served from an S3 bucket behind CloudFront at `app.opendnd.org`, beside `docs.opendnd.org` and `api.opendnd.org`. The development stage's user pool client lists the development server's callback and sign-out addresses so a local build can sign in against a real pool.
+
+## Consequences
+
+- The application is smaller than it looks. Its pages are a record list, a record, a form, a world list and search; the models give them their variety.
+- The OpenAPI description is the largest thing the application downloads: every model twice, once as stored and once as sent, inlined. It is read once per session. A description per model would cut the first load and is a change to the API, not to the application.
+- Generic controls are plain. A point in in-world time is a group of fields, a quadtree cell is a hexadecimal string, and geometry is edited as JSON. Purpose-built controls arrive with the features that need them: the map for cells and geometry, the calendar for time.
+- A reference is picked by searching names across every model, because the schema does not say which models a `Reference` may point at. Constraining that is an ontology decision.
+- Tests run in jsdom with a few polyfills for what it lacks, and the component library's popups have been exercised there, so the reference picker is tested end to end without a browser.
+- The infrastructure for the application's bucket and distribution is not yet written; the stage configuration carries the sign-in addresses it will need. Managing members, enabling modules, generating and simulating from the application, exporting a world, and the map itself are all owed.

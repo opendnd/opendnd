@@ -161,6 +161,11 @@ export interface BunWorkspaceReactViteProjectOptions extends BunWorkspaceReactPr
   readonly tailwind?: boolean;
   /** Dev server proxy rules (maps path prefix to target config) */
   readonly proxy?: Record<string, ViteProxyTarget>;
+  /**
+   * Files Vitest runs before every spec file, relative to the project: DOM
+   * matchers, polyfills for what jsdom lacks, and the like.
+   */
+  readonly vitestSetupFiles?: string[];
 }
 
 /**
@@ -201,6 +206,7 @@ export class BunWorkspaceReactViteProject extends BunWorkspaceReactProject {
       sampleCode: options.sampleName !== undefined,
       sampleName: options.sampleName,
       workspaceAliases: options.workspaceAliases,
+      setupFiles: options.vitestSetupFiles,
     });
 
     // Update ESLint rule to allow devDependencies for test files in specs directory

@@ -32,6 +32,10 @@ export const DEFAULT_STAGE: StageConfig = {
   bedrockModels: ['*'],
   publishEveryMinutes: 1,
   destroyable: true,
+  // The application's development server, so a local build can sign in
+  // against the development pool.
+  callbackUrls: ['http://localhost:4100/callback'],
+  logoutUrls: ['http://localhost:4100/sign-in'],
 };
 
 /**

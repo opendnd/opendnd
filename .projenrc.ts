@@ -1,6 +1,11 @@
 import { configureDocsSite } from './projenrc/docs-site';
 import { configurePackages } from './projenrc/packages';
 import { configureRootProject } from './projenrc/root-project';
+import {
+  aliasSites,
+  configureSites,
+  ignoreSiteGeneratedCode,
+} from './projenrc/sites';
 
 /**
  * The root project is a management container. The real work lives in
@@ -15,6 +20,12 @@ const rootProject = configureRootProject();
 configurePackages(rootProject);
 
 /**
+ * Web front ends under sites/@opendnd/*.
+ */
+const sites = configureSites(rootProject);
+ignoreSiteGeneratedCode(rootProject);
+
+/**
  * The monorepo-wide docs site (research, ADRs, guides, package docs).
  */
 configureDocsSite(rootProject);
@@ -23,6 +34,7 @@ configureDocsSite(rootProject);
  * Build tsconfig path mappings for every workspace.
  */
 rootProject.buildWorkspacePaths();
+aliasSites(sites);
 
 /**
  * Wire `bun run dev` to turbo.
