@@ -7,11 +7,11 @@ The application is a single-page React application under `sites/@opendnd/app`. I
 
 ## Running it
 
-The application talks to an API, so start one first, with development sign-in on:
+The application talks to an API, so start one first:
 
 ```bash
 docker compose up --detach --wait postgres
-cd apps/@opendnd/api && bunx projen migrate && OPENDND_DEV_AUTH=on bunx projen dev
+cd apps/@opendnd/api && bunx projen migrate && bunx projen dev
 ```
 
 Then, in another terminal:
@@ -20,7 +20,9 @@ Then, in another terminal:
 cd sites/@opendnd/app && bun run dev
 ```
 
-The development server listens on `http://localhost:4100`, expects the API at `http://localhost:4080`, and signs in with a name the API trusts. `bun run dev` at the repository root starts both.
+The development server listens on `http://localhost:4100` and expects the API at `http://localhost:4080`. `bun run dev` at the repository root starts both.
+
+Sign in with any name. The API's `dev` task runs with development sign-in on, so it trusts the name and makes it your account; started any other way, the API needs `OPENDND_DEV_AUTH=on` or it answers 401, and the sign-in page says so.
 
 ## Configuration
 

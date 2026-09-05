@@ -1,7 +1,9 @@
 import { type FormEvent, useState } from 'react';
 import { Navigate, useSearchParams } from 'react-router';
-import { useApp, useSession } from '../app/context';
+import { useApp, useSession, useSignOutReason } from '../app/context';
+import type { SignOutReason } from '../auth/session';
 import { Notice } from '../components/Notice';
+import type { AuthConfig } from '../config';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -22,6 +24,7 @@ import { Spinner } from '@/components/ui/spinner';
 export function SignIn() {
   const { config, signInDev, beginSignIn } = useApp();
   const session = useSession();
+  const reason = useSignOutReason();
   const [params] = useSearchParams();
   const returnTo = params.get('returnTo') ?? '/worlds';
   const [name, setName] = useState('');
@@ -52,12 +55,14 @@ export function SignIn() {
           <CardTitle className="text-xl">OpenDnD</CardTitle>
           <CardDescription>Sign in to open your worlds.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-col gap-4">
+          {reason && <SignedOut reason={reason} auth={config.auth} />}
+
           {config.auth.mode === 'dev' && (
             <form onSubmit={submitDev}>
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="dev-name">Your name</FieldLabel>
+                  <FieldLabel htmlFor="dev-name">Any name</FieldLabel>
                   <Input
                     id="dev-name"
                     value={name}
@@ -65,9 +70,10 @@ export function SignIn() {
                     autoFocus
                   />
                   <FieldDescription>
-                    Development sign-in. The API must be running with{' '}
-                    <code>OPENDND_DEV_AUTH=on</code>; it trusts the name you
-                    give.
+                    Development sign-in: the name becomes your account on the
+                    local API, which trusts it. The API has to run with
+                    development sign-in on, which <code>bunx projen dev</code>{' '}
+                    in <code>apps/@opendnd/api</code> does.
                   </FieldDescription>
                 </Field>
                 <Button
@@ -104,5 +110,35 @@ export function SignIn() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+/** Why the last session ended, so nobody is returned here unexplained. */
+function SignedOut(props: {
+  readonly reason: SignOutReason;
+  readonly auth: AuthConfig;
+}) {
+  if (props.reason === 'expired') {
+    return (
+      <Notice tone="warning" title="Your session expired">
+        Sign in again to carry on.
+      </Notice>
+    );
+  }
+  if (props.auth.mode === 'dev') {
+    return (
+      <Notice tone="warning" title="The API refused the sign-in">
+        It answered 401 to the development token, which means it is running
+        without development sign-in. Start it with <code>bunx projen dev</code>{' '}
+        in <code>apps/@opendnd/api</code>, or set{' '}
+        <code>OPENDND_DEV_AUTH=on</code> when starting it another way, then sign
+        in again.
+      </Notice>
+    );
+  }
+  return (
+    <Notice tone="warning" title="Your session was refused">
+      The API no longer accepts it. Sign in again.
+    </Notice>
   );
 }

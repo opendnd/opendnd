@@ -10,6 +10,7 @@ import {
   type KeyValueStorage,
   type Session,
   SessionStore,
+  type SignOutReason,
   devSession,
   expiresSoon,
 } from '../auth/session';
@@ -64,7 +65,7 @@ export function createServices(
         return fresh;
       })
       .catch(() => {
-        sessions.clear();
+        sessions.clear('expired');
         return undefined;
       })
       .finally(() => {
@@ -76,7 +77,7 @@ export function createServices(
   const api = new ApiClient({
     baseUrl: config.apiUrl,
     authorization,
-    onUnauthorized: () => sessions.clear(),
+    onUnauthorized: () => sessions.clear('unauthorized'),
   });
 
   return {
@@ -138,5 +139,15 @@ export function useSession(): Session | undefined {
     (listener) => sessions.subscribe(listener),
     () => sessions.read(),
     () => sessions.read(),
+  );
+}
+
+/** Why the last session ended, when the user did not end it. */
+export function useSignOutReason(): SignOutReason | undefined {
+  const { sessions } = useApp();
+  return useSyncExternalStore(
+    (listener) => sessions.subscribe(listener),
+    () => sessions.reason(),
+    () => sessions.reason(),
   );
 }

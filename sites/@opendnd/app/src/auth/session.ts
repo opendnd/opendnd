@@ -25,9 +25,13 @@ const KEY = 'opendnd.session';
  * Storage may be unavailable or refuse writes (private windows, blocked site
  * data), so every access is guarded and the store behaves as empty then.
  */
+/** Why a session ended without the user asking, for the sign-in page to say. */
+export type SignOutReason = 'unauthorized' | 'expired';
+
 export class SessionStore {
   private readonly listeners = new Set<() => void>();
   private cached: Session | undefined | null = null;
+  private lastReason: SignOutReason | undefined;
 
   constructor(private readonly storage: KeyValueStorage | undefined) {}
 
@@ -44,6 +48,7 @@ export class SessionStore {
 
   write(session: Session): void {
     this.cached = session;
+    this.lastReason = undefined;
     try {
       this.storage?.setItem(KEY, JSON.stringify(session));
     } catch {
@@ -52,14 +57,25 @@ export class SessionStore {
     this.notify();
   }
 
-  clear(): void {
+  /**
+   * Ends the session. A reason means it was not the user's own doing: the
+   * API refused the token, or it expired and could not be refreshed. The
+   * sign-in page reads it back so nobody is returned to the form unexplained.
+   */
+  clear(reason?: SignOutReason): void {
     this.cached = undefined;
+    this.lastReason = reason;
     try {
       this.storage?.removeItem(KEY);
     } catch {
       // Nothing to remove.
     }
     this.notify();
+  }
+
+  /** Why the last session ended, until the next one begins. */
+  reason(): SignOutReason | undefined {
+    return this.lastReason;
   }
 
   subscribe(listener: () => void): () => void {

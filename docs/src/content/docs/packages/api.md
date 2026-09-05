@@ -14,7 +14,7 @@ cd apps/@opendnd/api && bunx projen migrate && bunx projen dev
 
 `migrate` applies the SQL in `migrations/` as the database owner and then grants the serving role, `opendnd_app`, access to every table. The API itself connects as that role, which is neither a superuser nor an owner — both of those bypass row-level security, and the isolation between worlds depends on it not being bypassed.
 
-Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=on` accepts `Authorization: Bearer dev:<subject>` so the routes can be worked on without one.
+Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=on` accepts `Authorization: Bearer dev:<subject>` so the routes can be worked on without one; `bunx projen dev` sets it, because that task exists only for local work. Started any other way, the API stays anonymous-only until the variable is set, and the application's sign-in will be refused with a 401.
 
 ## Routes
 

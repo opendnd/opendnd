@@ -132,8 +132,11 @@ const apps: readonly PackageConfig[] = [
     tasks: {
       dev: {
         description:
-          'Run the API against the local Postgres from docker-compose.',
-        exec: 'bun run --hot src/server.ts',
+          'Run the API against the local Postgres from docker-compose, with development sign-in on.',
+        // This task exists for local work and nothing else runs it, so the
+        // development resolver is asked for here explicitly. A deployment
+        // never sets the variable and stays anonymous-only without a pool.
+        exec: 'OPENDND_DEV_AUTH=on bun run --hot src/server.ts',
       },
       migrate: {
         description: 'Apply the SQL migrations in migrations/ to DATABASE_URL.',

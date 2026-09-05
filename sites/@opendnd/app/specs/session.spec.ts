@@ -27,6 +27,20 @@ describe('the session store', () => {
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
+  it('remembers why a session ended until the next one begins', () => {
+    const store = new SessionStore(undefined);
+    store.write(devSession('ada'));
+    expect(store.reason()).toBeUndefined();
+    store.clear('unauthorized');
+    expect(store.read()).toBeUndefined();
+    expect(store.reason()).toBe('unauthorized');
+    store.write(devSession('ada'));
+    expect(store.reason()).toBeUndefined();
+    // The user signing out is not a reason to explain.
+    store.clear();
+    expect(store.reason()).toBeUndefined();
+  });
+
   it('works in memory when storage refuses', () => {
     const store = new SessionStore({
       getItem: () => {
