@@ -58,8 +58,7 @@
           "maximum": 59
         },
         "precision": {
-          "type": "string",
-          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/precision.json",
+          "$ref": "../vocabularies/precision.schema.json",
           "default": "year"
         },
         "nominal": {
@@ -380,12 +379,10 @@
           "type": "string"
         },
         "canonStatus": {
-          "type": "string",
-          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/canon-status.json"
+          "$ref": "../vocabularies/canon-status.schema.json"
         },
         "perspective": {
-          "type": "string",
-          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/perspective.json",
+          "$ref": "../vocabularies/perspective.schema.json",
           "default": "in-universe"
         },
         "validTime": {
@@ -440,7 +437,7 @@
         "from": {
           "type": "array",
           "items": {
-            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+            "$ref": "#/$defs/Reference"
           },
           "description": "The things that may be chosen."
         },
@@ -451,7 +448,7 @@
         "options": {
           "type": "array",
           "items": {
-            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
+            "$ref": "#/$defs/Choice"
           },
           "description": "Nested choices, for a choice between choices."
         }

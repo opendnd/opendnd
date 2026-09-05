@@ -6,22 +6,21 @@
   "description": "One person's asserted right to a title. A claim is the seed of a war: it can be pressed, won, lost, or left to descend to an heir.",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "claimant": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "common.schema.json#/$defs/Reference"
     },
     "title": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "common.schema.json#/$defs/Reference"
     },
     "basis": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/claim-basis.json"
+      "$ref": "../vocabularies/claim-basis.schema.json"
     },
     "through": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "common.schema.json#/$defs/Reference",
       "description": "The person the claim descends from, when it comes by inheritance or marriage."
     },
     "pressed": {
@@ -30,7 +29,7 @@
       "description": "Whether the claim has been pressed by force."
     },
     "resolvedBy": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "common.schema.json#/$defs/Reference",
       "description": "The event that made the claim good or void."
     }
   },

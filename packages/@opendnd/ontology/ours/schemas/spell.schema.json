@@ -6,7 +6,7 @@
   "description": "A spell. The shape follows the 5e SRD 2024 spell records as published so far (pull request 1178): a single description and higher-level text, damage as a type with dice by slot level, and no subclass lists. The saving throw and area of effect are kept beyond what those records carry, because every spell's rules text has them and a character sheet needs them.",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
@@ -17,8 +17,7 @@
       "description": "0 is a cantrip."
     },
     "school": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/spell-school.json"
+      "$ref": "../vocabularies/spell-school.schema.json"
     },
     "castingTime": {
       "type": "string"
@@ -59,8 +58,7 @@
       "type": "object",
       "properties": {
         "damageType": {
-          "type": "string",
-          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
+          "$ref": "../vocabularies/damage-type.schema.json"
         },
         "atSlotLevel": {
           "type": "object",
@@ -78,8 +76,7 @@
       "type": "object",
       "properties": {
         "ability": {
-          "type": "string",
-          "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/ability.json"
+          "$ref": "../vocabularies/ability.schema.json"
         },
         "onSuccess": {
           "type": "string",
@@ -126,7 +123,7 @@
     "classes": {
       "type": "array",
       "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "common.schema.json#/$defs/Reference"
       },
       "description": "The classes whose lists it appears on."
     }

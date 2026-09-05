@@ -17,11 +17,11 @@ bun run generate && bunx projen test
 
 ## Add a vocabulary
 
-Write `vocabularies/<id>.json` with inline `codes`, then reference it from a string property with `"x-ours-vocabulary": "<its url>"`. The generator emits a shared enum.
+Write `vocabularies/<id>.json` with inline `codes`, then bind a property to it with `{ "$ref": "../vocabularies/<id>.schema.json" }`. The loader derives that schema from the vocabulary, the publisher serves it beside it, any validator enforces the codes, and the generator emits a shared enum. A `default` may sit beside the `$ref`.
 
 ## Add a shared definition
 
-Add it under `$defs` in `schemas/common.schema.json` and reference it with `"$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Name"`.
+Add it under `$defs` in `schemas/common.schema.json` and reference it with `"$ref": "common.schema.json#/$defs/Name"`, which resolves against the referring schema's `$id`.
 
 ## Rules of thumb
 

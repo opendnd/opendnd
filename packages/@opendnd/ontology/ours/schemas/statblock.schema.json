@@ -6,29 +6,26 @@
   "description": "The rules view of a creature: what it can take, what it can do, and how dangerous it is. A model of its own rather than fields on `species`, because the 5e SRD treats a monster as an independent stat block and because a stat block is often a variant \u2014 a goblin boss, a veteran guard \u2014 with no species of its own. It may name the species it represents, and a person may name the stat block that represents them.",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "creatureType": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/creature-type.json"
+      "$ref": "../vocabularies/creature-type.schema.json"
     },
     "species": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "common.schema.json#/$defs/Reference",
       "description": "The species this represents, where it represents one."
     },
     "person": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "common.schema.json#/$defs/Reference",
       "description": "The person this represents, for a statted individual."
     },
     "size": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/size.json"
+      "$ref": "../vocabularies/size.schema.json"
     },
     "alignment": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/alignment.json"
+      "$ref": "../vocabularies/alignment.schema.json"
     },
     "armorClass": {
       "type": "integer"
@@ -79,35 +76,32 @@
     "proficiencies": {
       "type": "array",
       "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "common.schema.json#/$defs/Reference"
       },
       "description": "Saving throws and skills it is proficient in."
     },
     "damageVulnerabilities": {
       "type": "array",
       "items": {
-        "type": "string",
-        "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
+        "$ref": "../vocabularies/damage-type.schema.json"
       }
     },
     "damageResistances": {
       "type": "array",
       "items": {
-        "type": "string",
-        "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
+        "$ref": "../vocabularies/damage-type.schema.json"
       }
     },
     "damageImmunities": {
       "type": "array",
       "items": {
-        "type": "string",
-        "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
+        "$ref": "../vocabularies/damage-type.schema.json"
       }
     },
     "conditionImmunities": {
       "type": "array",
       "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "common.schema.json#/$defs/Reference"
       },
       "description": "Conditions it cannot suffer."
     },
@@ -121,7 +115,7 @@
     "languages": {
       "type": "array",
       "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "common.schema.json#/$defs/Reference"
       },
       "description": "Languages it knows."
     },
@@ -175,8 +169,7 @@
                 "description": "Dice notation, e.g. 1d8."
               },
               "damageType": {
-                "type": "string",
-                "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/damage-type.json"
+                "$ref": "../vocabularies/damage-type.schema.json"
               }
             },
             "required": [],

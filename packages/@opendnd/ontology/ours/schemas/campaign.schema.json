@@ -6,19 +6,17 @@
   "description": "A series of sessions a group plays in a world. Out-of-universe: a campaign is a record of play, not of the world, so it is marked out-of-universe and dated in real time rather than in a calendar of the fiction.",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "perspective": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/perspective.json",
+      "$ref": "../vocabularies/perspective.schema.json",
       "default": "out-of-universe",
       "description": "Out-of-universe by default: this is a record of play, not something that exists in the fiction."
     },
     "status": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/campaign-status.json"
+      "$ref": "../vocabularies/campaign-status.schema.json"
     },
     "gamemaster": {
       "type": "string",
@@ -32,11 +30,11 @@
       "description": "User ids of the players."
     },
     "party": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "common.schema.json#/$defs/Reference",
       "description": "The adventuring party, a faction whose factionType is party."
     },
     "setting": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "common.schema.json#/$defs/Reference",
       "description": "Where in the world it is set, if it is bounded to one place."
     },
     "beganOn": {
@@ -49,13 +47,13 @@
       "format": "date"
     },
     "inWorldTime": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition",
+      "$ref": "common.schema.json#/$defs/TemporalPosition",
       "description": "Where the party currently stands in the world's own calendar."
     },
     "characters": {
       "type": "array",
       "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "common.schema.json#/$defs/Reference"
       }
     }
   },

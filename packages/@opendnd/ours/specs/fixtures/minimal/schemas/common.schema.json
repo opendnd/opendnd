@@ -5,18 +5,35 @@
     "Base": {
       "type": "object",
       "properties": {
-        "id": { "type": "string", "format": "uuid" },
-        "name": { "type": "string", "minLength": 1 }
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
       },
-      "required": ["id", "name"]
+      "required": [
+        "id",
+        "name"
+      ]
     },
     "Reference": {
       "type": "object",
       "properties": {
-        "id": { "type": "string", "format": "uuid" },
-        "model": { "type": "string" }
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "model": {
+          "type": "string"
+        }
       },
-      "required": ["id", "model"],
+      "required": [
+        "id",
+        "model"
+      ],
       "additionalProperties": false
     }
   }

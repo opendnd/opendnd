@@ -6,12 +6,12 @@
   "description": "A fictional universe: the root every other resource belongs to (Wikidata narrative universe).",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "calendar": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "common.schema.json#/$defs/Reference"
     },
     "crs": {
       "type": "string",
@@ -25,7 +25,7 @@
       "type": "string"
     },
     "currentTime": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+      "$ref": "common.schema.json#/$defs/TemporalPosition"
     },
     "owner": {
       "type": "string",

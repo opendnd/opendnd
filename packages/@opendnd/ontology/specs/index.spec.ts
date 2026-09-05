@@ -25,10 +25,9 @@ describe('@opendnd/ontology', () => {
     const bundle = loadOursDirectory(OURS_DIR);
     for (const model of bundle.models.values()) {
       const schema = bundle.schemas.get(model.schema)!;
+      // Relative to the schema's own $id, as JSON Schema resolves it.
       const refs = (schema.allOf ?? []).map((s) => s.$ref);
-      expect(refs).toContain(
-        'https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase',
-      );
+      expect(refs).toContain('common.schema.json#/$defs/ResourceBase');
     }
   });
 });

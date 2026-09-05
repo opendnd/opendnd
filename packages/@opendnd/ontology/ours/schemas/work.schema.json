@@ -6,21 +6,20 @@
   "description": "A creative work, in-world (a chronicle, a legend) or out-of-world (an adventure module) (schema.org CreativeWork; NOnt narration).",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "workType": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/work-type.json"
+      "$ref": "../vocabularies/work-type.schema.json"
     },
     "author": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "common.schema.json#/$defs/Reference"
     },
     "about": {
       "type": "array",
       "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "common.schema.json#/$defs/Reference"
       }
     },
     "text": {

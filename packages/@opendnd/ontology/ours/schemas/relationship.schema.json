@@ -6,20 +6,19 @@
   "description": "A tie between two parties, with dated facts (GEDCOM X Relationship extended for succession and for parties that are not people). Either party may be a person, a faction or a place, so the same record carries a marriage, a house's vassalage to a crown, or a person's membership of a guild.",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "relationshipType": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/relationship-type.json"
+      "$ref": "../vocabularies/relationship-type.schema.json"
     },
     "party1": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "common.schema.json#/$defs/Reference",
       "description": "The first party. For an asymmetric type this is the senior side: the parent, the liege, the mentor."
     },
     "party2": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "$ref": "common.schema.json#/$defs/Reference",
       "description": "The second party."
     },
     "facts": {
@@ -28,14 +27,13 @@
         "type": "object",
         "properties": {
           "type": {
-            "type": "string",
-            "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/relationship-fact-type.json"
+            "$ref": "../vocabularies/relationship-fact-type.schema.json"
           },
           "time": {
-            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+            "$ref": "common.schema.json#/$defs/TemporalPosition"
           },
           "place": {
-            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+            "$ref": "common.schema.json#/$defs/Reference"
           }
         },
         "required": [
@@ -45,8 +43,7 @@
       }
     },
     "legitimacy": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/legitimacy.json"
+      "$ref": "../vocabularies/legitimacy.schema.json"
     },
     "successionOrder": {
       "type": "integer",

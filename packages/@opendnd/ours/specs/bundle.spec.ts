@@ -12,7 +12,13 @@ describe('loadOursDirectory', () => {
       'https://example.test/ours/models/pet.json',
     ]);
     expect(bundle.vocabularies.size).toBe(1);
-    expect(bundle.schemas.size).toBe(2);
+    // The two authored schemas, and the one derived from the vocabulary.
+    expect(bundle.schemas.size).toBe(3);
+    expect(
+      bundle.schemas.get(
+        'https://example.test/ours/vocabularies/mood.schema.json',
+      ),
+    ).toMatchObject({ type: 'string', enum: ['happy', 'sad'] });
   });
 
   it('publishes FHIR-style collection bundles', () => {

@@ -14,7 +14,7 @@ import { resolve } from 'node:path';
  *   platform base every resource extends (in-world time, transaction time,
  *   canon status, perspective, provenance).
  * - `vocabularies/*.json`: inline code lists referenced from schemas via the
- *   `x-ours-vocabulary` extension.
+ *   `$ref` to the schema published beside each vocabulary.
  *
  * Load it with `loadOursDirectory(OURS_DIR)` from `@opendnd/ours`. See ADR-002.
  */

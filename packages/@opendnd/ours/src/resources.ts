@@ -138,7 +138,11 @@ export interface JsonSchema {
   unevaluatedProperties?: boolean;
   /** The server sets this field; a request body may omit it. */
   readOnly?: boolean;
-  /** OURS extension: the URL of a Vocabulary whose codes constrain this string. */
+  /**
+   * On the schema derived from a vocabulary: the Vocabulary it came from,
+   * where the display text lives. Models bind to a vocabulary with a `$ref`
+   * to that schema, never with this keyword.
+   */
   'x-ours-vocabulary'?: string;
   /**
    * OURS extension, on a model schema: the properties that give a record its

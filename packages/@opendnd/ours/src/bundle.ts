@@ -64,8 +64,51 @@ export function loadOursDirectory(dir: string): OursBundle {
     }
     schemas.set(schema.$id, schema);
   }
+  // Every vocabulary is also a JSON Schema, so a model binds a property to it
+  // with an ordinary `$ref` and any validator enforces the codes.
+  for (const vocabulary of vocabularies.values()) {
+    const schema = vocabularySchemaFor(vocabulary);
+    if (schemas.has(schema.$id!)) {
+      throw new Error(
+        `Schema ${schema.$id} collides with the schema derived from vocabulary ${vocabulary.url}`,
+      );
+    }
+    schemas.set(schema.$id!, schema);
+  }
 
   return { ontology, models, vocabularies, schemas };
+}
+
+/**
+ * Where a vocabulary's JSON Schema lives: beside the vocabulary, with
+ * `.schema.json` in place of `.json`. A model schema at
+ * `.../schemas/person.schema.json` refers to it as
+ * `../vocabularies/sex.schema.json`.
+ */
+export function vocabularySchemaUrl(
+  vocabulary: Pick<Vocabulary, 'url'>,
+): string {
+  return vocabulary.url.endsWith('.json')
+    ? vocabulary.url.replace(/\.json$/, '.schema.json')
+    : `${vocabulary.url}.schema.json`;
+}
+
+/**
+ * A vocabulary as a JSON Schema: a string drawn from its codes. The schema
+ * names the vocabulary it was derived from, which is where the display text
+ * lives.
+ */
+export function vocabularySchemaFor(vocabulary: Vocabulary): JsonSchema {
+  const codes = vocabulary.codes ?? [];
+  return {
+    $id: vocabularySchemaUrl(vocabulary),
+    $schema: 'https://json-schema.org/draft/2020-12/schema',
+    title: vocabulary.name,
+    ...(vocabulary.description ? { description: vocabulary.description } : {}),
+    type: 'string',
+    ...(codes.length > 0 ? { enum: codes.map((c) => c.code) } : {}),
+    'x-ours-vocabulary': vocabulary.url,
+  };
 }
 
 /**

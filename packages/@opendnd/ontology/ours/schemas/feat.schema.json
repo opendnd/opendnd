@@ -6,13 +6,12 @@
   "description": "A talent taken in place of, or alongside, an ability score increase.",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "featType": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/feat-type.json"
+      "$ref": "../vocabularies/feat-type.schema.json"
     },
     "repeatable": {
       "type": "boolean",
@@ -35,7 +34,7 @@
       "description": "What must be true before it can be taken."
     },
     "prerequisiteOptions": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice",
+      "$ref": "common.schema.json#/$defs/Choice",
       "description": "A choice among prerequisites, where the rules offer one."
     }
   },

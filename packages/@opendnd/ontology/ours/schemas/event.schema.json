@@ -6,21 +6,20 @@
   "description": "Something that happened in-world, with participants in roles and optional cause links (schema.org Event, CIDOC E5).",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "eventType": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/event-type.json"
+      "$ref": "../vocabularies/event-type.schema.json"
     },
     "when": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TimeSpan"
+      "$ref": "common.schema.json#/$defs/TimeSpan"
     },
     "locations": {
       "type": "array",
       "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "common.schema.json#/$defs/Reference"
       }
     },
     "participants": {
@@ -29,11 +28,10 @@
         "type": "object",
         "properties": {
           "actor": {
-            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+            "$ref": "common.schema.json#/$defs/Reference"
           },
           "role": {
-            "type": "string",
-            "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/participant-role.json"
+            "$ref": "../vocabularies/participant-role.schema.json"
           }
         },
         "required": [
@@ -44,12 +42,12 @@
       }
     },
     "partOf": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "common.schema.json#/$defs/Reference"
     },
     "causedBy": {
       "type": "array",
       "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "common.schema.json#/$defs/Reference"
       }
     },
     "outcome": {

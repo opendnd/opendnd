@@ -1,5 +1,5 @@
 import { toCamelCase, toPascalCase, propertyKey } from './naming';
-import { OursBundle } from '../bundle';
+import { OursBundle, vocabularySchemaUrl } from '../bundle';
 import { JsonSchema, JsonSchemaType } from '../resources';
 import { splitRef } from '../validate';
 
@@ -177,6 +177,8 @@ class EmitContext {
   selfRaw: string | undefined;
   /** Maps "<doc>#<pointer>" to the declaration name it resolves to. */
   private readonly refNames = new Map<string, string>();
+  /** Vocabulary ids, which are emitted first and so are never a dependency. */
+  private readonly vocabularyNames = new Set<string>();
 
   constructor(private readonly bundle: OursBundle) {}
 
@@ -208,6 +210,14 @@ class EmitContext {
         description: model.description,
       });
     }
+    // A `$ref` to a vocabulary's schema is the enum emitted for it above.
+    for (const vocabulary of this.bundle.vocabularies.values()) {
+      if (!vocabulary.codes || vocabulary.codes.length === 0) continue;
+      const url = vocabularySchemaUrl(vocabulary);
+      this.refNames.set(`${url}#`, vocabulary.id);
+      this.refNames.set(`${url}#/`, vocabulary.id);
+      this.vocabularyNames.add(vocabulary.id);
+    }
     return decls;
   }
 
@@ -231,7 +241,10 @@ class EmitContext {
   dependenciesOf(schema: JsonSchema, doc: string): string[] {
     const deps = new Set<string>();
     const visit = (node: JsonSchema) => {
-      if (node.$ref !== undefined) deps.add(this.refName(node.$ref, doc));
+      if (node.$ref !== undefined) {
+        const name = this.refName(node.$ref, doc);
+        if (!this.vocabularyNames.has(name)) deps.add(name);
+      }
       // $defs are separate declarations; do not descend into them.
       for (const p of Object.values(node.properties ?? {})) visit(p);
       if (node.items) visit(node.items);
@@ -253,7 +266,7 @@ class EmitContext {
     if (schema.$ref !== undefined) {
       const name = this.refName(schema.$ref, doc);
       const suffix = name === this.selfRaw ? 'RawSchema' : 'Schema';
-      return `${toCamelCase(name)}${suffix}`;
+      return this.withDefault(`${toCamelCase(name)}${suffix}`, schema);
     }
     if (schema.allOf) {
       return this.emitAllOf(schema, doc, indent);
@@ -273,12 +286,6 @@ class EmitContext {
     }
     if (schema.const !== undefined) {
       return `z.literal(${JSON.stringify(schema.const)})`;
-    }
-    const vocab = schema['x-ours-vocabulary'];
-    if (vocab !== undefined) {
-      const v = this.bundle.vocabularies.get(vocab);
-      if (!v) throw new Error(`Unknown vocabulary ${vocab}`);
-      return this.withDefault(`${toCamelCase(v.id)}Schema`, schema);
     }
     if (schema.enum) {
       const allStrings = schema.enum.every((e) => typeof e === 'string');
@@ -447,7 +454,11 @@ class EmitContext {
     const { doc: targetDoc, pointer } = splitRef(ref, doc);
     const key = `${targetDoc}#${pointer}`;
     const name = this.refNames.get(key);
-    if (!name) throw new Error(`$ref ${ref} (from ${doc}) has no declaration`);
+    if (!name) {
+      throw new Error(
+        `$ref ${ref} (from ${doc}) has no declaration: it must name a model schema, a $defs entry, or a vocabulary with inline codes`,
+      );
+    }
     return name;
   }
 

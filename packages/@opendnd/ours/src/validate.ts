@@ -9,8 +9,9 @@ export interface ValidationIssue {
 
 /**
  * Cross-resource checks that Zod cannot do on its own: every model's schema
- * resolves, every relationship target names a model, every `$ref` and
- * `x-ours-vocabulary` inside the schemas resolves, and ids are unique.
+ * resolves, every relationship names a model and a Reference-typed property,
+ * every `$ref` inside the schemas resolves (vocabulary schemas included), and
+ * ids are unique.
  */
 export function validateBundle(bundle: OursBundle): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
@@ -86,15 +87,6 @@ export function validateBundle(bundle: OursBundle): ValidationIssue[] {
     walkSchema(schema, (node, path) => {
       if (node.$ref !== undefined && !resolvesRef(bundle, id, node.$ref)) {
         error(id, `${path}: $ref ${node.$ref} does not resolve`);
-      }
-      const vocab = node['x-ours-vocabulary'];
-      if (vocab !== undefined) {
-        const v = bundle.vocabularies.get(vocab);
-        if (!v) {
-          error(id, `${path}: x-ours-vocabulary ${vocab} is not in the bundle`);
-        } else if (!v.codes || v.codes.length === 0) {
-          error(id, `${path}: vocabulary ${vocab} has no inline codes`);
-        }
       }
     });
   }
@@ -203,15 +195,31 @@ function deref(
   return def ? { node: def, doc: targetDoc } : undefined;
 }
 
-/** Split a `$ref` into the document URL (or undefined for local) and pointer. */
+/**
+ * Split a `$ref` into the document URL and the pointer inside it. A relative
+ * document, `common.schema.json` or `../vocabularies/sex.schema.json`, is
+ * resolved against the document the reference appears in, as JSON Schema
+ * resolves it against that document's `$id`.
+ */
 export function splitRef(
   ref: string,
   currentDoc: string,
 ): { doc: string; pointer: string } {
   const hash = ref.indexOf('#');
-  if (hash === -1) return { doc: ref, pointer: '' };
-  const doc = ref.slice(0, hash);
-  return { doc: doc === '' ? currentDoc : doc, pointer: ref.slice(hash + 1) };
+  const document = hash === -1 ? ref : ref.slice(0, hash);
+  const pointer = hash === -1 ? '' : ref.slice(hash + 1);
+  return {
+    doc: document === '' ? currentDoc : resolveUrl(document, currentDoc),
+    pointer,
+  };
+}
+
+function resolveUrl(reference: string, base: string): string {
+  try {
+    return new URL(reference, base).href;
+  } catch {
+    return reference;
+  }
 }
 
 function resolvesRef(bundle: OursBundle, currentDoc: string, ref: string) {

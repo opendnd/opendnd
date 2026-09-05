@@ -6,18 +6,17 @@
   "description": "Something a character gains from a class, a subclass, a species, a background, a feat or an item. One model for all of them, because they differ only in where they come from, which `source` records. The 5e SRD keeps class features and species traits in separate collections; both land here.",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "source": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/feature-source.json"
+      "$ref": "../vocabularies/feature-source.schema.json"
     },
     "grantedBy": {
       "type": "array",
       "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "common.schema.json#/$defs/Reference"
       },
       "description": "The classes, subclasses, species or backgrounds that grant it. A species trait such as darkvision is shared by several species."
     },
@@ -33,7 +32,7 @@
         "type": "object",
         "properties": {
           "spell": {
-            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+            "$ref": "common.schema.json#/$defs/Reference",
             "description": "The spell."
           },
           "uses": {
@@ -50,7 +49,7 @@
       }
     },
     "proficiencyChoices": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice",
+      "$ref": "common.schema.json#/$defs/Choice",
       "description": "Proficiencies the feature lets a character choose."
     },
     "speed": {

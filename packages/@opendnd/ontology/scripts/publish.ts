@@ -9,12 +9,13 @@
  * and the machine view cannot disagree.
  */
 import { cpSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import {
   type JsonSchema,
   loadOursDirectory,
   toPublishedBundles,
   validateBundle,
+  vocabularySchemaUrl,
 } from '@opendnd/ours';
 import { OURS_DIR } from '../src';
 
@@ -48,6 +49,29 @@ writeFileSync(
 );
 for (const file of readdirSync(join(OURS_DIR, 'schemas'))) {
   cpSync(join(OURS_DIR, 'schemas', file), join(oursDir, 'schemas', file));
+}
+/*
+ * Every resource is also served on its own, at the URL its `url` field
+ * declares, so a `fullUrl` in a bundle and a `$ref` in a schema both fetch.
+ * A vocabulary is published twice: as the OURS resource with its display
+ * text, and as the JSON Schema the model schemas refer to.
+ */
+const writeAt = (url: string, value: unknown) => {
+  if (!url.startsWith(`${site}/`)) {
+    throw new Error(`${url} is not on ${site}, so it cannot be published here`);
+  }
+  const target = join(docs, 'public', new URL(url).pathname);
+  mkdirSync(dirname(target), { recursive: true });
+  writeFileSync(target, json(value));
+};
+for (const entry of published.models.entry)
+  writeAt(entry.fullUrl, entry.resource);
+for (const entry of published.vocabularies.entry) {
+  writeAt(entry.fullUrl, entry.resource);
+}
+for (const vocabulary of bundle.vocabularies.values()) {
+  const url = vocabularySchemaUrl(vocabulary);
+  writeAt(url, bundle.schemas.get(url));
 }
 // Discovery starts from the Ontology resource, so the well-known location
 // serves that resource itself: a client that fetches it has the document
@@ -123,17 +147,20 @@ for (const id of byId.keys()) {
     throw new Error(`model ${id} is in no layer; add it to LAYERS`);
 }
 
-const vocabById = new Map(
-  [...bundle.vocabularies.values()].map((v) => [v.url, v]),
+const vocabularyIds = new Set(
+  [...bundle.vocabularies.values()].map((v) => v.id),
 );
 function typeOf(prop: JsonSchema): string {
   if (prop.$ref) {
-    const name = String(prop.$ref).split('/').pop()!;
+    const ref = String(prop.$ref);
+    // A vocabulary is bound by a $ref to the schema published beside it.
+    const vocabulary = /vocabularies\/([a-z0-9-]+)\.schema\.json$/.exec(ref);
+    if (vocabulary && vocabularyIds.has(vocabulary[1]!)) {
+      return `[\`${vocabulary[1]}\`](/reference/vocabularies/#${vocabulary[1]})`;
+    }
+    const name = ref.split('/').pop()!;
     return name === 'Reference' ? '→ reference' : name;
   }
-  const vocab = prop['x-ours-vocabulary'] as string | undefined;
-  if (vocab)
-    return `[\`${vocabById.get(vocab)?.id ?? vocab}\`](/reference/vocabularies/#${vocabById.get(vocab)?.id})`;
   if (prop.enum)
     return (prop.enum as unknown[]).map((e) => `\`${String(e)}\``).join(' · ');
   const t = Array.isArray(prop.type)
@@ -235,6 +262,8 @@ writeFileSync(
     `| Ontology | [\`${bundle.ontology.url}\`](${bundle.ontology.url}) |`,
     `| Models | [\`${bundle.ontology.models}\`](${bundle.ontology.models}) |`,
     `| Vocabularies | [\`${bundle.ontology.vocabularies}\`](${bundle.ontology.vocabularies}) |`,
+    `| Each model, each vocabulary | At the \`url\` it declares: \`${site}/ours/models/{id}.json\`, \`${site}/ours/vocabularies/{id}.json\` |`,
+    `| Vocabulary schemas | \`${site}/ours/vocabularies/{id}.schema.json\`: each vocabulary as a JSON Schema enum, which is what the model schemas refer to |`,
     `| Mappings | [\`${bundle.ontology.mappings}\`](${bundle.ontology.mappings}) — empty until element-level maps exist |`,
     `| Schemas | \`${site}/ours/schemas/{model}.schema.json\`, at the \`$id\` each schema declares |`,
     `| Well-known | [\`${site}/.well-known/ours.json\`](${site}/.well-known/ours.json) — the Ontology resource again, so a client fetching the conventional location has the document OURS prescribes |`,

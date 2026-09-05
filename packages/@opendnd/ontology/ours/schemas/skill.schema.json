@@ -6,13 +6,12 @@
   "description": "A skill, and the ability its checks are made against.",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "ability": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/ability.json",
+      "$ref": "../vocabularies/ability.schema.json",
       "description": "The ability a check with this skill uses."
     }
   },

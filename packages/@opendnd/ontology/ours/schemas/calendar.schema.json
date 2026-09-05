@@ -6,7 +6,7 @@
   "description": "A temporal reference system: months, weekdays, leap rules, moons and eras (after Kanka; OWL-Time TRS).",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {

@@ -6,19 +6,18 @@
   "description": "A snapshot of a settlement's economy at a point in time: prosperity, how many of each business it supports, and its livestock. Like population, an aggregate that individuals are drawn from on demand.",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "place": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "common.schema.json#/$defs/Reference"
     },
     "at": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+      "$ref": "common.schema.json#/$defs/TemporalPosition"
     },
     "prosperity": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/prosperity.json"
+      "$ref": "../vocabularies/prosperity.schema.json"
     },
     "industries": {
       "type": "array",
@@ -26,8 +25,7 @@
         "type": "object",
         "properties": {
           "industry": {
-            "type": "string",
-            "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/industry.json"
+            "$ref": "../vocabularies/industry.schema.json"
           },
           "count": {
             "type": "integer",

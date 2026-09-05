@@ -24,6 +24,8 @@ describe('the published schemas under a conformant validator', () => {
     // known so strict mode does not refuse them.
     formats: { uuid: true, uri: true, 'date-time': true, date: true },
   });
+  // The two OURS annotations: which vocabulary a generated vocabulary schema
+  // came from, and which properties a record's valid time is read from.
   ajv.addKeyword({ keyword: 'x-ours-vocabulary' });
   ajv.addKeyword({ keyword: 'x-ours-valid-time' });
   for (const schema of bundle.schemas.values()) ajv.addSchema(schema as never);
@@ -63,6 +65,14 @@ describe('the published schemas under a conformant validator', () => {
       expect(validate.errors ?? []).toEqual([]);
       expect(ok).toBe(true);
     }
+  });
+
+  it('enforces the vocabularies, because they are bound by $ref and not by a keyword', () => {
+    const validate = validator('species');
+    expect(
+      validate({ ...instance('human.species.json'), size: 'colossal' }),
+    ).toBe(false);
+    expect(validate.errors?.[0]?.keyword).toBe('enum');
   });
 
   it('still refuses a property no schema declares', () => {

@@ -6,25 +6,24 @@
   "description": "An organized group of any kind: realm, dynasty, guild, religion, order, company, adventuring party.",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "factionType": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/faction-type.json"
+      "$ref": "../vocabularies/faction-type.schema.json"
     },
     "parent": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "common.schema.json#/$defs/Reference"
     },
     "seat": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "common.schema.json#/$defs/Reference"
     },
     "founded": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+      "$ref": "common.schema.json#/$defs/TemporalPosition"
     },
     "dissolved": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+      "$ref": "common.schema.json#/$defs/TemporalPosition"
     },
     "motto": {
       "type": "string"

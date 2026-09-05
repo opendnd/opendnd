@@ -6,19 +6,18 @@
   "description": "A person in the world, real to it or legendary (schema.org Person, CIDOC E21, Wikidata fictional human).",
   "allOf": [
     {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+      "$ref": "common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "species": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "common.schema.json#/$defs/Reference"
     },
     "culture": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "common.schema.json#/$defs/Reference"
     },
     "sex": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/sex.json"
+      "$ref": "../vocabularies/sex.schema.json"
     },
     "pronouns": {
       "type": "string"
@@ -28,22 +27,20 @@
       "description": "A byname earned in life, e.g. 'the Bold'. Rendered as 'Name the Bold'."
     },
     "alignment": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/alignment.json"
+      "$ref": "../vocabularies/alignment.schema.json"
     },
     "status": {
-      "type": "string",
-      "x-ours-vocabulary": "https://docs.opendnd.org/ours/vocabularies/person-status.json",
+      "$ref": "../vocabularies/person-status.schema.json",
       "default": "alive"
     },
     "birth": {
       "type": "object",
       "properties": {
         "time": {
-          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+          "$ref": "common.schema.json#/$defs/TemporalPosition"
         },
         "place": {
-          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+          "$ref": "common.schema.json#/$defs/Reference"
         }
       },
       "additionalProperties": false
@@ -52,10 +49,10 @@
       "type": "object",
       "properties": {
         "time": {
-          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
+          "$ref": "common.schema.json#/$defs/TemporalPosition"
         },
         "place": {
-          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+          "$ref": "common.schema.json#/$defs/Reference"
         },
         "cause": {
           "type": "string"
@@ -66,11 +63,11 @@
     "memberOf": {
       "type": "array",
       "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+        "$ref": "common.schema.json#/$defs/Reference"
       }
     },
     "residence": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      "$ref": "common.schema.json#/$defs/Reference"
     },
     "occupation": {
       "type": "string"
