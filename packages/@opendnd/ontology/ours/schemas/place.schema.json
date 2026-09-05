@@ -6,21 +6,21 @@
   "description": "A location at any scale, optionally with geometry in the world's CRS (schema.org Place, CIDOC E53, GeoSPARQL Feature).",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "placeType": {
-      "$ref": "../vocabularies/place-type.schema.json"
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/place-type.schema.json"
     },
     "parent": {
-      "$ref": "common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "feature": {
-      "$ref": "common.schema.json#/$defs/Feature"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Feature"
     },
     "cell": {
-      "$ref": "common.schema.json#/$defs/Cell",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Cell",
       "description": "Quadtree cell token for this place at its own scale (a realm at a coarse level, a building at a fine one). Containment is a prefix relationship. See ADR-006."
     },
     "population": {
@@ -31,12 +31,12 @@
       "type": "string"
     },
     "terrain": {
-      "$ref": "../vocabularies/terrain.schema.json"
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/terrain.schema.json"
     },
     "resources": {
       "type": "array",
       "items": {
-        "$ref": "../vocabularies/resource.schema.json"
+        "$ref": "https://docs.opendnd.org/ours/vocabularies/resource.schema.json"
       },
       "description": "Natural resources the place yields."
     },
@@ -63,17 +63,14 @@
       "additionalProperties": false
     },
     "controlledBy": {
-      "$ref": "common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "founded": {
-      "$ref": "common.schema.json#/$defs/TemporalPosition"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
     }
   },
   "required": [
     "placeType"
   ],
-  "unevaluatedProperties": false,
-  "x-ours-valid-time": {
-    "begin": "founded"
-  }
+  "unevaluatedProperties": false
 }

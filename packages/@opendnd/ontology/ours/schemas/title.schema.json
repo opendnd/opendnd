@@ -6,12 +6,12 @@
   "description": "A title: a seat of authority in a faction, with a rank and the law by which it passes from holder to holder.",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "faction": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The faction this title belongs to."
     },
     "rank": {
@@ -20,7 +20,7 @@
       "description": "Lower is higher: 0 for the sovereign seat."
     },
     "successionLaw": {
-      "$ref": "../vocabularies/succession-law.schema.json"
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/succession-law.schema.json"
     },
     "styleMale": {
       "type": "string",

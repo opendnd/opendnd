@@ -58,7 +58,7 @@
           "maximum": 59
         },
         "precision": {
-          "$ref": "../vocabularies/precision.schema.json",
+          "$ref": "https://docs.opendnd.org/ours/vocabularies/precision.schema.json",
           "default": "year"
         },
         "nominal": {
@@ -88,17 +88,17 @@
       "type": "object",
       "properties": {
         "begin": {
-          "$ref": "#/$defs/TemporalPosition"
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
         },
         "end": {
-          "$ref": "#/$defs/TemporalPosition"
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
         },
         "earliest": {
-          "$ref": "#/$defs/TemporalPosition",
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition",
           "description": "Outer lower bound when begin is uncertain."
         },
         "latest": {
-          "$ref": "#/$defs/TemporalPosition",
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition",
           "description": "Outer upper bound when end is uncertain."
         }
       },
@@ -123,7 +123,7 @@
               "const": "Point"
             },
             "coordinates": {
-              "$ref": "#/$defs/Position"
+              "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Position"
             }
           },
           "required": [
@@ -141,7 +141,7 @@
             "coordinates": {
               "type": "array",
               "items": {
-                "$ref": "#/$defs/Position"
+                "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Position"
               },
               "minItems": 2
             }
@@ -163,7 +163,7 @@
               "items": {
                 "type": "array",
                 "items": {
-                  "$ref": "#/$defs/Position"
+                  "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Position"
                 },
                 "minItems": 4
               }
@@ -188,7 +188,7 @@
                 "items": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/$defs/Position"
+                    "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Position"
                   },
                   "minItems": 4
                 }
@@ -213,7 +213,7 @@
           "description": "IRI of the world's CRS, minted per world."
         },
         "geometry": {
-          "$ref": "#/$defs/Geometry"
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Geometry"
         },
         "properties": {
           "type": "object",
@@ -249,7 +249,7 @@
         "derivedFrom": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Reference"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
           }
         },
         "attributedTo": {
@@ -324,7 +324,7 @@
       "type": "object",
       "properties": {
         "work": {
-          "$ref": "#/$defs/Reference"
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
         },
         "locator": {
           "type": "string",
@@ -379,27 +379,27 @@
           "type": "string"
         },
         "canonStatus": {
-          "$ref": "../vocabularies/canon-status.schema.json"
+          "$ref": "https://docs.opendnd.org/ours/vocabularies/canon-status.schema.json"
         },
         "perspective": {
-          "$ref": "../vocabularies/perspective.schema.json",
+          "$ref": "https://docs.opendnd.org/ours/vocabularies/perspective.schema.json",
           "default": "in-universe"
         },
         "validTime": {
-          "$ref": "#/$defs/TimeSpan",
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TimeSpan",
           "description": "When this assertion holds in-world. Absent means always."
         },
         "recorded": {
-          "$ref": "#/$defs/Recorded",
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Recorded",
           "readOnly": true
         },
         "provenance": {
-          "$ref": "#/$defs/Provenance"
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Provenance"
         },
         "citations": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Citation"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Citation"
           }
         },
         "tags": {
@@ -437,7 +437,7 @@
         "from": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Reference"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
           },
           "description": "The things that may be chosen."
         },
@@ -448,7 +448,7 @@
         "options": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/Choice"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
           },
           "description": "Nested choices, for a choice between choices."
         }

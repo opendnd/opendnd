@@ -6,25 +6,25 @@
   "description": "An aggregate head count of one species (and optionally culture) at a place at a point in time. Individuals are instantiated from it only when they become notable or someone zooms in.",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "place": {
-      "$ref": "common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "species": {
-      "$ref": "common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "culture": {
-      "$ref": "common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "count": {
       "type": "integer",
       "minimum": 0
     },
     "at": {
-      "$ref": "common.schema.json#/$defs/TemporalPosition"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
     }
   },
   "required": [
@@ -33,8 +33,5 @@
     "count",
     "at"
   ],
-  "unevaluatedProperties": false,
-  "x-ours-valid-time": {
-    "begin": "at"
-  }
+  "unevaluatedProperties": false
 }

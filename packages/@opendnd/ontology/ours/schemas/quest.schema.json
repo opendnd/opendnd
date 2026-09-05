@@ -6,19 +6,19 @@
   "description": "Something a party is meant to do, and how far they have got with it. In-universe as the world's own errand, or out-of-universe as a thread the gamemaster is holding; the perspective field says which.",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "status": {
-      "$ref": "../vocabularies/quest-status.schema.json"
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/quest-status.schema.json"
     },
     "campaign": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The campaign it belongs to, when it belongs to one."
     },
     "giver": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "Who set it."
     },
     "objectives": {
@@ -35,7 +35,7 @@
             "default": false
           },
           "about": {
-            "$ref": "common.schema.json#/$defs/Reference"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
           }
         },
         "required": [
@@ -47,7 +47,7 @@
     "about": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "What it concerns: places, people, factions, other quests."
     },
@@ -55,7 +55,7 @@
       "type": "string"
     },
     "resolvedBy": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The event that finished it."
     }
   },

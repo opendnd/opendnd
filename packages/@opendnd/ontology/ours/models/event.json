@@ -25,6 +25,10 @@
       "target": "Event"
     }
   ],
+  "validTime": {
+    "begin": "when.begin",
+    "end": "when.end"
+  },
   "mapsTo": [
     {
       "system": "https://schema.org",

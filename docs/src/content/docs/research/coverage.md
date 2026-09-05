@@ -117,6 +117,6 @@ Twenty-three types were declared as `extends IResource {}` with no body. They ar
 
 Neither is a missing concept. Both are worth an ADR.
 
-**References are untyped.** A `Reference` is `{ model, id, name? }`, and nothing constrains `model` to name a real model, let alone the right one for that field. `person.residence` will accept `{ model: "dragon", id: … }` through the schema, the codegen and the API. Declaring the intended target on each reference property — an `x-ours-target` extension, validated in the bundle and enforced on write — would close it, and would make the graph walkable in both directions.
+**References are untyped.** A `Reference` is `{ model, id, name? }`, and nothing constrains `model` to name a real model, let alone the right one for that field. `person.residence` will accept `{ model: "dragon", id: … }` through the schema, the codegen and the API. Declaring the intended target on each reference property — a declared target on the property, validated in the bundle and enforced on write — would close it, and would make the graph walkable in both directions.
 
 **The bundle validator has a matching blind spot.** It checks every declared `relationships[].target` against the known models, but a reference-shaped property with no declared relationship is never checked. That is how `culture.languages` came to point at a model that did not exist for several days: the schema said `Reference`, the model declared no relationship for it, and nothing objected. Adding the `language` model fixed the instance; the class of bug needs the check.

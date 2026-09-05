@@ -6,7 +6,7 @@
   "description": "An adventuring class, and its subclasses through `subclassOf`. Level progression is held here as a table rather than as one record per level, because a class is read whole.",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
@@ -15,41 +15,41 @@
       "description": "Sides of the hit die, e.g. 8 for d8."
     },
     "subclassOf": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The class this is a subclass of."
     },
     "primaryAbility": {
       "type": "array",
       "items": {
-        "$ref": "../vocabularies/ability.schema.json"
+        "$ref": "https://docs.opendnd.org/ours/vocabularies/ability.schema.json"
       },
       "description": "The abilities the class is built on."
     },
     "savingThrows": {
       "type": "array",
       "items": {
-        "$ref": "../vocabularies/ability.schema.json"
+        "$ref": "https://docs.opendnd.org/ours/vocabularies/ability.schema.json"
       },
       "description": "Saving throws it is proficient in."
     },
     "proficiencies": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Proficiencies every member of the class has."
     },
     "proficiencyChoices": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/Choice"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
       },
       "description": "Proficiencies chosen on taking the class."
     },
     "startingEquipmentOptions": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/Choice"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
       },
       "description": "Equipment chosen at the start."
     },
@@ -62,7 +62,7 @@
             "type": "object",
             "properties": {
               "ability": {
-                "$ref": "../vocabularies/ability.schema.json"
+                "$ref": "https://docs.opendnd.org/ours/vocabularies/ability.schema.json"
               },
               "minimumScore": {
                 "type": "integer"
@@ -78,7 +78,7 @@
         "proficiencies": {
           "type": "array",
           "items": {
-            "$ref": "common.schema.json#/$defs/Reference"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
           }
         }
       },
@@ -94,7 +94,7 @@
           "description": "The level at which spellcasting begins."
         },
         "ability": {
-          "$ref": "../vocabularies/ability.schema.json"
+          "$ref": "https://docs.opendnd.org/ours/vocabularies/ability.schema.json"
         },
         "info": {
           "type": "array",
@@ -123,7 +123,7 @@
     "spells": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "The spell list the class draws on."
     },
@@ -138,7 +138,7 @@
             "minimum": 1
           },
           "subclass": {
-            "$ref": "common.schema.json#/$defs/Reference",
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
             "description": "The subclass this row belongs to, for a subclass-specific level."
           },
           "proficiencyBonus": {
@@ -147,7 +147,7 @@
           "features": {
             "type": "array",
             "items": {
-              "$ref": "common.schema.json#/$defs/Reference"
+              "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
             }
           },
           "classSpecific": {
@@ -183,7 +183,7 @@
       }
     },
     "primaryAbilityOptions": {
-      "$ref": "common.schema.json#/$defs/Choice",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice",
       "description": "A choice of primary ability, for a class that offers one."
     }
   },

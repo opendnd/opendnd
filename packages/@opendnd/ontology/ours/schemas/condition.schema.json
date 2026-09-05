@@ -6,7 +6,7 @@
   "description": "A state a creature can be in that changes what it may do: blinded, grappled, frightened. The rules text is the description on the base.",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {},

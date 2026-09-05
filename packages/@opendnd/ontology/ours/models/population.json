@@ -21,6 +21,9 @@
       "target": "Culture"
     }
   ],
+  "validTime": {
+    "begin": "at"
+  },
   "mapsTo": [
     {
       "system": "https://schema.org",
