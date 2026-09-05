@@ -57,13 +57,12 @@ export function validateBundle(bundle: OursBundle): ValidationIssue[] {
         );
       }
     }
-    const validTime = schema?.['x-ours-valid-time'];
-    for (const [bound, path] of Object.entries(validTime ?? {})) {
+    for (const [bound, path] of Object.entries(model.validTime ?? {})) {
       const leaf = schema && propertyAt(bundle, schema, model.schema, path);
       if (!leaf || !/\/TemporalPosition$/.test(leaf.$ref ?? '')) {
         error(
-          model.schema,
-          `x-ours-valid-time.${bound} names ${path}, which is not a TemporalPosition property`,
+          model.url,
+          `validTime.${bound} names ${path}, which is not a TemporalPosition property of the schema`,
         );
       }
     }

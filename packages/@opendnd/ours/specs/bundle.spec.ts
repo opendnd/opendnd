@@ -18,7 +18,10 @@ describe('loadOursDirectory', () => {
       bundle.schemas.get(
         'https://example.test/ours/vocabularies/mood.schema.json',
       ),
-    ).toMatchObject({ type: 'string', enum: ['happy', 'sad'] });
+    ).toMatchObject({
+      type: 'string',
+      oneOf: [{ const: 'happy' }, { const: 'sad' }],
+    });
   });
 
   it('publishes FHIR-style collection bundles', () => {
@@ -79,13 +82,10 @@ describe('validateBundle', () => {
 
   it('reports a valid-time path that does not lead to a TemporalPosition', () => {
     const bundle = loadOursDirectory(FIXTURE);
-    const schemas = new Map(bundle.schemas);
-    const url = 'https://example.test/ours/schemas/pet.schema.json';
-    schemas.set(url, {
-      ...schemas.get(url)!,
-      'x-ours-valid-time': { begin: 'legs' },
-    });
-    const issues = validateBundle({ ...bundle, schemas });
+    const models = new Map(bundle.models);
+    const pet = models.get('https://example.test/ours/models/pet.json')!;
+    models.set(pet.url, { ...pet, validTime: { begin: 'legs' } });
+    const issues = validateBundle({ ...bundle, models });
     expect(
       issues.some((i) => i.message.includes('not a TemporalPosition property')),
     ).toBe(true);

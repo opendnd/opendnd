@@ -130,9 +130,9 @@ export function emitZodModule(bundle: OursBundle): string {
   );
 
   /*
-   * What the schemas say about the platform's part in a record: the fields
-   * the server sets, and the properties a record's in-world valid time is
-   * read from when it does not state one.
+   * What the bundle says about the platform's part in a record: the fields
+   * the server sets, marked read-only in the schemas, and the properties a
+   * record's in-world valid time is read from, declared on each Model.
    */
   const readOnly = new Set<string>();
   const validTime: string[] = [];
@@ -143,7 +143,7 @@ export function emitZodModule(bundle: OursBundle): string {
     )) {
       if (prop.readOnly) readOnly.add(name);
     }
-    const fields = schema['x-ours-valid-time'];
+    const fields = model.validTime;
     if (fields) {
       validTime.push(`  ${propertyKey(model.id)}: ${JSON.stringify(fields)},`);
     }

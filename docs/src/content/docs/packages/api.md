@@ -52,7 +52,7 @@ Every failure has one shape: `{ error, code, requestId }`, with `issues` on a va
 
 `?at=` is in-world time, counted in years of the world's calendar: it returns the state that held then, filtering on each record's valid-time interval. `?asOf=` is transaction time: it returns each record as it was authored at that moment, from the append-only version table. The Atlas and the Codex are both views over those two parameters.
 
-`validTime` is filled in by the store from the fields the schema names for it (a person's birth and death, a faction's founding and dissolution, an event's span, a snapshot's moment), so a writer need not know about it; see [ADR-014](/adr/adr-014-valid-time/).
+`validTime` is filled in by the store from the fields the Model manifest names for it (a person's birth and death, a faction's founding and dissolution, an event's span, a snapshot's moment), so a writer need not know about it; see [ADR-014](/adr/adr-014-valid-time/).
 
 Also `?canonStatus=`, `?perspective=`, `?module=`, `?generatedBy=`, `?name=` (prefix), `?ids=` (a set of ids, for what a page refers to), `?sort=id|name|updatedAt`, `?limit=` and `?cursor=`. A cursor is opaque and bound to the sort it came from. A review queue for generated content is `?canonStatus=generated`, which is a query rather than a feature.
 

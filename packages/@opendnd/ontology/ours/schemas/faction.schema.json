@@ -6,24 +6,24 @@
   "description": "An organized group of any kind: realm, dynasty, guild, religion, order, company, adventuring party.",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "factionType": {
-      "$ref": "../vocabularies/faction-type.schema.json"
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/faction-type.schema.json"
     },
     "parent": {
-      "$ref": "common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "seat": {
-      "$ref": "common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "founded": {
-      "$ref": "common.schema.json#/$defs/TemporalPosition"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
     },
     "dissolved": {
-      "$ref": "common.schema.json#/$defs/TemporalPosition"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
     },
     "motto": {
       "type": "string"
@@ -36,9 +36,5 @@
   "required": [
     "factionType"
   ],
-  "unevaluatedProperties": false,
-  "x-ours-valid-time": {
-    "begin": "founded",
-    "end": "dissolved"
-  }
+  "unevaluatedProperties": false
 }

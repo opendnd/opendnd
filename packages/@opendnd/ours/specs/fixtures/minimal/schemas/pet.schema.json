@@ -4,16 +4,16 @@
   "title": "Pet",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/Base"
+      "$ref": "https://example.test/ours/schemas/common.schema.json#/$defs/Base"
     }
   ],
   "properties": {
     "mood": {
-      "$ref": "../vocabularies/mood.schema.json",
+      "$ref": "https://example.test/ours/vocabularies/mood.schema.json",
       "default": "happy"
     },
     "owner": {
-      "$ref": "common.schema.json#/$defs/Reference"
+      "$ref": "https://example.test/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "legs": {
       "type": "integer",

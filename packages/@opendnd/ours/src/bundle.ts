@@ -94,20 +94,29 @@ export function vocabularySchemaUrl(
 }
 
 /**
- * A vocabulary as a JSON Schema: a string drawn from its codes. The schema
- * names the vocabulary it was derived from, which is where the display text
- * lives.
+ * A vocabulary as a JSON Schema: a string that is one of its codes, each
+ * carrying its display text as a `title`, which is JSON Schema's own way of
+ * labelling the values of an enumeration. The comment names the vocabulary
+ * the schema was derived from.
  */
 export function vocabularySchemaFor(vocabulary: Vocabulary): JsonSchema {
   const codes = vocabulary.codes ?? [];
   return {
     $id: vocabularySchemaUrl(vocabulary),
     $schema: 'https://json-schema.org/draft/2020-12/schema',
+    $comment: `Derived from the vocabulary at ${vocabulary.url}`,
     title: vocabulary.name,
     ...(vocabulary.description ? { description: vocabulary.description } : {}),
     type: 'string',
-    ...(codes.length > 0 ? { enum: codes.map((c) => c.code) } : {}),
-    'x-ours-vocabulary': vocabulary.url,
+    ...(codes.length > 0
+      ? {
+          oneOf: codes.map((code) => ({
+            const: code.code,
+            title: code.display,
+            ...(code.definition ? { description: code.definition } : {}),
+          })),
+        }
+      : {}),
   };
 }
 

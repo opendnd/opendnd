@@ -13,6 +13,9 @@
       "target": "Place"
     }
   ],
+  "validTime": {
+    "begin": "at"
+  },
   "mapsTo": [
     {
       "system": "https://schema.org",

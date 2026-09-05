@@ -6,15 +6,15 @@
   "description": "A kind of creature and its biology: size, chromosome layout, trait dictionary, growth and lifespan tables. Rules content (abilities, features) lives in the rules layer, not here (World Anvil Species; schema.org Taxon).",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "size": {
-      "$ref": "../vocabularies/size.schema.json"
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/size.schema.json"
     },
     "parent": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The species this is a subspecies of."
     },
     "chromosomes": {
@@ -185,11 +185,11 @@
       "additionalProperties": false
     },
     "creatureType": {
-      "$ref": "../vocabularies/creature-type.schema.json",
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/creature-type.schema.json",
       "description": "The rules category the species falls under, humanoid for most."
     },
     "sizeOptions": {
-      "$ref": "common.schema.json#/$defs/Choice",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice",
       "description": "A choice of size, for a species that offers one."
     }
   },

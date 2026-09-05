@@ -17,6 +17,10 @@
       "target": "Place"
     }
   ],
+  "validTime": {
+    "begin": "founded",
+    "end": "dissolved"
+  },
   "mapsTo": [
     {
       "system": "https://schema.org",

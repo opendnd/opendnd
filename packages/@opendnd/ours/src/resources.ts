@@ -51,6 +51,17 @@ export const ontologySchema = oursResourceBaseSchema.extend({
 });
 export type Ontology = z.infer<typeof ontologySchema>;
 
+/**
+ * Which properties of a record give its in-world valid time when it does not
+ * state one. Dotted paths into the model's schema, each leading to a
+ * temporal position.
+ */
+export const validTimeFieldsSchema = z.object({
+  begin: z.string().min(1),
+  end: z.string().min(1).optional(),
+});
+export type ValidTimeFields = z.infer<typeof validTimeFieldsSchema>;
+
 /** A model: semantic meaning plus a pointer to the structural JSON Schema. */
 export const modelSchema = oursResourceBaseSchema.extend({
   resourceType: z.literal('Model'),
@@ -59,6 +70,7 @@ export const modelSchema = oursResourceBaseSchema.extend({
   schema: z.url(),
   relationships: z.array(relationshipSchema).optional(),
   mapsTo: z.array(mapsToSchema).optional(),
+  validTime: validTimeFieldsSchema.optional(),
 });
 export type Model = z.infer<typeof modelSchema>;
 
@@ -138,17 +150,8 @@ export interface JsonSchema {
   unevaluatedProperties?: boolean;
   /** The server sets this field; a request body may omit it. */
   readOnly?: boolean;
-  /**
-   * On the schema derived from a vocabulary: the Vocabulary it came from,
-   * where the display text lives. Models bind to a vocabulary with a `$ref`
-   * to that schema, never with this keyword.
-   */
-  'x-ours-vocabulary'?: string;
-  /**
-   * OURS extension, on a model schema: the properties that give a record its
-   * in-world valid time when `validTime` is not stated. Dotted paths.
-   */
-  'x-ours-valid-time'?: { begin: string; end?: string };
+  /** A note for readers of the schema, which validators ignore. */
+  $comment?: string;
 }
 export type JsonSchemaType =
   'object' | 'string' | 'number' | 'integer' | 'boolean' | 'array' | 'null';

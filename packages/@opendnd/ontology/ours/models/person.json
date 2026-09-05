@@ -29,6 +29,10 @@
       "target": "Place"
     }
   ],
+  "validTime": {
+    "begin": "birth.time",
+    "end": "death.time"
+  },
   "mapsTo": [
     {
       "system": "https://schema.org",

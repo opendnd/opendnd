@@ -6,34 +6,34 @@
   "description": "A thing that can be owned, carried or used. One model for equipment, magic items and poisons alike, because the rules treat them the same way and only the fields that apply are filled in. The shape follows the 5e SRD equipment tree so content written for it converts without reshaping; the field names are camelCase to match the rest of this ontology, which is a mechanical transform of theirs. A record may describe a kind of thing or one particular thing: an instance names its kind in `instanceOf`, and any field set on the instance overrides the kind's.",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "itemCategory": {
-      "$ref": "../vocabularies/item-category.schema.json"
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/item-category.schema.json"
     },
     "instanceOf": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The kind this is one of: a world's named sword points at the longsword it is."
     },
     "owner": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "Who holds it: a person or a faction."
     },
     "location": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "Where it is, when nobody is carrying it."
     },
     "contains": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "What is inside it, for a container."
     },
     "created": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The event that made it: a forging, a gift, a discovery."
     },
     "cost": {
@@ -65,17 +65,17 @@
       "minimum": 1
     },
     "rarity": {
-      "$ref": "../vocabularies/rarity.schema.json"
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/rarity.schema.json"
     },
     "properties": {
       "type": "array",
       "items": {
-        "$ref": "../vocabularies/weapon-property.schema.json"
+        "$ref": "https://docs.opendnd.org/ours/vocabularies/weapon-property.schema.json"
       },
       "description": "Weapon properties."
     },
     "mastery": {
-      "$ref": "../vocabularies/weapon-mastery.schema.json",
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/weapon-mastery.schema.json",
       "description": "The mastery property, for a weapon."
     },
     "damage": {
@@ -86,7 +86,7 @@
           "description": "Dice notation, e.g. 1d8."
         },
         "damageType": {
-          "$ref": "../vocabularies/damage-type.schema.json"
+          "$ref": "https://docs.opendnd.org/ours/vocabularies/damage-type.schema.json"
         }
       },
       "required": [],
@@ -101,7 +101,7 @@
           "description": "Dice notation, e.g. 1d8."
         },
         "damageType": {
-          "$ref": "../vocabularies/damage-type.schema.json"
+          "$ref": "https://docs.opendnd.org/ours/vocabularies/damage-type.schema.json"
         }
       },
       "required": [],
@@ -141,7 +141,7 @@
       "description": "Range in feet."
     },
     "ammunition": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The item this one is loaded with."
     },
     "armorClass": {
@@ -177,7 +177,7 @@
       "type": "string"
     },
     "ability": {
-      "$ref": "../vocabularies/ability.schema.json",
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/ability.schema.json",
       "description": "The ability a tool is used with."
     },
     "utilize": {
@@ -192,7 +192,7 @@
             "type": "integer"
           },
           "ability": {
-            "$ref": "../vocabularies/ability.schema.json"
+            "$ref": "https://docs.opendnd.org/ours/vocabularies/ability.schema.json"
           }
         },
         "required": [
@@ -217,7 +217,7 @@
     "variants": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "The forms this item comes in."
     },
@@ -226,7 +226,7 @@
       "description": "Who may use it, where the rules restrict it."
     },
     "poisonType": {
-      "$ref": "../vocabularies/poison-type.schema.json",
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/poison-type.schema.json",
       "description": "How a poison is delivered."
     },
     "image": {

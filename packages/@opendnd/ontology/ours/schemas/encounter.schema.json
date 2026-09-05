@@ -6,33 +6,33 @@
   "description": "A confrontation prepared for a party. It is preparation, not history: an encounter that is played produces an event in the world's record, and the encounter stays as the thing that was set up.",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "perspective": {
-      "$ref": "../vocabularies/perspective.schema.json",
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/perspective.schema.json",
       "default": "out-of-universe",
       "description": "Out-of-universe by default: an encounter is preparation. Playing it produces an event, which is in-universe."
     },
     "kind": {
-      "$ref": "../vocabularies/encounter-kind.schema.json",
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/encounter-kind.schema.json",
       "description": "What sort of encounter it is. A trap is an encounter, not a thing of its own."
     },
     "campaign": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The campaign it is prepared for."
     },
     "place": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "Where it happens."
     },
     "cell": {
-      "$ref": "common.schema.json#/$defs/Cell",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Cell",
       "description": "Quadtree cell token of the battle map it is fought on."
     },
     "difficulty": {
-      "$ref": "../vocabularies/encounter-difficulty.schema.json"
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/encounter-difficulty.schema.json"
     },
     "adversaries": {
       "type": "array",
@@ -41,7 +41,7 @@
         "type": "object",
         "properties": {
           "actor": {
-            "$ref": "common.schema.json#/$defs/Reference"
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
           },
           "count": {
             "type": "integer",
@@ -56,11 +56,11 @@
       }
     },
     "quest": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The quest it belongs to."
     },
     "played": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The event it produced, once it has been played."
     }
   },

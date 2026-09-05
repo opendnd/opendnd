@@ -17,6 +17,9 @@
       "target": "Faction"
     }
   ],
+  "validTime": {
+    "begin": "founded"
+  },
   "mapsTo": [
     {
       "system": "https://schema.org",

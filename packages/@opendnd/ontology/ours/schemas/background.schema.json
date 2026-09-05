@@ -6,39 +6,39 @@
   "description": "Where a character came from before they began adventuring. Follows the 2024 rules, in which a background grants ability score increases and a feat rather than a personality table.",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "abilityScores": {
       "type": "array",
       "items": {
-        "$ref": "../vocabularies/ability.schema.json"
+        "$ref": "https://docs.opendnd.org/ours/vocabularies/ability.schema.json"
       },
       "description": "The abilities it may raise."
     },
     "feat": {
-      "$ref": "common.schema.json#/$defs/Reference",
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The feat it grants."
     },
     "proficiencies": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Proficiencies it grants outright."
     },
     "proficiencyChoices": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/Choice"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
       },
       "description": "Proficiencies chosen from a list."
     },
     "startingEquipmentOptions": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/Choice"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
       },
       "description": "Equipment chosen from a list."
     },

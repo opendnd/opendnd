@@ -6,12 +6,12 @@
   "description": "A belief held by a person or faction about a proposition, so contested history can be recorded without choosing a winner (CRMinf Belief).",
   "allOf": [
     {
-      "$ref": "common.schema.json#/$defs/ResourceBase"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
     "holder": {
-      "$ref": "common.schema.json#/$defs/Reference"
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "proposition": {
       "type": "string"
@@ -19,11 +19,11 @@
     "about": {
       "type": "array",
       "items": {
-        "$ref": "common.schema.json#/$defs/Reference"
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       }
     },
     "value": {
-      "$ref": "../vocabularies/belief-value.schema.json"
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/belief-value.schema.json"
     },
     "basis": {
       "type": "string",
