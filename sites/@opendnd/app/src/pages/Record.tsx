@@ -1,4 +1,4 @@
-import { PencilIcon, Trash2Icon } from 'lucide-react';
+import { HourglassIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { Problem } from '../api/client';
@@ -120,13 +120,24 @@ export function Record() {
 
       <aside className="flex flex-col gap-4 text-sm">
         {canEdit && !asOf && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               render={<Link to={`${recordPath(world.id, model, id)}/edit`} />}
             >
               <PencilIcon data-icon="inline-start" />
               Edit
             </Button>
+            {ontology.model(model)?.simulate && (
+              <Button
+                variant="outline"
+                render={
+                  <Link to={`${recordPath(world.id, model, id)}/simulate`} />
+                }
+              >
+                <HourglassIcon data-icon="inline-start" />
+                Simulate history
+              </Button>
+            )}
             <AlertDialog>
               <AlertDialogTrigger
                 render={<Button variant="destructive" disabled={removing} />}

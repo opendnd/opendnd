@@ -9,6 +9,7 @@ import type {
   Resource,
   Role,
   SearchHit,
+  SimulateResult,
   Usage,
   Vocabulary,
   World,
@@ -264,6 +265,21 @@ export class ApiClient {
   ): Promise<{ imported: number }> {
     return this.body('POST', `/v1/worlds/${world}/$import`, {
       body: { resources },
+    });
+  }
+
+  /**
+   * Run the history simulation over a world, a house or a place. Nothing is
+   * saved unless the request says `save: true`.
+   */
+  simulate(
+    world: string,
+    model: string,
+    id: string,
+    input: unknown,
+  ): Promise<SimulateResult> {
+    return this.body('POST', `/v1/worlds/${world}/${model}/${id}/$simulate`, {
+      body: input,
     });
   }
 

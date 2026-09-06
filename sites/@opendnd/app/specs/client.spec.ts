@@ -285,3 +285,24 @@ describe('the API client and a world’s settings', () => {
     });
   });
 });
+
+describe('the API client and simulation', () => {
+  it('runs a simulation over a resource and returns what it produced', async () => {
+    const { fetch, calls } = fakeFetch({
+      'POST /v1/worlds/w/place/p/$simulate': () => ({
+        startYear: 1000,
+        endYear: 1020,
+        counts: { event: 4 },
+        findings: [],
+        saved: false,
+        resources: [],
+      }),
+    });
+    const result = await client(fetch).api.simulate('w', 'place', 'p', {
+      years: 20,
+      save: false,
+    });
+    expect(result.endYear).toBe(1020);
+    expect(await calls[0]!.json()).toEqual({ years: 20, save: false });
+  });
+});

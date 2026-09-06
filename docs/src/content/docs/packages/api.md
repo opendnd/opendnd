@@ -29,7 +29,7 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 | `GET`/`PUT`/`PATCH`/`DELETE` `/v1/worlds/{world}/{model}/{id}` | One resource. |
 | `POST /v1/{model}/$generate` | Generate without a world and without an account, sending the species, culture and calendar whole. |
 | `POST /v1/worlds/{world}/{model}/$generate` | Generate from resources in the world, named by reference or id. Each resource that comes back carries its `model`, so the bundle can be imported as it is. |
-| `POST /v1/worlds/{world}/{model}/{id}/$simulate` | Run the history simulation over a world, a house or a place. |
+| `POST /v1/worlds/{world}/{model}/{id}/$simulate` | Run the history simulation over a world, a house or a place. `/v1/models` describes the request as JSON Schema, with every rate's default; the calendar, species and culture may be named by reference or id, or left out when the world has exactly one. |
 | `GET /v1/worlds/{world}/$export/{format}` | Everything in the world, as a bundle or as prose. |
 | `GET /v1/openapi.json` | This API, described from the ontology. |
 | `GET /v1/vocabularies` | Every code list with its display text, for a form. |

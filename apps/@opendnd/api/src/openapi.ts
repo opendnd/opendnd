@@ -1,6 +1,7 @@
 import { type ModelId, models, readOnlyFields } from '@opendnd/types';
 import { toJSONSchema } from 'zod';
 import { GENERATORS } from './generate';
+import { SCOPE_MODELS, SIMULATION } from './simulate';
 
 /**
  * The OpenAPI description, generated from the ontology.
@@ -793,30 +794,15 @@ const fixedPaths = {
         name: 'model',
         in: 'path',
         required: true,
-        schema: { enum: ['world', 'faction', 'place'] },
+        schema: { enum: [...SCOPE_MODELS] },
       },
       identifier,
     ],
     post: {
       tags: ['meta'],
       summary: 'Run the history simulation over a world, a house or a place',
-      requestBody: body({
-        type: 'object',
-        properties: {
-          years: { type: 'integer', minimum: 1, maximum: 1000 },
-          startYear: { type: 'integer' },
-          save: {
-            type: 'boolean',
-            description:
-              'Save the produced resources. Left false, they are returned ' +
-              'and nothing is written.',
-          },
-          calendar: { type: 'string', format: 'uuid' },
-          species: { type: 'string', format: 'uuid' },
-          culture: { type: 'string', format: 'uuid' },
-          params: { type: 'object' },
-        },
-      }),
+      description: SIMULATION.description,
+      requestBody: body(SIMULATION.input),
       responses: { 200: { description: 'What the run produced' } },
     },
   },

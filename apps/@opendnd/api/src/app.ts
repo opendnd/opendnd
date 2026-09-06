@@ -22,7 +22,7 @@ import {
   UnauthorizedError,
 } from './identity';
 import { openApiDocument } from './openapi';
-import { simulate } from './simulate';
+import { SCOPE_MODELS, SIMULATION, simulate } from './simulate';
 import {
   ConflictError,
   type ListOptions,
@@ -272,6 +272,7 @@ export function createApp(options: AppOptions) {
       models: MODEL_IDS.map((id) => ({
         ...modelInfo[id],
         ...(GENERATORS[id] ? { generate: GENERATORS[id] } : {}),
+        ...(SCOPE_MODELS.includes(id) ? { simulate: SIMULATION } : {}),
       })),
     }),
   );

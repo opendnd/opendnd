@@ -28,12 +28,34 @@ export interface ModelInfo {
   readonly description?: string;
   /** Present when something generates the model: what, and what it takes. */
   readonly generate?: GeneratorInfo;
+  /** Present when a history can be simulated over one of these. */
+  readonly simulate?: GeneratorInfo;
 }
 
 export interface GeneratorInfo {
   readonly description: string;
   /** The request body as JSON Schema, which a form is built from. */
   readonly input: JsonSchema;
+}
+
+/** A consistency finding over a simulated history. */
+export interface Finding {
+  readonly rule: string;
+  readonly severity: 'error' | 'warning';
+  readonly message: string;
+  /** Ids of the resources involved. */
+  readonly resources: readonly string[];
+}
+
+/** What a simulation run produced, and whether it was kept. */
+export interface SimulateResult {
+  readonly startYear: number;
+  readonly endYear: number;
+  readonly counts: Readonly<Record<string, number>>;
+  readonly findings: readonly Finding[];
+  /** Present when nothing was saved, to look at before keeping. */
+  readonly resources?: readonly Resource[];
+  readonly saved: boolean;
 }
 
 export interface VocabularyCode {

@@ -559,6 +559,42 @@ describe('the API: actions', () => {
     expect((person.body as { error: string }).error).toContain('a world');
   });
 
+  it('describes the simulation for the models it runs over, and takes references for its inputs', async () => {
+    const models = (
+      (await drew.get('/v1/models')).body as {
+        models: {
+          id: string;
+          simulate?: { description: string; input: Record<string, unknown> };
+        }[];
+      }
+    ).models;
+    for (const id of ['world', 'faction', 'place']) {
+      const entry = models.find((m) => m.id === id)!;
+      expect(entry.simulate?.input).toMatchObject({
+        type: 'object',
+        properties: { years: { default: 100 }, save: { default: false } },
+      });
+    }
+    expect(models.find((m) => m.id === 'person')?.simulate).toBeUndefined();
+
+    // The calendar may be named as a reference, as a form sends it.
+    const calendars = (
+      (await drew.get(`/v1/worlds/${world}/calendar`)).body as {
+        resources: { id: string }[];
+      }
+    ).resources;
+    const { status, body } = await drew.post(
+      `/v1/worlds/${world}/world/${world}/$simulate`,
+      {
+        years: 5,
+        startYear: 1000,
+        calendar: { model: 'calendar', id: calendars[0]!.id },
+      },
+    );
+    expect(status).toBe(200);
+    expect((body as { endYear: number }).endYear).toBe(1005);
+  });
+
   it('narrows a run to one house inside the realm', async () => {
     const houses = await drew.get(`/v1/worlds/${world}/faction?limit=500`);
     const all = (

@@ -9,6 +9,7 @@ import { Records } from './pages/Records';
 import { Search } from './pages/Search';
 import { Settings } from './pages/Settings';
 import { SignIn } from './pages/SignIn';
+import { Simulate } from './pages/Simulate';
 import { WorldHome } from './pages/WorldHome';
 import { WorldLayout } from './pages/WorldLayout';
 import { Worlds } from './pages/Worlds';
@@ -43,6 +44,7 @@ export const routes: RouteObject[] = [
                   { path: ':model/generate', element: <Generate /> },
                   { path: ':model/:id', element: <Record /> },
                   { path: ':model/:id/edit', element: <Edit /> },
+                  { path: ':model/:id/simulate', element: <Simulate /> },
                 ],
               },
             ],

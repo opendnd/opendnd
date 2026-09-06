@@ -2,6 +2,7 @@ import type { GeneratorContext } from '@opendnd/generators';
 import {
   type HistoryInput,
   type HistoryOutput,
+  DEFAULT_PARAMS,
   historyGenerator,
 } from '@opendnd/simulation';
 import type {
@@ -14,6 +15,8 @@ import type {
   Species,
   Title,
 } from '@opendnd/types';
+import { vocabularies } from '@opendnd/types';
+import { type JsonSchema, idOf, reference } from './generate';
 import { type Resource, type Store, ValidationError } from './store';
 
 /** Longest run the API will do in one request. */
@@ -152,10 +155,11 @@ async function only<T>(
   model: ModelId,
   named: unknown,
 ): Promise<T> {
-  if (typeof named === 'string') {
-    const resource = await store.get(model, named);
+  const id = idOf(named);
+  if (id !== undefined) {
+    const resource = await store.get(model, id);
     if (!resource) {
-      throw new ValidationError(`no ${model} ${named} in this world`, [
+      throw new ValidationError(`no ${model} ${id} in this world`, [
         { path: [model], message: 'not found' },
       ]);
     }
@@ -271,3 +275,153 @@ function descendants<T extends { id: string }>(
   }
   return found;
 }
+
+/** The models a history can be simulated for: the whole world, or the subtree under a house or a place. */
+export const SCOPE_MODELS: readonly ModelId[] = ['world', 'faction', 'place'];
+
+const rate = (description: string, fallback: number): JsonSchema => ({
+  type: 'number',
+  minimum: 0,
+  maximum: 1,
+  default: fallback,
+  description,
+});
+
+/**
+ * The simulation as a client sees it: what it does and what a run takes, as
+ * JSON Schema, so a form can be built from it the way one is built for a
+ * generator. Every rate has its default stated, which is what a run uses
+ * when the client says nothing.
+ */
+export const SIMULATION = {
+  description:
+    'Run the world forward year by year: births, marriages, deaths, successions, claims and wars among the houses that hold titles here, with population and prosperity following. Nothing is saved until asked.',
+  input: {
+    type: 'object',
+    properties: {
+      years: {
+        type: 'integer',
+        minimum: 1,
+        maximum: MAX_YEARS,
+        default: 100,
+        description: `How many years to run. At most ${MAX_YEARS} in one request.`,
+      },
+      startYear: {
+        type: 'integer',
+        default: 1000,
+        description: 'The in-world year the run begins in.',
+      },
+      calendar: reference(
+        'calendar',
+        'The calendar the history is dated in. Left out when the world has exactly one.',
+      ),
+      species: reference(
+        'species',
+        'Who the figures are. Left out when the world has exactly one.',
+      ),
+      culture: reference(
+        'culture',
+        'Whose names the figures take. Left out when the world has exactly one.',
+      ),
+      params: {
+        type: 'object',
+        description:
+          'Tunable rates. Each is left at its default when not given.',
+        properties: {
+          marriageChance: rate(
+            'Yearly chance an unmarried notable adult marries.',
+            DEFAULT_PARAMS.marriageChance,
+          ),
+          dynasticMarriageChance: rate(
+            'Share of marriages made with another house rather than a commoner.',
+            DEFAULT_PARAMS.dynasticMarriageChance,
+          ),
+          birthChance: rate(
+            'Yearly chance a married couple in fertile years has a child.',
+            DEFAULT_PARAMS.birthChance,
+          ),
+          infantMortality: rate(
+            'Extra yearly mortality under age five.',
+            DEFAULT_PARAMS.infantMortality,
+          ),
+          baseMortality: rate(
+            'Floor of yearly mortality at any age.',
+            DEFAULT_PARAMS.baseMortality,
+          ),
+          spouseAgeSpread: {
+            type: 'integer',
+            minimum: 0,
+            default: DEFAULT_PARAMS.spouseAgeSpread,
+            description:
+              'Largest age gap, in years, when a spouse is drawn from the population.',
+          },
+          populationGrowth: {
+            type: 'object',
+            description:
+              "Yearly growth of a settlement's population, by its prosperity.",
+            properties: Object.fromEntries(
+              vocabularies.prosperity.codes.map((code) => [
+                code.code,
+                {
+                  type: 'number',
+                  default:
+                    DEFAULT_PARAMS.populationGrowth[
+                      code.code as keyof typeof DEFAULT_PARAMS.populationGrowth
+                    ],
+                },
+              ]),
+            ),
+            additionalProperties: false,
+          },
+          prosperityDrift: rate(
+            "Yearly chance a settlement's prosperity moves one step up or down.",
+            DEFAULT_PARAMS.prosperityDrift,
+          ),
+          populationSnapshotEvery: {
+            type: 'integer',
+            minimum: 1,
+            default: DEFAULT_PARAMS.populationSnapshotEvery,
+            description: 'Record population and economy this often, in years.',
+          },
+          lineageDepth: {
+            type: 'integer',
+            minimum: 0,
+            default: DEFAULT_PARAMS.lineageDepth,
+            description:
+              'Kinship steps from a title holder within which a person is notable enough to be recorded.',
+          },
+          maxFiguresPerHouse: {
+            type: 'integer',
+            minimum: 1,
+            default: DEFAULT_PARAMS.maxFiguresPerHouse,
+            description: 'Cap on living recorded figures per house.',
+          },
+          warChance: rate(
+            'Yearly chance a living claimant presses a claim by force.',
+            DEFAULT_PARAMS.warChance,
+          ),
+          battlesToWin: {
+            type: 'integer',
+            minimum: 1,
+            default: DEFAULT_PARAMS.battlesToWin,
+            description: 'Battles one side must win to carry a war.',
+          },
+          maxWarYears: {
+            type: 'integer',
+            minimum: 1,
+            default: DEFAULT_PARAMS.maxWarYears,
+            description: 'After this many years a war ends inconclusively.',
+          },
+        },
+        additionalProperties: false,
+      },
+      save: {
+        type: 'boolean',
+        default: false,
+        description:
+          'Save what the run produces, in one transaction. Left false, it is returned to look at and nothing is written.',
+      },
+    },
+    additionalProperties: false,
+  } satisfies JsonSchema,
+};

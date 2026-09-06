@@ -50,7 +50,7 @@ export interface GeneratorDescription {
  * model to offer without the API saying so in any other way. The API also
  * accepts a bare id here.
  */
-function reference(model: ModelId, description: string): JsonSchema {
+export function reference(model: ModelId, description: string): JsonSchema {
   return {
     type: 'object',
     description,
@@ -237,7 +237,7 @@ export async function resolveInputs(
 export const REFERENCE_FIELDS = ['species', 'culture', 'calendar'] as const;
 
 /** The id a field names: a uuid string, or the `id` of a `Reference`. */
-function idOf(value: unknown): string | undefined {
+export function idOf(value: unknown): string | undefined {
   if (typeof value === 'string') return isUuid(value) ? value : undefined;
   if (typeof value === 'object' && value !== null) {
     const id = (value as { id?: unknown }).id;
