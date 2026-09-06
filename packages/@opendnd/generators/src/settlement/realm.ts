@@ -6,7 +6,7 @@ import type {
   Place,
   PlaceType,
   Population,
-  Reference,
+  ReferenceTo,
   Species,
   Terrain,
   Title,
@@ -34,8 +34,8 @@ export interface RealmInput {
   readonly terrain?: Terrain;
   /** Cap on population, used when carving a demesne out of a larger one. */
   readonly maxPopulation?: number;
-  readonly parent?: Reference;
-  readonly liege?: Reference;
+  readonly parent?: ReferenceTo<'place'>;
+  readonly liege?: ReferenceTo<'faction'>;
 }
 
 export interface RealmOutput {
@@ -111,7 +111,7 @@ function generateDemesne(
     population: count,
     ...(input.parent ? { parent: input.parent } : {}),
   };
-  const placeRef: Reference = {
+  const placeRef: ReferenceTo<'place'> = {
     model: 'place',
     id: place.id,
     name: place.name,
@@ -130,7 +130,7 @@ function generateDemesne(
     founded: { trs: input.calendar.id, year: input.year, precision: 'year' },
     ...(input.liege ? { parent: input.liege } : {}),
   };
-  const houseRef: Reference = {
+  const houseRef: ReferenceTo<'faction'> = {
     model: 'faction',
     id: house.id,
     name: house.name,
@@ -147,7 +147,7 @@ function generateDemesne(
     styleFemale: styles.female,
     styleNeuter: styles.neuter,
   };
-  (place as { controlledBy?: Reference }).controlledBy = houseRef;
+  (place as { controlledBy?: ReferenceTo<'faction'> }).controlledBy = houseRef;
 
   out.places.push(place);
   out.factions.push(house);

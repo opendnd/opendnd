@@ -21,3 +21,7 @@ Mature type generators for standards such as FHIR emit TypeScript and Zod from a
 - No intermediate representation yet. If a second emitter is needed (JSON-LD context, OpenAPI, SQL DDL), introduce an IR then rather than speculatively now.
 - The generate script depends on the built `@opendnd/ours` and `@opendnd/ontology` packages; the root `generate` script runs through turbo so those build first.
 - `@opendnd/ours` is a candidate to publish to npm once its API settles, ideally under an OURS-owned scope.
+
+## Decided later, 2026-09-06
+
+- **Relationships are written into the schemas.** A model manifest's `relationships` say which model each `Reference`-typed property points at, and until now that was a claim the validator checked against the schema and nothing else read. The emitter now writes it into the generated shape: the property's `model` is fixed to the target's id, or to one of several when relationships share a predicate, so a session whose campaign points at a place is refused, and a client reading the schema knows a field may only hold a campaign. Untyped references, those with no relationship, stay as they were. The manifest remains the one place a target is declared; the schema files carry a plain `Reference` as before.

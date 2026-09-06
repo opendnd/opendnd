@@ -27,6 +27,10 @@
     {
       "predicate": "birth.place",
       "target": "Place"
+    },
+    {
+      "predicate": "death.place",
+      "target": "Place"
     }
   ],
   "validTime": {

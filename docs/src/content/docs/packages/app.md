@@ -36,6 +36,12 @@ A world, a house or a place has a Simulate history button on its page for editor
 
 Every record has a Write about this button for editors and owners. The form comes from the request as the API describes it, except that the model is offered as a choice among what the deployment can actually serve, from `/v1/llm`, with the task's configured model named as what writes when nothing is chosen. The model is held to the facts on file: the record's fields and everything that refers to it, which the draft shows so they can be checked. A draft is read before it is kept, because a model does not say the same thing twice; keeping imports the very text that was read, and writing again is another call and another line on the world's spend.
 
+## Linked records
+
+A record's page offers to make records linked to it, and the offers come from the schemas rather than from a list in the application. For every model, a reference field the schema fixes to the model on the page is a way in: the new record's field will point back. A reference field of the record on the page fixed to another model is a way out: the new record will be added to that field once it is made. One of each becomes one offer that does both; more than one becomes an offer per field, named for it. Fields that may point at anything make no offer, because they would put every model on every page. So a campaign's page offers a new session, character, quest or encounter with the campaign filled in; a session's page offers a new event that the session will list as produced; an encounter's page offers the event it was played as. The form opens with the link made and returns to the page it came from.
+
+What links here says through which field each record refers, and when the referring record carries a date it says that too and lists in date order, so a campaign's sessions read as a chronology.
+
 ## Taking a world with you
 
 A world's home page ends with export and import. Anyone who can read the world can export it, as the JSON bundle the API serves or as a prose digest; the file is saved by the browser. An editor can import a bundle: the file is read locally first and what it holds is counted by kind, and only then is it sent, whole, to `$import`, which writes it in one transaction. A bundle exported from one world imports into another; records with the same ids are updated rather than duplicated.

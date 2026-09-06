@@ -35,6 +35,10 @@
     {
       "predicate": "variants",
       "target": "Item"
+    },
+    {
+      "predicate": "owner",
+      "target": "Faction"
     }
   ],
   "mapsTo": [

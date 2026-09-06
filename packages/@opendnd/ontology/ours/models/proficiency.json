@@ -11,6 +11,10 @@
     {
       "predicate": "reference",
       "target": "Skill"
+    },
+    {
+      "predicate": "reference",
+      "target": "Item"
     }
   ],
   "mapsTo": [

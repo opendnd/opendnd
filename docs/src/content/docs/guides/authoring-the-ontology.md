@@ -8,7 +8,7 @@ All ontology changes happen in `packages/@opendnd/ontology/ours/`. Nothing else 
 ## Add a model
 
 1. Write `schemas/<id>.schema.json`. Start from an existing one: it declares `$id`, `type: object`, extends `ResourceBase` through `allOf`, lists `properties` and `required`, and closes itself with `unevaluatedProperties: false` (not `additionalProperties`, which in draft 2020-12 would refuse the base's own fields). Every `$ref` is the canonical URL of what it points at; the ontology's tests refuse a relative one and any `x-` keyword.
-2. Write `models/<id>.json`: the OURS `Model` with `name`, `description`, `schema` pointing at the `$id` above, `relationships` whose predicates are `Reference`-typed properties of the schema (dotted for nested ones, `participants.actor`), `validTime` naming the properties the record's in-world span is read from when it has any, and at least one `mapsTo` alignment. The validator refuses a predicate the schema does not have. Prefer schema.org names for properties where they exist.
+2. Write `models/<id>.json`: the OURS `Model` with `name`, `description`, `schema` pointing at the `$id` above, `relationships` whose predicates are `Reference`-typed properties of the schema (dotted for nested ones, `participants.actor`) and whose targets are written into the generated schemas, so the property's `model` is fixed to the target and a pointer at the wrong model is refused, `validTime` naming the properties the record's in-world span is read from when it has any, and at least one `mapsTo` alignment. The validator refuses a predicate the schema does not have. Prefer schema.org names for properties where they exist.
 3. Regenerate and test:
 
 ```bash

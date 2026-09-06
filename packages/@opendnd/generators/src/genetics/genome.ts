@@ -1,4 +1,4 @@
-import type { Person, Reference, Sex, Size } from '@opendnd/types';
+import type { Person, ReferenceTo, Sex, Size } from '@opendnd/types';
 
 /** One expressed gene: the gene key and what it expresses as. */
 export interface Expression {
@@ -11,7 +11,7 @@ export type Chromosomes = Readonly<Record<string, string>>;
 
 /** The genetic record of one creature. */
 export interface Genome {
-  readonly species: Reference;
+  readonly species: ReferenceTo<'species'>;
   readonly sex: Sex;
   readonly chromosomes: Chromosomes;
   /** The phenotype, by category: what each expressed gene shows as. */

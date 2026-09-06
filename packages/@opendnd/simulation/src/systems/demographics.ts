@@ -7,7 +7,7 @@ import {
   personGenerator,
   toPersonFields,
 } from '@opendnd/generators';
-import type { Person, Reference, Sex } from '@opendnd/types';
+import type { Person, ReferenceTo, Sex } from '@opendnd/types';
 import { Lifecycle, isAdult, isFertile, mortality } from '../lifecycle';
 import { makeEvent, makeRelationship, ref, yearOf } from '../resources';
 import { HistoryState } from '../state';
@@ -364,7 +364,10 @@ function childGenome(
 }
 
 /** Where a person is, by their house's seat or their own residence. */
-function placeOf(state: HistoryState, person: Person): Reference | undefined {
+function placeOf(
+  state: HistoryState,
+  person: Person,
+): ReferenceTo<'place'> | undefined {
   const houseId = state.houseOf(person.id);
   return (houseId ? state.seatOf(houseId) : undefined) ?? person.residence;
 }

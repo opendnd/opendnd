@@ -31,6 +31,42 @@
     {
       "predicate": "inventory.item",
       "target": "Item"
+    },
+    {
+      "predicate": "classes.class",
+      "target": "Class"
+    },
+    {
+      "predicate": "conditions",
+      "target": "Condition"
+    },
+    {
+      "predicate": "proficiencies",
+      "target": "Proficiency"
+    },
+    {
+      "predicate": "spells.known",
+      "target": "Spell"
+    },
+    {
+      "predicate": "spells.prepared",
+      "target": "Spell"
+    },
+    {
+      "predicate": "choices.source",
+      "target": "Class"
+    },
+    {
+      "predicate": "choices.source",
+      "target": "Feature"
+    },
+    {
+      "predicate": "choices.source",
+      "target": "Background"
+    },
+    {
+      "predicate": "choices.source",
+      "target": "Feat"
     }
   ],
   "mapsTo": [

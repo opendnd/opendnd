@@ -15,6 +15,14 @@
     {
       "predicate": "spells.spell",
       "target": "Spell"
+    },
+    {
+      "predicate": "grantedBy",
+      "target": "Species"
+    },
+    {
+      "predicate": "grantedBy",
+      "target": "Background"
     }
   ],
   "mapsTo": [

@@ -7,7 +7,7 @@ import type {
   PlaceType,
   Population,
   Prosperity,
-  Reference,
+  ReferenceTo,
   Resource,
   Species,
   Terrain,
@@ -41,8 +41,8 @@ export interface SettlementInput {
   /** People per square mile. Drawn around the tier's typical density when absent. */
   readonly density?: number;
   readonly resources?: Resource[];
-  readonly parent?: Reference;
-  readonly controlledBy?: Reference;
+  readonly parent?: ReferenceTo<'place'>;
+  readonly controlledBy?: ReferenceTo<'faction'>;
   /** Upper bound on population, used when carving localities out of a demesne. */
   readonly maxPopulation?: number;
 }
@@ -112,7 +112,11 @@ export const settlementGenerator: Generator<SettlementInput, SettlementOutput> =
         ...(input.parent ? { parent: input.parent } : {}),
         ...(input.controlledBy ? { controlledBy: input.controlledBy } : {}),
       };
-      const placeRef: Reference = { model: 'place', id: place.id, name };
+      const placeRef: ReferenceTo<'place'> = {
+        model: 'place',
+        id: place.id,
+        name,
+      };
 
       const population: Population = {
         ...stamp(settlementGenerator, childContext(ctx, 'population')),

@@ -19,6 +19,18 @@
     {
       "predicate": "played",
       "target": "Event"
+    },
+    {
+      "predicate": "campaign",
+      "target": "Campaign"
+    },
+    {
+      "predicate": "adversaries.actor",
+      "target": "Statblock"
+    },
+    {
+      "predicate": "adversaries.actor",
+      "target": "Person"
     }
   ],
   "mapsTo": [

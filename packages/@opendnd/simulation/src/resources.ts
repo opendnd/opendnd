@@ -7,8 +7,9 @@ import type {
   EventType,
   ParticipantRole,
   Person,
+  ModelId,
   Population,
-  Reference,
+  ReferenceTo,
   Relationship,
   RelationshipType,
   Tenure,
@@ -18,10 +19,10 @@ import type {
 /** Identity of the history simulation as a generator, for provenance. */
 export const HISTORY_GENERATOR = { id: 'history', version: '0.1.0' } as const;
 
-export function ref(
-  model: string,
+export function ref<M extends ModelId>(
+  model: M,
   r: { id: string; name?: string },
-): Reference {
+): ReferenceTo<M> {
   return r.name === undefined
     ? { model, id: r.id }
     : { model, id: r.id, name: r.name };
@@ -37,12 +38,12 @@ export interface EventSpec {
   readonly name: string;
   readonly description?: string;
   readonly participants: ReadonlyArray<{
-    actor: Reference;
+    actor: ReferenceTo<'person'>;
     role: ParticipantRole;
   }>;
-  readonly locations?: Reference[];
-  readonly causedBy?: Reference[];
-  readonly partOf?: Reference;
+  readonly locations?: ReferenceTo<'place'>[];
+  readonly causedBy?: ReferenceTo<'event'>[];
+  readonly partOf?: ReferenceTo<'event'>;
   readonly outcome?: string;
 }
 
@@ -92,7 +93,7 @@ export function makeTenure(
   ctx: GeneratorContext,
   label: string,
   calendar: Calendar,
-  title: Reference,
+  title: ReferenceTo<'title'>,
   holder: Person,
   year: number,
   began?: Event,
@@ -112,7 +113,7 @@ export function makeClaim(
   ctx: GeneratorContext,
   label: string,
   claimant: Person,
-  title: Reference,
+  title: ReferenceTo<'title'>,
   basis: ClaimBasis,
   through?: Person,
 ): Claim {
@@ -132,9 +133,9 @@ export function makePopulation(
   ctx: GeneratorContext,
   label: string,
   calendar: Calendar,
-  place: Reference,
-  species: Reference,
-  culture: Reference | undefined,
+  place: ReferenceTo<'place'>,
+  species: ReferenceTo<'species'>,
+  culture: ReferenceTo<'culture'> | undefined,
   count: number,
   year: number,
 ): Population {

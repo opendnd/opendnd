@@ -19,6 +19,18 @@
     {
       "predicate": "spells",
       "target": "Spell"
+    },
+    {
+      "predicate": "multiclassing.proficiencies",
+      "target": "Proficiency"
+    },
+    {
+      "predicate": "levels.subclass",
+      "target": "Class"
+    },
+    {
+      "predicate": "levels.features",
+      "target": "Feature"
     }
   ],
   "mapsTo": [

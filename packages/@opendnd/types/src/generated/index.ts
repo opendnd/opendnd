@@ -918,9 +918,21 @@ export const backgroundSchema = z.strictObject({
   /** The abilities it may raise. */
   abilityScores: z.array(abilitySchema).optional(),
   /** The feat it grants. */
-  feat: referenceSchema.optional(),
+  feat: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("feat"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Proficiencies it grants outright. */
-  proficiencies: z.array(referenceSchema).optional(),
+  proficiencies: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("proficiency"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** Proficiencies chosen from a list. */
   proficiencyChoices: z.array(choiceSchema).optional(),
   /** Equipment chosen from a list. */
@@ -953,7 +965,13 @@ export const beliefSchema = z.strictObject({
   tags: z.array(z.string()).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  holder: referenceSchema,
+  holder: z.strictObject({
+    /** Model id of the target. */
+    model: z.enum(["person", "faction"]),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
   proposition: z.string(),
   about: z.array(referenceSchema).optional(),
   value: beliefValueSchema,
@@ -1049,15 +1067,33 @@ export const campaignSchema = z.strictObject({
   /** User ids of the players. */
   players: z.array(z.string()).optional(),
   /** The adventuring party, a faction whose factionType is party. */
-  party: referenceSchema.optional(),
+  party: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("faction"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Where in the world it is set, if it is bounded to one place. */
-  setting: referenceSchema.optional(),
+  setting: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("place"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Real-world date of the first session. */
   beganOn: z.iso.date().optional(),
   endedOn: z.iso.date().optional(),
   /** Where the party currently stands in the world's own calendar. */
   inWorldTime: temporalPositionSchema.optional(),
-  characters: z.array(referenceSchema).optional(),
+  characters: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("character"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
 });
 export type Campaign = z.infer<typeof campaignSchema>;
 
@@ -1086,9 +1122,21 @@ export const characterSchema = z.strictObject({
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** The being in the world. */
-  person: referenceSchema,
+  person: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("person"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
   /** The campaign they are played in. */
-  campaign: referenceSchema.optional(),
+  campaign: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("campaign"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** User id of whoever plays them. Absent for one the gamemaster runs. */
   player: z.string().optional(),
   status: characterStatusSchema.optional(),
@@ -1098,18 +1146,48 @@ export const characterSchema = z.strictObject({
   /** The classes taken and the level in each; more than one for a multiclassed character. */
   classes: z.array(z.strictObject({
     /** The class. */
-    class: referenceSchema,
+    class: z.strictObject({
+      /** Model id of the target. */
+      model: z.literal("class"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    }),
     level: z.int().min(1),
   })).optional(),
   /** The background chosen. */
-  background: referenceSchema.optional(),
+  background: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("background"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Feats taken. */
-  feats: z.array(referenceSchema).optional(),
+  feats: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("feat"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** A stat block that stands for the character in an encounter, when one has been built. */
-  statblock: referenceSchema.optional(),
+  statblock: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("statblock"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Items carried, in the order the character keeps them. */
   inventory: z.array(z.strictObject({
-    item: referenceSchema,
+    item: z.strictObject({
+      /** Model id of the target. */
+      model: z.literal("item"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    }),
     quantity: z.int().min(1).default(1),
     equipped: z.boolean().default(false),
     attuned: z.boolean().default(false),
@@ -1132,15 +1210,39 @@ export const characterSchema = z.strictObject({
   /** Hit dice spent since the last long rest. */
   hitDiceSpent: z.int().min(0).optional(),
   /** Conditions currently affecting the character. */
-  conditions: z.array(referenceSchema).optional(),
+  conditions: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("condition"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** Proficiencies held, from every source. */
-  proficiencies: z.array(referenceSchema).optional(),
+  proficiencies: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("proficiency"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** Spellcasting state. */
   spells: z.strictObject({
     /** Spells known or in the spellbook. */
-    known: z.array(referenceSchema).optional(),
+    known: z.array(z.strictObject({
+      /** Model id of the target. */
+      model: z.literal("spell"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    })).optional(),
     /** Spells prepared today. */
-    prepared: z.array(referenceSchema).optional(),
+    prepared: z.array(z.strictObject({
+      /** Model id of the target. */
+      model: z.literal("spell"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    })).optional(),
     /** Spell slots spent since the last rest, by level. */
     slotsUsed: z.array(z.strictObject({
       level: z.int().min(1).max(9),
@@ -1150,7 +1252,13 @@ export const characterSchema = z.strictObject({
   /** What was picked wherever the rules offered a choice: the skills from a background, the subclass, a fighting style, an ability score increase taken instead of a feat. */
   choices: z.array(z.strictObject({
     /** The class, feature, background or feat that offered the choice. */
-    source: referenceSchema,
+    source: z.strictObject({
+      /** Model id of the target. */
+      model: z.enum(["class", "feature", "background", "feat"]),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    }),
     /** What was chosen. */
     chosen: z.array(referenceSchema).optional(),
     /** The choice in words, when what was chosen is not a resource: an ability increase, a language. */
@@ -1182,15 +1290,39 @@ export const claimSchema = z.strictObject({
   tags: z.array(z.string()).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  claimant: referenceSchema,
-  title: referenceSchema,
+  claimant: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("person"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
+  title: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("title"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
   basis: claimBasisSchema,
   /** The person the claim descends from, when it comes by inheritance or marriage. */
-  through: referenceSchema.optional(),
+  through: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("person"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Whether the claim has been pressed by force. */
   pressed: z.boolean().default(false),
   /** The event that made the claim good or void. */
-  resolvedBy: referenceSchema.optional(),
+  resolvedBy: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("event"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
 });
 export type Claim = z.infer<typeof claimSchema>;
 
@@ -1220,13 +1352,25 @@ export const classSchema = z.strictObject({
   /** Sides of the hit die, e.g. 8 for d8. */
   hitDie: z.int(),
   /** The class this is a subclass of. */
-  subclassOf: referenceSchema.optional(),
+  subclassOf: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("class"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** The abilities the class is built on. */
   primaryAbility: z.array(abilitySchema).optional(),
   /** Saving throws it is proficient in. */
   savingThrows: z.array(abilitySchema).optional(),
   /** Proficiencies every member of the class has. */
-  proficiencies: z.array(referenceSchema).optional(),
+  proficiencies: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("proficiency"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** Proficiencies chosen on taking the class. */
   proficiencyChoices: z.array(choiceSchema).optional(),
   /** Equipment chosen at the start. */
@@ -1237,7 +1381,13 @@ export const classSchema = z.strictObject({
       ability: abilitySchema,
       minimumScore: z.int(),
     })).optional(),
-    proficiencies: z.array(referenceSchema).optional(),
+    proficiencies: z.array(z.strictObject({
+      /** Model id of the target. */
+      model: z.literal("proficiency"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    })).optional(),
   }).optional(),
   /** How the class casts, where it casts. */
   spellcasting: z.strictObject({
@@ -1251,14 +1401,32 @@ export const classSchema = z.strictObject({
     })).optional(),
   }).optional(),
   /** The spell list the class draws on. */
-  spells: z.array(referenceSchema).optional(),
+  spells: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("spell"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** What the class gains at each level. */
   levels: z.array(z.strictObject({
     level: z.int().min(1),
     /** The subclass this row belongs to, for a subclass-specific level. */
-    subclass: referenceSchema.optional(),
+    subclass: z.strictObject({
+      /** Model id of the target. */
+      model: z.literal("class"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    }).optional(),
     proficiencyBonus: z.int().optional(),
-    features: z.array(referenceSchema).optional(),
+    features: z.array(z.strictObject({
+      /** Model id of the target. */
+      model: z.literal("feature"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    })).optional(),
     /** Counters particular to the class at this level: rage count, sneak attack dice, sorcery points. */
     classSpecific: z.record(z.string(), z.unknown()).optional(),
     spellcasting: z.strictObject({
@@ -1330,9 +1498,21 @@ export const cultureSchema = z.strictObject({
     family: z.array(z.string()).optional(),
     place: z.array(z.string()).optional(),
   }).optional(),
-  languages: z.array(referenceSchema).optional(),
+  languages: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("language"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** Species that commonly belong to this culture. */
-  species: z.array(referenceSchema).optional(),
+  species: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("species"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** Prose on how names are formed and used. */
   namingConventions: z.string().optional(),
 });
@@ -1361,7 +1541,13 @@ export const economySchema = z.strictObject({
   tags: z.array(z.string()).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  place: referenceSchema,
+  place: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("place"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
   at: temporalPositionSchema,
   prosperity: prosperitySchema,
   industries: z.array(z.strictObject({
@@ -1402,21 +1588,51 @@ export const encounterSchema = z.strictObject({
   /** What sort of encounter it is. A trap is an encounter, not a thing of its own. */
   kind: encounterKindSchema.optional(),
   /** The campaign it is prepared for. */
-  campaign: referenceSchema.optional(),
+  campaign: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("campaign"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Where it happens. */
-  place: referenceSchema,
+  place: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("place"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
   /** Quadtree cell token of the battle map it is fought on. */
   cell: cellSchema.optional(),
   difficulty: encounterDifficultySchema.optional(),
   /** What the party faces, and how many of each. */
   adversaries: z.array(z.strictObject({
-    actor: referenceSchema,
+    actor: z.strictObject({
+      /** Model id of the target. */
+      model: z.enum(["statblock", "person"]),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    }),
     count: z.int().min(1).default(1),
   })).optional(),
   /** The quest it belongs to. */
-  quest: referenceSchema.optional(),
+  quest: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("quest"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** The event it produced, once it has been played. */
-  played: referenceSchema.optional(),
+  played: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("event"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
 });
 export type Encounter = z.infer<typeof encounterSchema>;
 
@@ -1445,13 +1661,37 @@ export const eventSchema = z.strictObject({
   module: z.string().optional(),
   eventType: eventTypeSchema,
   when: timeSpanSchema,
-  locations: z.array(referenceSchema).optional(),
+  locations: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("place"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   participants: z.array(z.strictObject({
-    actor: referenceSchema,
+    actor: z.strictObject({
+      /** Model id of the target. */
+      model: z.literal("person"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    }),
     role: participantRoleSchema,
   })).optional(),
-  partOf: referenceSchema.optional(),
-  causedBy: z.array(referenceSchema).optional(),
+  partOf: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("event"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
+  causedBy: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("event"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   outcome: z.string().optional(),
 });
 export type Event = z.infer<typeof eventSchema>;
@@ -1480,8 +1720,20 @@ export const factionSchema = z.strictObject({
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   factionType: factionTypeSchema,
-  parent: referenceSchema.optional(),
-  seat: referenceSchema.optional(),
+  parent: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("faction"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
+  seat: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("place"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   founded: temporalPositionSchema.optional(),
   dissolved: temporalPositionSchema.optional(),
   motto: z.string().optional(),
@@ -1551,15 +1803,45 @@ export const itemSchema = z.strictObject({
   module: z.string().optional(),
   itemCategory: itemCategorySchema.optional(),
   /** The kind this is one of: a world's named sword points at the longsword it is. */
-  instanceOf: referenceSchema.optional(),
+  instanceOf: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("item"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Who holds it: a person or a faction. */
-  owner: referenceSchema.optional(),
+  owner: z.strictObject({
+    /** Model id of the target. */
+    model: z.enum(["person", "faction"]),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Where it is, when nobody is carrying it. */
-  location: referenceSchema.optional(),
+  location: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("place"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** What is inside it, for a container. */
-  contains: z.array(referenceSchema).optional(),
+  contains: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("item"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** The event that made it: a forging, a gift, a discovery. */
-  created: referenceSchema.optional(),
+  created: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("event"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** A price in coin. */
   cost: z.strictObject({
     quantity: z.int().min(0),
@@ -1597,7 +1879,13 @@ export const itemSchema = z.strictObject({
     long: z.int().optional(),
   }).optional(),
   /** The item this one is loaded with. */
-  ammunition: referenceSchema.optional(),
+  ammunition: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("item"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Armor class it confers. */
   armorClass: z.strictObject({
     base: z.int(),
@@ -1624,7 +1912,13 @@ export const itemSchema = z.strictObject({
   /** Whether this is one form of a family of items, a +1 sword among +X swords. */
   variant: z.boolean().optional(),
   /** The forms this item comes in. */
-  variants: z.array(referenceSchema).optional(),
+  variants: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("item"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** Who may use it, where the rules restrict it. */
   limitedTo: z.string().optional(),
   /** How a poison is delivered. */
@@ -1658,7 +1952,13 @@ export const languageSchema = z.strictObject({
   module: z.string().optional(),
   status: languageStatusSchema.optional(),
   /** The language this one descends from, if any. */
-  family: referenceSchema.optional(),
+  family: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("language"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** The writing system it is set in, where it has one. */
   script: z.string().optional(),
   /** A phrase in it, for flavour and for a font to be chosen against. */
@@ -1689,8 +1989,20 @@ export const personSchema = z.strictObject({
   tags: z.array(z.string()).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  species: referenceSchema.optional(),
-  culture: referenceSchema.optional(),
+  species: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("species"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
+  culture: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("culture"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   sex: sexSchema.optional(),
   pronouns: z.string().optional(),
   /** A byname earned in life, e.g. 'the Bold'. Rendered as 'Name the Bold'. */
@@ -1699,15 +2011,39 @@ export const personSchema = z.strictObject({
   status: personStatusSchema.default("alive"),
   birth: z.strictObject({
     time: temporalPositionSchema.optional(),
-    place: referenceSchema.optional(),
+    place: z.strictObject({
+      /** Model id of the target. */
+      model: z.literal("place"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    }).optional(),
   }).optional(),
   death: z.strictObject({
     time: temporalPositionSchema.optional(),
-    place: referenceSchema.optional(),
+    place: z.strictObject({
+      /** Model id of the target. */
+      model: z.literal("place"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    }).optional(),
     cause: z.string().optional(),
   }).optional(),
-  memberOf: z.array(referenceSchema).optional(),
-  residence: referenceSchema.optional(),
+  memberOf: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("faction"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
+  residence: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("place"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   occupation: z.string().optional(),
   /** How the person stands with the world's powers, each -100..100. */
   standing: z.strictObject({
@@ -1763,7 +2099,13 @@ export const placeSchema = z.strictObject({
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   placeType: placeTypeSchema,
-  parent: referenceSchema.optional(),
+  parent: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("place"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   feature: featureSchema.optional(),
   /** Quadtree cell token for this place at its own scale (a realm at a coarse level, a building at a fine one). Containment is a prefix relationship. See ADR-006. */
   cell: cellSchema.optional(),
@@ -1778,7 +2120,13 @@ export const placeSchema = z.strictObject({
     arableSquareMiles: z.number().min(0).optional(),
     wildernessSquareMiles: z.number().min(0).optional(),
   }).optional(),
-  controlledBy: referenceSchema.optional(),
+  controlledBy: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("faction"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   founded: temporalPositionSchema.optional(),
 });
 export type Place = z.infer<typeof placeSchema>;
@@ -1806,9 +2154,27 @@ export const populationSchema = z.strictObject({
   tags: z.array(z.string()).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  place: referenceSchema,
-  species: referenceSchema,
-  culture: referenceSchema.optional(),
+  place: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("place"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
+  species: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("species"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
+  culture: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("culture"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   count: z.int().min(0),
   at: temporalPositionSchema,
 });
@@ -1839,7 +2205,13 @@ export const proficiencySchema = z.strictObject({
   module: z.string().optional(),
   proficiencyType: proficiencyTypeSchema,
   /** What the proficiency is in when it is a thing: a skill or an item. A saving throw names an ability instead. */
-  reference: referenceSchema.optional(),
+  reference: z.strictObject({
+    /** Model id of the target. */
+    model: z.enum(["skill", "item"]),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** The ability, for a saving-throw proficiency. */
   ability: abilitySchema.optional(),
 });
@@ -1870,9 +2242,21 @@ export const questSchema = z.strictObject({
   module: z.string().optional(),
   status: questStatusSchema,
   /** The campaign it belongs to, when it belongs to one. */
-  campaign: referenceSchema.optional(),
+  campaign: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("campaign"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Who set it. */
-  giver: referenceSchema.optional(),
+  giver: z.strictObject({
+    /** Model id of the target. */
+    model: z.enum(["person", "faction"]),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** The steps it breaks into, each done or not. */
   objectives: z.array(z.strictObject({
     summary: z.string(),
@@ -1883,7 +2267,13 @@ export const questSchema = z.strictObject({
   about: z.array(referenceSchema).optional(),
   reward: z.string().optional(),
   /** The event that finished it. */
-  resolvedBy: referenceSchema.optional(),
+  resolvedBy: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("event"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
 });
 export type Quest = z.infer<typeof questSchema>;
 
@@ -1912,13 +2302,31 @@ export const relationshipSchema = z.strictObject({
   module: z.string().optional(),
   relationshipType: relationshipTypeSchema,
   /** The first party. For an asymmetric type this is the senior side: the parent, the liege, the mentor. */
-  party1: referenceSchema,
+  party1: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("person"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
   /** The second party. */
-  party2: referenceSchema,
+  party2: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("person"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
   facts: z.array(z.strictObject({
     type: relationshipFactTypeSchema,
     time: temporalPositionSchema.optional(),
-    place: referenceSchema.optional(),
+    place: z.strictObject({
+      /** Model id of the target. */
+      model: z.literal("place"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      name: z.string().optional(),
+    }).optional(),
   })).optional(),
   legitimacy: legitimacySchema.optional(),
   successionOrder: z.int().min(1).optional(),
@@ -1950,7 +2358,13 @@ export const sessionSchema = z.strictObject({
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** The campaign this belongs to. */
-  campaign: referenceSchema,
+  campaign: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("campaign"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
   /** Its place in the sequence. */
   number: z.int().min(1).optional(),
   playedOn: z.iso.datetime().optional(),
@@ -1960,7 +2374,13 @@ export const sessionSchema = z.strictObject({
   /** What happened, in the group's words. */
   recap: z.string().optional(),
   /** Events in the world's record that this session created. */
-  produced: z.array(referenceSchema).optional(),
+  produced: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("event"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** The stretch of in-world time the session covered. */
   coveredInWorld: timeSpanSchema.optional(),
 });
@@ -2019,7 +2439,13 @@ export const speciesSchema = z.strictObject({
   module: z.string().optional(),
   size: sizeSchema.optional(),
   /** The species this is a subspecies of. */
-  parent: referenceSchema.optional(),
+  parent: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("species"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Chromosome number to the die rolled for each allele, or 'sex' for the sex chromosome. */
   chromosomes: z.record(z.string(), z.string().regex(new RegExp("^(d[0-9]+|sex)$"))).optional(),
   /** Dice rolled for the X and Y alleles of the sex chromosome. */
@@ -2130,7 +2556,13 @@ export const spellSchema = z.strictObject({
     size: z.int(),
   }).optional(),
   /** The classes whose lists it appears on. */
-  classes: z.array(referenceSchema).optional(),
+  classes: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("class"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
 });
 export type Spell = z.infer<typeof spellSchema>;
 
@@ -2159,9 +2591,21 @@ export const statblockSchema = z.strictObject({
   module: z.string().optional(),
   creatureType: creatureTypeSchema.optional(),
   /** The species this represents, where it represents one. */
-  species: referenceSchema.optional(),
+  species: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("species"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** The person this represents, for a statted individual. */
-  person: referenceSchema.optional(),
+  person: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("person"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   size: sizeSchema.optional(),
   alignment: alignmentSchema.optional(),
   armorClass: z.int().optional(),
@@ -2181,16 +2625,34 @@ export const statblockSchema = z.strictObject({
     charisma: z.int().optional(),
   }).optional(),
   /** Saving throws and skills it is proficient in. */
-  proficiencies: z.array(referenceSchema).optional(),
+  proficiencies: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("proficiency"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   damageVulnerabilities: z.array(damageTypeSchema).optional(),
   damageResistances: z.array(damageTypeSchema).optional(),
   damageImmunities: z.array(damageTypeSchema).optional(),
   /** Conditions it cannot suffer. */
-  conditionImmunities: z.array(referenceSchema).optional(),
+  conditionImmunities: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("condition"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   /** Darkvision, blindsight, passive perception and the rest. */
   senses: z.record(z.string(), z.string()).optional(),
   /** Languages it knows. */
-  languages: z.array(referenceSchema).optional(),
+  languages: z.array(z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("language"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  })).optional(),
   challengeRating: z.number().optional(),
   proficiencyBonus: z.int().optional(),
   experience: z.int().optional(),
@@ -2250,12 +2712,36 @@ export const tenureSchema = z.strictObject({
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** The title held. */
-  title: referenceSchema,
-  holder: referenceSchema,
+  title: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("title"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
+  holder: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("person"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
   /** The event that started this tenure (succession, coronation, founding). */
-  began: referenceSchema.optional(),
+  began: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("event"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** The event that ended it (death, abdication, deposition). */
-  ended: referenceSchema.optional(),
+  ended: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("event"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
 });
 export type Tenure = z.infer<typeof tenureSchema>;
 
@@ -2283,7 +2769,13 @@ export const titleSchema = z.strictObject({
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** The faction this title belongs to. */
-  faction: referenceSchema,
+  faction: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("faction"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }),
   /** Lower is higher: 0 for the sovereign seat. */
   rank: z.int().min(0).optional(),
   successionLaw: successionLawSchema,
@@ -2320,7 +2812,13 @@ export const workSchema = z.strictObject({
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   workType: workTypeSchema,
-  author: referenceSchema.optional(),
+  author: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("person"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   about: z.array(referenceSchema).optional(),
   text: z.string().optional(),
   language: z.string().optional(),
@@ -2350,7 +2848,13 @@ export const worldSchema = z.strictObject({
   tags: z.array(z.string()).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  calendar: referenceSchema.optional(),
+  calendar: z.strictObject({
+    /** Model id of the target. */
+    model: z.literal("calendar"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    name: z.string().optional(),
+  }).optional(),
   /** Default coordinate reference system IRI for this world's maps. */
   crs: z.url().optional(),
   genre: z.string().optional(),

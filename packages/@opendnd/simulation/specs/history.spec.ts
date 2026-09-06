@@ -241,7 +241,7 @@ describe('historyGenerator', () => {
       birth: {
         time: { trs: calendar.id, year: born, precision: 'year' as const },
       },
-      memberOf: [{ model: 'faction', id: house.id, name: house.name }],
+      memberOf: [{ model: 'faction' as const, id: house.id, name: house.name }],
     });
     const lord = founder('lord', 'male', 970);
     const lady = founder('lady', 'female', 975);

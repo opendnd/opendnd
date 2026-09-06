@@ -15,6 +15,10 @@
     {
       "predicate": "party2",
       "target": "Person"
+    },
+    {
+      "predicate": "facts.place",
+      "target": "Place"
     }
   ],
   "mapsTo": [

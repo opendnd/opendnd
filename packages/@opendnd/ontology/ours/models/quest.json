@@ -19,6 +19,10 @@
     {
       "predicate": "resolvedBy",
       "target": "Event"
+    },
+    {
+      "predicate": "giver",
+      "target": "Faction"
     }
   ],
   "mapsTo": [

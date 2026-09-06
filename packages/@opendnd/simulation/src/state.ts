@@ -7,7 +7,7 @@ import type {
   Place,
   Population,
   Prosperity,
-  Reference,
+  ReferenceTo,
   Relationship,
   Tenure,
   Title,
@@ -108,7 +108,7 @@ export class HistoryState {
   }
 
   /** Where a house's figures live, if it has a seat. */
-  seatOf(houseId: string): Reference | undefined {
+  seatOf(houseId: string): ReferenceTo<'place'> | undefined {
     return this.houses.get(houseId)?.seat;
   }
 

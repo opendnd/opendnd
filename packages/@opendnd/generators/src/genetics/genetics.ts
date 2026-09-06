@@ -1,5 +1,5 @@
 import { Rng, sidesOf } from '@opendnd/random';
-import type { Reference, Sex, Species } from '@opendnd/types';
+import type { ReferenceTo, Sex, Species } from '@opendnd/types';
 import {
   Chromosomes,
   Expression,
@@ -275,6 +275,6 @@ function chromosomeKeys(layout: Readonly<Record<string, string>>): string[] {
   return Object.keys(layout).sort((a, b) => Number(a) - Number(b));
 }
 
-function speciesRef(species: Species): Reference {
+function speciesRef(species: Species): ReferenceTo<'species'> {
   return { model: 'species', id: species.id, name: species.name };
 }

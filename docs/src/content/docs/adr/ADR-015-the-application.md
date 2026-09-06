@@ -31,3 +31,8 @@ Two further things are settled before any page is drawn. Working on the applicat
 - A reference is picked by searching names across every model, because the schema does not say which models a `Reference` may point at. Constraining that is an ontology decision.
 - Tests run in jsdom with a few polyfills for what it lacks, and the component library's popups have been exercised there, so the reference picker is tested end to end without a browser.
 - The infrastructure for the application's bucket and distribution is not yet written; the stage configuration carries the sign-in addresses it will need. Managing members, enabling modules, generating and simulating from the application, exporting a world, and the map itself are all owed.
+
+## Decided later, 2026-09-06
+
+- **Links are made from the schemas, not from a list.** A record's page offers to make records linked to it: a new record whose schema fixes a reference field to this model, with that field filled in; a new record of a model this record's own reference fields are fixed to, added to that field once made; or both at once when the models point at each other. Fields that may point at anything offer nothing. This is what makes the campaign layer usable without the application knowing it exists: a session's page offers the event it produced because `session.produced` is fixed to `event`, and a campaign's page offers a session because `session.campaign` is fixed to `campaign`. A new model with a fixed reference joins in with no change here.
+- **What links here reads through the schemas too.** Each referring record says which of its fields carries the reference, and when it carries a date it is listed in date order, so sessions read as a chronology and holders as a roll.

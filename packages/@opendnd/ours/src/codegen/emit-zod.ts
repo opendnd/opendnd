@@ -1,6 +1,6 @@
 import { toCamelCase, toPascalCase, propertyKey } from './naming';
 import { OursBundle, vocabularySchemaUrl } from '../bundle';
-import { JsonSchema, JsonSchemaType } from '../resources';
+import { JsonSchema, JsonSchemaType, Model } from '../resources';
 import { splitRef } from '../validate';
 
 /**
@@ -228,7 +228,7 @@ class EmitContext {
       this.refNames.set(`${model.schema}#/`, model.name);
       decls.push({
         name: model.name,
-        schema,
+        schema: this.typeReferences(model, schema),
         doc: model.schema,
         description: model.description,
       });
@@ -485,6 +485,99 @@ class EmitContext {
     return name;
   }
 
+  /**
+   * The manifest's relationships, written into the schema.
+   *
+   * A relationship says which model a Reference-typed property points at,
+   * and the schema itself carries a plain Reference. The claim is written
+   * into the emitted shape: the property's `model` becomes the target's id,
+   * or one of several when relationships share a predicate. Validation then
+   * refuses a pointer at the wrong model, and a client reading the schema
+   * knows what the field may hold.
+   */
+  private typeReferences(model: Model, schema: JsonSchema): JsonSchema {
+    const targets = new Map<string, string[]>();
+    for (const relationship of model.relationships ?? []) {
+      const target = this.modelId(relationship.target);
+      // An unknown target is the validator's to report, not the emitter's.
+      if (target === undefined) continue;
+      const ids = targets.get(relationship.predicate) ?? [];
+      if (!ids.includes(target)) ids.push(target);
+      targets.set(relationship.predicate, ids);
+    }
+    let typed = schema;
+    for (const [predicate, ids] of [...targets.entries()].sort(([a], [b]) =>
+      a.localeCompare(b),
+    )) {
+      typed = this.typeAt(typed, model.schema, predicate.split('.'), ids);
+    }
+    return typed;
+  }
+
+  private modelId(target: string): string | undefined {
+    for (const model of this.bundle.models.values()) {
+      if (model.id === target || model.name === target) return model.id;
+    }
+    return undefined;
+  }
+
+  /**
+   * A copy of `node` with the Reference at `segments` fixed to `ids`. A
+   * `$ref` met on the way is copied inline, so the rewrite lands on this
+   * model's own shape and the shared definition stays as it is.
+   */
+  private typeAt(
+    node: JsonSchema,
+    doc: string,
+    segments: readonly string[],
+    ids: readonly string[],
+  ): JsonSchema {
+    if (segments.length === 0) {
+      return node.items
+        ? { ...node, items: typedReference(node.items, ids) }
+        : typedReference(node, ids);
+    }
+    let here = node;
+    let hereDoc = doc;
+    if (node.$ref !== undefined) {
+      const resolved = this.resolveObject(node, doc);
+      here = rehome(
+        {
+          ...resolved.schema,
+          description: node.description ?? resolved.schema.description,
+        },
+        resolved.doc,
+      );
+      hereDoc = resolved.doc;
+    }
+    if (here.items) {
+      return {
+        ...here,
+        items: this.typeAt(here.items, hereDoc, segments, ids),
+      };
+    }
+    const [head, ...rest] = segments as [string, ...string[]];
+    if (here.properties?.[head]) {
+      return {
+        ...here,
+        properties: {
+          ...here.properties,
+          [head]: this.typeAt(here.properties[head], hereDoc, rest, ids),
+        },
+      };
+    }
+    if (here.allOf) {
+      return {
+        ...here,
+        allOf: here.allOf.map((part) =>
+          this.resolveObject(part, hereDoc).schema.properties?.[head]
+            ? this.typeAt(part, hereDoc, segments, ids)
+            : part,
+        ),
+      };
+    }
+    return node;
+  }
   private withDefault(expr: string, schema: JsonSchema): string {
     return schema.default === undefined
       ? expr
@@ -492,6 +585,28 @@ class EmitContext {
   }
 }
 
+/** A Reference whose `model` is fixed to one of `ids`; anything else is left alone. */
+function typedReference(leaf: JsonSchema, ids: readonly string[]): JsonSchema {
+  if (!/\/Reference$/.test(leaf.$ref ?? '')) return leaf;
+  return {
+    type: 'object',
+    ...(leaf.description ? { description: leaf.description } : {}),
+    properties: {
+      model: {
+        type: 'string',
+        description: 'Model id of the target.',
+        ...(ids.length === 1 ? { const: ids[0] } : { enum: [...ids] }),
+      },
+      id: { type: 'string', format: 'uuid' },
+      name: {
+        type: 'string',
+        description: 'Denormalized display name, for convenience.',
+      },
+    },
+    required: ['model', 'id'],
+    additionalProperties: false,
+  };
+}
 /** Deep-copy `schemas`, turning `#/...` refs into `<doc>#/...` refs. */
 function rehomeRefs<T extends Record<string, JsonSchema>>(
   schemas: T,

@@ -2,6 +2,7 @@ import {
   FeatherIcon,
   HourglassIcon,
   PencilIcon,
+  PlusIcon,
   Trash2Icon,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -14,7 +15,15 @@ import { useOntology } from '../app/ontology';
 import { recordPath, useWorld } from '../app/world';
 import { Article } from '../components/Article';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
-import { describe, humanize } from '../schema/fields';
+import { type Field, describe } from '../schema/fields';
+import {
+  type RelatedAction,
+  dateOf,
+  labelOf,
+  referringFields,
+  relatedActions,
+  rootOf,
+} from '../schema/related';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,7 +35,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -70,6 +79,10 @@ export function Record() {
   const history = useRequest(
     () => api.history(world.id, model, id),
     [api, world.id, model, id],
+  );
+  const actions = useMemo(
+    () => relatedActions(ontology, model),
+    [ontology, model],
   );
 
   const remove = async () => {
@@ -207,6 +220,36 @@ export function Record() {
           </CardContent>
         </Card>
 
+        {canEdit && !asOf && actions.length > 0 && (
+          <Card size="sm">
+            <CardHeader>
+              <CardTitle>Add a linked record</CardTitle>
+              <CardDescription>
+                New records that refer to this one, or that it refers to, with
+                the link already made.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-1.5">
+                {actions.map((action) => (
+                  <Link
+                    key={`${action.target}/${action.set ?? ''}/${action.link ?? ''}`}
+                    className={buttonVariants({
+                      variant: 'outline',
+                      size: 'xs',
+                    })}
+                    title={action.description}
+                    to={createPath(world.id, model, id, action)}
+                  >
+                    <PlusIcon data-icon="inline-start" />
+                    {action.label}
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card size="sm">
           <CardHeader>
             <CardTitle>What links here</CardTitle>
@@ -218,7 +261,11 @@ export function Record() {
                 Nothing refers to this yet.
               </p>
             )}
-            <ReferenceList hits={references.data ?? []} world={world.id} />
+            <ReferenceList
+              hits={references.data ?? []}
+              world={world.id}
+              id={id}
+            />
           </CardContent>
         </Card>
 
@@ -257,30 +304,74 @@ export function Record() {
   );
 }
 
+/** Where a new record linked to this one is made. */
+function createPath(
+  world: string,
+  model: string,
+  id: string,
+  action: RelatedAction,
+): string {
+  const query = new URLSearchParams({ ref: `${model}/${id}` });
+  if (action.set) query.set('set', action.set);
+  if (action.link) query.set('link', action.link);
+  return `/worlds/${world}/${action.target}/new?${query.toString()}`;
+}
+
+/**
+ * What refers to a record, by model, each entry saying through which field
+ * and, when the record carries a date, when: a list of sessions reads as a
+ * chronology, a list of holders as a roll.
+ */
 function ReferenceList(props: {
   readonly hits: readonly ReferenceHit[];
   readonly world: string;
+  readonly id: string;
 }) {
-  const groups = new Map<string, ReferenceHit[]>();
-  for (const hit of props.hits) {
-    groups.set(hit.model, [...(groups.get(hit.model) ?? []), hit]);
-  }
+  const ontology = useOntology();
+  const groups = useMemo(() => {
+    const roots = new Map<string, Field | undefined>();
+    const byModel = new Map<string, Entry[]>();
+    for (const hit of props.hits) {
+      if (!roots.has(hit.model)) {
+        roots.set(hit.model, rootOf(ontology, hit.model));
+      }
+      const root = roots.get(hit.model);
+      const entry: Entry = {
+        hit,
+        via: referringFields(hit.resource, props.id).map((name) =>
+          labelOf(root, name),
+        ),
+        date: dateOf(hit.resource, root),
+      };
+      byModel.set(hit.model, [...(byModel.get(hit.model) ?? []), entry]);
+    }
+    for (const entries of byModel.values()) entries.sort(compareEntries);
+    return byModel;
+  }, [props.hits, props.id, ontology]);
+
   return (
     <div className="flex flex-col gap-3">
-      {[...groups.entries()].map(([model, hits]) => (
+      {[...groups.entries()].map(([model, entries]) => (
         <div key={model}>
           <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {humanize(model)}
+            {ontology.label(model)}
           </h3>
           <ul className="mt-1 flex flex-col gap-0.5">
-            {hits.map((hit) => (
-              <li key={hit.resource.id}>
+            {entries.map(({ hit, via, date }) => (
+              <li key={hit.resource.id} className="flex flex-col">
                 <Link
                   className="underline-offset-4 hover:underline"
                   to={recordPath(props.world, model, hit.resource.id)}
                 >
                   {hit.resource.name ?? hit.resource.id}
                 </Link>
+                {(via.length > 0 || date) && (
+                  <span className="text-xs text-muted-foreground">
+                    {via.length > 0 && `as ${via.join(', ').toLowerCase()}`}
+                    {via.length > 0 && date && ' · '}
+                    {date && `${date.label.toLowerCase()} ${formatDate(date)}`}
+                  </span>
+                )}
               </li>
             ))}
           </ul>
@@ -288,4 +379,28 @@ function ReferenceList(props: {
       ))}
     </div>
   );
+}
+
+interface Entry {
+  readonly hit: ReferenceHit;
+  readonly via: readonly string[];
+  readonly date: ReturnType<typeof dateOf>;
+}
+
+/** Dated entries first, in date order; the rest by name. */
+function compareEntries(a: Entry, b: Entry): number {
+  if (a.date && b.date) return a.date.value.localeCompare(b.date.value);
+  if (a.date) return -1;
+  if (b.date) return 1;
+  return String(a.hit.resource.name ?? '').localeCompare(
+    String(b.hit.resource.name ?? ''),
+  );
+}
+
+function formatDate(date: NonNullable<ReturnType<typeof dateOf>>): string {
+  const parsed = new Date(date.value);
+  if (Number.isNaN(parsed.getTime())) return date.value;
+  return date.kind === 'date'
+    ? parsed.toLocaleDateString(undefined, { timeZone: 'UTC' })
+    : parsed.toLocaleString();
 }

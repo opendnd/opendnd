@@ -8,6 +8,7 @@ import { type AppServices, AppProvider } from 'src/app/context';
 import { OntologyProvider } from 'src/app/ontology';
 import { WorldProvider } from 'src/app/world';
 import { SessionStore, devSession } from 'src/auth/session';
+import type { Ontology } from 'src/schema/openapi';
 import { WORLD_ID, petOntology } from './fixtures/ontology';
 
 export type Handler = (
@@ -74,16 +75,21 @@ export function renderInWorld(
     readonly fetch?: typeof fetch;
     readonly world?: World;
     readonly path?: string;
+    /** Another ontology than the pet one, for models that refer to each other. */
+    readonly ontology?: Ontology;
+    /** The route pattern to mount `ui` at, when it reads path parameters. */
+    readonly route?: string;
   } = {},
 ) {
   const services = testServices(options.fetch ?? fakeFetch().fetch);
   const world = options.world ?? testWorld;
+  const ontology = options.ontology ?? petOntology();
   const router = createMemoryRouter(
     [
       {
-        path: '*',
+        path: options.route ?? '*',
         element: (
-          <OntologyProvider ontology={petOntology()}>
+          <OntologyProvider ontology={ontology}>
             <WorldProvider world={world}>{ui}</WorldProvider>
           </OntologyProvider>
         ),
