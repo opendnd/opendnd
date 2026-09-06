@@ -32,6 +32,10 @@ A model the API can generate has a Generate button on its list page. The form th
 
 A world, a house or a place has a Simulate history button on its page for editors and owners. The form is built from the simulation's input as `/v1/models` describes it: how many years, from which, and the tunable rates with their defaults stated. A run is a rehearsal first: the page shows what would be produced, by kind, and the consistency findings over it, and nothing is saved. Keep runs the same request again with `save` set, which the API does deterministically, so what was looked at is what is kept. A viewer is told that a run is a write and cannot start one.
 
+## Writing about a record
+
+Every record has a Write about this button for editors and owners. The form comes from the request as the API describes it, except that the model is offered as a choice among what the deployment can actually serve, from `/v1/llm`, with the task's configured model named as what writes when nothing is chosen. The model is held to the facts on file: the record's fields and everything that refers to it, which the draft shows so they can be checked. A draft is read before it is kept, because a model does not say the same thing twice; keeping imports the very text that was read, and writing again is another call and another line on the world's spend.
+
 ## A world's settings
 
 An owner has a Settings page for each world: its name, visibility and summary, which the world's own record follows; who belongs, with their roles, and who is invited by email and has not yet signed in; what the world has spent on language model calls; and archiving. An archived world keeps everything and appears under "Put away" on the worlds page, where an owner can restore it. The API allows none of this to anyone but an owner, and the page says so to anyone else.

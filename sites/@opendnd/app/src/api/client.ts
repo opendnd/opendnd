@@ -1,6 +1,8 @@
 import type {
+  AuthorResult,
   HistoryEntry,
   Invitation,
+  LlmCatalogue,
   Me,
   Member,
   ModelInfo,
@@ -265,6 +267,23 @@ export class ApiClient {
   ): Promise<{ imported: number }> {
     return this.body('POST', `/v1/worlds/${world}/$import`, {
       body: { resources },
+    });
+  }
+
+  /** The language models the deployment can write with. */
+  llm(): Promise<LlmCatalogue> {
+    return this.body('GET', '/v1/llm');
+  }
+
+  /** Ask a language model to write about a record. Nothing is saved unless asked. */
+  author(
+    world: string,
+    model: string,
+    id: string,
+    input: unknown,
+  ): Promise<AuthorResult> {
+    return this.body('POST', `/v1/worlds/${world}/${model}/${id}/$author`, {
+      body: input,
     });
   }
 

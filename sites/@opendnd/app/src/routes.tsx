@@ -1,5 +1,6 @@
 import { Navigate, type RouteObject } from 'react-router';
 import { RequireSession, Shell } from './components/Layout';
+import { Author } from './pages/Author';
 import { Callback } from './pages/Callback';
 import { Edit } from './pages/Edit';
 import { ErrorPage } from './pages/ErrorPage';
@@ -45,6 +46,7 @@ export const routes: RouteObject[] = [
                   { path: ':model/:id', element: <Record /> },
                   { path: ':model/:id/edit', element: <Edit /> },
                   { path: ':model/:id/simulate', element: <Simulate /> },
+                  { path: ':model/:id/author', element: <Author /> },
                 ],
               },
             ],

@@ -30,6 +30,43 @@ export interface ModelInfo {
   readonly generate?: GeneratorInfo;
   /** Present when a history can be simulated over one of these. */
   readonly simulate?: GeneratorInfo;
+  /** Present when a language model can be asked to write about one of these. */
+  readonly author?: GeneratorInfo;
+}
+
+/** A language model the deployment can write with. */
+export interface LlmModel {
+  readonly id: string;
+  readonly provider: string;
+  readonly name: string;
+  /** Free at the point of use: a model on the deployment's own machine. */
+  readonly local: boolean;
+}
+
+export interface LlmCatalogue {
+  /** The writing task, and the model it is configured with when one is. */
+  readonly task: { readonly name: string; readonly model?: string };
+  readonly models: readonly LlmModel[];
+}
+
+/** What a model call cost. Money is in millionths of a dollar. */
+export interface Spend {
+  readonly model: string;
+  readonly provider: string;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly costMicros: number;
+  readonly chargeMicros: number;
+  readonly cached: boolean;
+}
+
+/** What asking a model to write produced. */
+export interface AuthorResult {
+  /** The work, carrying its `model`, so it can be imported as it is. */
+  readonly work: Resource;
+  readonly saved: boolean;
+  readonly facts: readonly string[];
+  readonly spend?: Spend;
 }
 
 export interface GeneratorInfo {

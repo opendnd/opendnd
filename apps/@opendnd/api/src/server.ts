@@ -1,3 +1,4 @@
+import { modelsFromEnv } from '@opendnd/llm';
 import { createApp } from './app';
 import { createPool } from './db';
 import { resolverFromEnv } from './identity';
@@ -14,7 +15,12 @@ if (!identity) {
   );
 }
 
-const app = createApp({ pool, ...(identity ? { identity } : {}) });
+const app = createApp({
+  pool,
+  ...(identity ? { identity } : {}),
+  // Language models as the environment configures them, attributed per request.
+  models: (request) => modelsFromEnv(request),
+});
 
 console.log(`OpenDnD API on http://localhost:${port}`);
 

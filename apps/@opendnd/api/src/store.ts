@@ -121,7 +121,8 @@ const SORTS: Record<SortKey, { column: string; cast: string }> = {
  */
 export class Store {
   constructor(
-    private readonly client: PoolClient,
+    /** The request's connection, for anything else that must land in the same transaction. */
+    readonly client: PoolClient,
     private readonly world: string,
   ) {}
 

@@ -306,3 +306,26 @@ describe('the API client and simulation', () => {
     expect(await calls[0]!.json()).toEqual({ years: 20, save: false });
   });
 });
+
+describe('the API client and writing', () => {
+  it('lists the language models and asks one to write about a record', async () => {
+    const { fetch, calls } = fakeFetch({
+      'GET /v1/llm': () => ({
+        task: { name: 'chronicle' },
+        models: [
+          { id: 'm', provider: 'ollama', name: 'm:latest', local: true },
+        ],
+      }),
+      'POST /v1/worlds/w/person/p/$author': () => ({
+        work: { id: 'k', model: 'work', text: 'Words.' },
+        saved: false,
+        facts: ['Person: Ada'],
+      }),
+    });
+    const { api } = client(fetch);
+    expect((await api.llm()).models[0]?.id).toBe('m');
+    const result = await api.author('w', 'person', 'p', { words: 100 });
+    expect(result.work.text).toBe('Words.');
+    expect(await calls[1]!.json()).toEqual({ words: 100 });
+  });
+});

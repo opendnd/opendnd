@@ -1,4 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
+import {
+  DEFAULT_TASKS,
+  ModelError,
+  type ModelSpec,
+  Models,
+  type Provider,
+  asTaskConfig,
+} from '@opendnd/llm';
 import type { Pool } from 'pg';
 import { MODEL_IDS, createApp } from 'src/app';
 import { inWorld } from 'src/db';
@@ -1681,3 +1689,223 @@ describe('the API: hardening', () => {
     expect(health.body).toEqual({ ok: true, database: 'ok' });
   });
 });
+
+describe('the API: writing about a record', () => {
+  let pool: Pool;
+  let app: ReturnType<typeof createApp>;
+  let drew: ReturnType<typeof client>;
+  let reader: ReturnType<typeof client>;
+  let world: string;
+  let person: string;
+
+  /** A model that answers from a script, so no network is needed. */
+  const spec: ModelSpec = {
+    id: 'test-model',
+    provider: 'scripted',
+    modelId: 'scripted-1',
+    contextWindow: 8192,
+    maxOutputTokens: 1024,
+    capabilities: [],
+  };
+  const script: (string | ModelError)[] = [];
+  const scripted: Provider = {
+    id: 'scripted',
+    async list() {
+      return ['scripted-1'];
+    },
+    async complete(model, request) {
+      const next = script.shift();
+      if (next === undefined) throw new Error('the script ran out');
+      if (next instanceof ModelError) throw next;
+      // The facts travel in the prompt; keep them visible for the assertions.
+      lastPrompt = request.messages.map((m) => String(m.content)).join('\n');
+      return {
+        text: next,
+        usage: { inputTokens: 300, outputTokens: 120 },
+        stopReason: 'stop' as const,
+        modelId: model.modelId,
+      };
+    },
+  };
+  let lastPrompt = '';
+
+  beforeAll(async () => {
+    pool = await connect();
+    app = createApp({
+      pool,
+      identity: new DevIdentityResolver(),
+      models: (request) =>
+        new Models({
+          providers: [scripted],
+          models: [spec],
+          tasks: {
+            chronicle: {
+              ...asTaskConfig(DEFAULT_TASKS.chronicle),
+              model: 'test-model',
+            },
+          },
+          ...(request.ledger ? { ledger: request.ledger } : {}),
+          ...(request.world ? { world: request.world } : {}),
+          ...(request.requestedBy ? { requestedBy: request.requestedBy } : {}),
+        }),
+    });
+    drew = client(app, who('drew-author'));
+    reader = client(app, who('reader-author'));
+    world = (
+      (await drew.post('/v1/worlds', { name: 'Written' })).body as {
+        id: string;
+      }
+    ).id;
+    person = (
+      (
+        await drew.post(`/v1/worlds/${world}/person`, {
+          name: 'Ilsabet Marrow',
+          description: 'A river-warden of the ford.',
+          sex: 'female',
+          status: 'alive',
+        })
+      ).body as { id: string }
+    ).id;
+    await reader.get('/v1/me');
+    await drew.post(`/v1/worlds/${world}/members`, {
+      subject: who('reader-author'),
+      role: 'viewer',
+    });
+  });
+
+  afterAll(async () => {
+    if (!pool) return;
+    await pool.query('delete from layer where id = $1', [world]);
+    await pool.query('delete from app_user where subject = any($1)', [
+      [who('drew-author'), who('reader-author')],
+    ]);
+    await pool.end();
+  });
+
+  it('offers writing about every model, and lists the models it can write with', async () => {
+    const models = (
+      (await drew.get('/v1/models')).body as {
+        models: {
+          author?: { input: { properties: Record<string, unknown> } };
+        }[];
+      }
+    ).models;
+    expect(models.length).toBeGreaterThan(0);
+    for (const entry of models) {
+      expect(entry.author?.input.properties).toHaveProperty('workType');
+    }
+
+    const llm = (await drew.get('/v1/llm')).body as {
+      task: { name: string; model?: string };
+      models: { id: string; provider: string; local: boolean }[];
+    };
+    expect(llm.task).toEqual({ name: 'chronicle', model: 'test-model' });
+    expect(llm.models).toContainEqual(
+      expect.objectContaining({
+        id: 'test-model',
+        provider: 'scripted',
+        local: true,
+      }),
+    );
+    expect((await anonymousClient(app).get('/v1/llm')).status).toBe(401);
+  });
+
+  it('writes from the facts on file, bills the world, and saves nothing until asked', async () => {
+    script.push('Ilsabet Marrow kept the ford and took stories for tolls.');
+    const { status, body } = await drew.post(
+      `/v1/worlds/${world}/person/${person}/$author`,
+      { words: 80 },
+    );
+    expect(status).toBe(200);
+    const result = body as {
+      work: Record<string, unknown> & {
+        about: { id: string }[];
+        provenance: { generatedBy: string; parameters: { model: string } };
+      };
+      saved: boolean;
+      facts: string[];
+      spend: { model: string; inputTokens: number; costMicros: number };
+    };
+    expect(result.saved).toBe(false);
+    expect(result.work.text).toBe(
+      'Ilsabet Marrow kept the ford and took stories for tolls.',
+    );
+    expect(result.work.model).toBe('work');
+    expect(result.work.workType).toBe('article');
+    expect(result.work.about[0]?.id).toBe(person);
+    expect(result.work.provenance.generatedBy).toMatch(/^article@/);
+    expect(result.work.provenance.parameters.model).toBe('scripted:scripted-1');
+    // What the model was allowed to say came from the record.
+    expect(result.facts).toContain('Person: Ilsabet Marrow');
+    expect(result.facts).toContain('Sex: female');
+    expect(lastPrompt).toContain('A river-warden of the ford.');
+    expect(result.spend).toMatchObject({
+      model: 'test-model',
+      inputTokens: 300,
+      costMicros: 0,
+    });
+
+    // The call is on the bill even though nothing was kept.
+    const usage = (await drew.get(`/v1/worlds/${world}/usage`)).body as {
+      calls: number;
+    };
+    expect(usage.calls).toBe(1);
+    const works = (await drew.get(`/v1/worlds/${world}/work`)).body as {
+      resources: unknown[];
+    };
+    expect(works.resources).toHaveLength(0);
+  });
+
+  it('keeps the work when asked, so it refers to its subject like any record', async () => {
+    script.push('A chronicle of the ford.');
+    const { status, body } = await drew.post(
+      `/v1/worlds/${world}/person/${person}/$author`,
+      { workType: 'chronicle', save: true },
+    );
+    expect(status).toBe(200);
+    const result = body as {
+      saved: boolean;
+      work: { id: string; perspective: string };
+    };
+    expect(result.saved).toBe(true);
+    expect(result.work.perspective).toBe('in-universe');
+
+    const referring = (
+      (await drew.get(`/v1/worlds/${world}/person/${person}/references`))
+        .body as { references: { model: string; resource: { id: string } }[] }
+    ).references;
+    expect(referring).toContainEqual(
+      expect.objectContaining({
+        model: 'work',
+        resource: expect.objectContaining({ id: result.work.id }),
+      }),
+    );
+  });
+
+  it('reports a model that is not served here, and one that fails', async () => {
+    const unknown = await drew.post(
+      `/v1/worlds/${world}/person/${person}/$author`,
+      { model: 'nowhere:latest' },
+    );
+    expect(unknown.status).toBe(400);
+    expect((unknown.body as { code: string }).code).toBe('no-model');
+
+    script.push(new ModelError('the model is on fire', 'fatal', 'scripted'));
+    const failed = await drew.post(
+      `/v1/worlds/${world}/person/${person}/$author`,
+      {},
+    );
+    expect(failed.status).toBe(502);
+    expect((failed.body as { code: string }).code).toBe('model-failed');
+
+    // A viewer may read the world, not spend its money.
+    expect(
+      (await reader.post(`/v1/worlds/${world}/person/${person}/$author`, {}))
+        .status,
+    ).toBe(403);
+  });
+});
+
+function anonymousClient(app: ReturnType<typeof createApp>) {
+  return client(app);
+}

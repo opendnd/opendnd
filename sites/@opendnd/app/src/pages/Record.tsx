@@ -1,4 +1,9 @@
-import { HourglassIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import {
+  FeatherIcon,
+  HourglassIcon,
+  PencilIcon,
+  Trash2Icon,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import { Problem } from '../api/client';
@@ -136,6 +141,17 @@ export function Record() {
               >
                 <HourglassIcon data-icon="inline-start" />
                 Simulate history
+              </Button>
+            )}
+            {ontology.model(model)?.author && (
+              <Button
+                variant="outline"
+                render={
+                  <Link to={`${recordPath(world.id, model, id)}/author`} />
+                }
+              >
+                <FeatherIcon data-icon="inline-start" />
+                Write about this
               </Button>
             )}
             <AlertDialog>

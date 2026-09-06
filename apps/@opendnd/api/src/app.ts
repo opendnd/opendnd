@@ -1,3 +1,12 @@
+import { articleAuthor } from '@opendnd/generators';
+import {
+  BudgetExceededError,
+  type Ledger,
+  ModelError,
+  type Models,
+  NoModelError,
+  modelsFromEnv,
+} from '@opendnd/llm';
 import { type ModelId, modelInfo, models, vocabularies } from '@opendnd/types';
 import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -5,6 +14,7 @@ import { type RequestIdVariables, requestId } from 'hono/request-id';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import type { Pool, PoolClient } from 'pg';
 import { z } from 'zod';
+import { AUTHOR, authorAbout } from './author';
 import { inTransaction, inWorld } from './db';
 import { assertFormat, exportWorld } from './export';
 import {
@@ -21,6 +31,7 @@ import {
   type IdentityResolver,
   UnauthorizedError,
 } from './identity';
+import { PgLedger } from './ledger';
 import { openApiDocument } from './openapi';
 import { SCOPE_MODELS, SIMULATION, simulate } from './simulate';
 import {
@@ -72,6 +83,16 @@ type Scoped = (
   identity: Identity | undefined,
 ) => Promise<Response>;
 
+/** What a request tells the language models about itself, for the bill. */
+export interface ModelsRequest {
+  readonly world?: string;
+  readonly requestedBy?: string;
+  readonly ledger?: Ledger;
+}
+
+/** Language models for one request, attributed to its world and caller. */
+export type ModelsFactory = (request: ModelsRequest) => Models;
+
 export interface AppOptions {
   readonly pool: Pool;
   /** Absent means every request is anonymous, which fails closed. */
@@ -81,6 +102,11 @@ export interface AppOptions {
    * for a public API whose authorization is the bearer token, not the origin.
    */
   readonly origins?: readonly string[];
+  /**
+   * Language models for a request. Defaults to what the environment
+   * configures, which with nothing set is an Ollama on the usual port.
+   */
+  readonly models?: ModelsFactory;
 }
 
 /** Every model id, so the route table can be built from the ontology. */
@@ -145,6 +171,15 @@ const worldPatch = z
   });
 export type WorldPatch = z.infer<typeof worldPatch>;
 
+/** What may be asked of the author. Checked at the edge; see AUTHOR for the words. */
+const authorBody = z.object({
+  workType: z.enum(['article', 'chronicle']).optional(),
+  words: z.coerce.number().int().min(50).max(2000).optional(),
+  language: z.string().min(2).max(35).optional(),
+  model: z.string().min(1).optional(),
+  save: z.boolean().optional(),
+});
+
 const memberBody = z
   .object({
     subject: z.string().min(1).optional(),
@@ -169,6 +204,8 @@ const memberBody = z
  */
 export function createApp(options: AppOptions) {
   const { pool } = options;
+  const modelsFor: ModelsFactory =
+    options.models ?? ((request) => modelsFromEnv(request));
   const app = new Hono<Env>();
 
   app.use('*', requestId());
@@ -209,6 +246,21 @@ export function createApp(options: AppOptions) {
     }
     if (error instanceof NoGeneratorError) {
       return problem(400, 'no-generator', error.message);
+    }
+    // A model that was not named, or is not served here, is the caller's to
+    // fix; a model that failed is the provider's, and is reported as such.
+    if (error instanceof NoModelError) {
+      return problem(400, 'no-model', error.message);
+    }
+    if (error instanceof BudgetExceededError) {
+      return problem(429, 'budget', error.message);
+    }
+    if (error instanceof ModelError) {
+      return problem(
+        error.kind === 'unavailable' ? 503 : 502,
+        'model-failed',
+        error.message,
+      );
     }
     if (error instanceof UnauthorizedError) {
       return problem(401, 'unauthorized', error.message);
@@ -273,9 +325,35 @@ export function createApp(options: AppOptions) {
         ...modelInfo[id],
         ...(GENERATORS[id] ? { generate: GENERATORS[id] } : {}),
         ...(SCOPE_MODELS.includes(id) ? { simulate: SIMULATION } : {}),
+        // Anything on record can be written about.
+        author: AUTHOR,
       })),
     }),
   );
+
+  /**
+   * The language models this deployment can write with: what the configured
+   * endpoints actually hold, so a person can be offered the choice rather
+   * than have it made for them.
+   */
+  app.get('/v1/llm', async (c) => {
+    requireIdentity(c);
+    const llm = modelsFor({});
+    const available = await llm.available();
+    const task = llm.taskFor(articleAuthor.task);
+    return c.json({
+      task: {
+        name: articleAuthor.task,
+        ...(task.model ? { model: task.model } : {}),
+      },
+      models: available.map((spec) => ({
+        id: spec.id,
+        provider: spec.provider,
+        name: spec.modelId,
+        local: spec.pricing === undefined,
+      })),
+    });
+  });
 
   /**
    * Everything an application needs to start: who the caller is and which
@@ -451,6 +529,43 @@ export function createApp(options: AppOptions) {
     );
     return c.json({ resources });
   });
+
+  /**
+   * Ask a language model to write about a record.
+   *
+   * The usage line is written inside the same transaction as the work, so a
+   * request that fails leaves no bill, and one that saves is charged in the
+   * commit that keeps what it paid for. Left unsaved, the work is returned to
+   * read; a client that likes it imports it as it is.
+   */
+  app.post('/v1/worlds/:world/:model/:id/$author', (c) =>
+    write(c, async (store, model, world, identity) => {
+      const request = parse(authorBody, await json(c), 'author');
+      const ledger = new PgLedger(store.client, world, identity?.subject);
+      const llm = modelsFor({
+        world,
+        ledger,
+        ...(identity ? { requestedBy: identity.subject } : {}),
+      });
+      const result = await authorAbout(
+        store,
+        { model, id: uuidParam(c, 'id') },
+        request,
+        {
+          models: llm,
+          context: (seedPath) =>
+            contextFor({
+              world,
+              seedPath,
+              ...(identity ? { requestedBy: identity.subject } : {}),
+            }),
+          label: (m) => modelInfo[m].name,
+          spend: () => ledger.last,
+        },
+      );
+      return c.json(result);
+    }),
+  );
 
   /**
    * Run the history simulation over a world, a house or a place.

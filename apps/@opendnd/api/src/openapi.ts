@@ -1,5 +1,6 @@
 import { type ModelId, models, readOnlyFields } from '@opendnd/types';
 import { toJSONSchema } from 'zod';
+import { AUTHOR } from './author';
 import { GENERATORS } from './generate';
 import { SCOPE_MODELS, SIMULATION } from './simulate';
 
@@ -804,6 +805,47 @@ const fixedPaths = {
       description: SIMULATION.description,
       requestBody: body(SIMULATION.input),
       responses: { 200: { description: 'What the run produced' } },
+    },
+  },
+  '/v1/worlds/{world}/{model}/{id}/$author': {
+    parameters: [
+      world,
+      {
+        name: 'model',
+        in: 'path',
+        required: true,
+        schema: { type: 'string' },
+      },
+      identifier,
+    ],
+    post: {
+      tags: ['meta'],
+      summary: 'Ask a language model to write about a record',
+      description: AUTHOR.description,
+      requestBody: body(AUTHOR.input),
+      responses: {
+        200: {
+          description:
+            'The work, carrying its model so it can be imported as it is; whether it was saved; what the model was given; and what the call cost',
+        },
+        400: problem(
+          'The request is not valid, or no model was named or is served here',
+        ),
+        429: problem('The spending ceiling for this deployment is reached'),
+        502: problem('The model failed'),
+        503: problem('The model is not available'),
+      },
+    },
+  },
+  '/v1/llm': {
+    get: {
+      tags: ['meta'],
+      summary: 'The language models this deployment can write with',
+      description:
+        'What the configured endpoints actually hold, so a client can offer the choice. `task` names the model the writing task is configured with, when one is.',
+      responses: {
+        200: { description: 'The models, and the task’s configured model' },
+      },
     },
   },
   '/v1/worlds/{world}/$export/{format}': {
