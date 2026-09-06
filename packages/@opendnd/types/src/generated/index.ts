@@ -3168,6 +3168,170 @@ export const models = {
 } as const;
 export type ModelId = keyof typeof models;
 
+/** Each model's name and description, as its manifest states them. */
+export const modelInfo = {
+  background: {
+    id: "background",
+    name: "Background",
+    description: "Where a character came from before they began adventuring.",
+  },
+  belief: {
+    id: "belief",
+    name: "Belief",
+    description: "A belief held about a proposition.",
+  },
+  calendar: {
+    id: "calendar",
+    name: "Calendar",
+    description: "A temporal reference system for in-world dates.",
+  },
+  campaign: {
+    id: "campaign",
+    name: "Campaign",
+    description: "A series of sessions a group plays in a world.",
+  },
+  character: {
+    id: "character",
+    name: "Character",
+    description: "A person as played, in one campaign.",
+  },
+  claim: {
+    id: "claim",
+    name: "Claim",
+    description: "One person's asserted right to a title.",
+  },
+  class: {
+    id: "class",
+    name: "Class",
+    description: "An adventuring class and its subclasses.",
+  },
+  condition: {
+    id: "condition",
+    name: "Condition",
+    description: "A state a creature can be in that changes what it may do.",
+  },
+  culture: {
+    id: "culture",
+    name: "Culture",
+    description: "A people's shared naming, language and customs.",
+  },
+  economy: {
+    id: "economy",
+    name: "Economy",
+    description: "A snapshot of a settlement's economy at a point in time.",
+  },
+  encounter: {
+    id: "encounter",
+    name: "Encounter",
+    description: "A confrontation prepared for a party.",
+  },
+  event: {
+    id: "event",
+    name: "Event",
+    description: "Something that happened in-world.",
+  },
+  faction: {
+    id: "faction",
+    name: "Faction",
+    description: "An organized group of any kind.",
+  },
+  feat: {
+    id: "feat",
+    name: "Feat",
+    description: "A talent taken in place of, or alongside, an ability score increase.",
+  },
+  feature: {
+    id: "feature",
+    name: "Feature",
+    description: "Something a character gains from a class, species, background, feat or item.",
+  },
+  item: {
+    id: "item",
+    name: "Item",
+    description: "A thing that can be owned, carried or used: equipment, magic items and poisons alike.",
+  },
+  language: {
+    id: "language",
+    name: "Language",
+    description: "A language spoken or written in the world.",
+  },
+  person: {
+    id: "person",
+    name: "Person",
+    description: "A person in the world.",
+  },
+  place: {
+    id: "place",
+    name: "Place",
+    description: "A location at any scale.",
+  },
+  population: {
+    id: "population",
+    name: "Population",
+    description: "An aggregate head count at a place and time.",
+  },
+  proficiency: {
+    id: "proficiency",
+    name: "Proficiency",
+    description: "Being trained in a weapon, a tool, a skill or a saving throw.",
+  },
+  quest: {
+    id: "quest",
+    name: "Quest",
+    description: "Something a party is meant to do.",
+  },
+  relationship: {
+    id: "relationship",
+    name: "Relationship",
+    description: "A tie between two people.",
+  },
+  session: {
+    id: "session",
+    name: "Session",
+    description: "One sitting of a campaign.",
+  },
+  skill: {
+    id: "skill",
+    name: "Skill",
+    description: "A skill, and the ability its checks are made against.",
+  },
+  species: {
+    id: "species",
+    name: "Species",
+    description: "A kind of creature and its biology.",
+  },
+  spell: {
+    id: "spell",
+    name: "Spell",
+    description: "A spell, its components, and what it does.",
+  },
+  statblock: {
+    id: "statblock",
+    name: "Statblock",
+    description: "The rules view of a creature: what it can take, what it can do, and how dangerous it is.",
+  },
+  tenure: {
+    id: "tenure",
+    name: "Tenure",
+    description: "One person's time holding a title.",
+  },
+  title: {
+    id: "title",
+    name: "Title",
+    description: "A seat of authority in a faction.",
+  },
+  work: {
+    id: "work",
+    name: "Work",
+    description: "A creative work in-world or out-of-world.",
+  },
+  world: {
+    id: "world",
+    name: "World",
+    description: "A fictional universe: the root every other resource belongs to.",
+  },
+} as const satisfies Record<ModelId, { id: ModelId; name: string; description?: string }>;
+
 /** Fields the API sets itself. A request may omit them and cannot override them. */
 export const readOnlyFields = ["id","model","module","recorded","world"] as const;
 

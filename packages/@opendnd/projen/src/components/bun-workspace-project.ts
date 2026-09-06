@@ -166,6 +166,8 @@ export interface BunWorkspaceReactViteProjectOptions extends BunWorkspaceReactPr
    * matchers, polyfills for what jsdom lacks, and the like.
    */
   readonly vitestSetupFiles?: string[];
+  /** Milliseconds a Vitest test may take. Vitest's default is five seconds. */
+  readonly vitestTimeout?: number;
 }
 
 /**
@@ -207,6 +209,7 @@ export class BunWorkspaceReactViteProject extends BunWorkspaceReactProject {
       sampleName: options.sampleName,
       workspaceAliases: options.workspaceAliases,
       setupFiles: options.vitestSetupFiles,
+      testTimeout: options.vitestTimeout,
     });
 
     // Update ESLint rule to allow devDependencies for test files in specs directory

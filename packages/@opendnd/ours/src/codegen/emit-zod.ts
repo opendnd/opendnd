@@ -130,6 +130,29 @@ export function emitZodModule(bundle: OursBundle): string {
   );
 
   /*
+   * What the ontology says about each model in words, for anything that
+   * shows models to people: a client should not have to carry its own copy
+   * of the names and let them drift from the manifests.
+   */
+  lines.push(
+    "/** Each model's name and description, as its manifest states them. */",
+    'export const modelInfo = {',
+    ...models.map((m) =>
+      [
+        `  ${propertyKey(m.id)}: {`,
+        `    id: ${JSON.stringify(m.id)},`,
+        `    name: ${JSON.stringify(m.name)},`,
+        ...(m.description
+          ? [`    description: ${JSON.stringify(m.description)},`]
+          : []),
+        '  },',
+      ].join('\n'),
+    ),
+    '} as const satisfies Record<ModelId, { id: ModelId; name: string; description?: string }>;',
+    '',
+  );
+
+  /*
    * What the bundle says about the platform's part in a record: the fields
    * the server sets, marked read-only in the schemas, and the properties a
    * record's in-world valid time is read from, declared on each Model.

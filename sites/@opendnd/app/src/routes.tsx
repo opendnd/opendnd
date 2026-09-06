@@ -3,6 +3,7 @@ import { RequireSession, Shell } from './components/Layout';
 import { Callback } from './pages/Callback';
 import { Edit } from './pages/Edit';
 import { ErrorPage } from './pages/ErrorPage';
+import { Generate } from './pages/Generate';
 import { Record } from './pages/Record';
 import { Records } from './pages/Records';
 import { Search } from './pages/Search';
@@ -37,6 +38,7 @@ export const routes: RouteObject[] = [
                   { path: 'search', element: <Search /> },
                   { path: ':model', element: <Records /> },
                   { path: ':model/new', element: <Edit /> },
+                  { path: ':model/generate', element: <Generate /> },
                   { path: ':model/:id', element: <Record /> },
                   { path: ':model/:id/edit', element: <Edit /> },
                 ],

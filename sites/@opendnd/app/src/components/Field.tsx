@@ -126,6 +126,7 @@ export function FieldControl(props: ControlProps) {
         <ReferencePicker
           id={id}
           value={isReference(value) ? value : undefined}
+          models={field.referenceModels}
           onChange={(reference: Reference | undefined) => onChange(reference)}
         />
       );

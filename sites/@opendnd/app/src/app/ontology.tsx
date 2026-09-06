@@ -9,9 +9,24 @@ const OntologyContext = createContext<Ontology | undefined>(undefined);
 /**
  * Loads what the API says about itself once per session and hands it to
  * every page beneath. Nothing renders until it is known, because every page
- * is built from it.
+ * is built from it. Given an ontology outright, as a test does, it provides
+ * that and loads nothing.
  */
-export function OntologyProvider(props: { readonly children: ReactNode }) {
+export function OntologyProvider(props: {
+  readonly children: ReactNode;
+  readonly ontology?: Ontology;
+}) {
+  if (props.ontology) {
+    return (
+      <OntologyContext.Provider value={props.ontology}>
+        {props.children}
+      </OntologyContext.Provider>
+    );
+  }
+  return <LoadedOntology>{props.children}</LoadedOntology>;
+}
+
+function LoadedOntology(props: { readonly children: ReactNode }) {
   const api = useApi();
   const request = useRequest(() => loadOntology(api), [api]);
   if (request.error) {

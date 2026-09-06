@@ -20,13 +20,13 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 
 | Route | |
 |---|---|
-| `GET /v1/models` | The models this deployment serves, which is the ontology it was built from. |
+| `GET /v1/models` | The models this deployment serves, each with the name and description its manifest gives it, and, where something generates it, what that generator takes as JSON Schema. |
 | `GET`/`POST` `/v1/worlds` | The caller's worlds, and creating one. |
 | `POST /v1/worlds/{world}/members` | Admit someone by subject or by email, or change their role. Owners only. |
 | `GET`/`POST` `/v1/worlds/{world}/{model}` | List and create. |
 | `GET`/`PUT`/`PATCH`/`DELETE` `/v1/worlds/{world}/{model}/{id}` | One resource. |
-| `POST /v1/{model}/$generate` | Generate without a world and without an account. |
-| `POST /v1/worlds/{world}/{model}/$generate` | Generate from resources named by id. |
+| `POST /v1/{model}/$generate` | Generate without a world and without an account, sending the species, culture and calendar whole. |
+| `POST /v1/worlds/{world}/{model}/$generate` | Generate from resources in the world, named by reference or id. Each resource that comes back carries its `model`, so the bundle can be imported as it is. |
 | `POST /v1/worlds/{world}/{model}/{id}/$simulate` | Run the history simulation over a world, a house or a place. |
 | `GET /v1/worlds/{world}/$export/{format}` | Everything in the world, as a bundle or as prose. |
 | `GET /v1/openapi.json` | This API, described from the ontology. |

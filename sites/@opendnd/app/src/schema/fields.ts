@@ -44,6 +44,8 @@ export interface Field {
   readonly fields?: readonly Field[];
   readonly minimum?: number;
   readonly maximum?: number;
+  /** For `reference`: the models it may point at, when the schema fixes them. */
+  readonly referenceModels?: readonly string[];
   readonly schema: JsonSchema;
 }
 
@@ -140,7 +142,14 @@ export function describe(
       return { ...base, kind: 'list', item };
     }
     case 'object': {
-      if (isReferenceSchema(schema)) return { ...base, kind: 'reference' };
+      if (isReferenceSchema(schema)) {
+        const models = referenceModels(schema);
+        return {
+          ...base,
+          kind: 'reference',
+          ...(models ? { referenceModels: models } : {}),
+        };
+      }
       const properties = schema.properties;
       if (!properties || Object.keys(properties).length === 0) {
         return { ...base, kind: 'json' };
@@ -172,6 +181,22 @@ export function isReferenceSchema(schema: JsonSchema): boolean {
     required.includes('id') &&
     keys.every((key) => key === 'model' || key === 'id' || key === 'name')
   );
+}
+
+/**
+ * The models a reference may point at, when its schema fixes `model` to a
+ * constant or a list. A plain `Reference` fixes nothing and may point anywhere.
+ */
+export function referenceModels(
+  schema: JsonSchema,
+): readonly string[] | undefined {
+  const model = schema.properties?.model;
+  if (!model) return undefined;
+  if (typeof model.const === 'string') return [model.const];
+  if (model.enum && model.enum.every((v) => typeof v === 'string')) {
+    return model.enum as string[];
+  }
+  return undefined;
 }
 
 /** `abilityScores` to `Ability scores`, `lawful-good` to `Lawful good`. */

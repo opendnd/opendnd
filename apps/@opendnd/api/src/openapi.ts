@@ -1,6 +1,6 @@
 import { type ModelId, models, readOnlyFields } from '@opendnd/types';
 import { toJSONSchema } from 'zod';
-import { canGenerate } from './generate';
+import { GENERATORS } from './generate';
 
 /**
  * The OpenAPI description, generated from the ontology.
@@ -134,17 +134,20 @@ export function openApiDocument(options: { url?: string } = {}) {
         },
       },
     };
-    if (canGenerate(id)) {
+    const generator = GENERATORS[id];
+    if (generator) {
       paths[`/v1/${id}/$generate`] = {
         post: {
           tags: [tag],
           summary: `Generate ${id} resources without saving them`,
           description:
-            'Needs no world and no account. Returns the resources stamped ' +
-            'generated; post one back to keep it. Without an account, a ' +
-            'place may be a settlement or a county but not a larger realm.',
+            `${generator.description} Needs no world and no account. ` +
+            'Returns the resources stamped generated, each carrying its ' +
+            'model; post one back, or import them, to keep them. Without ' +
+            'an account, a place may be a settlement or a county but not a ' +
+            'larger realm. The species, culture and calendar are sent whole.',
           security: [],
-          requestBody: body({ type: 'object' }),
+          requestBody: body(generator.input),
           responses: {
             200: { description: 'Generated', content: json(bundle) },
             400: problem('The input is not valid'),
@@ -156,9 +159,14 @@ export function openApiDocument(options: { url?: string } = {}) {
         post: {
           tags: [tag],
           summary: `Generate ${id} resources from this world's content`,
-          requestBody: body({ type: 'object' }),
+          description:
+            `${generator.description} The species, culture and calendar ` +
+            'are named by reference or id and read from the world. Nothing ' +
+            'is saved: import what is worth keeping.',
+          requestBody: body(generator.input),
           responses: {
             200: { description: 'Generated', content: json(bundle) },
+            400: problem('The input is not valid'),
           },
         },
       };
@@ -318,6 +326,25 @@ const fixedSchemas = {
     properties: { resources: { type: 'array', items: { type: 'object' } } },
     required: ['resources'],
   },
+  ModelInfo: {
+    type: 'object',
+    properties: {
+      id: { type: 'string' },
+      name: { type: 'string' },
+      description: { type: 'string' },
+      generate: {
+        type: 'object',
+        description:
+          'Present when something generates this model: what it makes, and the request body as JSON Schema.',
+        properties: {
+          description: { type: 'string' },
+          input: { type: 'object' },
+        },
+        required: ['description', 'input'],
+      },
+    },
+    required: ['id', 'name'],
+  },
   World: {
     type: 'object',
     properties: {
@@ -463,8 +490,24 @@ const fixedPaths = {
     get: {
       tags: ['meta'],
       summary: 'The models this deployment serves',
+      description:
+        'Each with its name and description as the ontology states them, and what generates it, when something does.',
       security: [],
-      responses: { 200: { description: 'The model registry' } },
+      responses: {
+        200: {
+          description: 'The model registry',
+          content: json({
+            type: 'object',
+            properties: {
+              models: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/ModelInfo' },
+              },
+            },
+            required: ['models'],
+          }),
+        },
+      },
     },
   },
   '/v1/vocabularies': {

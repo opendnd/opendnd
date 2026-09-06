@@ -1,4 +1,4 @@
-import { type ModelId, models, vocabularies } from '@opendnd/types';
+import { type ModelId, modelInfo, models, vocabularies } from '@opendnd/types';
 import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { type RequestIdVariables, requestId } from 'hono/request-id';
@@ -9,9 +9,9 @@ import { inTransaction, inWorld } from './db';
 import { assertFormat, exportWorld } from './export';
 import {
   ANONYMOUS_TIERS,
+  GENERATORS,
   NoGeneratorError,
   REFERENCE_FIELDS,
-  canGenerate,
   contextFor,
   generate,
   resolveInputs,
@@ -248,10 +248,17 @@ export function createApp(options: AppOptions) {
    */
   app.get('/v1/vocabularies', (c) => c.json({ vocabularies }));
 
-  /** The models this deployment serves, which is the ontology it was built from. */
+  /**
+   * The models this deployment serves, which is the ontology it was built
+   * from: each with its name and description as the manifest states them,
+   * and, where something generates it, what that generator takes.
+   */
   app.get('/v1/models', (c) =>
     c.json({
-      models: MODEL_IDS.map((id) => ({ id, generate: canGenerate(id) })),
+      models: MODEL_IDS.map((id) => ({
+        ...modelInfo[id],
+        ...(GENERATORS[id] ? { generate: GENERATORS[id] } : {}),
+      })),
     }),
   );
 

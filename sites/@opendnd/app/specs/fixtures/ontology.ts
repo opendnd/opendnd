@@ -125,7 +125,37 @@ export const petDocument: OpenApiDocument = {
   },
 };
 
-export const petModels: ModelInfo[] = [{ id: 'pet', generate: false }];
+export const petModels: ModelInfo[] = [
+  {
+    id: 'pet',
+    name: 'Pet',
+    description: 'A companion animal.',
+    generate: {
+      description: 'A pet with a mood, belonging to someone.',
+      input: {
+        type: 'object',
+        properties: {
+          owner: {
+            type: 'object',
+            description: 'Whose pet it is.',
+            properties: {
+              model: { const: 'person' },
+              id: { type: 'string', format: 'uuid' },
+              name: { type: 'string' },
+            },
+            required: ['model', 'id'],
+            additionalProperties: false,
+          },
+          mood: { type: 'string', enum: ['happy', 'sad'] },
+          count: { type: 'integer', minimum: 1, description: 'How many.' },
+        },
+        required: ['owner'],
+        additionalProperties: false,
+      },
+    },
+  },
+  { id: 'person', name: 'Person' },
+];
 
 export const petVocabularies: Vocabulary[] = [
   {

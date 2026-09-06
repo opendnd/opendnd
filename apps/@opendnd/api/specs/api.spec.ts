@@ -7,6 +7,14 @@ import { openApiDocument } from 'src/openapi';
 import { type OutboxEvent, publishAll, publishWorld } from 'src/outbox';
 import { connect } from './support';
 
+/**
+ * Identities for this run alone. The suite runs against the same local
+ * database a developer works in, and a developer signs in as `dev:drew`; a
+ * fixed subject here would count their worlds and then delete their user.
+ */
+const RUN = crypto.randomUUID().slice(0, 8);
+const who = (name: string) => `${name}-${RUN}`;
+
 /** The API as a caller sees it: requests in, JSON out. */
 function client(app: ReturnType<typeof createApp>, subject?: string) {
   const call = async (
@@ -54,8 +62,8 @@ describe('the API', () => {
   beforeAll(async () => {
     pool = await connect();
     app = createApp({ pool, identity: new DevIdentityResolver() });
-    drew = client(app, 'drew');
-    stranger = client(app, 'stranger');
+    drew = client(app, who('drew'));
+    stranger = client(app, who('stranger'));
     anonymous = client(app);
 
     const made = await drew.post('/v1/worlds', { name: 'Aerath' });
@@ -69,7 +77,7 @@ describe('the API', () => {
       await pool.query('delete from layer where id = $1', [id]);
     }
     await pool.query('delete from app_user where subject = any($1)', [
-      ['drew', 'stranger'],
+      [who('drew'), who('stranger')],
     ]);
     await pool.end();
   });
@@ -221,7 +229,7 @@ describe('the API', () => {
     expect(
       (
         await stranger.post(`/v1/worlds/${world}/members`, {
-          subject: 'stranger',
+          subject: who('stranger'),
           role: 'editor',
         })
       ).status,
@@ -229,7 +237,7 @@ describe('the API', () => {
     expect(
       (
         await drew.post(`/v1/worlds/${world}/members`, {
-          subject: 'stranger',
+          subject: who('stranger'),
           role: 'editor',
         })
       ).status,
@@ -295,6 +303,87 @@ describe('the API', () => {
     expect(person.name.length).toBeGreaterThan(0);
   });
 
+  it('describes each model by name, and says what generates it and what that takes', async () => {
+    const { body } = await anonymous.get('/v1/models');
+    const models = (
+      body as {
+        models: {
+          id: string;
+          name: string;
+          description?: string;
+          generate?: { description: string; input: Record<string, unknown> };
+        }[];
+      }
+    ).models;
+    const person = models.find((m) => m.id === 'person')!;
+    expect(person.name).toBe('Person');
+    expect(person.description).toBeTruthy();
+    expect(person.generate?.input).toMatchObject({
+      type: 'object',
+      required: ['species', 'culture'],
+    });
+    // A reference input says which model it points at, in the schema itself.
+    const species = (person.generate!.input.properties as Record<string, any>)
+      .species;
+    expect(species.properties.model).toEqual({ const: 'species' });
+    // Nothing generates a calendar, so its entry says so by saying nothing.
+    expect(models.find((m) => m.id === 'calendar')?.generate).toBeUndefined();
+  });
+
+  it('stamps each generated resource with its model, takes references as inputs, and imports the lot', async () => {
+    const species = await Bun.file(
+      `${__dirname}/../../../../packages/@opendnd/generators/specs/fixtures/human.species.json`,
+    ).json();
+    const culture = await Bun.file(
+      `${__dirname}/../../../../packages/@opendnd/generators/specs/fixtures/culture.json`,
+    ).json();
+    const calendar = await drew.post(`/v1/worlds/${world}/calendar`, {
+      name: 'Common Reckoning',
+      months: [{ name: 'Year', length: 360 }],
+    });
+    // The fixtures carry ids, and an earlier test saved them; a second post
+    // of the same id is a conflict, so these are saved as new records.
+    const { id: _speciesId, ...speciesBody } = species;
+    const { id: _cultureId, ...cultureBody } = culture;
+    const savedSpecies = await drew.post(
+      `/v1/worlds/${world}/species`,
+      speciesBody,
+    );
+    const savedCulture = await drew.post(
+      `/v1/worlds/${world}/culture`,
+      cultureBody,
+    );
+    expect([savedSpecies.status, savedCulture.status]).toEqual([201, 201]);
+    const ref = (model: string, saved: { body: unknown }) => ({
+      model,
+      id: (saved.body as { id: string }).id,
+    });
+
+    const generated = await drew.post(`/v1/worlds/${world}/place/$generate`, {
+      tier: 'village',
+      species: ref('species', savedSpecies),
+      culture: ref('culture', savedCulture),
+      calendar: ref('calendar', calendar),
+      year: 1041,
+      seedPath: 'place/village-1',
+    });
+    expect(generated.status).toBe(200);
+    const resources = (generated.body as { resources: { model: string }[] })
+      .resources;
+    expect(resources.map((r) => r.model).sort()).toEqual([
+      'economy',
+      'place',
+      'population',
+    ]);
+
+    // Because each carries its model, the bundle imports as it is.
+    const imported = await drew.post(`/v1/worlds/${world}/$import`, {
+      resources,
+    });
+    expect(imported.status).toBe(201);
+    expect((imported.body as { imported: number }).imported).toBe(3);
+  });
+
   it('writes an event for every change, in the same transaction', async () => {
     // Read inside the world: the outbox is world-scoped content, so even this
     // spec cannot see another tenant's events, and neither can a subscriber.
@@ -330,7 +419,7 @@ describe('the API: actions', () => {
   beforeAll(async () => {
     pool = await connect();
     app = createApp({ pool, identity: new DevIdentityResolver() });
-    drew = client(app, 'drew-actions');
+    drew = client(app, who('drew-actions'));
     const made = await drew.post('/v1/worlds', { name: 'Simulated Realm' });
     world = (made.body as { id: string }).id;
 
@@ -377,7 +466,7 @@ describe('the API: actions', () => {
     if (!pool) return;
     await pool.query('delete from layer where id = $1', [world]);
     await pool.query('delete from app_user where subject = $1', [
-      'drew-actions',
+      who('drew-actions'),
     ]);
     await pool.end();
   });
@@ -500,7 +589,7 @@ describe('the API: actions', () => {
 
     const response = await app.request(
       `http://api/v1/worlds/${world}/$export/markdown`,
-      { headers: { authorization: 'Bearer dev:drew-actions' } },
+      { headers: { authorization: `Bearer dev:${who('drew-actions')}` } },
     );
     expect(response.headers.get('content-type')).toContain('text/markdown');
     const text = await response.text();
@@ -597,8 +686,8 @@ describe('the API: what a front end needs', () => {
   beforeAll(async () => {
     pool = await connect();
     app = createApp({ pool, identity: new DevIdentityResolver() });
-    drew = client(app, 'drew-frontend');
-    stranger = client(app, 'stranger-frontend');
+    drew = client(app, who('drew-frontend'));
+    stranger = client(app, who('stranger-frontend'));
     world = (
       (await drew.post('/v1/worlds', { name: 'Aerath' })).body as {
         id: string;
@@ -638,7 +727,7 @@ describe('the API: what a front end needs', () => {
     if (!pool) return;
     await pool.query('delete from layer where id = $1', [world]);
     await pool.query('delete from app_user where subject = any($1)', [
-      ['drew-frontend', 'stranger-frontend'],
+      [who('drew-frontend'), who('stranger-frontend')],
     ]);
     await pool.end();
   });
@@ -650,8 +739,8 @@ describe('the API: what a front end needs', () => {
       email: string;
       worlds: { id: string; role: string }[];
     };
-    expect(me.subject).toBe('drew-frontend');
-    expect(me.email).toBe('drew-frontend@dev.invalid');
+    expect(me.subject).toBe(who('drew-frontend'));
+    expect(me.email).toBe(`${who('drew-frontend')}@dev.invalid`);
     expect(me.worlds.find((w) => w.id === world)?.role).toBe('owner');
     expect((await client(app).get('/v1/me')).status).toBe(401);
   });
@@ -828,7 +917,7 @@ describe('the API: what a front end needs', () => {
   it('lets an owner see and remove members, and keeps the last owner', async () => {
     await stranger.get('/v1/me');
     await drew.post(`/v1/worlds/${world}/members`, {
-      subject: 'stranger-frontend',
+      subject: who('stranger-frontend'),
       role: 'editor',
     });
 
@@ -839,8 +928,8 @@ describe('the API: what a front end needs', () => {
       }
     ).members;
     expect(members.map((m) => m.subject).sort()).toEqual([
-      'drew-frontend',
-      'stranger-frontend',
+      who('drew-frontend'),
+      who('stranger-frontend'),
     ]);
     // An editor cannot see who else belongs.
     expect((await stranger.get(`/v1/worlds/${world}/members`)).status).toBe(
@@ -848,14 +937,19 @@ describe('the API: what a front end needs', () => {
     );
 
     expect(
-      (await drew.delete(`/v1/worlds/${world}/members/stranger-frontend`))
-        .status,
+      (
+        await drew.delete(
+          `/v1/worlds/${world}/members/${who('stranger-frontend')}`,
+        )
+      ).status,
     ).toBe(204);
     expect((await stranger.get(`/v1/worlds/${world}/place`)).status).toBe(403);
 
     // A world with no owner is one nobody can fix, so the request is
     // refused rather than failing.
-    const last = await drew.delete(`/v1/worlds/${world}/members/drew-frontend`);
+    const last = await drew.delete(
+      `/v1/worlds/${world}/members/${who('drew-frontend')}`,
+    );
     expect(last.status).toBe(409);
     expect((last.body as { error: string }).error).toContain(
       'at least one owner',
@@ -903,7 +997,7 @@ describe('the API: the campaign layer', () => {
   beforeAll(async () => {
     pool = await connect();
     app = createApp({ pool, identity: new DevIdentityResolver() });
-    drew = client(app, 'drew-campaign');
+    drew = client(app, who('drew-campaign'));
     world = (
       (await drew.post('/v1/worlds', { name: 'Aerath' })).body as {
         id: string;
@@ -915,7 +1009,7 @@ describe('the API: the campaign layer', () => {
     if (!pool) return;
     await pool.query('delete from layer where id = $1', [world]);
     await pool.query('delete from app_user where subject = $1', [
-      'drew-campaign',
+      who('drew-campaign'),
     ]);
     await pool.end();
   });
@@ -1103,7 +1197,7 @@ describe('the API: hardening', () => {
   let anonymous: ReturnType<typeof client>;
   let world: string;
   const created: string[] = [];
-  const subjects = ['drew-h', 'other-h', 'newcomer-h'];
+  const subjects = [who('drew-h'), who('other-h'), who('newcomer-h')];
   const trs = 'c0000000-0000-4000-8000-000000000001';
 
   const makeWorld = async (body: Record<string, unknown>) => {
@@ -1117,8 +1211,8 @@ describe('the API: hardening', () => {
   beforeAll(async () => {
     pool = await connect();
     app = createApp({ pool, identity: new DevIdentityResolver() });
-    drew = client(app, 'drew-h');
-    other = client(app, 'other-h');
+    drew = client(app, who('drew-h'));
+    other = client(app, who('other-h'));
     anonymous = client(app);
     world = await makeWorld({ name: 'Hardened' });
   });
@@ -1348,7 +1442,7 @@ describe('the API: hardening', () => {
 
   it('will not let the last owner demote themself', async () => {
     const demoted = await drew.post(`/v1/worlds/${world}/members`, {
-      subject: 'drew-h',
+      subject: who('drew-h'),
       role: 'editor',
     });
     expect(demoted.status).toBe(409);
@@ -1360,7 +1454,7 @@ describe('the API: hardening', () => {
 
   it('invites by email and seats the person the first time they sign in', async () => {
     const invited = await drew.post(`/v1/worlds/${world}/members`, {
-      email: 'Newcomer-H@dev.invalid',
+      email: `Newcomer-H-${RUN}@dev.invalid`,
       role: 'editor',
     });
     expect(invited.status).toBe(202);
@@ -1369,9 +1463,9 @@ describe('the API: hardening', () => {
       (before.body as { invitations: { email: string }[] }).invitations.map(
         (i) => i.email,
       ),
-    ).toEqual(['newcomer-h@dev.invalid']);
+    ).toEqual([`${who('newcomer-h')}@dev.invalid`]);
 
-    const newcomer = client(app, 'newcomer-h');
+    const newcomer = client(app, who('newcomer-h'));
     const me = await newcomer.get('/v1/me');
     expect(
       (me.body as { worlds: { id: string; role: string }[] }).worlds,
@@ -1383,7 +1477,7 @@ describe('the API: hardening', () => {
     };
     expect(body.invitations).toEqual([]);
     expect(body.members).toContainEqual(
-      expect.objectContaining({ subject: 'newcomer-h', role: 'editor' }),
+      expect.objectContaining({ subject: who('newcomer-h'), role: 'editor' }),
     );
   });
 

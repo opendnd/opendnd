@@ -187,3 +187,35 @@ describe('the API client and the platform fetch', () => {
     }
   });
 });
+
+describe('the API client and generation', () => {
+  it('generates inside a world and imports what came back', async () => {
+    const generated = [
+      { id: 'p1', model: 'place', name: 'Ford' },
+      { id: 'q1', model: 'population' },
+    ];
+    const { fetch, calls } = fakeFetch({
+      'POST /v1/worlds/w/place/$generate': () => ({ resources: generated }),
+      'POST /v1/worlds/w/$import': () =>
+        Response.json({ imported: 2, world: 'w' }, { status: 201 }),
+    });
+    const { api } = client(fetch);
+    const resources = await api.generate('w', 'place', { tier: 'village' });
+    expect(resources).toEqual(generated);
+    expect(await calls[0]!.json()).toEqual({ tier: 'village' });
+
+    const imported = await api.importResources('w', resources);
+    expect(imported).toEqual({ imported: 2, world: 'w' });
+    expect(await calls[1]!.json()).toEqual({ resources: generated });
+  });
+
+  it('narrows a search to the models a field allows', async () => {
+    const { fetch, calls } = fakeFetch({
+      'GET /v1/worlds/w/$search': () => ({ results: [] }),
+    });
+    await client(fetch).api.search('w', 'Ada', 20, ['species', 'culture']);
+    expect(new URL(calls[0]!.url).search).toBe(
+      '?q=Ada&limit=20&models=species%2Cculture',
+    );
+  });
+});

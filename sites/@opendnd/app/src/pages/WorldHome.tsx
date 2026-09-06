@@ -1,7 +1,6 @@
 import { Link } from 'react-router';
 import { useOntology } from '../app/ontology';
 import { useWorld } from '../app/world';
-import { humanize } from '../schema/fields';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -31,7 +30,8 @@ export function WorldHome() {
       </header>
       <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {ontology.models.map((model) => {
-          const schema = ontology.schema(model.id);
+          const description =
+            model.description ?? ontology.schema(model.id)?.description;
           return (
             <li key={model.id}>
               <Link
@@ -40,10 +40,15 @@ export function WorldHome() {
               >
                 <Card className="h-full transition-colors hover:border-ring">
                   <CardHeader>
-                    <CardTitle>{humanize(model.id)}</CardTitle>
-                    {schema?.description && (
+                    <CardTitle className="flex items-center gap-2">
+                      {model.name}
+                      {model.generate && (
+                        <Badge variant="outline">generates</Badge>
+                      )}
+                    </CardTitle>
+                    {description && (
                       <CardDescription className="line-clamp-3">
-                        {schema.description}
+                        {description}
                       </CardDescription>
                     )}
                   </CardHeader>

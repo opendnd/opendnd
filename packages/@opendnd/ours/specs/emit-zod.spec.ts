@@ -39,6 +39,11 @@ describe('emitZodModule', () => {
     expect(code).toContain('export const models = {');
   });
 
+  it('emits each model’s name and description as its manifest states them', () => {
+    expect(code).toContain('export const modelInfo = {');
+    expect(code).toMatch(/pet: \{\n\s+id: "pet",\n\s+name: "Pet",/);
+  });
+
   it('produces a module that Bun can import and whose schema validates data', async () => {
     // Inside the package so `zod` resolves from its node_modules.
     const dir = mkdtempSync(join(__dirname, '.tmp-emit-'));

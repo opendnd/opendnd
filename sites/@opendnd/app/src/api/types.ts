@@ -1,3 +1,5 @@
+import type { JsonSchema } from '../schema/openapi';
+
 /** Shapes the API answers with. Content shapes come from the ontology at run time. */
 
 export type Role = 'owner' | 'editor' | 'viewer';
@@ -21,8 +23,17 @@ export interface Me {
 
 export interface ModelInfo {
   readonly id: string;
-  /** Whether `$generate` exists for the model. */
-  readonly generate: boolean;
+  /** The name the ontology gives the model. */
+  readonly name: string;
+  readonly description?: string;
+  /** Present when something generates the model: what, and what it takes. */
+  readonly generate?: GeneratorInfo;
+}
+
+export interface GeneratorInfo {
+  readonly description: string;
+  /** The request body as JSON Schema, which a form is built from. */
+  readonly input: JsonSchema;
 }
 
 export interface VocabularyCode {

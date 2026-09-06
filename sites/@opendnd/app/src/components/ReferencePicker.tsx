@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import type { Reference, SearchHit } from '../api/types';
 import { useApi } from '../app/context';
 import { useDebounced, useRequest } from '../app/hooks';
+import { useOntology } from '../app/ontology';
 import { recordPath, useWorld } from '../app/world';
 import { humanize } from '../schema/fields';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,8 @@ import {
 export interface ReferencePickerProps {
   readonly value?: Reference;
   readonly id?: string;
+  /** Only these models are searched, when the field fixes them. */
+  readonly models?: readonly string[];
   onChange(value: Reference | undefined): void;
 }
 
@@ -28,16 +31,23 @@ export interface ReferencePickerProps {
  */
 export function ReferencePicker(props: ReferencePickerProps) {
   const api = useApi();
+  const ontology = useOntology();
   const { world } = useWorld();
   const [query, setQuery] = useState('');
   const debounced = useDebounced(query.trim(), 250);
+  const models = props.models;
+  const modelsKey = models?.join(',') ?? '';
   const results = useRequest(
     () =>
       debounced.length > 0
-        ? api.search(world.id, debounced)
+        ? api.search(world.id, debounced, 20, models)
         : Promise.resolve([] as SearchHit[]),
-    [api, world.id, debounced],
+    // The joined key stands for the list, which callers rebuild each render.
+    [api, world.id, debounced, modelsKey],
   );
+  const placeholder = models
+    ? `Search ${models.map((m) => ontology.label(m).toLowerCase()).join(' or ')} by name`
+    : 'Search this world by name';
 
   const selected: SearchHit | null = props.value
     ? {
@@ -71,7 +81,7 @@ export function ReferencePicker(props: ReferencePickerProps) {
         <ComboboxInput
           id={props.id}
           className="w-full"
-          placeholder="Search this world by name"
+          placeholder={placeholder}
           showClear
         />
         <ComboboxContent>

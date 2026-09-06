@@ -164,3 +164,19 @@ describe('describing a schema as fields', () => {
     expect(humanize('')).toBe('');
   });
 });
+
+describe('references that name their models', () => {
+  it('reads which models a reference may point at from the schema', () => {
+    const ontology = petOntology();
+    const input = describeSchema(
+      ontology.model('pet')!.generate!.input,
+      ontology,
+      { name: 'generate' },
+    );
+    const owner = input.fields!.find((f) => f.name === 'owner')!;
+    expect(owner.kind).toBe('reference');
+    expect(owner.referenceModels).toEqual(['person']);
+    // A plain Reference fixes nothing and may point anywhere.
+    expect(field('owner').referenceModels).toBeUndefined();
+  });
+});

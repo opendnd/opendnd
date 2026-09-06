@@ -3,8 +3,7 @@ import { Link, Navigate, Outlet, useLocation } from 'react-router';
 import { AppSidebar } from './AppSidebar';
 import { useSession } from '../app/context';
 import { MeProvider, useMe } from '../app/me';
-import { OntologyProvider } from '../app/ontology';
-import { humanize } from '../schema/fields';
+import { OntologyProvider, useOntology } from '../app/ontology';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -76,6 +75,7 @@ export function placeIn(pathname: string): {
 function Crumbs() {
   const location = useLocation();
   const me = useMe();
+  const ontology = useOntology();
   const place = placeIn(location.pathname);
   const world = me.data?.worlds.find((w) => w.id === place.world);
   const crumbs: { label: string; to?: string }[] = [
@@ -89,7 +89,7 @@ function Crumbs() {
   }
   if (place.world && place.model) {
     crumbs.push({
-      label: humanize(place.model),
+      label: ontology.label(place.model),
       to: `/worlds/${place.world}/${place.model}`,
     });
   }

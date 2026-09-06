@@ -1,4 +1,4 @@
-import { FilesIcon, PlusIcon } from 'lucide-react';
+import { FilesIcon, PlusIcon, SparklesIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import type { Resource } from '../api/types';
@@ -109,8 +109,10 @@ export function Records() {
     );
   }
 
-  const label = humanize(model);
+  const label = ontology.label(model);
   const newPath = `/worlds/${world.id}/${model}/new`;
+  const generatePath = `/worlds/${world.id}/${model}/generate`;
+  const generator = ontology.model(model)?.generate;
 
   return (
     <div className="flex flex-col gap-4">
@@ -129,10 +131,18 @@ export function Records() {
           aria-label="Filter by name"
         />
         {canEdit && (
-          <Button className="ml-auto" render={<Link to={newPath} />}>
-            <PlusIcon data-icon="inline-start" />
-            New {label.toLowerCase()}
-          </Button>
+          <div className="ml-auto flex items-center gap-2">
+            {generator && (
+              <Button variant="outline" render={<Link to={generatePath} />}>
+                <SparklesIcon data-icon="inline-start" />
+                Generate
+              </Button>
+            )}
+            <Button render={<Link to={newPath} />}>
+              <PlusIcon data-icon="inline-start" />
+              New {label.toLowerCase()}
+            </Button>
+          </div>
         )}
       </div>
 

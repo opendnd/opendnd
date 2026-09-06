@@ -90,6 +90,9 @@ function configureOne(
     tailwind: true,
     // DOM matchers and the polyfills jsdom needs for the component library.
     vitestSetupFiles: ['./specs/setup.ts'],
+    // Component tests driven through user events take a second or two on
+    // their own and several when every package's tests run at once.
+    vitestTimeout: 20000,
     deps: [
       `react@${versions.react}`,
       `react-dom@${versions['react-dom']}`,

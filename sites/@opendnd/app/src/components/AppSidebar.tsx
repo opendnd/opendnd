@@ -5,7 +5,6 @@ import { placeIn } from './Layout';
 import { useApp, useSession } from '../app/context';
 import { useMe } from '../app/me';
 import { useOntology } from '../app/ontology';
-import { humanize } from '../schema/fields';
 import {
   Sidebar,
   SidebarContent,
@@ -95,7 +94,7 @@ export function AppSidebar() {
                         <Link to={`/worlds/${place.world}/${model.id}`} />
                       }
                     >
-                      {humanize(model.id)}
+                      {model.name}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}

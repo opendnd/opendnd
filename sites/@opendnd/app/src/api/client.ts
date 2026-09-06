@@ -188,12 +188,44 @@ export class ApiClient {
     ).then((r) => r.history);
   }
 
-  search(world: string, q: string, limit = 20): Promise<SearchHit[]> {
+  search(
+    world: string,
+    q: string,
+    limit = 20,
+    models?: readonly string[],
+  ): Promise<SearchHit[]> {
     return this.body<{ results: SearchHit[] }>(
       'GET',
       `/v1/worlds/${world}/$search`,
-      { query: { q, limit } },
+      {
+        query: {
+          q,
+          limit,
+          ...(models && models.length > 0 ? { models: models.join(',') } : {}),
+        },
+      },
     ).then((r) => r.results);
+  }
+
+  // Generation
+
+  /** Generate resources from this world's content. Nothing is saved. */
+  generate(world: string, model: string, input: unknown): Promise<Resource[]> {
+    return this.body<{ resources: Resource[] }>(
+      'POST',
+      `/v1/worlds/${world}/${model}/$generate`,
+      { body: input },
+    ).then((r) => r.resources);
+  }
+
+  /** Save many resources in one transaction. Each carries its `model`. */
+  importResources(
+    world: string,
+    resources: readonly Resource[],
+  ): Promise<{ imported: number }> {
+    return this.body('POST', `/v1/worlds/${world}/$import`, {
+      body: { resources },
+    });
   }
 
   // Plumbing

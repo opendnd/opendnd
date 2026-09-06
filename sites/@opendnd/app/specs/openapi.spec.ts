@@ -15,7 +15,13 @@ describe('the ontology as the API describes it', () => {
       'id',
     );
     expect(ontology.schema('dragon')).toBeUndefined();
-    expect(ontology.model('pet')).toEqual({ id: 'pet', generate: false });
+    expect(ontology.model('pet')).toMatchObject({ id: 'pet', name: 'Pet' });
+  });
+
+  it('calls a model by the name its manifest gives it, or a readable id', () => {
+    const ontology = petOntology();
+    expect(ontology.label('pet')).toBe('Pet');
+    expect(ontology.label('hitDice')).toBe('Hit dice');
   });
 
   it('follows a reference into the components and keeps the referring words', () => {

@@ -21,6 +21,12 @@ export interface VitestConfigOptions {
    * the app config, or those packages cannot be imported from a spec.
    */
   readonly workspaceAliases?: Record<string, string>;
+  /**
+   * Milliseconds a test may take. Vitest's default is five seconds, which a
+   * component test driven through user events can exceed when the whole
+   * repository's tasks run at once.
+   */
+  readonly testTimeout?: number;
 }
 
 class VitestConfigFile extends FileBase {
@@ -30,6 +36,7 @@ class VitestConfigFile extends FileBase {
   private readonly setupFiles: string[];
   private readonly plugins: string[];
   private readonly workspaceAliases: Record<string, string>;
+  private readonly testTimeout: number | undefined;
 
   constructor(project: ReactTypeScriptProject, options: VitestConfigOptions) {
     super(project, 'vitest.config.ts');
@@ -39,6 +46,7 @@ class VitestConfigFile extends FileBase {
     this.globals = options.globals ?? true;
     this.setupFiles = options.setupFiles ?? [];
     this.plugins = options.plugins ?? ['react'];
+    this.testTimeout = options.testTimeout;
   }
 
   private synthesizeAliases(): string[] {
@@ -80,6 +88,9 @@ class VitestConfigFile extends FileBase {
       `    globals: ${this.globals},`,
       `    setupFiles: ${JSON.stringify(this.setupFiles)},`,
       `    watch: ${this.watch},`,
+      ...(this.testTimeout !== undefined
+        ? [`    testTimeout: ${this.testTimeout},`]
+        : []),
       '  },',
       '});',
       '',

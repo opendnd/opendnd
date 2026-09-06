@@ -5,9 +5,10 @@ import { RouterProvider } from 'react-router/dom';
 import { ApiClient } from 'src/api/client';
 import type { World } from 'src/api/types';
 import { type AppServices, AppProvider } from 'src/app/context';
+import { OntologyProvider } from 'src/app/ontology';
 import { WorldProvider } from 'src/app/world';
 import { SessionStore, devSession } from 'src/auth/session';
-import { WORLD_ID } from './fixtures/ontology';
+import { WORLD_ID, petOntology } from './fixtures/ontology';
 
 export type Handler = (
   request: Request,
@@ -65,7 +66,7 @@ export function testServices(fetchImpl: typeof fetch): AppServices {
   };
 }
 
-/** Renders inside the app's providers and a router, at `/worlds/<id>`. */
+/** Renders inside the app's providers, the invented ontology and a router, at `/worlds/<id>`. */
 export function renderInWorld(
   ui: ReactNode,
   options: {
@@ -80,7 +81,11 @@ export function renderInWorld(
     [
       {
         path: '*',
-        element: <WorldProvider world={world}>{ui}</WorldProvider>,
+        element: (
+          <OntologyProvider ontology={petOntology()}>
+            <WorldProvider world={world}>{ui}</WorldProvider>
+          </OntologyProvider>
+        ),
       },
     ],
     { initialEntries: [options.path ?? `/worlds/${world.id}`] },

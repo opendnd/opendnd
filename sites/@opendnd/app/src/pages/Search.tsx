@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router';
 import type { SearchHit } from '../api/types';
 import { useApi } from '../app/context';
 import { useRequest } from '../app/hooks';
+import { useOntology } from '../app/ontology';
 import { recordPath, useWorld } from '../app/world';
 import { ErrorNotice, Loading } from '../components/Notice';
 import { humanize } from '../schema/fields';
@@ -25,6 +26,7 @@ import {
 /** One search box across every model, as the API offers it. */
 export function Search() {
   const api = useApi();
+  const ontology = useOntology();
   const { world } = useWorld();
   const [params] = useSearchParams();
   const q = params.get('q')?.trim() ?? '';
@@ -63,7 +65,7 @@ export function Search() {
       {[...groups.entries()].map(([model, hits]) => (
         <section key={model} className="flex flex-col gap-2">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {humanize(model)}
+            {ontology.label(model)}
           </h2>
           <ItemGroup className="gap-1">
             {hits.map((hit) => (
