@@ -85,6 +85,11 @@ export function Article(props: ArticleProps) {
               Revision {resource.recorded.revision}
             </Badge>
           )}
+          {typeof resource.module === 'string' && (
+            <Badge variant="outline" title={resource.module}>
+              From a module
+            </Badge>
+          )}
         </div>
         {Array.isArray(alternateNames) && alternateNames.length > 0 && (
           <p className="text-sm text-muted-foreground">

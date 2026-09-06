@@ -6,7 +6,9 @@ import type {
   Me,
   Member,
   ModelInfo,
+  Module,
   Page,
+  PublishRequest,
   ReferenceHit,
   Resource,
   Role,
@@ -168,6 +170,39 @@ export class ApiClient {
 
   usage(world: string): Promise<Usage> {
     return this.body('GET', `/v1/worlds/${world}/usage`);
+  }
+
+  // Modules
+
+  /** The modules the caller may enable: public ones, and those from their own worlds. */
+  modules(): Promise<{ modules: Module[] }> {
+    return this.body('GET', '/v1/modules');
+  }
+
+  module(id: string): Promise<Module> {
+    return this.body('GET', `/v1/modules/${id}`);
+  }
+
+  /** The modules a world reads beneath its own content, nearest first. */
+  worldModules(world: string): Promise<{ modules: Module[] }> {
+    return this.body('GET', `/v1/worlds/${world}/modules`);
+  }
+
+  /** Snapshot the world's own content as a module. Owners only. */
+  publishModule(world: string, request: PublishRequest): Promise<Module> {
+    return this.body('POST', `/v1/worlds/${world}/$publish`, {
+      body: request,
+    });
+  }
+
+  enableModule(world: string, module: string): Promise<Module> {
+    return this.body('POST', `/v1/worlds/${world}/modules`, {
+      body: { module },
+    });
+  }
+
+  disableModule(world: string, module: string): Promise<void> {
+    return this.body('DELETE', `/v1/worlds/${world}/modules/${module}`);
   }
 
   // Content

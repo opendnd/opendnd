@@ -288,7 +288,14 @@ export class Store {
     assertModel(model);
     assertUuid(id);
     const previous = await this.own(model, id);
-    const current = previous === undefined ? undefined : revisionOf(previous);
+    // The revision a writer names is the one this world reads, which is a
+    // module's when the world has no copy of its own yet.
+    const seen =
+      previous ??
+      (options.expectedRevision === undefined
+        ? undefined
+        : await this.get(model, id));
+    const current = seen === undefined ? undefined : revisionOf(seen);
     if (
       options.expectedRevision !== undefined &&
       options.expectedRevision !== current

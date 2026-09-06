@@ -44,6 +44,12 @@ A world's home page ends with export and import. Anyone who can read the world c
 
 An owner has a Settings page for each world: its name, visibility and summary, which the world's own record follows; who belongs, with their roles, and who is invited by email and has not yet signed in; what the world has spent on language model calls; and archiving. An archived world keeps everything and appears under "Put away" on the worlds page, where an owner can restore it. The API allows none of this to anyone but an owner, and the page says so to anyone else.
 
+## Modules
+
+A world's settings page has a Modules section for its owners. It lists the modules the world reads beneath its own content, nearest first, each with what it holds counted by kind, and lets an owner disable one. Below that, an owner can enable any module the API offers them, which is every public module and every module published from a world they belong to. Last, an owner can publish the world itself: its name, a version, a license, a summary, and whether the module is public or only for members of this world. Publishing does not change the world; it takes a snapshot, and publishing again without a change answers with the same module rather than a second one.
+
+A record that came from a module says so in its record keeping, and a world that edits one keeps its own copy, which shadows the module's from then on.
+
 ## Configuration
 
 Settings are read at build time from `VITE_` variables, in the environment or in a `.env.local` file in the site directory. With nothing set, the development server uses the local API and development sign-in; a production build uses `https://api.opendnd.org` and Cognito.

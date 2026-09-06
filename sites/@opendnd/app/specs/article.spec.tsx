@@ -27,6 +27,17 @@ describe('a resource as an article', () => {
     expect(screen.getByText('Fond of shoes.')).toBeInTheDocument();
   });
 
+  it('says when a record came from a module, and stays quiet when it did not', () => {
+    const digest = `sha256:${'c'.repeat(64)}`;
+    const { unmount } = renderInWorld(
+      <Article resource={{ ...storedPet, module: digest }} root={root} />,
+    );
+    expect(screen.getByText('From a module')).toHaveAttribute('title', digest);
+    unmount();
+    renderInWorld(<Article resource={storedPet} root={root} />);
+    expect(screen.queryByText('From a module')).not.toBeInTheDocument();
+  });
+
   it('shows codes by their display text and references as links', () => {
     renderInWorld(<Article resource={storedPet} root={root} />);
     expect(screen.getByText('Mood').nextElementSibling).toHaveTextContent(

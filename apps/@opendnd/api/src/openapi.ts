@@ -323,6 +323,45 @@ const narrowing = [
 const bundle = { $ref: '#/components/schemas/Bundle' };
 
 const fixedSchemas = {
+  Module: {
+    type: 'object',
+    description:
+      "A world's content, published: a snapshot in a layer of its own, addressed by a digest of that content.",
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      digest: {
+        type: 'string',
+        description: '`sha256:` and the hex digest of the content.',
+      },
+      name: { type: 'string' },
+      version: { type: 'string' },
+      license: { type: 'string' },
+      summary: { type: 'string' },
+      visibility: { enum: ['private', 'public'] },
+      contents: {
+        type: 'object',
+        additionalProperties: { type: 'integer' },
+        description: 'Records by model, counted at publication.',
+      },
+      total: { type: 'integer' },
+      sourceWorld: { type: 'string', format: 'uuid' },
+      publishedAt: { type: 'string', format: 'date-time' },
+      position: {
+        type: 'integer',
+        description: "Where it sits in a world's stack, when listed for one.",
+      },
+    },
+    required: [
+      'id',
+      'digest',
+      'name',
+      'version',
+      'visibility',
+      'contents',
+      'total',
+      'publishedAt',
+    ],
+  },
   Bundle: {
     type: 'object',
     properties: { resources: { type: 'array', items: { type: 'object' } } },
@@ -475,6 +514,13 @@ const fixedSchemas = {
 };
 
 const roleSchema = { enum: ['owner', 'editor', 'viewer'] };
+
+const moduleParam = {
+  name: 'module',
+  in: 'path',
+  required: true,
+  schema: { type: 'string', format: 'uuid' },
+};
 
 const fixedPaths = {
   '/health': {
@@ -757,6 +803,138 @@ const fixedPaths = {
           description: 'What matched',
           content: json({ $ref: '#/components/schemas/SearchResults' }),
         },
+      },
+    },
+  },
+  '/v1/modules': {
+    get: {
+      tags: ['modules'],
+      summary: 'The modules the caller may enable',
+      description:
+        'Every public module, and every module published from a world the caller belongs to. Newest first.',
+      responses: {
+        200: {
+          description: 'The catalogue',
+          content: json({
+            type: 'object',
+            properties: {
+              modules: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/Module' },
+              },
+            },
+            required: ['modules'],
+          }),
+        },
+      },
+    },
+  },
+  '/v1/modules/{module}': {
+    parameters: [moduleParam],
+    get: {
+      tags: ['modules'],
+      summary: 'One module',
+      responses: {
+        200: {
+          description: 'The module',
+          content: json({ $ref: '#/components/schemas/Module' }),
+        },
+        404: problem('No such module, or not one the caller may see'),
+      },
+    },
+  },
+  '/v1/worlds/{world}/$publish': {
+    parameters: [world],
+    post: {
+      tags: ['modules'],
+      summary: "Publish the world's content as a module",
+      description:
+        "Every live record in the world's own layer, except the world's own record, copied into an immutable layer addressed by a digest of the content. Owners only. The same content publishes once: an unchanged world answers 200 with the module already published.",
+      requestBody: body({
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          version: { type: 'string' },
+          license: { type: 'string' },
+          summary: { type: 'string' },
+          visibility: {
+            enum: ['private', 'public'],
+            description:
+              'Who is offered it: members of this world, or anyone signed in. Default private.',
+          },
+        },
+        required: ['name', 'version'],
+      }),
+      responses: {
+        201: {
+          description: 'The module, newly published',
+          content: json({ $ref: '#/components/schemas/Module' }),
+        },
+        200: {
+          description: 'The module this content was already published as',
+          content: json({ $ref: '#/components/schemas/Module' }),
+        },
+        400: problem('The world has nothing to publish'),
+        403: problem('Only an owner may publish a world'),
+      },
+    },
+  },
+  '/v1/worlds/{world}/modules': {
+    parameters: [world],
+    get: {
+      tags: ['modules'],
+      summary: 'The modules a world reads, nearest first',
+      responses: {
+        200: {
+          description: 'The stack beneath the world’s own content',
+          content: json({
+            type: 'object',
+            properties: {
+              modules: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/Module' },
+              },
+            },
+            required: ['modules'],
+          }),
+        },
+      },
+    },
+    post: {
+      tags: ['modules'],
+      summary: 'Enable a module in the world',
+      description:
+        "Its layer goes after everything the world already reads, so the world's own records and earlier modules win over it. Owners only. Enabling a module already enabled answers 200 and changes nothing.",
+      requestBody: body({
+        type: 'object',
+        properties: { module: { type: 'string', format: 'uuid' } },
+        required: ['module'],
+      }),
+      responses: {
+        201: {
+          description: 'The module, with its position in the stack',
+          content: json({ $ref: '#/components/schemas/Module' }),
+        },
+        200: {
+          description: 'The module was already enabled',
+          content: json({ $ref: '#/components/schemas/Module' }),
+        },
+        403: problem('Only an owner may enable a module'),
+        404: problem('No such module, or not one the caller may see'),
+      },
+    },
+  },
+  '/v1/worlds/{world}/modules/{module}': {
+    parameters: [world, moduleParam],
+    delete: {
+      tags: ['modules'],
+      summary: 'Disable a module in the world',
+      description:
+        "Takes the module's layer out of the stack. Records the world wrote over the module's stay, because they are the world's own.",
+      responses: {
+        204: { description: 'Disabled' },
+        403: problem('Only an owner may disable a module'),
+        404: problem('The world does not read that module'),
       },
     },
   },

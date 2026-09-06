@@ -33,6 +33,9 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 | `POST /v1/worlds/{world}/{model}/{id}/$author` | Ask a language model to write an article or chronicle about a record from the facts on file. The usage line is written in the same transaction; left unsaved, the work is returned to read and can be imported as it is. Editors and owners. |
 | `GET /v1/llm` | The language models the configured endpoints actually hold, and the model the writing task is configured with, so a client offers the choice. |
 | `GET /v1/worlds/{world}/$export/{format}` | Everything in the world, as a bundle or as prose. |
+| `POST /v1/worlds/{world}/$publish` | Snapshot the world's own content as a module: an immutable layer addressed by a digest of its content. Owners only; the same content publishes once. |
+| `GET /v1/modules`, `GET /v1/modules/{module}` | The modules the caller may enable: public ones, and those published from worlds they belong to. |
+| `GET`/`POST` `/v1/worlds/{world}/modules`, `DELETE /v1/worlds/{world}/modules/{module}` | The modules a world reads beneath its own content, and enabling or disabling one. Owners enable and disable. |
 | `GET /v1/openapi.json` | This API, described from the ontology. |
 | `GET /v1/vocabularies` | Every code list with its display text, for a form. |
 | `GET /v1/me` | The caller and the worlds they may open. |
@@ -102,6 +105,14 @@ Runs are capped at 1000 years, and they are synchronous: two centuries of a 250,
 
 A world is exported whole rather than by model, because a resource is only meaningful with the things it refers to: a tenure without its title and its holder is three ids and no history. `json` produces the same collection Bundle shape OURS publishes in, so an export can be read back by the tooling that reads the ontology. `markdown` produces a digest: what the world holds, then its history in year order.
 
+## Modules
+
+A module is a world's content, published. `$publish` copies every live record in the world's own layer, except the world's own record, into a new layer of kind `module`, stamps each copy with the module's digest in its `module` field, and lists the module in a catalogue with its name, version, license, summary, what it holds counted by model, and who may see it: a public module is offered to everyone, a private one only to members of the world it came from.
+
+The digest is a content address: `sha256:` and the hash of every record's model, id and body, with the platform fields that say where a record is rather than what it is (`world`, `module`, `recorded`) left out, in a fixed order. The same content therefore has the same digest, and publishing a world that has not changed answers with the module already published rather than a second one. A module cannot be edited, because no request can address its layer for writing; a corrected module is a new digest.
+
+Enabling a module adds its layer to the world's stack, after everything already there. Reads resolve nearest layer first, so a module's record appears in the world as the world's own, carrying `module` so a client can say where it came from and `?module=` can list what a module contributed. Writing that record in the world puts a copy in the world's own layer, which shadows the module's from then on; deleting it there hides it. Disabling the module removes its layer from the stack and leaves the world's own overrides where they are. See [ADR-016](/adr/adr-016-modules/).
+
 ## The event outbox
 
 Every write appends to the outbox in the same transaction as the write itself. A publisher claims a page with `for update skip locked`, hands it to a sink and marks it published inside one transaction, so several publishers can run at once without one waiting on another or two sending the same event.
@@ -115,7 +126,7 @@ The publisher finds the worlds with events waiting through a database function, 
 ```
 layer        a stack of content: a world's own, or a module's
 world        the tenant; its own layer shares its id
-module       a published package, addressed by a content digest
+module       a published package, addressed by a content digest, with its provenance, visibility and contents
 world_layer  the layers a world reads, nearest first
 resource     (layer, model, id) with the validated body as jsonb
 ```

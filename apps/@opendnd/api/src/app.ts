@@ -32,6 +32,14 @@ import {
   UnauthorizedError,
 } from './identity';
 import { PgLedger } from './ledger';
+import {
+  disableModule,
+  enableModule,
+  moduleFor,
+  modulesOf,
+  modulesVisibleTo,
+  publishModule,
+} from './modules';
 import { openApiDocument } from './openapi';
 import { SCOPE_MODELS, SIMULATION, simulate } from './simulate';
 import {
@@ -122,6 +130,16 @@ export class Forbidden extends Error {
 }
 
 const UUID = z.uuid();
+
+const publishBody = z.object({
+  name: z.string().trim().min(1).max(120),
+  version: z.string().trim().min(1).max(40),
+  license: z.string().trim().min(1).max(120).optional(),
+  summary: z.string().trim().min(1).max(2000).optional(),
+  visibility: z.enum(VISIBILITIES).optional(),
+});
+
+const enableBody = z.object({ module: UUID });
 const CELL = z.string().regex(/^[0-9a-f]{1,16}$/i, 'not a cell token');
 
 /** What a list accepts, checked at the edge so a bad value is a 400 and not a database error. */
@@ -632,6 +650,67 @@ export function createApp(options: AppOptions) {
         summary: `imported ${resources.length} resources`,
       });
       return c.json({ imported: count, world }, 201);
+    }),
+  );
+
+  /**
+   * Modules: a world's content, published.
+   *
+   * The catalogue offers what the caller may enable: every public module,
+   * and every module published from a world they belong to.
+   */
+  app.get('/v1/modules', async (c) => {
+    const identity = requireIdentity(c);
+    return inTransaction(pool, async (client) => {
+      const userId = await ensureUser(client, identity);
+      return c.json({ modules: await modulesVisibleTo(client, userId) });
+    });
+  });
+
+  app.get('/v1/modules/:module', async (c) => {
+    const identity = requireIdentity(c);
+    const id = uuidParam(c, 'module');
+    return inTransaction(pool, async (client) => {
+      const userId = await ensureUser(client, identity);
+      const found = await moduleFor(client, id, userId);
+      if (!found) throw new NotFoundError('module', id);
+      return c.json(found);
+    });
+  });
+
+  /**
+   * Snapshot the world's own content as a module. Owners only, and the same
+   * content publishes once: an unchanged world answers with the module it
+   * already published.
+   */
+  app.post('/v1/worlds/:world/$publish', (c) =>
+    administering(c, pool, async (client, world, userId) => {
+      const request = parse(publishBody, await json(c), 'publish');
+      const result = await publishModule(client, world, userId, request);
+      return c.json(result.module, result.existing ? 200 : 201);
+    }),
+  );
+
+  /** The modules a world reads beneath its own content, nearest first. */
+  app.get('/v1/worlds/:world/modules', (c) =>
+    withWorld(c, false, async (store, world) =>
+      c.json({ modules: await modulesOf(store.client, world) }),
+    ),
+  );
+
+  /** Enable a module: its layer goes after everything the world reads. */
+  app.post('/v1/worlds/:world/modules', (c) =>
+    administering(c, pool, async (client, world, userId) => {
+      const { module: moduleId } = parse(enableBody, await json(c), 'module');
+      const result = await enableModule(client, world, moduleId, userId);
+      return c.json(result.module, result.enabled ? 201 : 200);
+    }),
+  );
+
+  app.delete('/v1/worlds/:world/modules/:module', (c) =>
+    administering(c, pool, async (client, world) => {
+      await disableModule(client, world, uuidParam(c, 'module'));
+      return c.body(null, 204);
     }),
   );
 

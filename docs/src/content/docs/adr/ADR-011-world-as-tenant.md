@@ -27,7 +27,7 @@ Two things complicate the obvious implementation. The first is modules. Paid con
 ## Consequences
 
 - Adding a model to the ontology adds its routes and needs no migration: content is one table with the platform fields projected out as generated columns for indexing.
-- The module system is now a data change rather than a schema change. The tables exist and the layered read is written; publishing, digests and resolution order are still to build.
+- The module system is now a data change rather than a schema change. The tables exist and the layered read is written; publishing, digests and resolution order followed in [ADR-016](/adr/adr-016-modules/).
 - Filtering happens after layer resolution, because a world that overrides a record decides that record's name and canon status. That costs an index on the resolved set, which is acceptable at the page sizes the API serves and can be revisited with a materialised resolution if it stops being.
 - Row-level security is checked on every content row, which adds a subquery per read. The alternative was trusting every query ever written against this database.
 - A deployment that connects as the database owner silently loses the isolation. The specs assert that the serving role is neither a superuser nor able to bypass the policies, so this cannot regress quietly.

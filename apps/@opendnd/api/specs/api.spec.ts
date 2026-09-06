@@ -1949,3 +1949,221 @@ describe('the API: writing about a record', () => {
 function anonymousClient(app: ReturnType<typeof createApp>) {
   return client(app);
 }
+
+describe('the API: modules', () => {
+  let pool: Pool;
+  let app: ReturnType<typeof createApp>;
+  let drew: ReturnType<typeof client>;
+  let ada: ReturnType<typeof client>;
+  let setting: string;
+  let secret: string;
+  let table: string;
+  let published: { id: string; digest: string };
+  let hidden: { id: string };
+
+  beforeAll(async () => {
+    pool = await connect();
+    app = createApp({ pool, identity: new DevIdentityResolver() });
+    drew = client(app, who('drew-modules'));
+    ada = client(app, who('ada-modules'));
+
+    // A setting to publish: two languages and a calendar.
+    const made = await drew.post('/v1/worlds', { name: 'Reach Setting' });
+    setting = (made.body as { id: string }).id;
+    await drew.post(`/v1/worlds/${setting}/language`, { name: 'Old Alder' });
+    await drew.post(`/v1/worlds/${setting}/language`, { name: 'Reach Cant' });
+    await drew.post(`/v1/worlds/${setting}/calendar`, {
+      name: 'Common Reckoning',
+      months: [{ name: 'Year', length: 360 }],
+    });
+
+    // Something private, from another world of Drew's.
+    const other = await drew.post('/v1/worlds', { name: 'Drawer' });
+    secret = (other.body as { id: string }).id;
+    await drew.post(`/v1/worlds/${secret}/language`, { name: 'Secret Tongue' });
+
+    // Ada's own world, which will read the setting.
+    const adas = await ada.post('/v1/worlds', { name: "Ada's Table" });
+    table = (adas.body as { id: string }).id;
+  });
+
+  afterAll(async () => {
+    await pool?.end();
+  });
+
+  it('publishes a world as a module addressed by its content, once', async () => {
+    const first = await drew.post(`/v1/worlds/${setting}/$publish`, {
+      name: 'Reach Setting',
+      version: '1.0.0',
+      license: 'CC-BY-4.0',
+      summary: 'Two tongues and a calendar.',
+      visibility: 'public',
+    });
+    expect(first.status).toBe(201);
+    published = first.body as { id: string; digest: string };
+    const module = first.body as {
+      digest: string;
+      contents: Record<string, number>;
+      total: number;
+      visibility: string;
+      sourceWorld: string;
+    };
+    expect(module.digest).toMatch(/^sha256:[0-9a-f]{64}$/);
+    expect(module.contents).toEqual({ language: 2, calendar: 1 });
+    expect(module.total).toBe(3);
+    expect(module.visibility).toBe('public');
+    expect(module.sourceWorld).toBe(setting);
+
+    // Unchanged content is the module already published, whatever it is called.
+    const again = await drew.post(`/v1/worlds/${setting}/$publish`, {
+      name: 'Reach Setting, again',
+      version: '1.0.1',
+    });
+    expect(again.status).toBe(200);
+    expect((again.body as { id: string }).id).toBe(published.id);
+
+    // The world itself is untouched by publishing.
+    const languages = await drew.get(`/v1/worlds/${setting}/language`);
+    const resources = (languages.body as { resources: { module?: string }[] })
+      .resources;
+    expect(resources).toHaveLength(2);
+    expect(resources.every((r) => r.module === undefined)).toBe(true);
+
+    const nothing = await ada.post(`/v1/worlds/${table}/$publish`, {
+      name: 'Empty',
+      version: '0.0.1',
+    });
+    expect(nothing.status).toBe(400);
+
+    const priv = await drew.post(`/v1/worlds/${secret}/$publish`, {
+      name: 'Drawer',
+      version: '1.0.0',
+    });
+    expect(priv.status).toBe(201);
+    hidden = priv.body as { id: string };
+  });
+
+  it('offers public modules to everyone and private ones to their own members', async () => {
+    const seen = await ada.get('/v1/modules');
+    expect(seen.status).toBe(200);
+    const ids = (seen.body as { modules: { id: string }[] }).modules.map(
+      (m) => m.id,
+    );
+    expect(ids).toContain(published.id);
+    expect(ids).not.toContain(hidden.id);
+
+    expect((await ada.get(`/v1/modules/${hidden.id}`)).status).toBe(404);
+    expect((await drew.get(`/v1/modules/${hidden.id}`)).status).toBe(200);
+    const refused = await ada.post(`/v1/worlds/${table}/modules`, {
+      module: hidden.id,
+    });
+    expect(refused.status).toBe(404);
+  });
+
+  it('reads an enabled module as the world’s own content, marked with where it came from', async () => {
+    const enabled = await ada.post(`/v1/worlds/${table}/modules`, {
+      module: published.id,
+    });
+    expect(enabled.status).toBe(201);
+    expect((enabled.body as { position: number }).position).toBe(1);
+    const twice = await ada.post(`/v1/worlds/${table}/modules`, {
+      module: published.id,
+    });
+    expect(twice.status).toBe(200);
+
+    const stack = await ada.get(`/v1/worlds/${table}/modules`);
+    expect(
+      (stack.body as { modules: { id: string; position: number }[] }).modules,
+    ).toEqual([expect.objectContaining({ id: published.id, position: 1 })]);
+
+    const languages = await ada.get(`/v1/worlds/${table}/language`);
+    const resources = (
+      languages.body as {
+        resources: {
+          id: string;
+          name: string;
+          world: string;
+          module: string;
+        }[];
+      }
+    ).resources;
+    expect(resources.map((r) => r.name).sort()).toEqual([
+      'Old Alder',
+      'Reach Cant',
+    ]);
+    expect(resources.every((r) => r.world === table)).toBe(true);
+    expect(resources.every((r) => r.module === published.digest)).toBe(true);
+
+    const byModule = await ada.get(
+      `/v1/worlds/${table}/language?module=${encodeURIComponent(published.digest)}`,
+    );
+    expect((byModule.body as { resources: unknown[] }).resources).toHaveLength(
+      2,
+    );
+  });
+
+  it('lets a world override or hide a module’s record without touching the module', async () => {
+    const languages = await ada.get(`/v1/worlds/${table}/language`);
+    const [first, second] = (
+      languages.body as { resources: { id: string; name: string }[] }
+    ).resources;
+
+    // Editing what was shown, revision and all, as the application does.
+    const shown = await ada.get(`/v1/worlds/${table}/language/${first!.id}`);
+    const etag = shown.headers.get('etag')!;
+    expect(etag).toBeTruthy();
+    const { module: _module, ...body } = shown.body as Record<string, unknown>;
+    const edited = await ada.put(
+      `/v1/worlds/${table}/language/${first!.id}`,
+      { ...body, name: `${first!.name} (Ada's spelling)` },
+      { 'if-match': etag },
+    );
+    expect(edited.status).toBe(200);
+    const own = edited.body as { name: string; module?: string };
+    expect(own.name).toBe(`${first!.name} (Ada's spelling)`);
+    expect(own.module).toBeUndefined();
+
+    const gone = await ada.delete(`/v1/worlds/${table}/language/${second!.id}`);
+    expect(gone.status).toBe(204);
+
+    const now = await ada.get(`/v1/worlds/${table}/language`);
+    expect(
+      (now.body as { resources: { name: string }[] }).resources.map(
+        (r) => r.name,
+      ),
+    ).toEqual([`${first!.name} (Ada's spelling)`]);
+
+    // The module, and the world it came from, are as they were.
+    const source = await drew.get(`/v1/worlds/${setting}/language`);
+    expect(
+      (source.body as { resources: { name: string }[] }).resources
+        .map((r) => r.name)
+        .sort(),
+    ).toEqual(['Old Alder', 'Reach Cant']);
+  });
+
+  it('leaves a world its own overrides when the module is disabled, and keeps enabling to owners', async () => {
+    const stranger = client(app, who('stranger-modules'));
+    const refused = await stranger.post(`/v1/worlds/${table}/modules`, {
+      module: published.id,
+    });
+    expect(refused.status).toBe(403);
+
+    const disabled = await ada.delete(
+      `/v1/worlds/${table}/modules/${published.id}`,
+    );
+    expect(disabled.status).toBe(204);
+    expect(
+      (await ada.delete(`/v1/worlds/${table}/modules/${published.id}`)).status,
+    ).toBe(404);
+
+    const left = await ada.get(`/v1/worlds/${table}/language`);
+    const names = (
+      left.body as { resources: { name: string }[] }
+    ).resources.map((r) => r.name);
+    expect(names).toHaveLength(1);
+    expect(names[0]).toMatch(/Ada's spelling/);
+    const calendars = await ada.get(`/v1/worlds/${table}/calendar`);
+    expect((calendars.body as { resources: unknown[] }).resources).toEqual([]);
+  });
+});

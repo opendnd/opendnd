@@ -191,3 +191,36 @@ export function isReference(value: unknown): value is Reference {
     typeof (value as Reference).id === 'string'
   );
 }
+
+/**
+ * A published package of content: a world's records snapshotted into a layer
+ * of their own and addressed by a digest of that content, which another world
+ * reads beneath its own.
+ */
+export interface Module {
+  readonly id: string;
+  /** The content address, `sha256:` and the hex digest. */
+  readonly digest: string;
+  readonly name: string;
+  readonly version: string;
+  readonly summary?: string;
+  readonly license?: string;
+  readonly visibility: Visibility;
+  /** How many records of each model the module holds. */
+  readonly contents: Record<string, number>;
+  readonly total: number;
+  /** The world it was published from, when that world still exists. */
+  readonly sourceWorld?: string;
+  readonly publishedAt: string;
+  /** Where it sits in a world's stack, nearest first, when listed for a world. */
+  readonly position?: number;
+}
+
+/** What publishing asks for. The content is the world's own, as it stands. */
+export interface PublishRequest {
+  readonly name: string;
+  readonly version: string;
+  readonly license?: string;
+  readonly summary?: string;
+  readonly visibility?: Visibility;
+}
