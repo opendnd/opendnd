@@ -28,6 +28,10 @@ Sign in with any name. The API's `dev` task runs with development sign-in on, so
 
 A model the API can generate has a Generate button on its list page. The form there is built from the generator's input as `/v1/models` describes it, in JSON Schema, the same way a resource's form is built from its schema: a reference input whose `model` the schema fixes gets a picker that searches only that model. Generating saves nothing. The results are listed by kind, and Keep all imports them in one transaction; one result of the model asked for opens its page, more than one opens the list.
 
+## A world's settings
+
+An owner has a Settings page for each world: its name, visibility and summary, which the world's own record follows; who belongs, with their roles, and who is invited by email and has not yet signed in; what the world has spent on language model calls; and archiving. An archived world keeps everything and appears under "Put away" on the worlds page, where an owner can restore it. The API allows none of this to anyone but an owner, and the page says so to anyone else.
+
 ## Configuration
 
 Settings are read at build time from `VITE_` variables, in the environment or in a `.env.local` file in the site directory. With nothing set, the development server uses the local API and development sign-in; a production build uses `https://api.opendnd.org` and Cognito.

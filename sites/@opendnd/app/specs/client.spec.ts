@@ -219,3 +219,69 @@ describe('the API client and generation', () => {
     );
   });
 });
+
+describe('the API client and a world’s settings', () => {
+  it('patches a world, manages members and invitations, and reads usage', async () => {
+    const { fetch, calls } = fakeFetch({
+      'PATCH /v1/worlds/w': () => ({
+        id: 'w',
+        name: 'Renamed',
+        visibility: 'public',
+      }),
+      'POST /v1/worlds/w/members': async (request) => {
+        const body = (await request.json()) as { email?: string; role: string };
+        return body.email
+          ? Response.json(
+              { invited: body.email, role: body.role },
+              { status: 202 },
+            )
+          : undefined;
+      },
+      'DELETE /v1/worlds/w/members/ada%40x': () => undefined,
+      'DELETE /v1/worlds/w/invitations/sam%40example.test': () => undefined,
+      'GET /v1/worlds/w/usage': () => ({
+        calls: 1,
+        inputTokens: 2,
+        outputTokens: 3,
+        costMicros: 4,
+        chargeMicros: 5,
+      }),
+    });
+    const { api } = client(fetch);
+
+    expect(
+      await api.updateWorld('w', { name: 'Renamed', summary: null }),
+    ).toMatchObject({
+      name: 'Renamed',
+    });
+    expect(await calls[0]!.json()).toEqual({ name: 'Renamed', summary: null });
+
+    expect(
+      await api.setMember('w', { email: 'sam@example.test', role: 'viewer' }),
+    ).toEqual({
+      invited: 'sam@example.test',
+      role: 'viewer',
+    });
+    expect(
+      await api.setMember('w', { subject: 'ada', role: 'owner' }),
+    ).toBeUndefined();
+
+    // Subjects and emails travel URL-encoded in the path.
+    await api.removeMember('w', 'ada@x');
+    await api.withdrawInvitation('w', 'sam@example.test');
+    expect(new URL(calls[3]!.url).pathname).toBe(
+      '/v1/worlds/w/members/ada%40x',
+    );
+    expect(new URL(calls[4]!.url).pathname).toBe(
+      '/v1/worlds/w/invitations/sam%40example.test',
+    );
+
+    expect(await api.usage('w')).toEqual({
+      calls: 1,
+      inputTokens: 2,
+      outputTokens: 3,
+      costMicros: 4,
+      chargeMicros: 5,
+    });
+  });
+});

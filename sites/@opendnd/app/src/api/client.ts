@@ -1,14 +1,18 @@
 import type {
   HistoryEntry,
+  Invitation,
   Me,
   Member,
   ModelInfo,
   Page,
   ReferenceHit,
   Resource,
+  Role,
   SearchHit,
+  Usage,
   Vocabulary,
   World,
+  WorldPatch,
 } from './types';
 
 /** What the API says went wrong, as it says it: a code for programs, a message for people. */
@@ -114,18 +118,53 @@ export class ApiClient {
     return this.body('POST', '/v1/worlds', { body: world });
   }
 
+  /** Change a world's name, visibility or summary. Owners only. */
+  updateWorld(world: string, patch: WorldPatch): Promise<World> {
+    return this.body('PATCH', `/v1/worlds/${world}`, { body: patch });
+  }
+
   archiveWorld(world: string): Promise<void> {
     return this.body('DELETE', `/v1/worlds/${world}`);
   }
 
-  restoreWorld(world: string): Promise<World> {
+  restoreWorld(world: string): Promise<void> {
     return this.body('POST', `/v1/worlds/${world}/$restore`);
   }
 
   members(
     world: string,
-  ): Promise<{ members: Member[]; invitations: unknown[] }> {
+  ): Promise<{ members: Member[]; invitations: Invitation[] }> {
     return this.body('GET', `/v1/worlds/${world}/members`);
+  }
+
+  /**
+   * Admit someone or change their role. Named by subject they are set at
+   * once; named by email they are set if they have signed in before, and
+   * otherwise invited, which the answer says.
+   */
+  setMember(
+    world: string,
+    member: { subject?: string; email?: string; role: Role },
+  ): Promise<{ invited: string; role: Role } | undefined> {
+    return this.body('POST', `/v1/worlds/${world}/members`, { body: member });
+  }
+
+  removeMember(world: string, subject: string): Promise<void> {
+    return this.body(
+      'DELETE',
+      `/v1/worlds/${world}/members/${encodeURIComponent(subject)}`,
+    );
+  }
+
+  withdrawInvitation(world: string, email: string): Promise<void> {
+    return this.body(
+      'DELETE',
+      `/v1/worlds/${world}/invitations/${encodeURIComponent(email)}`,
+    );
+  }
+
+  usage(world: string): Promise<Usage> {
+    return this.body('GET', `/v1/worlds/${world}/usage`);
   }
 
   // Content

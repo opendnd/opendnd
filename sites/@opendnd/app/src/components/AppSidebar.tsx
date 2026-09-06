@@ -1,4 +1,4 @@
-import { GlobeIcon, LogOutIcon, SearchIcon } from 'lucide-react';
+import { GlobeIcon, LogOutIcon, SearchIcon, SettingsIcon } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { placeIn } from './Layout';
@@ -31,6 +31,7 @@ export function AppSidebar() {
   const ontology = useOntology();
   const location = useLocation();
   const place = placeIn(location.pathname);
+  const current = me.data?.worlds.find((w) => w.id === place.world);
 
   return (
     <Sidebar>
@@ -98,6 +99,17 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
+                {current?.role === 'owner' && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={location.pathname.endsWith('/settings')}
+                      render={<Link to={`/worlds/${place.world}/settings`} />}
+                    >
+                      <SettingsIcon />
+                      Settings
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

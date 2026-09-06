@@ -94,6 +94,29 @@ export interface Member {
   readonly role: Role;
 }
 
+/** Someone admitted by email who has not signed in yet. */
+export interface Invitation {
+  readonly email: string;
+  readonly role: Role;
+  readonly invitedAt: string;
+}
+
+/** What a world has spent on model calls. Money is in millionths of a dollar. */
+export interface Usage {
+  readonly calls: number;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly costMicros: number;
+  readonly chargeMicros: number;
+}
+
+/** What an owner may change about a world. `summary: null` clears it. */
+export interface WorldPatch {
+  readonly name?: string;
+  readonly visibility?: Visibility;
+  readonly summary?: string | null;
+}
+
 /** A pointer to another resource, as the ontology's `Reference`. */
 export interface Reference {
   readonly model: string;

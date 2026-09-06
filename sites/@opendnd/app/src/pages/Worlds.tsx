@@ -2,6 +2,7 @@ import { GlobeIcon } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import { Link } from 'react-router';
 import { useApi } from '../app/context';
+import { useRequest } from '../app/hooks';
 import { useMe } from '../app/me';
 import { ErrorNotice, Loading } from '../components/Notice';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +40,9 @@ import { Spinner } from '@/components/ui/spinner';
 export function Worlds() {
   const api = useApi();
   const me = useMe();
+  const archived = useRequest(() => api.worlds(true), [api]);
+  const [restoring, setRestoring] = useState<string>();
+  const [restoreError, setRestoreError] = useState<Error>();
   const [name, setName] = useState('');
   const [visibility, setVisibility] = useState<'private' | 'public'>('private');
   const [saving, setSaving] = useState(false);
@@ -57,6 +61,22 @@ export function Worlds() {
       setError(cause instanceof Error ? cause : new Error(String(cause)));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const restore = async (id: string) => {
+    setRestoring(id);
+    setRestoreError(undefined);
+    try {
+      await api.restoreWorld(id);
+      me.reload();
+      archived.reload();
+    } catch (cause) {
+      setRestoreError(
+        cause instanceof Error ? cause : new Error(String(cause)),
+      );
+    } finally {
+      setRestoring(undefined);
     }
   };
 
@@ -101,6 +121,43 @@ export function Worlds() {
               </Item>
             ))}
           </ItemGroup>
+        )}
+
+        {archived.data && archived.data.length > 0 && (
+          <section className="flex flex-col gap-2 pt-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Put away
+            </h2>
+            {restoreError && <ErrorNotice error={restoreError} />}
+            <ItemGroup className="gap-2">
+              {archived.data.map((world) => (
+                <Item key={world.id} variant="muted">
+                  <ItemContent>
+                    <ItemTitle>{world.name}</ItemTitle>
+                    <ItemDescription>
+                      Archived
+                      {world.archivedAt &&
+                        ` ${new Date(world.archivedAt).toLocaleDateString()}`}
+                      . Kept whole; not listed or served.
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={restoring !== undefined}
+                      onClick={() => restore(world.id)}
+                    >
+                      {restoring === world.id && (
+                        <Spinner data-icon="inline-start" />
+                      )}
+                      Restore
+                    </Button>
+                  </ItemActions>
+                </Item>
+              ))}
+            </ItemGroup>
+          </section>
         )}
       </section>
 

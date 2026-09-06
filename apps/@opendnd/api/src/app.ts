@@ -48,6 +48,8 @@ import {
   removeMember,
   restoreWorld,
   setMember,
+  uninvite,
+  updateWorld,
   usageFor,
   worldsFor,
 } from './worlds';
@@ -130,6 +132,18 @@ const worldBody = z.object({
   summary: z.string().optional(),
   visibility: z.enum(VISIBILITIES).optional(),
 });
+
+/** What may change about a world. `summary: null` clears it. */
+const worldPatch = z
+  .object({
+    name: z.string().trim().min(1, 'a world needs a name').optional(),
+    summary: z.string().nullable().optional(),
+    visibility: z.enum(VISIBILITIES).optional(),
+  })
+  .refine((body) => Object.keys(body).length > 0, {
+    error: 'name something to change: name, summary or visibility',
+  });
+export type WorldPatch = z.infer<typeof worldPatch>;
 
 const memberBody = z
   .object({
@@ -307,6 +321,18 @@ export function createApp(options: AppOptions) {
     return c.json(world, 201);
   });
 
+  /**
+   * Change a world's name, visibility or summary. The name and summary are
+   * also on the world's own record, which follows, so the atlas and the
+   * tenancy never disagree about what a world is called.
+   */
+  app.patch('/v1/worlds/:world', async (c) => {
+    const body = parse(worldPatch, await json(c), 'world');
+    return administering(c, pool, async (client, world) =>
+      c.json(await updateWorld(client, world, body)),
+    );
+  });
+
   /** Who belongs, and who has been invited and not yet arrived. */
   app.get('/v1/worlds/:world/members', async (c) =>
     administering(c, pool, async (client, world) =>
@@ -351,6 +377,16 @@ export function createApp(options: AppOptions) {
       const subject = param(c, 'subject');
       const removed = await removeMember(client, world, subject);
       if (!removed) throw new NotFoundError('member', subject);
+      return c.body(null, 204);
+    }),
+  );
+
+  /** Withdraw an invitation that has not been taken up. */
+  app.delete('/v1/worlds/:world/invitations/:email', async (c) =>
+    administering(c, pool, async (client, world) => {
+      const email = param(c, 'email');
+      const withdrawn = await uninvite(client, world, email);
+      if (!withdrawn) throw new NotFoundError('invitation', email);
       return c.body(null, 204);
     }),
   );

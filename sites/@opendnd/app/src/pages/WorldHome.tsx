@@ -1,7 +1,9 @@
+import { SettingsIcon } from 'lucide-react';
 import { Link } from 'react-router';
 import { useOntology } from '../app/ontology';
 import { useWorld } from '../app/world';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardDescription,
@@ -12,7 +14,7 @@ import {
 /** Every model the API serves, as the doors into a world. */
 export function WorldHome() {
   const ontology = useOntology();
-  const { world } = useWorld();
+  const { world, isOwner } = useWorld();
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
@@ -22,6 +24,17 @@ export function WorldHome() {
           </h1>
           <Badge variant="secondary">{world.role ?? 'visitor'}</Badge>
           <Badge variant="outline">{world.visibility}</Badge>
+          {isOwner && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-auto"
+              render={<Link to={`/worlds/${world.id}/settings`} />}
+            >
+              <SettingsIcon data-icon="inline-start" />
+              Settings
+            </Button>
+          )}
         </div>
         <p className="text-sm text-muted-foreground">
           Everything in this world is one of these. Open one to browse or add to

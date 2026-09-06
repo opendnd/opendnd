@@ -5,6 +5,8 @@ export interface WorldScope {
   readonly world: World;
   /** Whether the signed-in user may write to this world. */
   readonly canEdit: boolean;
+  /** Whether the signed-in user may change the world itself and who belongs. */
+  readonly isOwner: boolean;
 }
 
 const WorldContext = createContext<WorldScope | undefined>(undefined);
@@ -17,6 +19,7 @@ export function WorldProvider(props: {
   const scope: WorldScope = {
     world: props.world,
     canEdit: role === 'owner' || role === 'editor',
+    isOwner: role === 'owner',
   };
   return (
     <WorldContext.Provider value={scope}>

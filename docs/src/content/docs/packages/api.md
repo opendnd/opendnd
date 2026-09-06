@@ -22,7 +22,9 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 |---|---|
 | `GET /v1/models` | The models this deployment serves, each with the name and description its manifest gives it, and, where something generates it, what that generator takes as JSON Schema. |
 | `GET`/`POST` `/v1/worlds` | The caller's worlds, and creating one. |
+| `PATCH /v1/worlds/{world}` | Change a world's name, visibility or summary. Owners only; the world's own record follows. |
 | `POST /v1/worlds/{world}/members` | Admit someone by subject or by email, or change their role. Owners only. |
+| `DELETE /v1/worlds/{world}/invitations/{email}` | Withdraw an invitation that has not been taken up. |
 | `GET`/`POST` `/v1/worlds/{world}/{model}` | List and create. |
 | `GET`/`PUT`/`PATCH`/`DELETE` `/v1/worlds/{world}/{model}/{id}` | One resource. |
 | `POST /v1/{model}/$generate` | Generate without a world and without an account, sending the species, culture and calendar whole. |

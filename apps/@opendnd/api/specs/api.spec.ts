@@ -1481,6 +1481,82 @@ describe('the API: hardening', () => {
     );
   });
 
+  it('lets an owner change a world’s name, visibility and summary, and its record follows', async () => {
+    const id = await makeWorld({ name: 'Provisional', summary: 'A draft.' });
+
+    const changed = await drew.patch(`/v1/worlds/${id}`, {
+      name: 'Settled',
+      visibility: 'public',
+      summary: 'No longer a draft.',
+    });
+    expect(changed.status).toBe(200);
+    expect(changed.body).toMatchObject({
+      id,
+      name: 'Settled',
+      visibility: 'public',
+      role: 'owner',
+    });
+
+    // The tenancy and the world's own record agree.
+    const listed = (
+      (await drew.get('/v1/me')).body as {
+        worlds: { id: string; name: string }[];
+      }
+    ).worlds.find((w) => w.id === id);
+    expect(listed?.name).toBe('Settled');
+    const record = (await drew.get(`/v1/worlds/${id}/world/${id}`)).body as {
+      name: string;
+      summary?: string;
+    };
+    expect(record.name).toBe('Settled');
+    expect(record.summary).toBe('No longer a draft.');
+
+    // Clearing the summary is a null, as a merge patch says it.
+    const cleared = await drew.patch(`/v1/worlds/${id}`, { summary: null });
+    expect(cleared.status).toBe(200);
+    const after = (await drew.get(`/v1/worlds/${id}/world/${id}`)).body as {
+      summary?: string;
+    };
+    expect(after.summary).toBeUndefined();
+
+    // Nothing to change is a 400, not a silent no-op.
+    expect((await drew.patch(`/v1/worlds/${id}`, {})).status).toBe(400);
+    expect(
+      (await drew.patch(`/v1/worlds/${id}`, { visibility: 'link' })).status,
+    ).toBe(400);
+
+    // An editor may write content, not the world itself.
+    await other.get('/v1/me');
+    await drew.post(`/v1/worlds/${id}/members`, {
+      subject: who('other-h'),
+      role: 'editor',
+    });
+    expect(
+      (await other.patch(`/v1/worlds/${id}`, { name: 'Mine now' })).status,
+    ).toBe(403);
+  });
+
+  it('lets an owner withdraw an invitation that has not been taken up', async () => {
+    const email = `${who('never-h')}@dev.invalid`;
+    const invited = await drew.post(`/v1/worlds/${world}/members`, {
+      email,
+      role: 'viewer',
+    });
+    expect(invited.status).toBe(202);
+    const pending = (await drew.get(`/v1/worlds/${world}/members`)).body as {
+      invitations: { email: string }[];
+    };
+    expect(pending.invitations.map((i) => i.email)).toContain(email);
+
+    const path = `/v1/worlds/${world}/invitations/${encodeURIComponent(email)}`;
+    expect((await drew.delete(path)).status).toBe(204);
+    const gone = (await drew.get(`/v1/worlds/${world}/members`)).body as {
+      invitations: { email: string }[];
+    };
+    expect(gone.invitations.map((i) => i.email)).not.toContain(email);
+    expect((await drew.delete(path)).status).toBe(404);
+  });
+
   it('lets an owner list archived worlds and restore one', async () => {
     const attic = await makeWorld({ name: 'Attic' });
     expect((await drew.delete(`/v1/worlds/${attic}`)).status).toBe(204);

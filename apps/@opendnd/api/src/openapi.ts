@@ -589,12 +589,54 @@ const fixedPaths = {
   },
   '/v1/worlds/{world}': {
     parameters: [world],
+    patch: {
+      tags: ['worlds'],
+      summary: "Change a world's name, visibility or summary",
+      description:
+        'Owners only. The name and summary are also on the world’s own record, which follows. `summary: null` clears it.',
+      requestBody: body({
+        type: 'object',
+        properties: {
+          name: { type: 'string', minLength: 1 },
+          summary: { type: ['string', 'null'] },
+          visibility: { enum: ['private', 'public'] },
+        },
+        minProperties: 1,
+      }),
+      responses: {
+        200: {
+          description: 'The world as it now is',
+          content: json({ $ref: '#/components/schemas/World' }),
+        },
+        400: problem('Nothing to change, or a value is not valid'),
+        403: problem('Only an owner may change a world'),
+      },
+    },
     delete: {
       tags: ['worlds'],
       summary: 'Archive a world. The content stays; it stops being listed.',
       responses: {
         204: { description: 'Archived' },
         403: problem('Only an owner may archive a world'),
+      },
+    },
+  },
+  '/v1/worlds/{world}/invitations/{email}': {
+    parameters: [
+      world,
+      {
+        name: 'email',
+        in: 'path',
+        required: true,
+        schema: { type: 'string', format: 'email' },
+      },
+    ],
+    delete: {
+      tags: ['worlds'],
+      summary: 'Withdraw an invitation that has not been taken up',
+      responses: {
+        204: { description: 'Withdrawn' },
+        404: problem('No such invitation'),
       },
     },
   },

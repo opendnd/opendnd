@@ -385,6 +385,77 @@ async function assertAnotherOwner(
 }
 
 /**
+ * Change what a world is called, who may see it, or how it is summarised.
+ *
+ * The name and summary live twice: on the tenancy row, which lists worlds
+ * without entering any of them, and on the world's own record, which is
+ * ontology content with a history. Both are written here, in one transaction,
+ * so they cannot disagree. A `null` summary clears it, as a merge patch says.
+ */
+export async function updateWorld(
+  client: PoolClient,
+  worldId: string,
+  patch: {
+    readonly name?: string;
+    readonly visibility?: Visibility;
+    readonly summary?: string | null;
+  },
+): Promise<World> {
+  const sets: string[] = ['updated_at = now()'];
+  const params: unknown[] = [worldId];
+  if (patch.name !== undefined) {
+    sets.push(`name = $${params.push(patch.name)}`);
+  }
+  if (patch.visibility !== undefined) {
+    sets.push(`visibility = $${params.push(patch.visibility)}`);
+  }
+  const { rows } = await client.query<{
+    id: string;
+    name: string;
+    visibility: Visibility;
+    archived_at: Date | null;
+  }>(
+    `update world set ${sets.join(', ')} where id = $1
+     returning id, name, visibility, archived_at`,
+    params,
+  );
+  const row = rows[0];
+  if (!row) throw new Error(`world ${worldId} vanished while being updated`);
+
+  const record: Record<string, unknown> = {};
+  if (patch.name !== undefined) record.name = patch.name;
+  if (patch.summary !== undefined) record.summary = patch.summary;
+  if (Object.keys(record).length > 0) {
+    await client.query('select set_config($1, $2, true)', [
+      'app.world',
+      worldId,
+    ]);
+    await new Store(client, worldId).patch('world', worldId, record);
+  }
+
+  return {
+    id: row.id,
+    name: row.name,
+    visibility: row.visibility,
+    role: 'owner',
+    ...(row.archived_at ? { archivedAt: row.archived_at.toISOString() } : {}),
+  };
+}
+
+/** Withdraw an invitation. True if there was one to withdraw. */
+export async function uninvite(
+  client: PoolClient,
+  worldId: string,
+  email: string,
+): Promise<boolean> {
+  const { rowCount } = await client.query(
+    'delete from world_invitation where world_id = $1 and email = lower($2)',
+    [worldId, email],
+  );
+  return (rowCount ?? 0) > 0;
+}
+
+/**
  * Archive a world.
  *
  * The content stays. A world someone spent a year on should not be one click

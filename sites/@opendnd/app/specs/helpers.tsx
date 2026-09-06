@@ -13,7 +13,7 @@ import { WORLD_ID, petOntology } from './fixtures/ontology';
 export type Handler = (
   request: Request,
   url: URL,
-) => Response | object | undefined;
+) => Response | object | undefined | Promise<Response | object | undefined>;
 
 /**
  * A `fetch` that answers from a table of `METHOD /path` handlers and records
@@ -23,7 +23,8 @@ export function fakeFetch(handlers: Record<string, Handler> = {}) {
   const calls: Request[] = [];
   const impl = (async (input: RequestInfo | URL, init?: RequestInit) => {
     const request = new Request(input, init);
-    calls.push(request);
+    // Recorded as a clone, so a handler that reads the body leaves it readable.
+    calls.push(request.clone());
     const url = new URL(request.url);
     const key = `${request.method} ${url.pathname}`;
     const handler = handlers[key];
@@ -33,7 +34,7 @@ export function fakeFetch(handlers: Record<string, Handler> = {}) {
         { status: 404 },
       );
     }
-    const answer = handler(request, url);
+    const answer = await handler(request, url);
     if (answer instanceof Response) return answer;
     if (answer === undefined) return new Response(null, { status: 204 });
     return Response.json(answer);

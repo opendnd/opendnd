@@ -7,6 +7,7 @@ import { Generate } from './pages/Generate';
 import { Record } from './pages/Record';
 import { Records } from './pages/Records';
 import { Search } from './pages/Search';
+import { Settings } from './pages/Settings';
 import { SignIn } from './pages/SignIn';
 import { WorldHome } from './pages/WorldHome';
 import { WorldLayout } from './pages/WorldLayout';
@@ -36,6 +37,7 @@ export const routes: RouteObject[] = [
                 children: [
                   { index: true, element: <WorldHome /> },
                   { path: 'search', element: <Search /> },
+                  { path: 'settings', element: <Settings /> },
                   { path: ':model', element: <Records /> },
                   { path: ':model/new', element: <Edit /> },
                   { path: ':model/generate', element: <Generate /> },
