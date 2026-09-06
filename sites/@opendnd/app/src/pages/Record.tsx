@@ -1,6 +1,7 @@
 import {
   FeatherIcon,
   HourglassIcon,
+  MapIcon,
   PencilIcon,
   PlusIcon,
   Trash2Icon,
@@ -15,6 +16,7 @@ import { useOntology } from '../app/ontology';
 import { recordPath, useWorld } from '../app/world';
 import { Article } from '../components/Article';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
+import { cellModels, parseCell } from '../schema/cells';
 import { type Field, describe } from '../schema/fields';
 import {
   type RelatedAction,
@@ -84,6 +86,14 @@ export function Record() {
     () => relatedActions(ontology, model),
     [ontology, model],
   );
+  const cellField = useMemo(
+    () => cellModels(ontology).find((m) => m.model === model)?.field,
+    [ontology, model],
+  );
+  const onMap =
+    cellField !== undefined
+      ? parseCell(resource.data?.body[cellField])?.token
+      : undefined;
 
   const remove = async () => {
     setRemoving(true);
@@ -193,6 +203,19 @@ export function Record() {
           </div>
         )}
         {removeError && <ErrorNotice error={removeError} />}
+
+        {onMap && (
+          <div>
+            <Button
+              variant="outline"
+              size="sm"
+              render={<Link to={`/worlds/${world.id}/map?cell=${onMap}`} />}
+            >
+              <MapIcon data-icon="inline-start" />
+              On the map
+            </Button>
+          </div>
+        )}
 
         <Card size="sm">
           <CardHeader>

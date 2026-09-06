@@ -22,6 +22,7 @@ import {
   GENERATORS,
   NoGeneratorError,
   REFERENCE_FIELDS,
+  resolveWithin,
   contextFor,
   generate,
   resolveInputs,
@@ -835,10 +836,10 @@ export function createApp(options: AppOptions) {
    */
   app.post('/v1/worlds/:world/:model/$generate', (c) =>
     read(c, async (store, model, world, identity) => {
-      const input = await resolveInputs(
-        await json(c),
-        REFERENCE_FIELDS,
-        (m, id) => store.get(m, id),
+      const load = (m: ModelId, id: string) => store.get(m, id);
+      const input = await resolveWithin(
+        await resolveInputs(await json(c), REFERENCE_FIELDS, load),
+        load,
       );
       const resources = generate(
         model,

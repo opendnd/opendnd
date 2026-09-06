@@ -73,6 +73,7 @@ const packages: readonly PackageConfig[] = [
     deps: [
       '@opendnd/llm@workspace:*',
       '@opendnd/random@workspace:*',
+      '@opendnd/spatial@workspace:*',
       '@opendnd/types@workspace:*',
     ],
   },
@@ -115,6 +116,7 @@ const apps: readonly PackageConfig[] = [
       `pg@${versions.pg}`,
       `zod@${versions.zod}`,
       '@opendnd/types@workspace:*',
+      '@opendnd/spatial@workspace:*',
       '@opendnd/generators@workspace:*',
       '@opendnd/simulation@workspace:*',
       '@opendnd/llm@workspace:*',

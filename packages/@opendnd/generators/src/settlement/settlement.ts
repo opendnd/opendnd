@@ -24,6 +24,7 @@ import {
 } from './data';
 import { Generator, GeneratorContext, childContext, stamp } from '../generator';
 import { NameGenerator } from '../names';
+import { placeCell } from './placement';
 
 export interface SettlementInput {
   /** hamlet, village, town, city or metropolis. */
@@ -38,6 +39,12 @@ export interface SettlementInput {
   readonly prosperity?: Prosperity;
   /** Head count. Drawn from the tier's range when absent. */
   readonly population?: number;
+  /** The cell to place it inside. Left out, it lands somewhere on the world. */
+  readonly within?: string;
+  /** Cells already taken by its neighbours, to keep clear of. */
+  readonly avoid?: readonly string[];
+  /** The world's radius, which sizes a cell at each level. Earth when left out. */
+  readonly radiusMeters?: number;
   /** People per square mile. Drawn around the tier's typical density when absent. */
   readonly density?: number;
   readonly resources?: Resource[];
@@ -94,6 +101,15 @@ export const settlementGenerator: Generator<SettlementInput, SettlementOutput> =
       const resources =
         input.resources ?? rollResources(terrain, rng.child('resources'));
       const area = landArea(count, density, rng.child('area'));
+      const cell = placeCell(
+        area.squareMiles,
+        input.within,
+        rng.child('cell'),
+        input.avoid,
+        input.radiusMeters !== undefined
+          ? { radiusMeters: input.radiusMeters }
+          : {},
+      );
       const at = {
         trs: input.calendar.id,
         year: input.year,
@@ -108,6 +124,7 @@ export const settlementGenerator: Generator<SettlementInput, SettlementOutput> =
         terrain,
         resources,
         area,
+        cell,
         population: count,
         ...(input.parent ? { parent: input.parent } : {}),
         ...(input.controlledBy ? { controlledBy: input.controlledBy } : {}),

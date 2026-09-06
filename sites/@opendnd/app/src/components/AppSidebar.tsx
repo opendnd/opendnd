@@ -1,4 +1,10 @@
-import { GlobeIcon, LogOutIcon, SearchIcon, SettingsIcon } from 'lucide-react';
+import {
+  GlobeIcon,
+  LogOutIcon,
+  MapIcon,
+  SearchIcon,
+  SettingsIcon,
+} from 'lucide-react';
 import { type FormEvent, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
 import { placeIn } from './Layout';
@@ -87,6 +93,15 @@ export function AppSidebar() {
             <SidebarGroupContent className="flex flex-col gap-2">
               <SearchBox world={place.world} />
               <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={location.pathname.endsWith('/map')}
+                    render={<Link to={`/worlds/${place.world}/map`} />}
+                  >
+                    <MapIcon />
+                    Map
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 {ontology.models.map((model) => (
                   <SidebarMenuItem key={model.id}>
                     <SidebarMenuButton

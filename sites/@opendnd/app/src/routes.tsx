@@ -5,6 +5,7 @@ import { Callback } from './pages/Callback';
 import { Edit } from './pages/Edit';
 import { ErrorPage } from './pages/ErrorPage';
 import { Generate } from './pages/Generate';
+import { MapPage } from './pages/Map';
 import { Record } from './pages/Record';
 import { Records } from './pages/Records';
 import { Search } from './pages/Search';
@@ -39,6 +40,7 @@ export const routes: RouteObject[] = [
                 children: [
                   { index: true, element: <WorldHome /> },
                   { path: 'search', element: <Search /> },
+                  { path: 'map', element: <MapPage /> },
                   { path: 'settings', element: <Settings /> },
                   { path: ':model', element: <Records /> },
                   { path: ':model/new', element: <Edit /> },

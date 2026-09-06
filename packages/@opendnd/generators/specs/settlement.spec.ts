@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Rng } from '@opendnd/random';
+import { CellId } from '@opendnd/spatial';
 import {
   calendarSchema,
   cultureSchema,
@@ -18,6 +19,7 @@ import {
   TIERS,
   createContext,
   industriesFor,
+  levelForArea,
   realmGenerator,
   rollResources,
   settlementGenerator,
@@ -185,6 +187,46 @@ describe('realmGenerator', () => {
     }
     for (const [parentId, sum] of childrenSum)
       expect(sum).toBeLessThanOrEqual(byId.get(parentId)!.population! + 1);
+  });
+
+  it('places every demesne and locality on the map, each inside its parent', () => {
+    const byId = new Map(realm.places.map((p) => [p.id, p]));
+    for (const place of realm.places) {
+      expect(place.cell).toMatch(/^[0-9a-f]{1,16}$/);
+      const parent = place.parent ? byId.get(place.parent.id) : undefined;
+      if (parent) {
+        const outer = CellId.fromToken(parent.cell!);
+        const inner = CellId.fromToken(place.cell!);
+        expect(outer.contains(inner)).toBe(true);
+        expect(inner.level()).toBeGreaterThan(outer.level());
+      }
+    }
+    // Siblings keep clear of one another where there is room.
+    const kingdom = realm.places.find((p) => p.placeType === 'kingdom')!;
+    const duchies = realm.places
+      .filter((p) => p.parent?.id === kingdom.id)
+      .map((p) => CellId.fromToken(p.cell!));
+    expect(duchies.length).toBeGreaterThan(1);
+    for (let a = 0; a < duchies.length; a++) {
+      for (let b = a + 1; b < duchies.length; b++) {
+        expect(duchies[a]!.intersects(duchies[b]!)).toBe(false);
+      }
+    }
+  });
+
+  it('lands inside the cell it is asked to, at a level fit for its land', () => {
+    const within = CellId.fromFaceIJ(2, 5, 9, 6).token();
+    const county = realmGenerator.generate(
+      { tier: 'county', culture, species, calendar, year: 1000, within },
+      ctx('realm/placed'),
+    );
+    const top = county.places.find((p) => p.placeType === 'county')!;
+    expect(CellId.fromToken(within).contains(CellId.fromToken(top.cell!))).toBe(
+      true,
+    );
+    // Eight hundred square miles is a cell about forty-five kilometres across.
+    expect(CellId.fromToken(top.cell!).level()).toBe(levelForArea(800));
+    expect(levelForArea(800)).toBeGreaterThan(6);
   });
 
   it('gives every demesne a ruling house and a ranked title', () => {

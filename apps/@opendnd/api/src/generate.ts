@@ -6,7 +6,7 @@ import {
   settlementGenerator,
 } from '@opendnd/generators';
 import { type ModelId, vocabularies } from '@opendnd/types';
-import type { Resource } from './store';
+import { type Resource, ValidationError } from './store';
 
 /**
  * Generation returns resources rather than a resource: asking for a place
@@ -140,6 +140,10 @@ export const GENERATORS: Partial<Record<ModelId, GeneratorDescription>> = {
           minimum: 1,
           description: 'Left out, drawn from the range the tier allows.',
         },
+        within: reference(
+          'place',
+          'A place to put it inside, which becomes its parent. Left out, it lands somewhere on the world.',
+        ),
       },
       required: ['tier', 'species', 'culture', 'calendar', 'year'],
       additionalProperties: false,
@@ -233,6 +237,40 @@ export async function resolveInputs(
   return out;
 }
 
+/**
+ * A place generated `within` another lands inside that place's cell and takes
+ * it as its parent. The container is named by id or reference and must
+ * already have a cell; a place that has none has nowhere to put anything.
+ */
+export async function resolveWithin(
+  input: Record<string, unknown>,
+  load: (model: ModelId, id: string) => Promise<Resource | undefined>,
+): Promise<Record<string, unknown>> {
+  if (input.within === undefined) return input;
+  const id = idOf(input.within);
+  const container = id === undefined ? undefined : await load('place', id);
+  if (!container) {
+    throw new ValidationError(
+      `within names ${String(id ?? input.within)}, which is not a place in this world`,
+      [{ path: ['within'], message: 'unknown place' }],
+    );
+  }
+  if (typeof container.cell !== 'string') {
+    throw new ValidationError(
+      `${String(container.name ?? id)} has no cell yet, so nothing can be placed within it`,
+      [{ path: ['within'], message: 'no cell' }],
+    );
+  }
+  return {
+    ...input,
+    within: container.cell,
+    parent: input.parent ?? {
+      model: 'place',
+      id: container.id,
+      ...(typeof container.name === 'string' ? { name: container.name } : {}),
+    },
+  };
+}
 /** Fields of a generator input that may be given as an id or a reference instead. */
 export const REFERENCE_FIELDS = ['species', 'culture', 'calendar'] as const;
 

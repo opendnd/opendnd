@@ -20,6 +20,7 @@ import {
 import { drawPopulation, placeName, settlementGenerator } from './settlement';
 import { Generator, GeneratorContext, childContext, stamp } from '../generator';
 import { NameGenerator } from '../names';
+import { placeCell } from './placement';
 
 export type DemesneTier = 'county' | 'duchy' | 'kingdom';
 
@@ -36,6 +37,12 @@ export interface RealmInput {
   readonly maxPopulation?: number;
   readonly parent?: ReferenceTo<'place'>;
   readonly liege?: ReferenceTo<'faction'>;
+  /** The cell to place the demesne inside. Left out, it lands somewhere on the world. */
+  readonly within?: string;
+  /** Cells already taken by its neighbours, to keep clear of. */
+  readonly avoid?: readonly string[];
+  /** The world's radius, which sizes a cell at each level. Earth when left out. */
+  readonly radiusMeters?: number;
 }
 
 export interface RealmOutput {
@@ -100,6 +107,17 @@ function generateDemesne(
   const name = input.name ?? placeName(input.culture, rng.child('name'));
   const squareMiles =
     SCALE_SQUARE_MILES[tier.scale as keyof typeof SCALE_SQUARE_MILES];
+  const radius =
+    input.radiusMeters !== undefined
+      ? { radiusMeters: input.radiusMeters }
+      : {};
+  const cell = placeCell(
+    squareMiles,
+    input.within,
+    rng.child('cell'),
+    input.avoid,
+    radius,
+  );
 
   const place: Place = {
     ...stamp(realmGenerator, ctx),
@@ -108,6 +126,7 @@ function generateDemesne(
     placeType: input.tier as PlaceType,
     ...(input.terrain ? { terrain: input.terrain } : {}),
     area: { squareMiles },
+    cell,
     population: count,
     ...(input.parent ? { parent: input.parent } : {}),
   };
@@ -172,8 +191,10 @@ function generateDemesne(
   });
 
   // Carve the population into children until what remains is too small.
+  // Each child is placed inside this demesne's cell, clear of the ones before.
   let remaining = count;
   let index = 0;
+  const placed: string[] = [];
   const childTier =
     input.tier === 'kingdom'
       ? 'duchy'
@@ -194,10 +215,13 @@ function generateDemesne(
           maxPopulation: Math.min(cap, TIERS[pick].max),
           parent: placeRef,
           liege: houseRef,
+          within: cell,
+          avoid: placed,
         },
         childContext(ctx, `${pick}/${index}`),
         out,
       );
+      if (child.cell) placed.push(child.cell);
       remaining -= child.population ?? 0;
     } else {
       const pick = fitLocality(remaining);
@@ -213,9 +237,13 @@ function generateDemesne(
           maxPopulation: Math.min(cap, TIERS[pick].max),
           parent: placeRef,
           controlledBy: houseRef,
+          within: cell,
+          avoid: placed,
+          ...radius,
         },
         childContext(ctx, `${pick}/${index}`),
       );
+      if (settlement.place.cell) placed.push(settlement.place.cell);
       out.places.push(settlement.place);
       out.populations.push(settlement.population);
       out.economies.push(settlement.economy);

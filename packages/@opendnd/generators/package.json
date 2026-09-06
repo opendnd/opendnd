@@ -31,6 +31,7 @@
   "dependencies": {
     "@opendnd/llm": "workspace:*",
     "@opendnd/random": "workspace:*",
+    "@opendnd/spatial": "workspace:*",
     "@opendnd/types": "workspace:*"
   },
   "devEngines": {

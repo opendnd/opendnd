@@ -7,6 +7,7 @@ import {
   type Provider,
   asTaskConfig,
 } from '@opendnd/llm';
+import { CellId } from '@opendnd/spatial';
 import type { Pool } from 'pg';
 import { MODEL_IDS, createApp } from 'src/app';
 import { inWorld } from 'src/db';
@@ -682,6 +683,68 @@ describe('the API: actions', () => {
     ).resources;
     expect(cant.canonStatus).toBe('proposed');
     expect(cant.id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
+  it('generates a county within a place, inside its cell and under it', async () => {
+    const first = async (model: string) =>
+      (
+        (await drew.get(`/v1/worlds/${world}/${model}?limit=1`)).body as {
+          resources: { id: string }[];
+        }
+      ).resources[0]!.id;
+    const [speciesId, cultureId, calendarId] = await Promise.all([
+      first('species'),
+      first('culture'),
+      first('calendar'),
+    ]);
+    const duchies = await drew.get(`/v1/worlds/${world}/place?name=Duchy`);
+    const duchy = (
+      duchies.body as { resources: { id: string; cell?: string }[] }
+    ).resources[0]!;
+    expect(duchy.cell).toMatch(/^[0-9a-f]{1,16}$/);
+
+    const made = await drew.post(`/v1/worlds/${world}/place/$generate`, {
+      tier: 'county',
+      species: speciesId,
+      culture: cultureId,
+      calendar: calendarId,
+      year: 1000,
+      within: { model: 'place', id: duchy.id },
+    });
+    expect(made.status).toBe(200);
+    const places = (
+      made.body as {
+        resources: {
+          model: string;
+          cell?: string;
+          placeType: string;
+          parent?: { id: string };
+        }[];
+      }
+    ).resources.filter((r) => r.model === 'place');
+    expect(places.length).toBeGreaterThan(1);
+    const outer = CellId.fromToken(duchy.cell!);
+    for (const place of places) {
+      expect(outer.contains(CellId.fromToken(place.cell!))).toBe(true);
+    }
+    const county = places.find((p) => p.placeType === 'county')!;
+    expect(county.parent?.id).toBe(duchy.id);
+
+    // A place without a cell has nowhere to put anything.
+    const bare = await drew.post(`/v1/worlds/${world}/place`, {
+      name: 'Nowhere in particular',
+      placeType: 'region',
+    });
+    expect(bare.status).toBe(201);
+    const refused = await drew.post(`/v1/worlds/${world}/place/$generate`, {
+      tier: 'county',
+      species: speciesId,
+      culture: cultureId,
+      calendar: calendarId,
+      year: 1000,
+      within: (bare.body as { id: string }).id,
+    });
+    expect(refused.status).toBe(400);
   });
 
   it('publishes the outbox once, and claims nothing twice', async () => {

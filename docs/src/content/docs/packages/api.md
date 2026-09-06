@@ -89,7 +89,7 @@ Every write appends to the outbox in the same transaction, so an event cannot de
 
 `$generate` runs the matching generator and returns the resources without saving any of them: the caller decides what to keep and posts it back. It returns a list rather than one resource, because generating a place produces the place, its population and its economy, and generating a demesne produces a whole realm of them with the houses and titles that hold them.
 
-Inside a world, a generator input that wants a whole resource — a species with its chromosomes, a culture with its name lists — may be given the id instead, and the API loads it from the world first.
+Inside a world, a generator input that wants a whole resource — a species with its chromosomes, a culture with its name lists — may be given the id instead, and the API loads it from the world first. A place may be generated `within` another place that has a cell: the new one is placed inside that cell and takes the place as its parent; left out, it lands somewhere on the world.
 
 ## Simulating
 

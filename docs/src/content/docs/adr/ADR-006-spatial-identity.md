@@ -23,3 +23,8 @@ The Atlas needs Google-Maps-style zoom from a whole planet to a street, and the 
 - Vector tiles for the Atlas are cut from PostGIS geometry as planned; the quadtree adds ids and containment, it does not replace geometry.
 - The 2019 icosahedron experiment is retired: geodesic grids are more uniform but do not nest, which matters more here.
 - `@opendnd/spatial` implements cell ids, projection for a given world radius, containment, neighbours and battle-map tile addressing. Position bits use Z-order rather than S2's Hilbert curve; the layout and level semantics match S2, so the curve can be swapped without changing the API.
+
+## Decided later, 2026-09-06
+
+- **Generated places are placed.** The settlement and realm generators give every place a cell at the level whose cells are about the size of its land, and every child a cell inside its parent's, clear of its siblings' where there is room, from the same seeded source as everything else, so a realm lands in the same place each time it is generated. A place too large for its parent's cell takes the level just below the parent's: containment is what the quadtree promises, not exact area. A generator asked for a place `within` another puts it inside that place's cell; asked for nothing, it chooses a spot on the world.
+- **The map is the cells.** The application draws a world from the cell tokens its records carry, on one face at a time, without a tile server: a cell's position inside the cell in view is arithmetic on the token. Tiles for terrain and imagery remain the plan for when there is something to render into them; the identity they will be addressed by is already on every generated place.
