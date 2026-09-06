@@ -2,6 +2,7 @@ import { SettingsIcon } from 'lucide-react';
 import { Link } from 'react-router';
 import { useOntology } from '../app/ontology';
 import { useWorld } from '../app/world';
+import { Transfer } from '../components/Transfer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -71,6 +72,7 @@ export function WorldHome() {
           );
         })}
       </ul>
+      <Transfer />
     </div>
   );
 }

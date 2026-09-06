@@ -644,6 +644,46 @@ describe('the API: actions', () => {
     expect(bad.status).toBe(400);
   });
 
+  it('imports the bundle an export produced into another world, unchanged', async () => {
+    const exported = await drew.get(`/v1/worlds/${world}/$export/json`);
+    expect(exported.status).toBe(200);
+    const bundle = exported.body as {
+      total: number;
+      entry: { model: string; resource: { id: string; name: string } }[];
+    };
+    const made = await drew.post('/v1/worlds', { name: 'Copied Realm' });
+    const copy = (made.body as { id: string }).id;
+
+    const imported = await drew.post(`/v1/worlds/${copy}/$import`, bundle);
+    expect(imported.status).toBe(201);
+    expect((imported.body as { imported: number }).imported).toBe(bundle.total);
+
+    // The same ids in the other world, with nothing changed on the way.
+    const place = bundle.entry.find((entry) => entry.model === 'place')!;
+    const there = await drew.get(
+      `/v1/worlds/${copy}/place/${place.resource.id}`,
+    );
+    expect(there.status).toBe(200);
+    expect((there.body as { name: string }).name).toBe(place.resource.name);
+
+    // Nothing to import is refused, whichever shape carried it.
+    const empty = await drew.post(`/v1/worlds/${copy}/$import`, { entry: [] });
+    expect(empty.status).toBe(400);
+
+    // A list typed by hand need not be stamped: an id and a canon status
+    // are supplied, as they are for a single create.
+    const typed = await drew.post(`/v1/worlds/${copy}/$import`, {
+      resources: [{ model: 'language', resource: { name: 'Reach Cant' } }],
+    });
+    expect(typed.status).toBe(201);
+    const languages = await drew.get(`/v1/worlds/${copy}/language?name=Reach`);
+    const [cant] = (
+      languages.body as { resources: { id: string; canonStatus: string }[] }
+    ).resources;
+    expect(cant.canonStatus).toBe('proposed');
+    expect(cant.id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
   it('publishes the outbox once, and claims nothing twice', async () => {
     const sink = collecting();
     const waiting = await pending(pool, world);

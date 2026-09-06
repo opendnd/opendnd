@@ -765,11 +765,26 @@ const fixedPaths = {
     post: {
       tags: ['meta'],
       summary: 'Save many resources in one transaction',
+      description:
+        'Send `{ resources: [{ model, resource }] }`, or the Bundle that `$export/json` produces, whose `entry` list has the same shape. Everything is written or nothing is, so a world exported from one place imports into another unchanged.',
       requestBody: body({
         type: 'object',
         properties: {
           resources: {
             type: 'array',
+            description: 'A plain list of resources, each with its model.',
+            items: {
+              type: 'object',
+              properties: {
+                model: { type: 'string' },
+                resource: { type: 'object' },
+              },
+              required: ['model', 'resource'],
+            },
+          },
+          entry: {
+            type: 'array',
+            description: 'The same list, as an exported Bundle carries it.',
             items: {
               type: 'object',
               properties: {
@@ -780,7 +795,6 @@ const fixedPaths = {
             },
           },
         },
-        required: ['resources'],
       }),
       responses: {
         201: { description: 'How many were written' },

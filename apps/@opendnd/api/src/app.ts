@@ -603,10 +603,16 @@ export function createApp(options: AppOptions) {
   app.post('/v1/worlds/:world/$import', (c) =>
     withWorld(c, true, async (store, world) => {
       const body = await json(c);
-      const entries = body.resources;
+      // Either a plain list, or the Bundle an export produces, so what came
+      // out of one world goes into another unchanged.
+      const entries = Array.isArray(body.resources)
+        ? body.resources
+        : Array.isArray(body.entry)
+          ? body.entry
+          : undefined;
       if (!Array.isArray(entries) || entries.length === 0) {
         throw new ValidationError(
-          'send { resources: [{ model, resource }] } with at least one entry',
+          'send { resources: [{ model, resource }] }, or an exported Bundle, with at least one entry',
           [{ path: ['resources'], message: 'required' }],
         );
       }

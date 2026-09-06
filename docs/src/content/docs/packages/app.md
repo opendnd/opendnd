@@ -36,6 +36,10 @@ A world, a house or a place has a Simulate history button on its page for editor
 
 Every record has a Write about this button for editors and owners. The form comes from the request as the API describes it, except that the model is offered as a choice among what the deployment can actually serve, from `/v1/llm`, with the task's configured model named as what writes when nothing is chosen. The model is held to the facts on file: the record's fields and everything that refers to it, which the draft shows so they can be checked. A draft is read before it is kept, because a model does not say the same thing twice; keeping imports the very text that was read, and writing again is another call and another line on the world's spend.
 
+## Taking a world with you
+
+A world's home page ends with export and import. Anyone who can read the world can export it, as the JSON bundle the API serves or as a prose digest; the file is saved by the browser. An editor can import a bundle: the file is read locally first and what it holds is counted by kind, and only then is it sent, whole, to `$import`, which writes it in one transaction. A bundle exported from one world imports into another; records with the same ids are updated rather than duplicated.
+
 ## A world's settings
 
 An owner has a Settings page for each world: its name, visibility and summary, which the world's own record follows; who belongs, with their roles, and who is invited by email and has not yet signed in; what the world has spent on language model calls; and archiving. An archived world keeps everything and appears under "Put away" on the worlds page, where an owner can restore it. The API allows none of this to anyone but an owner, and the page says so to anyone else.

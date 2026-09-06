@@ -40,7 +40,7 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 | `DELETE /v1/worlds/{world}` | Archive a world. `GET /v1/worlds?archived=true` lists the archived ones to their owners. |
 | `POST /v1/worlds/{world}/$restore` | Bring an archived world back. |
 | `GET /health` | Up, and able to reach the database. |
-| `POST /v1/worlds/{world}/$import` | Save many resources in one request. |
+| `POST /v1/worlds/{world}/$import` | Save many resources in one transaction: `{ resources: [{ model, resource }] }`, or the Bundle `$export/json` produces, so a world exported from one place imports into another unchanged. |
 | `GET /v1/worlds/{world}/$search?q=` | One search box across every model. |
 | `GET /v1/worlds/{world}/{model}/{id}/references` | Everything that points at a record. |
 | `GET /v1/worlds/{world}/{model}/{id}/history` | Every version of a record. |
@@ -72,7 +72,7 @@ Also `?canonStatus=`, `?perspective=`, `?module=`, `?generatedBy=`, `?name=` (pr
 
 ### Writes
 
-`$import` saves many resources in one request, validated individually and written in one transaction, so a batch lands whole or not at all. It exists because generating a realm produces upwards of a thousand resources and keeping what was just generated should not be a thousand requests.
+`$import` saves many resources in one request, validated individually and written in one transaction, so a batch lands whole or not at all. A record without an id or a canon status is given one, as a single create gives it, so a list typed by hand need not be stamped first. It exists because generating a realm produces upwards of a thousand resources and keeping what was just generated should not be a thousand requests.
 
 The platform fields belong to the API. It sets `world` from the path, `model` from the route, `id` when the client does not supply one, and `recorded` — created time, updated time and revision — from the request and the stored record, so a client cannot backdate a change or claim a revision it did not make. Those fields are `readOnly` in the schemas and absent from the request-body shapes in the OpenAPI description. A resource created through the API is `proposed` unless it says otherwise, because content arriving over HTTP is not canon by default.
 

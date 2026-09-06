@@ -540,6 +540,10 @@ export class Store {
           ...own,
           model,
           world: this.world,
+          // Nor need it carry an id or say whether it is canon: an unmarked
+          // record is proposed, as one created on its own is.
+          id: own.id ?? crypto.randomUUID(),
+          canonStatus: own.canonStatus ?? 'proposed',
           // Content from a generator arrives stamped; content typed by a
           // person does not, and should not have to be to be saved in a batch.
           recorded: own.recorded ?? {

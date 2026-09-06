@@ -30,3 +30,7 @@ window.matchMedia ??= ((query: string) =>
     removeListener: () => undefined,
     dispatchEvent: () => false,
   }) as MediaQueryList) as typeof window.matchMedia;
+
+// Saving a file goes through an object URL, which jsdom does not make.
+URL.createObjectURL ??= () => 'blob:jsdom/test';
+URL.revokeObjectURL ??= () => undefined;

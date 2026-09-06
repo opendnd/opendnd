@@ -270,6 +270,30 @@ export class ApiClient {
     });
   }
 
+  /**
+   * Save a bundle as a file holds it: what an export produced, a plain
+   * `{ resources }` list, or a bare array of resources carrying their model.
+   */
+  importBundle(world: string, bundle: unknown): Promise<{ imported: number }> {
+    const body = Array.isArray(bundle) ? { resources: bundle } : bundle;
+    return this.body('POST', `/v1/worlds/${world}/$import`, { body });
+  }
+
+  /** Everything in a world, as a file to keep: a JSON bundle or a prose digest. */
+  async exportWorld(
+    world: string,
+    format: 'json' | 'markdown',
+  ): Promise<{ blob: Blob; filename: string }> {
+    const response = await this.raw(
+      'GET',
+      `/v1/worlds/${world}/$export/${format}`,
+    );
+    return {
+      blob: await response.blob(),
+      filename: `world-${world.slice(0, 8)}.${format === 'json' ? 'json' : 'md'}`,
+    };
+  }
+
   /** The language models the deployment can write with. */
   llm(): Promise<LlmCatalogue> {
     return this.body('GET', '/v1/llm');
@@ -310,6 +334,27 @@ export class ApiClient {
     options: RequestOptions = {},
   ): Promise<T> {
     return (await this.request<T>(method, path, options)).body;
+  }
+
+  /** A request whose answer is a file rather than JSON: an export, say. */
+  async raw(method: string, path: string): Promise<Response> {
+    const url = new URL(path, `${this.options.baseUrl}/`);
+    const headers: Record<string, string> = {};
+    const token = await this.options.authorization();
+    if (token) headers.authorization = `Bearer ${token}`;
+    let response: Response;
+    try {
+      response = await this.fetchImpl(url, { method, headers });
+    } catch (cause) {
+      const reason = cause instanceof Error ? ` (${cause.message})` : '';
+      throw new Problem(
+        0,
+        'network',
+        `could not reach the API at ${this.options.baseUrl}${reason}`,
+      );
+    }
+    if (!response.ok) throw await this.problemFrom(response);
+    return response;
   }
 
   async request<T>(
