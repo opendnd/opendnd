@@ -57,7 +57,7 @@ Every failure has one shape: `{ error, code, requestId }`, with `issues` on a va
 
 ### Reads
 
-`?at=` is in-world time, counted in years of the world's calendar: it returns the state that held then, filtering on each record's valid-time interval. `?asOf=` is transaction time: it returns each record as it was authored at that moment, from the append-only version table. The Atlas and the Codex are both views over those two parameters.
+`?at=` is in-world time, counted in years of the world's calendar: it returns the state that held then, filtering on each record's valid-time interval. `?from=` and `?to=` ask for a span of years instead: the dated records whose valid time overlaps it, where a record with no end counts as ending when it begins, so a span lists what happened in it rather than everything still standing. `?sort=validTime` orders a page by when each record begins in the world, and like a span it leaves out the undated, which is how a timeline is read. `?asOf=` is transaction time: it returns each record as it was authored at that moment, from the append-only version table. The Atlas and the Codex are both views over those two parameters.
 
 `validTime` is filled in by the store from the fields the Model manifest names for it (a person's birth and death, a faction's founding and dissolution, an event's span, a snapshot's moment), so a writer need not know about it; see [ADR-014](/adr/adr-014-valid-time/).
 

@@ -1,5 +1,6 @@
 import {
   FeatherIcon,
+  HistoryIcon,
   HourglassIcon,
   MapIcon,
   PencilIcon,
@@ -94,6 +95,10 @@ export function Record() {
     cellField !== undefined
       ? parseCell(resource.data?.body[cellField])?.token
       : undefined;
+  const beginning = (
+    resource.data?.body.validTime as { begin?: { year?: unknown } } | undefined
+  )?.begin?.year;
+  const began = typeof beginning === 'number' ? beginning : undefined;
 
   const remove = async () => {
     setRemoving(true);
@@ -204,16 +209,32 @@ export function Record() {
         )}
         {removeError && <ErrorNotice error={removeError} />}
 
-        {onMap && (
-          <div>
-            <Button
-              variant="outline"
-              size="sm"
-              render={<Link to={`/worlds/${world.id}/map?cell=${onMap}`} />}
-            >
-              <MapIcon data-icon="inline-start" />
-              On the map
-            </Button>
+        {(onMap || began !== undefined) && (
+          <div className="flex flex-wrap gap-2">
+            {onMap && (
+              <Button
+                variant="outline"
+                size="sm"
+                render={<Link to={`/worlds/${world.id}/map?cell=${onMap}`} />}
+              >
+                <MapIcon data-icon="inline-start" />
+                On the map
+              </Button>
+            )}
+            {began !== undefined && (
+              <Button
+                variant="outline"
+                size="sm"
+                render={
+                  <Link
+                    to={`/worlds/${world.id}/timeline?from=${began - 10}&to=${began + 10}`}
+                  />
+                }
+              >
+                <HistoryIcon data-icon="inline-start" />
+                On the timeline
+              </Button>
+            )}
           </div>
         )}
 

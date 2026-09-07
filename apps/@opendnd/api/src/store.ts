@@ -21,7 +21,7 @@ export interface ReadOptions {
 }
 
 /** The orders a page can come in. A cursor belongs to the order it was made in. */
-export type SortKey = 'id' | 'name' | 'updatedAt';
+export type SortKey = 'id' | 'name' | 'updatedAt' | 'validTime';
 
 export interface ListOptions extends ReadOptions {
   readonly canonStatus?: string;
@@ -37,6 +37,12 @@ export interface ListOptions extends ReadOptions {
   readonly cell?: string;
   /** Only these ids, which is how a page fetches what it refers to at once. */
   readonly ids?: readonly string[];
+  /**
+   * A span of in-world years. Returns dated records whose valid time
+   * overlaps it, which is how a timeline asks for a stretch of history.
+   */
+  readonly from?: number;
+  readonly to?: number;
   readonly sort?: SortKey;
   readonly limit?: number;
   /** Where to continue from, taken from a previous page's `next`. */
@@ -108,6 +114,8 @@ const SORTS: Record<SortKey, { column: string; cast: string }> = {
   id: { column: 'id', cast: 'uuid' },
   name: { column: 'lower(name)', cast: 'text' },
   updatedAt: { column: 'recorded_at', cast: 'timestamptz' },
+  // In-world time, by when a record begins. Only dated records take part.
+  validTime: { column: 'valid_from', cast: 'int' },
 };
 
 /**
@@ -221,6 +229,25 @@ export class Store {
       where.push(
         `cell_id between $${params.push(min)} and $${params.push(max)}`,
       );
+    }
+    // Ordering by in-world time, or asking for a span of it, is asking about
+    // dated records: the undated are left out rather than sorted nowhere.
+    if (
+      sort === 'validTime' ||
+      options.from !== undefined ||
+      options.to !== undefined
+    ) {
+      where.push('valid_from is not null');
+    }
+    // A record with no end counts as ending when it begins: a span lists what
+    // happened in it, and asking what still held at a moment is `at`'s job.
+    if (options.from !== undefined) {
+      where.push(
+        `coalesce(valid_to, valid_from) >= $${params.push(options.from)}`,
+      );
+    }
+    if (options.to !== undefined) {
+      where.push(`valid_from <= $${params.push(options.to)}`);
     }
     if (options.at !== undefined) {
       const at = params.push(options.at);

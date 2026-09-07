@@ -554,6 +554,64 @@ describe('the API: actions', () => {
     expect(after - before).toBe(1);
   });
 
+  it('orders a page by in-world time and takes a span of years, leaving out the undated', async () => {
+    const span = await drew.get(
+      `/v1/worlds/${world}/event?sort=validTime&from=1005&to=1015&limit=5`,
+    );
+    expect(span.status).toBe(200);
+    const page = span.body as {
+      resources: {
+        validTime: { begin: { year: number }; end?: { year: number } };
+      }[];
+      next?: string;
+    };
+    expect(page.resources.length).toBeGreaterThan(0);
+    const years = page.resources.map((r) => r.validTime.begin.year);
+    expect([...years].sort((a, b) => a - b)).toEqual(years);
+    // A span returns what overlaps it: a record may begin before the span
+    // and still be part of it, as long as it has not ended before it starts.
+    for (const r of page.resources) {
+      const end = r.validTime.end?.year ?? r.validTime.begin.year;
+      expect(r.validTime.begin.year).toBeLessThanOrEqual(1015);
+      expect(end).toBeGreaterThanOrEqual(1005);
+    }
+    // The cursor continues in the same order from where the page ended.
+    expect(page.next).toBeTruthy();
+    const more = await drew.get(
+      `/v1/worlds/${world}/event?sort=validTime&from=1005&to=1015&limit=5&cursor=${encodeURIComponent(page.next!)}`,
+    );
+    const later = (more.body as typeof page).resources.map(
+      (r) => r.validTime.begin.year,
+    );
+    expect(later.length).toBeGreaterThan(0);
+    expect(later[0]).toBeGreaterThanOrEqual(years[years.length - 1]!);
+
+    // A place with a founding is dated; the generated settlements, which have
+    // none, are left out of an order by time.
+    const calendars = await drew.get(`/v1/worlds/${world}/calendar?limit=1`);
+    const founded = await drew.post(`/v1/worlds/${world}/place`, {
+      name: 'The Old Keep',
+      placeType: 'region',
+      founded: {
+        trs: (calendars.body as { resources: { id: string }[] }).resources[0]!
+          .id,
+        year: 990,
+        precision: 'year',
+      },
+    });
+    expect(founded.status).toBe(201);
+    const all = await drew.get(`/v1/worlds/${world}/place?limit=500`);
+    const dated = await drew.get(
+      `/v1/worlds/${world}/place?sort=validTime&limit=500`,
+    );
+    const total = (all.body as { resources: unknown[] }).resources.length;
+    const withTime = (dated.body as { resources: { validTime?: unknown }[] })
+      .resources;
+    expect(withTime.length).toBeGreaterThan(0);
+    expect(withTime.length).toBeLessThan(total);
+    expect(withTime.every((r) => r.validTime !== undefined)).toBe(true);
+  });
+
   it('refuses a run that is too long, or a scope with nothing in it', async () => {
     const long = await drew.post(
       `/v1/worlds/${world}/world/${world}/$simulate`,

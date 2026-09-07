@@ -1,5 +1,6 @@
 import {
   GlobeIcon,
+  HistoryIcon,
   LogOutIcon,
   MapIcon,
   SearchIcon,
@@ -100,6 +101,15 @@ export function AppSidebar() {
                   >
                     <MapIcon />
                     Map
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={location.pathname.endsWith('/timeline')}
+                    render={<Link to={`/worlds/${place.world}/timeline`} />}
+                  >
+                    <HistoryIcon />
+                    Timeline
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 {ontology.models.map((model) => (

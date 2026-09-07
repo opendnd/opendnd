@@ -12,6 +12,7 @@ import { Search } from './pages/Search';
 import { Settings } from './pages/Settings';
 import { SignIn } from './pages/SignIn';
 import { Simulate } from './pages/Simulate';
+import { Timeline } from './pages/Timeline';
 import { WorldHome } from './pages/WorldHome';
 import { WorldLayout } from './pages/WorldLayout';
 import { Worlds } from './pages/Worlds';
@@ -41,6 +42,7 @@ export const routes: RouteObject[] = [
                   { index: true, element: <WorldHome /> },
                   { path: 'search', element: <Search /> },
                   { path: 'map', element: <MapPage /> },
+                  { path: 'timeline', element: <Timeline /> },
                   { path: 'settings', element: <Settings /> },
                   { path: ':model', element: <Records /> },
                   { path: ':model/new', element: <Edit /> },

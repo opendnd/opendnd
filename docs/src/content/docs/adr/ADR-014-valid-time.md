@@ -29,3 +29,8 @@ A second, related gap: some links change over in-world time and had no time at a
 - `event.when` and `event.validTime` hold the same span on every event the API writes. That is duplication by design: `when` is the event's statement, `validTime` is the platform's index of it.
 - `?at=` is a year in the world's calendar and assumes one calendar per world. A world with two calendars needs an epoch offset between them before its years can be compared, which is a change to `calendar` and to the filter rather than to this decision.
 - Nothing yet derives a record's `validTime` from the records that link to it. A person's `memberOf` does not end when a `member-of` relationship ends; the relationship is the record to read for that.
+
+## Decided later, 2026-09-07
+
+- **Valid time is an order and a span, not only a point.** `?at=` answers "what held then". A timeline needs "what happened, in order, between these years": `?sort=validTime` orders a page by the year a record begins and pages by it, and `?from=`/`?to=` return the dated records whose interval overlaps a span, a record with no end counting as ending when it begins: a span asks what happened in it, and what still held at a moment is `?at=`'s question. Both leave out records with no valid time rather than sorting them nowhere; a point query keeps them, because a record with no span holds at every moment.
+- **Which models are dated is published.** The manifest's `validTime` fields, which the store already reads to derive a record's interval, are now on `/v1/models`, so a client can offer the dated models first without knowing them by name.

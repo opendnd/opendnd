@@ -288,9 +288,23 @@ const filters = [
   {
     name: 'sort',
     in: 'query',
-    schema: { type: 'string', enum: ['id', 'name', 'updatedAt'] },
+    schema: { type: 'string', enum: ['id', 'name', 'updatedAt', 'validTime'] },
     description:
-      'Order of the page. A cursor is bound to the sort it came from.',
+      'Order of the page. A cursor is bound to the sort it came from. ' +
+      '`validTime` orders by when a record begins in the world and leaves out the undated.',
+  },
+  {
+    name: 'from',
+    in: 'query',
+    schema: { type: 'integer' },
+    description:
+      'In-world year. With `to`, a span: returns dated records whose valid time overlaps it.',
+  },
+  {
+    name: 'to',
+    in: 'query',
+    schema: { type: 'integer' },
+    description: 'In-world year, the end of the span.',
   },
   {
     name: 'limit',
@@ -382,6 +396,16 @@ const fixedSchemas = {
           input: { type: 'object' },
         },
         required: ['description', 'input'],
+      },
+      validTime: {
+        type: 'object',
+        description:
+          'Present when the ontology says which fields date a record of this model: the property that begins its span, and the one that ends it.',
+        properties: {
+          begin: { type: 'string' },
+          end: { type: 'string' },
+        },
+        required: ['begin'],
       },
     },
     required: ['id', 'name'],

@@ -32,6 +32,8 @@ export interface ModelInfo {
   readonly simulate?: GeneratorInfo;
   /** Present when a language model can be asked to write about one of these. */
   readonly author?: GeneratorInfo;
+  /** Present when the ontology says which fields date a record: what begins its span, and what ends it. */
+  readonly validTime?: { readonly begin: string; readonly end?: string };
 }
 
 /** A language model the deployment can write with. */

@@ -7,7 +7,13 @@ import {
   NoModelError,
   modelsFromEnv,
 } from '@opendnd/llm';
-import { type ModelId, modelInfo, models, vocabularies } from '@opendnd/types';
+import {
+  type ModelId,
+  modelInfo,
+  models,
+  validTimeFields,
+  vocabularies,
+} from '@opendnd/types';
 import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { type RequestIdVariables, requestId } from 'hono/request-id';
@@ -132,6 +138,11 @@ export class Forbidden extends Error {
 
 const UUID = z.uuid();
 
+/** Which fields date a record of each model, as the ontology's manifests say. */
+const dated = validTimeFields as Partial<
+  Record<ModelId, { begin: string; end?: string }>
+>;
+
 const publishBody = z.object({
   name: z.string().trim().min(1).max(120),
   version: z.string().trim().min(1).max(40),
@@ -155,7 +166,9 @@ const listQuery = z.object({
   cell: CELL.optional(),
   cursor: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(500).optional(),
-  sort: z.enum(['id', 'name', 'updatedAt']).optional(),
+  sort: z.enum(['id', 'name', 'updatedAt', 'validTime']).optional(),
+  from: z.coerce.number().int().optional(),
+  to: z.coerce.number().int().optional(),
   ids: z
     .string()
     .transform((value) => value.split(',').map((id) => id.trim()))
@@ -344,6 +357,7 @@ export function createApp(options: AppOptions) {
         ...modelInfo[id],
         ...(GENERATORS[id] ? { generate: GENERATORS[id] } : {}),
         ...(SCOPE_MODELS.includes(id) ? { simulate: SIMULATION } : {}),
+        ...(dated[id] ? { validTime: dated[id] } : {}),
         // Anything on record can be written about.
         author: AUTHOR,
       })),
