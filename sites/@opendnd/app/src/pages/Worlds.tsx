@@ -5,6 +5,7 @@ import { useApi } from '../app/context';
 import { useRequest } from '../app/hooks';
 import { useMe } from '../app/me';
 import { ErrorNotice, Loading } from '../components/Notice';
+import { WorldCover } from '../components/WorldCover';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -83,7 +84,7 @@ export function Worlds() {
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
       <section className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold tracking-tight">Your worlds</h1>
+        <h1 className="font-display text-3xl">Your worlds</h1>
         {me.error && <ErrorNotice error={me.error} onRetry={me.reload} />}
         {me.loading && !me.data && <Loading />}
         {me.data && me.data.worlds.length === 0 && (
@@ -100,27 +101,34 @@ export function Worlds() {
           </Empty>
         )}
         {me.data && me.data.worlds.length > 0 && (
-          <ItemGroup className="gap-2">
+          <ul className="grid gap-4 sm:grid-cols-2">
             {me.data.worlds.map((world) => (
-              <Item
-                key={world.id}
-                variant="outline"
-                render={<Link to={`/worlds/${world.id}`} />}
-              >
-                <ItemContent>
-                  <ItemTitle>{world.name}</ItemTitle>
-                  <ItemDescription>
-                    {world.visibility === 'public'
-                      ? 'Anyone may read'
-                      : 'Members only'}
-                  </ItemDescription>
-                </ItemContent>
-                <ItemActions>
-                  <Badge variant="secondary">{world.role ?? 'visitor'}</Badge>
-                </ItemActions>
-              </Item>
+              <li key={world.id}>
+                <Link to={`/worlds/${world.id}`} className="block h-full">
+                  <Card className="h-full overflow-hidden pt-0 transition-colors hover:border-ring">
+                    <WorldCover world={world.id} />
+                    <CardHeader>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="font-display text-xl">
+                          {world.name}
+                        </CardTitle>
+                        <Badge variant="secondary" className="ml-auto">
+                          {world.role ?? 'visitor'}
+                        </Badge>
+                      </div>
+                      <CardDescription>
+                        {world.visibility === 'public'
+                          ? 'Anyone may read'
+                          : 'Members only'}
+                        {' · '}
+                        Enter to open it as its own space.
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
+                </Link>
+              </li>
             ))}
-          </ItemGroup>
+          </ul>
         )}
 
         {archived.data && archived.data.length > 0 && (

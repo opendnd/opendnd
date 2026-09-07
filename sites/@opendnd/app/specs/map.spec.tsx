@@ -128,16 +128,17 @@ describe('the map', () => {
     );
   });
 
-  it('looks into a cell that holds others, and opens a record that holds none', async () => {
+  it('looks into a cell that holds others, and previews a record that holds none', async () => {
     const user = userEvent.setup();
-    const { router } = renderMap();
+    renderMap();
     await screen.findByRole('img', { name: 'Map of The Valley' });
     await user.click(screen.getByRole('button', { name: 'South Camp' }));
-    await waitFor(() =>
-      expect(router.state.location.pathname).toBe(
-        `/worlds/${WORLD_ID}/camp/${camps[2]!.id}`,
-      ),
-    );
+    // A record with nothing inside opens beside the map, with the way to its page.
+    const sheet = await screen.findByRole('dialog');
+    expect(within(sheet).getByText('South Camp')).toBeInTheDocument();
+    expect(
+      within(sheet).getByRole('link', { name: 'Learn more' }),
+    ).toHaveAttribute('href', `/worlds/${WORLD_ID}/camp/${camps[2]!.id}`);
   });
 
   it('opens on the cell it is given and can step out of it', async () => {

@@ -5,8 +5,9 @@ import { RouterProvider } from 'react-router/dom';
 import { describe, expect, it } from 'vitest';
 import { AppProvider } from 'src/app/context';
 import { MeProvider } from 'src/app/me';
+import { OntologyProvider } from 'src/app/ontology';
 import { Worlds } from 'src/pages/Worlds';
-import { WORLD_ID } from './fixtures/ontology';
+import { WORLD_ID, petOntology } from './fixtures/ontology';
 import { fakeFetch, testServices, testWorld } from './helpers';
 
 const OLD_ID = '55555555-5555-4555-8555-555555555555';
@@ -58,7 +59,9 @@ describe('the worlds page', () => {
           path: '/worlds',
           element: (
             <MeProvider>
-              <Worlds />
+              <OntologyProvider ontology={petOntology()}>
+                <Worlds />
+              </OntologyProvider>
             </MeProvider>
           ),
         },

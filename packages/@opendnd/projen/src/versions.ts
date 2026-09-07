@@ -40,7 +40,13 @@ export const versions = {
   cn: '^0.2.5',
   'lucide-react': '^1.41.0',
   'tw-animate-css': '^1.4.0',
-  '@fontsource-variable/geist': '^5.3.0',
+  // The type OpenHI's sites share: DM Sans for text, DM Serif Display for
+  // headings, JetBrains Mono for code and ids.
+  '@fontsource-variable/dm-sans': '^5.3.0',
+  '@fontsource/dm-serif-display': '^5.3.0',
+  '@fontsource-variable/jetbrains-mono': '^5.3.0',
+  'react-markdown': '^10.1.0',
+  'remark-gfm': '^4.0.1',
   jsdom: '^30.0.1',
   '@testing-library/react': '^16.3.3',
   '@testing-library/dom': '^10.4.1',

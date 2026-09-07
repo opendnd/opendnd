@@ -2,13 +2,17 @@ import { Navigate, type RouteObject } from 'react-router';
 import { RequireSession, Shell } from './components/Layout';
 import { Author } from './pages/Author';
 import { Callback } from './pages/Callback';
+import { Campaigns } from './pages/Campaigns';
+import { Characters } from './pages/Characters';
+import { Compendium } from './pages/Compendium';
+import { Data } from './pages/Data';
 import { Edit } from './pages/Edit';
 import { ErrorPage } from './pages/ErrorPage';
 import { Generate } from './pages/Generate';
 import { MapPage } from './pages/Map';
+import { Marketplace } from './pages/Marketplace';
 import { Record } from './pages/Record';
 import { Records } from './pages/Records';
-import { Search } from './pages/Search';
 import { Settings } from './pages/Settings';
 import { SignIn } from './pages/SignIn';
 import { Simulate } from './pages/Simulate';
@@ -40,7 +44,12 @@ export const routes: RouteObject[] = [
                 element: <WorldLayout />,
                 children: [
                   { index: true, element: <WorldHome /> },
-                  { path: 'search', element: <Search /> },
+                  { path: 'search', element: <Compendium /> },
+                  { path: 'compendium', element: <Compendium /> },
+                  { path: 'campaigns', element: <Campaigns /> },
+                  { path: 'characters', element: <Characters /> },
+                  { path: 'marketplace', element: <Marketplace /> },
+                  { path: 'data', element: <Data /> },
                   { path: 'map', element: <MapPage /> },
                   { path: 'timeline', element: <Timeline /> },
                   { path: 'settings', element: <Settings /> },

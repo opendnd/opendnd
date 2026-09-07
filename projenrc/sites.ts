@@ -32,7 +32,12 @@ const sites: readonly SiteConfig[] = [
       `cn@${versions.cn}`,
       `lucide-react@${versions['lucide-react']}`,
       `tw-animate-css@${versions['tw-animate-css']}`,
-      `@fontsource-variable/geist@${versions['@fontsource-variable/geist']}`,
+      `@fontsource-variable/dm-sans@${versions['@fontsource-variable/dm-sans']}`,
+      `@fontsource/dm-serif-display@${versions['@fontsource/dm-serif-display']}`,
+      `@fontsource-variable/jetbrains-mono@${versions['@fontsource-variable/jetbrains-mono']}`,
+      // Long prose on a record, a wiki page say, is Markdown.
+      `react-markdown@${versions['react-markdown']}`,
+      `remark-gfm@${versions['remark-gfm']}`,
     ],
   },
 ];

@@ -1,6 +1,7 @@
 import { ChevronDownIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
+import { Markdown } from './Markdown';
 import { type Resource, isReference } from '../api/types';
 import { recordPath, useWorld } from '../app/world';
 import { type Field, humanize } from '../schema/fields';
@@ -107,11 +108,7 @@ export function Article(props: ArticleProps) {
         )}
       </header>
       {typeof resource.description === 'string' && (
-        <div className="flex max-w-prose flex-col gap-3 text-base leading-relaxed">
-          {resource.description.split(/\n{2,}/).map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
-          ))}
-        </div>
+        <Markdown text={resource.description} />
       )}
       {Array.isArray(tags) && tags.length > 0 && (
         <div className="flex flex-wrap gap-1">
@@ -224,7 +221,7 @@ export function Value(props: {
   }
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (field?.kind === 'textarea' && typeof value === 'string') {
-    return <span className="whitespace-pre-line">{value}</span>;
+    return <Markdown text={value} className="prose-record text-sm" />;
   }
   return String(value);
 }

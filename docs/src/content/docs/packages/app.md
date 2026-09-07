@@ -58,7 +58,7 @@ What links here says through which field each record refers, and when the referr
 
 ## Taking a world with you
 
-A world's home page ends with export and import. Anyone who can read the world can export it, as the JSON bundle the API serves or as a prose digest; the file is saved by the browser. An editor can import a bundle: the file is read locally first and what it holds is counted by kind, and only then is it sent, whole, to `$import`, which writes it in one transaction. A bundle exported from one world imports into another; records with the same ids are updated rather than duplicated.
+The Data page ends with export and import. Anyone who can read the world can export it, as the JSON bundle the API serves or as a prose digest; the file is saved by the browser. An editor can import a bundle: the file is read locally first and what it holds is counted by kind, and only then is it sent, whole, to `$import`, which writes it in one transaction. A bundle exported from one world imports into another; records with the same ids are updated rather than duplicated.
 
 ## A world's settings
 
@@ -66,7 +66,7 @@ An owner has a Settings page for each world: its name, visibility and summary, w
 
 ## Modules
 
-A world's settings page has a Modules section for its owners. It lists the modules the world reads beneath its own content, nearest first, each with what it holds counted by kind, and lets an owner move one up or down the stack or disable it. Below that, an owner can enable any module the API offers them, which is every public module and every module published from a world they belong to. Last, an owner can publish the world itself: its name, a version, a license, a summary, and whether the module is public or only for members of this world. Publishing does not change the world; it takes a snapshot, and publishing again without a change answers with the same module rather than a second one.
+The Marketplace page lists the modules the world reads beneath its own content, nearest first, each with what it holds counted by kind, and lets an owner move one up or down the stack or disable it. Below that, an owner can enable any module the API offers them, which is every public module and every module published from a world they belong to. Last, an owner can publish the world itself: its name, a version, a license, a summary, and whether the module is public or only for members of this world. Publishing does not change the world; it takes a snapshot, and publishing again without a change answers with the same module rather than a second one.
 
 A record that came from a module says so in its record keeping, and a world that edits one keeps its own copy, which shadows the module's from then on.
 
@@ -83,18 +83,35 @@ Settings are read at build time from `VITE_` variables, in the environment or in
 
 A build that asks for Cognito without both Cognito settings refuses to sign anyone in rather than falling back to development sign-in. Development sign-in works only against an API started with `OPENDND_DEV_AUTH=on`; the API decides, not the application.
 
+## The shape of it
+
+Outside a world, the worlds page shows each world as a card with a cover drawn from its own map. Inside a world, the world is the whole frame, with these surfaces down the side; a surface that stands on a model is offered only when the ontology has it.
+
+| Surface | |
+|---|---|
+| Home | A greeting, a search, what the surfaces hold, the campaigns, and what changed last. |
+| Campaigns, Characters | The campaign layer as cards, with a way to start a new one. |
+| Maps | The world drawn from its cells, as of any year; a record opens beside the map. |
+| Timeline | Everything dated, in the order it began, with the world's now marked. |
+| Compendium | One search across everything, and the written works to browse. |
+| Marketplace | The modules the world reads, what it could enable, and publishing it. |
+| Data | Every kind of record as a table, with export and import. |
+| Settings | Name, members, spend and archiving. Owners only. |
+
+Every record page has an Inspect button that shows the record as the API holds it. Descriptions and long text render from Markdown.
+
 ## What is where
 
 | Folder | |
 |---|---|
 | `src/config.ts` | The settings above, read from `import.meta.env`. |
-| `src/auth/` | The session store, PKCE, and the Cognito hosted sign-in. |
+| `src/app/` | The session store, the ontology, the world scope, and `surfaces.ts`, the one place the navigation names models. |
 | `src/api/` | One method per API route, and the shapes the API answers with. |
-| `src/schema/` | The ontology as the API describes it, and the description of a schema as fields for a form or an article. |
-| `src/components/` | The article, the schema-driven form and its controls, the reference picker, the sidebar and the page frame. |
+| `src/schema/` | The ontology as the API describes it, and the description of a schema as fields for a form or an article; cells, time and related records read from it. |
+| `src/components/` | The article, the schema-driven form and its controls, the reference picker, Markdown, the sidebar and the page frame. |
 | `src/components/ui/` | The component library's components, written by its CLI. Not edited by hand. |
 | `src/pages/` | One component per route. |
-| `specs/` | Vitest specs, run under jsdom against an invented model and a fake `fetch`. |
+| `specs/` | Vitest specs, run under jsdom against invented models and a fake `fetch`. |
 
 ## Adding a component
 

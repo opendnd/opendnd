@@ -4,6 +4,7 @@ import { AppSidebar } from './AppSidebar';
 import { useSession } from '../app/context';
 import { MeProvider, useMe } from '../app/me';
 import { OntologyProvider, useOntology } from '../app/ontology';
+import { SURFACE_SEGMENTS, surfaceLabel } from '../app/surfaces';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -57,14 +58,18 @@ export function placeIn(pathname: string): {
   world?: string;
   model?: string;
   id?: string;
+  surface?: string;
 } {
   const match = /^\/worlds\/([^/]+)(?:\/([^/]+))?(?:\/([^/]+))?/.exec(pathname);
   if (!match) return {};
   const [, world, model, id] = match;
+  // A surface is a page of the world, not a model in it.
+  const surface = model !== undefined && SURFACE_SEGMENTS.has(model);
   return {
     world,
-    ...(model && model !== 'search' ? { model } : {}),
-    ...(id && id !== 'new' ? { id } : {}),
+    ...(model && !surface ? { model } : {}),
+    ...(surface ? { surface: model } : {}),
+    ...(id && id !== 'new' && !surface ? { id } : {}),
   };
 }
 
@@ -88,6 +93,12 @@ function Crumbs() {
       label: ontology.label(place.model),
       to: `/worlds/${place.world}/${place.model}`,
     });
+  }
+  if (place.world && place.surface) {
+    const label = surfaceLabel(place.surface);
+    if (label) {
+      crumbs.push({ label, to: `/worlds/${place.world}/${place.surface}` });
+    }
   }
   const last = crumbs.length - 1;
   return (

@@ -7,12 +7,13 @@ import {
   XIcon,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 import type { Resource } from '../api/types';
 import { useApi } from '../app/context';
 import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
 import { recordPath, useWorld } from '../app/world';
+import { Markdown } from '../components/Markdown';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
 import {
   type Cell,
@@ -27,6 +28,16 @@ import {
 import { referringFields } from '../schema/related';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 
 /** Fills, one per model that sits on the map, in the order the ontology lists them. */
 const FILLS = [
@@ -73,8 +84,10 @@ export function MapPage() {
   const ontology = useOntology();
   const { world, canEdit } = useWorld();
   const [params, setParams] = useSearchParams();
-  const navigate = useNavigate();
   const chosen = params.get('cell') ?? undefined;
+  // The year to draw the world as of: what held then, like an older photograph.
+  const asOf = params.get('at') ?? undefined;
+  const [preview, setPreview] = useState<OnMap>();
   const [placing, setPlacing] = useState<Entry>();
   const [depth, setDepth] = useState(2);
   const [busy, setBusy] = useState(false);
@@ -88,6 +101,7 @@ export function MapPage() {
         models.map((m) =>
           api.list(world.id, m.model, {
             ...(chosen ? { cell: chosen } : {}),
+            ...(asOf ? { at: asOf } : {}),
             limit: 500,
           }),
         ),
@@ -102,7 +116,7 @@ export function MapPage() {
       );
     },
     // The joined key stands for the list, which is rebuilt each render.
-    [api, world.id, modelsKey, chosen],
+    [api, world.id, modelsKey, chosen, asOf],
   );
 
   const all = records.data ?? [];
@@ -148,7 +162,12 @@ export function MapPage() {
     : [];
   const gridLevel = focus ? Math.min(focus.level + depth, 30) : 0;
 
-  const look = (token: string) => setParams({ cell: token });
+  const keep = (change: (q: URLSearchParams) => void) => {
+    const next = new URLSearchParams(params);
+    change(next);
+    setParams(next);
+  };
+  const look = (token: string) => keep((q) => q.set('cell', token));
   const choose = (target: OnMap) => {
     // A cell with others inside it, or with unplaced records waiting to go
     // inside it, is looked into; one with neither opens its record.
@@ -160,7 +179,7 @@ export function MapPage() {
     if (holdsOthers && target.cell.token !== focus?.token) {
       look(target.cell.token);
     } else {
-      void navigate(recordPath(world.id, target.model, target.resource.id));
+      setPreview(target);
     }
   };
 
@@ -249,8 +268,18 @@ export function MapPage() {
             Out
           </Button>
         )}
+        <AsOf
+          year={asOf}
+          onChange={(year) =>
+            keep((q) => (year ? q.set('at', year) : q.delete('at')))
+          }
+        />
         {chosen && (
-          <Button variant="outline" size="sm" onClick={() => setParams({})}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => keep((q) => q.delete('cell'))}
+          >
             <GlobeIcon data-icon="inline-start" />
             Everything
           </Button>
@@ -522,7 +551,95 @@ export function MapPage() {
           </aside>
         </div>
       )}
+
+      <Sheet
+        open={preview !== undefined}
+        onOpenChange={(open) => !open && setPreview(undefined)}
+      >
+        <SheetContent
+          side="right"
+          className="flex flex-col gap-4 overflow-y-auto"
+        >
+          {preview && (
+            <>
+              <SheetHeader>
+                <SheetTitle className="font-display text-2xl">
+                  {nameOf(preview.resource)}
+                </SheetTitle>
+                <SheetDescription>
+                  {ontology.label(preview.model)}
+                  {typeof preview.resource.canonStatus === 'string' &&
+                    ` · ${preview.resource.canonStatus}`}
+                </SheetDescription>
+              </SheetHeader>
+              <div className="px-4">
+                {typeof preview.resource.description === 'string' &&
+                preview.resource.description !== '' ? (
+                  <Markdown
+                    text={preview.resource.description
+                      .split(/\n\s*\n/)
+                      .slice(0, 3)
+                      .join('\n\n')}
+                    className="prose-record text-sm"
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Nothing written about this yet.
+                  </p>
+                )}
+              </div>
+              <SheetFooter>
+                <Button
+                  render={
+                    <Link
+                      to={recordPath(
+                        world.id,
+                        preview.model,
+                        preview.resource.id,
+                      )}
+                    />
+                  }
+                >
+                  Learn more
+                </Button>
+              </SheetFooter>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
+  );
+}
+
+/** The year the map is drawn as of. Empty means today. */
+function AsOf(props: {
+  readonly year?: string;
+  readonly onChange: (year: string) => void;
+}) {
+  const [draft, setDraft] = useState(props.year ?? '');
+  return (
+    <form
+      className="flex items-center gap-1"
+      onSubmit={(event) => {
+        event.preventDefault();
+        props.onChange(draft.trim());
+      }}
+    >
+      <Label htmlFor="map-at" className="text-xs text-muted-foreground">
+        As of year
+      </Label>
+      <Input
+        id="map-at"
+        type="number"
+        className="h-8 w-24 text-sm"
+        placeholder="now"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+      />
+      <Button type="submit" size="sm" variant="outline">
+        Show
+      </Button>
+    </form>
   );
 }
 

@@ -1,4 +1,6 @@
 import {
+  BracesIcon,
+  CopyIcon,
   FeatherIcon,
   HistoryIcon,
   HourglassIcon,
@@ -48,6 +50,14 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 
 /** One resource: its article, what links to it, and its history. */
 export function Record() {
@@ -209,6 +219,49 @@ export function Record() {
         )}
         {removeError && <ErrorNotice error={removeError} />}
 
+        <div className="flex flex-wrap gap-2">
+          {resource.data && (
+            <Sheet>
+              <SheetTrigger render={<Button variant="outline" size="sm" />}>
+                <BracesIcon data-icon="inline-start" />
+                Inspect
+              </SheetTrigger>
+              <SheetContent
+                side="right"
+                className="flex flex-col gap-3 overflow-y-auto sm:max-w-xl"
+              >
+                <SheetHeader>
+                  <SheetTitle>The record as the API holds it</SheetTitle>
+                  <SheetDescription>
+                    {ontology.label(model)} · revision{' '}
+                    {String(resource.data.body.recorded?.revision ?? '?')}
+                    {resource.data.etag && ` · ETag ${resource.data.etag}`}
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="flex items-center gap-2 px-4">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() =>
+                      void navigator.clipboard?.writeText(
+                        JSON.stringify(resource.data?.body, null, 2),
+                      )
+                    }
+                  >
+                    <CopyIcon data-icon="inline-start" />
+                    Copy JSON
+                  </Button>
+                  <code className="truncate font-mono text-xs text-muted-foreground">
+                    /v1/worlds/{world.id}/{model}/{id}
+                  </code>
+                </div>
+                <pre className="mx-4 mb-4 overflow-x-auto rounded-md bg-muted p-3 font-mono text-xs leading-relaxed">
+                  {JSON.stringify(resource.data.body, null, 2)}
+                </pre>
+              </SheetContent>
+            </Sheet>
+          )}
+        </div>
         {(onMap || began !== undefined) && (
           <div className="flex flex-wrap gap-2">
             {onMap && (
