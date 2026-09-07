@@ -40,6 +40,12 @@ Every record has a Write about this button for editors and owners. The form come
 
 Every world has a Timeline page: its dated records in the order they begin, grouped by year of the world's calendar, each a link to its record and each span shown with its end. Which models are dated comes from the ontology, through the API's description of each model, and the page starts with those whose records both begin and end, the things that happen and the things that last; snapshots, and any other model, can be added with a tick. A span of years narrows it, and a record with a date has an On the timeline button that opens the years around it.
 
+## Reading time and lists
+
+In-world time is recognised by its shape rather than by field name: a position in a named calendar reads as its year, with the month and day when they are given and "about" when the precision is coarser, and a span reads as its two years. Each is a link to the timeline at those years, so a session's covered years, an event's when and a person's birth all open the history around them.
+
+A model's list shows, beside each name, the first few of its fields that fit in a cell: codes, numbers, dates and in-world times, in the order the schema gives them, so a list of sessions shows their numbers and dates and a list of events their kinds and years. A list can be ordered by name, by when it was last changed, or, for a model the ontology dates, by in-world time, which lists only the dated.
+
 ## The map
 
 Every world has a Map page, drawn from cells. A model whose schema has a cell field is drawn, which the application finds in the schemas rather than knowing; today that is places and encounters. With nothing chosen, the map shows the smallest cell that holds everything on the busiest face of the world, each record as a square where its cell is, coarser cells beneath finer ones. Choosing a square that has others inside it looks into it, choosing one that has nothing inside opens its record, and Out steps up a level. A record with a cell has an On the map button that opens the map on it. Records without a cell are listed beside the map, and an editor places one from there: choose it, then choose a square of the grid laid over the view, as fine as wanted. When the record in view has unplaced records referring to it, a county with towns that name it as their parent, say, one button scatters them all inside it. Generated places arrive with a cell already.

@@ -36,3 +36,8 @@ Two further things are settled before any page is drawn. Working on the applicat
 
 - **Links are made from the schemas, not from a list.** A record's page offers to make records linked to it: a new record whose schema fixes a reference field to this model, with that field filled in; a new record of a model this record's own reference fields are fixed to, added to that field once made; or both at once when the models point at each other. Fields that may point at anything offer nothing. This is what makes the campaign layer usable without the application knowing it exists: a session's page offers the event it produced because `session.produced` is fixed to `event`, and a campaign's page offers a session because `session.campaign` is fixed to `campaign`. A new model with a fixed reference joins in with no change here.
 - **What links here reads through the schemas too.** Each referring record says which of its fields carries the reference, and when it carries a date it is listed in date order, so sessions read as a chronology and holders as a roll.
+
+## Decided later, 2026-09-07
+
+- **In-world time is read by shape.** A position in a calendar and a span of two are recognised by their fields, not by which property holds them, and read as years that link to the timeline. This is what lets a session's covered years, an event's when and a population's moment all read alike with nothing in the application naming any of them.
+- **A list shows what fits.** Beside each name, a model's list shows the first few of its fields that fit in a cell, in schema order, and can be ordered by name, by last change, or by in-world time for a model the ontology dates. The columns are the schema's, so a new model lists sensibly the day it is added.

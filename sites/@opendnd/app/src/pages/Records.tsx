@@ -1,12 +1,14 @@
 import { FilesIcon, PlusIcon, SparklesIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import type { Resource } from '../api/types';
 import { useApi } from '../app/context';
 import { useOntology } from '../app/ontology';
 import { recordPath, useWorld } from '../app/world';
+import { Value } from '../components/Article';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
-import { humanize } from '../schema/fields';
+import { describe, humanize } from '../schema/fields';
+import { summaryFields } from '../schema/time';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +20,10 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from '@/components/ui/native-select';
 import {
   Table,
   TableBody,
@@ -44,13 +50,21 @@ export function Records() {
   const { model = '' } = useParams();
   const [params, setParams] = useSearchParams();
   const name = params.get('name') ?? '';
+  const sort = sortParam(params.get('sort'));
+  const info = ontology.model(model);
+  const schema = ontology.schema(model);
+  const columns = useMemo(
+    () =>
+      schema ? summaryFields(describe(schema, ontology, { name: model })) : [],
+    [schema, ontology, model],
+  );
   const [listing, setListing] = useState<Listing>({ items: [], loading: true });
 
   useEffect(() => {
     let cancelled = false;
     setListing({ items: [], loading: true });
     api
-      .list(world.id, model, { name: name || undefined, limit: PAGE })
+      .list(world.id, model, { name: name || undefined, sort, limit: PAGE })
       .then((page) => {
         if (cancelled) return;
         setListing({ items: page.resources, next: page.next, loading: false });
@@ -66,7 +80,7 @@ export function Records() {
     return () => {
       cancelled = true;
     };
-  }, [api, world.id, model, name]);
+  }, [api, world.id, model, name, sort]);
 
   const more = async () => {
     if (!listing.next) return;
@@ -74,6 +88,7 @@ export function Records() {
     try {
       const page = await api.list(world.id, model, {
         name: name || undefined,
+        sort,
         limit: PAGE,
         cursor: listing.next,
       });
@@ -130,6 +145,28 @@ export function Records() {
           }
           aria-label="Filter by name"
         />
+        <NativeSelect
+          aria-label="Order"
+          className="w-44"
+          value={sort ?? ''}
+          onChange={(e) => {
+            const next = new URLSearchParams(params);
+            if (e.target.value) next.set('sort', e.target.value);
+            else next.delete('sort');
+            setParams(next, { replace: true });
+          }}
+        >
+          <NativeSelectOption value="">In the order added</NativeSelectOption>
+          <NativeSelectOption value="name">By name</NativeSelectOption>
+          <NativeSelectOption value="updatedAt">
+            Last changed first
+          </NativeSelectOption>
+          {info?.validTime && (
+            <NativeSelectOption value="validTime">
+              In-world time, dated only
+            </NativeSelectOption>
+          )}
+        </NativeSelect>
         {canEdit && (
           <div className="ml-auto flex items-center gap-2">
             {generator && (
@@ -184,6 +221,9 @@ export function Records() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
+                {columns.map((column) => (
+                  <TableHead key={column.name}>{column.label}</TableHead>
+                ))}
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Updated</TableHead>
               </TableRow>
@@ -199,6 +239,11 @@ export function Records() {
                       {resource.name ?? resource.id}
                     </Link>
                   </TableCell>
+                  {columns.map((column) => (
+                    <TableCell key={column.name} className="max-w-56 truncate">
+                      <Value field={column} value={resource[column.name]} />
+                    </TableCell>
+                  ))}
                   <TableCell>
                     {typeof resource.canonStatus === 'string' && (
                       <Badge variant="outline">
@@ -226,4 +271,12 @@ export function Records() {
       )}
     </div>
   );
+}
+
+const SORTS = ['name', 'updatedAt', 'validTime'] as const;
+
+function sortParam(value: string | null): (typeof SORTS)[number] | undefined {
+  return (SORTS as readonly string[]).includes(value ?? '')
+    ? (value as (typeof SORTS)[number])
+    : undefined;
 }

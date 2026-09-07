@@ -4,6 +4,15 @@ import { Link } from 'react-router';
 import { type Resource, isReference } from '../api/types';
 import { recordPath, useWorld } from '../app/world';
 import { type Field, humanize } from '../schema/fields';
+import {
+  type TemporalPosition,
+  type TimeSpan,
+  formatPosition,
+  formatSpan,
+  isPosition,
+  isSpan,
+  yearsOf,
+} from '../schema/time';
 import { isEmpty } from '../schema/value';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -179,6 +188,7 @@ export function Value(props: {
   const { field, value } = props;
   if (isEmpty(value)) return <span className="text-muted-foreground">—</span>;
   if (isReference(value)) return <ReferenceLink reference={value} />;
+  if (isSpan(value) || isPosition(value)) return <TimeText value={value} />;
   if (Array.isArray(value)) {
     return (
       <ul className="flex list-disc flex-col gap-1 pl-5">
@@ -248,4 +258,25 @@ function orderFields(
   const known = order.filter((name) => names.includes(name));
   const unknown = names.filter((name) => !order.includes(name));
   return [...known, ...unknown];
+}
+
+/** In-world time as years, linking to the timeline around them. */
+export function TimeText(props: {
+  readonly value: TemporalPosition | TimeSpan;
+}) {
+  const { world } = useWorld();
+  const text = isSpan(props.value)
+    ? formatSpan(props.value)
+    : formatPosition(props.value);
+  const years = yearsOf(props.value);
+  if (!years) return <span>{text}</span>;
+  return (
+    <Link
+      className="underline underline-offset-4 hover:text-primary"
+      title="On the timeline"
+      to={`/worlds/${world.id}/timeline?from=${years.from}&to=${years.to}`}
+    >
+      {text}
+    </Link>
+  );
 }

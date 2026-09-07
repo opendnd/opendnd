@@ -59,8 +59,13 @@ describe('a resource as an article', () => {
     expect(screen.getByText('Friendly').nextElementSibling).toHaveTextContent(
       'Yes',
     );
+    // In-world time reads as its year and opens the timeline there.
     expect(screen.getByText('Born').nextElementSibling).toHaveTextContent(
-      'Year1041',
+      '1041',
+    );
+    expect(screen.getByRole('link', { name: '1041' })).toHaveAttribute(
+      'href',
+      `/worlds/${WORLD_ID}/timeline?from=1041&to=1041`,
     );
     // A field the schema does not name is still shown, as JSON.
     expect(
