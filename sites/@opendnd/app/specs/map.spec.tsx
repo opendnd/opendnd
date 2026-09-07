@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { ModelInfo } from 'src/api/types';
 import { MapPage } from 'src/pages/Map';
-import { cellAt } from 'src/schema/cells';
+import { cellAt, contains, parseCell } from 'src/schema/cells';
 import { type JsonSchema, ontologyFrom } from 'src/schema/openapi';
 import { WORLD_ID } from './fixtures/ontology';
 import { fakeFetch, renderInWorld } from './helpers';
@@ -59,10 +59,34 @@ const camps = [
     spot: south.token,
   },
   { id: 'a0000000-0000-4000-8000-000000000004', name: 'Nowhere Camp' },
+  {
+    id: 'a0000000-0000-4000-8000-000000000005',
+    name: 'Lost Camp',
+    within: { model: 'camp', id: 'a0000000-0000-4000-8000-000000000001' },
+  },
+  {
+    id: 'a0000000-0000-4000-8000-000000000006',
+    name: 'Stray Camp',
+    within: { model: 'camp', id: 'a0000000-0000-4000-8000-000000000001' },
+  },
 ];
 
 function renderMap(path = `/worlds/${WORLD_ID}/map`) {
   const { fetch, calls } = fakeFetch({
+    ...Object.fromEntries(
+      camps.map((camp) => [
+        `PATCH /v1/worlds/${WORLD_ID}/camp/${camp.id}`,
+        async (request: Request) => ({
+          ...camp,
+          ...((await request.json()) as Record<string, unknown>),
+        }),
+      ]),
+    ),
+    [`GET /v1/worlds/${WORLD_ID}/camp/${camps[0]!.id}/references`]: () => ({
+      references: camps
+        .filter((c) => 'within' in c)
+        .map((resource) => ({ model: 'camp', resource })),
+    }),
     [`GET /v1/worlds/${WORLD_ID}/camp`]: (request) => {
       const cell = new URL(request.url).searchParams.get('cell');
       return {
@@ -126,5 +150,67 @@ describe('the map', () => {
         `?cell=${cellAt(2, 5 * 2 + 0, 9 * 2 + 0, 7).token}`,
       ),
     );
+  });
+
+  it('places a record from the list by choosing a square of the grid', async () => {
+    const user = userEvent.setup();
+    const { calls } = renderMap();
+    await screen.findByRole('img', { name: 'Map of The Valley' });
+    await user.click(
+      screen.getByRole('button', { name: 'Place Nowhere Camp' }),
+    );
+    expect(screen.getByText(/Placing Nowhere Camp/)).toBeInTheDocument();
+    // Two levels below the view by default: a four-by-four grid.
+    expect(screen.getAllByTestId(/^slot-/)).toHaveLength(16);
+    await user.click(screen.getByRole('button', { name: 'Finer grid' }));
+    expect(screen.getAllByTestId(/^slot-/)).toHaveLength(64);
+    await user.click(screen.getByRole('button', { name: 'Coarser grid' }));
+
+    const slot = cellAt(2, 5 * 4 + 1, 9 * 4 + 2, 8);
+    await user.click(screen.getByTestId(`slot-${slot.token}`));
+    await waitFor(() =>
+      expect(calls.some((c) => c.method === 'PATCH')).toBe(true),
+    );
+    const patch = calls.find((c) => c.method === 'PATCH')!;
+    expect(patch.url).toContain(`/camp/${camps[3]!.id}`);
+    expect(await patch.json()).toEqual({ spot: slot.token });
+  });
+
+  it('places everything unplaced that refers to the record in view, inside it', async () => {
+    const user = userEvent.setup();
+    const { calls } = renderMap();
+    await screen.findByRole('img', { name: 'Map of The Valley' });
+    await user.click(
+      screen.getByRole('button', { name: 'Place 2 inside The Valley' }),
+    );
+    await waitFor(() =>
+      expect(calls.filter((c) => c.method === 'PATCH')).toHaveLength(2),
+    );
+    const tokens = await Promise.all(
+      calls
+        .filter((c) => c.method === 'PATCH')
+        .map(async (c) => ((await c.json()) as { spot: string }).spot),
+    );
+    expect(new Set(tokens).size).toBe(2);
+    for (const token of tokens) {
+      const cell = parseCell(token)!;
+      expect(contains(valley, cell)).toBe(true);
+      expect(cell.level).toBe(8);
+    }
+  });
+
+  it('finds what waits to be placed inside the record in view by what refers to it', async () => {
+    const user = userEvent.setup();
+    const { calls } = renderMap(`/worlds/${WORLD_ID}/map?cell=${valley.token}`);
+    await screen.findByRole('img', { name: 'Map of The Valley' });
+    await user.click(
+      await screen.findByRole('button', { name: 'Place 2 inside The Valley' }),
+    );
+    await waitFor(() =>
+      expect(calls.filter((c) => c.method === 'PATCH')).toHaveLength(2),
+    );
+    expect(
+      calls.some((c) => c.url.endsWith(`/camp/${camps[0]!.id}/references`)),
+    ).toBe(true);
   });
 });

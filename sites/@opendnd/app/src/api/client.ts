@@ -243,6 +243,20 @@ export class ApiClient {
     });
   }
 
+  /** Change some of a resource's fields, as a merge patch: `null` clears one. */
+  patch(
+    world: string,
+    model: string,
+    id: string,
+    body: Record<string, unknown>,
+    etag?: string,
+  ): Promise<Stored<Resource>> {
+    return this.request('PATCH', `/v1/worlds/${world}/${model}/${id}`, {
+      body,
+      etag,
+    });
+  }
+
   remove(world: string, model: string, id: string): Promise<void> {
     return this.body('DELETE', `/v1/worlds/${world}/${model}/${id}`);
   }
