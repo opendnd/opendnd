@@ -12,7 +12,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import { Separator } from '@/components/ui/separator';
 import {
   SidebarInset,
   SidebarProvider,
@@ -38,12 +37,9 @@ export function Shell() {
         <SidebarProvider>
           <AppSidebar />
           <SidebarInset>
-            <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+            {/* Stays put while the page scrolls, so the way back is always in reach. */}
+            <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
               <SidebarTrigger className="-ml-1" />
-              <Separator
-                orientation="vertical"
-                className="mr-2 data-[orientation=vertical]:h-4"
-              />
               <Crumbs />
             </header>
             <div className="flex-1 p-6">
