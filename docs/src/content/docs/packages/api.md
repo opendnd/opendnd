@@ -35,7 +35,7 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 | `GET /v1/worlds/{world}/$export/{format}` | Everything in the world, as a bundle or as prose. |
 | `POST /v1/worlds/{world}/$publish` | Snapshot the world's own content as a module: an immutable layer addressed by a digest of its content. Owners only; the same content publishes once. |
 | `GET /v1/modules`, `GET /v1/modules/{module}` | The modules the caller may enable: public ones, and those published from worlds they belong to. |
-| `GET`/`POST` `/v1/worlds/{world}/modules`, `DELETE /v1/worlds/{world}/modules/{module}` | The modules a world reads beneath its own content, and enabling or disabling one. Owners enable and disable. |
+| `GET`/`POST`/`PUT` `/v1/worlds/{world}/modules`, `DELETE /v1/worlds/{world}/modules/{module}` | The modules a world reads beneath its own content; enabling one, disabling one, and putting them in a new order, nearest first. Owners change the stack. |
 | `GET /v1/openapi.json` | This API, described from the ontology. |
 | `GET /v1/vocabularies` | Every code list with its display text, for a form. |
 | `GET /v1/me` | The caller and the worlds they may open. |
@@ -111,7 +111,7 @@ A module is a world's content, published. `$publish` copies every live record in
 
 The digest is a content address: `sha256:` and the hash of every record's model, id and body, with the platform fields that say where a record is rather than what it is (`world`, `module`, `recorded`) left out, in a fixed order. The same content therefore has the same digest, and publishing a world that has not changed answers with the module already published rather than a second one. A module cannot be edited, because no request can address its layer for writing; a corrected module is a new digest.
 
-Enabling a module adds its layer to the world's stack, after everything already there. Reads resolve nearest layer first, so a module's record appears in the world as the world's own, carrying `module` so a client can say where it came from and `?module=` can list what a module contributed. Writing that record in the world puts a copy in the world's own layer, which shadows the module's from then on; deleting it there hides it. Disabling the module removes its layer from the stack and leaves the world's own overrides where they are. See [ADR-016](/adr/adr-016-modules/).
+Enabling a module adds its layer to the world's stack, after everything already there, and an owner can put the stack in a new order. Publishing, enabling, disabling and reordering each write an event to the outbox of the world it happened in, `opendnd.module.published` and so on, so a subscriber hears that content arrived the same way it hears that a record changed. Reads resolve nearest layer first, so a module's record appears in the world as the world's own, carrying `module` so a client can say where it came from and `?module=` can list what a module contributed. Writing that record in the world puts a copy in the world's own layer, which shadows the module's from then on; deleting it there hides it. Disabling the module removes its layer from the stack and leaves the world's own overrides where they are. See [ADR-016](/adr/adr-016-modules/).
 
 ## The event outbox
 

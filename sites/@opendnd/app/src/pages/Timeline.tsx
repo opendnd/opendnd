@@ -6,6 +6,7 @@ import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
 import { recordPath, useWorld } from '../app/world';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
+import { formatPosition, isPosition } from '../schema/time';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,10 +31,49 @@ interface Entry {
 export function Timeline() {
   const api = useApi();
   const ontology = useOntology();
-  const { world } = useWorld();
+  const { world, canEdit } = useWorld();
   const [params, setParams] = useSearchParams();
   const from = yearParam(params.get('from'));
   const to = yearParam(params.get('to'));
+
+  // The world's own record carries where the world stands in its own time,
+  // which the timeline marks as now. Found by shape, so nothing here names
+  // the field that holds it.
+  const record = useRequest(
+    () => api.get(world.id, 'world', world.id).catch(() => undefined),
+    [api, world.id],
+  );
+  const now = useMemo(() => {
+    const body = record.data?.body;
+    if (!body) return undefined;
+    for (const [field, value] of Object.entries(body)) {
+      if (isPosition(value) && typeof value.year === 'number') {
+        return { field, position: value, year: value.year };
+      }
+    }
+    return undefined;
+  }, [record.data]);
+  const [moving, setMoving] = useState(false);
+  const [moveError, setMoveError] = useState<Error>();
+  const moveNow = async (year: number) => {
+    if (!now || !record.data) return;
+    setMoving(true);
+    setMoveError(undefined);
+    try {
+      await api.patch(
+        world.id,
+        'world',
+        world.id,
+        { [now.field]: { ...now.position, year } },
+        record.data.etag,
+      );
+      record.reload();
+    } catch (cause) {
+      setMoveError(cause instanceof Error ? cause : new Error(String(cause)));
+    } finally {
+      setMoving(false);
+    }
+  };
 
   const dated = ontology.models.filter((m) => m.validTime !== undefined);
   const defaults = useMemo(
@@ -94,8 +134,10 @@ export function Timeline() {
     for (const entry of entries) {
       groups.set(entry.begin, [...(groups.get(entry.begin) ?? []), entry]);
     }
-    return [...groups.entries()];
-  }, [entries]);
+    // Now takes its place among the years, as a row of its own.
+    if (now && !groups.has(now.year)) groups.set(now.year, []);
+    return [...groups.entries()].sort((a, b) => a[0] - b[0]);
+  }, [entries, now]);
 
   const truncated = (pages.data ?? [])
     .filter(({ page }) => page.next !== undefined)
@@ -125,6 +167,31 @@ export function Timeline() {
           What the world records, in the order it began, by year of its
           calendar.
         </p>
+        {now && (
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <Badge>Now: {formatPosition(now.position)}</Badge>
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() =>
+                update((q) => {
+                  q.set('from', String(now.year - 10));
+                  q.set('to', String(now.year + 10));
+                })
+              }
+            >
+              Around now
+            </Button>
+            {canEdit && (
+              <MoveNow
+                year={now.year}
+                busy={moving}
+                onMove={(y) => void moveNow(y)}
+              />
+            )}
+            {moveError && <ErrorNotice error={moveError} />}
+          </div>
+        )}
       </header>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(14rem,1fr)]">
@@ -166,8 +233,17 @@ export function Timeline() {
                 key={year}
                 className="grid grid-cols-[5rem_minmax(0,1fr)] gap-3"
               >
-                <h2 className="text-right text-sm font-semibold tabular-nums text-muted-foreground">
+                <h2
+                  className={
+                    now?.year === year
+                      ? 'text-right text-sm font-semibold tabular-nums text-primary'
+                      : 'text-right text-sm font-semibold tabular-nums text-muted-foreground'
+                  }
+                >
                   {year}
+                  {now?.year === year && (
+                    <span className="block text-xs font-normal">now</span>
+                  )}
                 </h2>
                 <ul className="flex flex-col gap-1 border-l pl-3">
                   {list.map((entry) => (
@@ -322,4 +398,42 @@ function yearOf(
 
 function nameOf(resource: Resource): string {
   return typeof resource.name === 'string' ? resource.name : resource.id;
+}
+
+/** Move the world's now to another year, for an editor. */
+function MoveNow(props: {
+  readonly year: number;
+  readonly busy: boolean;
+  readonly onMove: (year: number) => void;
+}) {
+  const [year, setYear] = useState(String(props.year));
+  const parsed = yearParam(year);
+  return (
+    <form
+      className="flex items-center gap-1"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (parsed !== undefined && parsed !== props.year) props.onMove(parsed);
+      }}
+    >
+      <Label htmlFor="timeline-now" className="text-muted-foreground">
+        Move now to
+      </Label>
+      <Input
+        id="timeline-now"
+        type="number"
+        className="h-7 w-24 text-sm"
+        value={year}
+        onChange={(e) => setYear(e.target.value)}
+      />
+      <Button
+        type="submit"
+        size="xs"
+        variant="outline"
+        disabled={props.busy || parsed === undefined || parsed === props.year}
+      >
+        Move
+      </Button>
+    </form>
+  );
 }

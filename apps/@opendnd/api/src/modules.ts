@@ -169,7 +169,9 @@ export async function publishModule(
     [id, now],
   );
   await enter(client, world);
-  return { module: toModule(row), existing: false };
+  const published = toModule(row);
+  await announce(client, world, 'published', published);
+  return { module: published, existing: false };
 }
 
 /** The modules a user may enable, newest first. */
@@ -246,7 +248,10 @@ export async function enableModule(
     'insert into world_layer (world_id, layer_id, position) values ($1, $2, $3)',
     [world, moduleId, position],
   );
-  return { module: { ...found, position }, enabled: true };
+  const enabled = { ...found, position };
+  await enter(client, world);
+  await announce(client, world, 'enabled', enabled);
+  return { module: enabled, enabled: true };
 }
 
 /** Take a module out of a world's stack. The world's own overrides stay. */
@@ -255,12 +260,101 @@ export async function disableModule(
   world: string,
   moduleId: string,
 ): Promise<void> {
-  const { rowCount } = await client.query(
-    `delete from world_layer
-     where world_id = $1 and layer_id = $2 and position > 0`,
+  const { rows } = await client.query<ModuleRow>(
+    `select ${COLUMNS}, wl.position
+     from world_layer wl
+     join module m on m.id = wl.layer_id
+     where wl.world_id = $1 and wl.layer_id = $2 and wl.position > 0`,
     [world, moduleId],
   );
-  if ((rowCount ?? 0) === 0) throw new NotFoundError('module', moduleId);
+  if (!rows[0]) throw new NotFoundError('module', moduleId);
+  await client.query(
+    'delete from world_layer where world_id = $1 and layer_id = $2',
+    [world, moduleId],
+  );
+  await enter(client, world);
+  await announce(client, world, 'disabled', toModule(rows[0]));
+}
+
+/**
+ * Put a world's modules in a new order, nearest first. The order must name
+ * every module the world reads, once each; positions are reassigned from one.
+ */
+export async function reorderModules(
+  client: PoolClient,
+  world: string,
+  order: readonly string[],
+): Promise<Module[]> {
+  const current = await modulesOf(client, world);
+  const have = current.map((m) => m.id).sort();
+  const want = [...order].sort();
+  if (
+    have.length !== want.length ||
+    have.some((id, index) => id !== want[index])
+  ) {
+    throw new ValidationError(
+      'the order must name every module this world reads, once each',
+      [{ path: ['order'], message: 'not the modules this world reads' }],
+    );
+  }
+  // Positions are unique per world, so they step aside before they are
+  // reassigned: a swap done in one statement would collide with itself.
+  await client.query(
+    'update world_layer set position = -position where world_id = $1 and position > 0',
+    [world],
+  );
+  await client.query(
+    `update world_layer set position = ordered.position
+     from unnest($2::uuid[], $3::int[]) as ordered(layer_id, position)
+     where world_layer.world_id = $1 and world_layer.layer_id = ordered.layer_id`,
+    [world, order, order.map((_, index) => index + 1)],
+  );
+  const modules = await modulesOf(client, world);
+  await enter(client, world);
+  await client.query(
+    `insert into event_outbox (world_id, model, resource_id, action, envelope)
+     values ($1, 'module', $1, 'reordered', $2)`,
+    [
+      world,
+      {
+        specVersion: '1',
+        type: 'opendnd.module.reordered',
+        world,
+        order: modules.map((m) => ({ id: m.id, digest: m.digest })),
+      },
+    ],
+  );
+  return modules;
+}
+
+/** A module event in a world's outbox, beside the writes. */
+async function announce(
+  client: PoolClient,
+  world: string,
+  action: 'published' | 'enabled' | 'disabled',
+  module: Module,
+): Promise<void> {
+  await client.query(
+    `insert into event_outbox (world_id, model, resource_id, action, envelope)
+     values ($1, 'module', $2, $3, $4)`,
+    [
+      world,
+      module.id,
+      action,
+      {
+        specVersion: '1',
+        type: `opendnd.module.${action}`,
+        world,
+        model: 'module',
+        id: module.id,
+        digest: module.digest,
+        name: module.name,
+        version: module.version,
+        total: module.total,
+        ...(module.position !== undefined ? { position: module.position } : {}),
+      },
+    ],
+  );
 }
 
 /** Set the layer the transaction reads and writes as. */

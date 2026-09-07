@@ -316,4 +316,33 @@ describe('a world’s settings', () => {
       await screen.findByText('Published Testland 1.0.0'),
     ).toBeInTheDocument();
   });
+
+  it('lets an owner move a module up the stack', async () => {
+    const user = userEvent.setup();
+    const second = { ...offered, position: 2 };
+    const { fetch, calls } = apiFor({
+      [`GET /v1/worlds/${WORLD_ID}/modules`]: () => ({
+        modules: [enabledModule, second],
+      }),
+      [`PUT /v1/worlds/${WORLD_ID}/modules`]: async (request) => {
+        const { order } = (await request.json()) as { order: string[] };
+        return {
+          modules: order.map((id, index) => ({
+            ...(id === offered.id ? offered : enabledModule),
+            position: index + 1,
+          })),
+        };
+      },
+    });
+    renderSettings(fetch);
+    expect(await screen.findByText('Reach Setting')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Move Core Bestiary up' }),
+    ).toBeDisabled();
+    await user.click(
+      screen.getByRole('button', { name: 'Move Reach Setting up' }),
+    );
+    const put = calls.find((c) => c.method === 'PUT')!;
+    expect(await put.json()).toEqual({ order: [offered.id, enabledModule.id] });
+  });
 });

@@ -38,7 +38,7 @@ Every record has a Write about this button for editors and owners. The form come
 
 ## The timeline
 
-Every world has a Timeline page: its dated records in the order they begin, grouped by year of the world's calendar, each a link to its record and each span shown with its end. Which models are dated comes from the ontology, through the API's description of each model, and the page starts with those whose records both begin and end, the things that happen and the things that last; snapshots, and any other model, can be added with a tick. A span of years narrows it, and a record with a date has an On the timeline button that opens the years around it.
+Every world has a Timeline page: its dated records in the order they begin, grouped by year of the world's calendar, each a link to its record and each span shown with its end. Which models are dated comes from the ontology, through the API's description of each model, and the page starts with those whose records both begin and end, the things that happen and the things that last; snapshots, and any other model, can be added with a tick. A span of years narrows it, and a record with a date has an On the timeline button that opens the years around it. When the world's own record says where the world stands in its own time, that year is marked as now among the others, a button opens the years around it, and an editor can move now to another year from the same place.
 
 ## Reading time and lists
 
@@ -66,7 +66,7 @@ An owner has a Settings page for each world: its name, visibility and summary, w
 
 ## Modules
 
-A world's settings page has a Modules section for its owners. It lists the modules the world reads beneath its own content, nearest first, each with what it holds counted by kind, and lets an owner disable one. Below that, an owner can enable any module the API offers them, which is every public module and every module published from a world they belong to. Last, an owner can publish the world itself: its name, a version, a license, a summary, and whether the module is public or only for members of this world. Publishing does not change the world; it takes a snapshot, and publishing again without a change answers with the same module rather than a second one.
+A world's settings page has a Modules section for its owners. It lists the modules the world reads beneath its own content, nearest first, each with what it holds counted by kind, and lets an owner move one up or down the stack or disable it. Below that, an owner can enable any module the API offers them, which is every public module and every module published from a world they belong to. Last, an owner can publish the world itself: its name, a version, a license, a summary, and whether the module is public or only for members of this world. Publishing does not change the world; it takes a snapshot, and publishing again without a change answers with the same module rather than a second one.
 
 A record that came from a module says so in its record keeping, and a world that edits one keeps its own copy, which shadows the module's from then on.
 

@@ -947,6 +947,42 @@ const fixedPaths = {
         404: problem('No such module, or not one the caller may see'),
       },
     },
+    put: {
+      tags: ['modules'],
+      summary: 'Put the modules in a new order',
+      description:
+        'Nearest first: the first named wins over the rest where they hold the same record. The order must name every module the world reads, once each. Owners only.',
+      requestBody: body({
+        type: 'object',
+        properties: {
+          order: {
+            type: 'array',
+            items: { type: 'string', format: 'uuid' },
+            minItems: 1,
+          },
+        },
+        required: ['order'],
+      }),
+      responses: {
+        200: {
+          description: 'The stack, in its new order',
+          content: json({
+            type: 'object',
+            properties: {
+              modules: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/Module' },
+              },
+            },
+            required: ['modules'],
+          }),
+        },
+        400: problem(
+          'The order does not name exactly the modules the world reads',
+        ),
+        403: problem('Only an owner may reorder modules'),
+      },
+    },
   },
   '/v1/worlds/{world}/modules/{module}': {
     parameters: [world, moduleParam],

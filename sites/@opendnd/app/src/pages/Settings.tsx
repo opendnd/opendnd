@@ -1,4 +1,11 @@
-import { ArchiveIcon, MailIcon, PackageIcon, XIcon } from 'lucide-react';
+import {
+  ArchiveIcon,
+  ArrowDownIcon,
+  ArrowUpIcon,
+  MailIcon,
+  PackageIcon,
+  XIcon,
+} from 'lucide-react';
 import { type FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import type { Member, Module, Role, Usage, Visibility } from '../api/types';
@@ -413,7 +420,15 @@ function Modules() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<Error>();
 
-  const enabledIds = new Set((enabled.data?.modules ?? []).map((m) => m.id));
+  const stack = enabled.data?.modules ?? [];
+  const enabledIds = new Set(stack.map((m) => m.id));
+
+  /** Nearest first: swapping two neighbours is how an owner changes who wins. */
+  const move = (from: number, to: number) => {
+    const order = stack.map((m) => m.id);
+    [order[from], order[to]] = [order[to]!, order[from]!];
+    return api.reorderModules(world.id, order);
+  };
   const offered = (catalogue.data?.modules ?? []).filter(
     (m) => !enabledIds.has(m.id),
   );
@@ -469,7 +484,7 @@ function Modules() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {enabled.data.modules.map((m) => (
+              {stack.map((m, index) => (
                 <TableRow key={m.id}>
                   <TableCell>
                     <span className="font-medium">{m.name}</span>
@@ -483,7 +498,25 @@ function Modules() {
                   <TableCell>
                     <Contents module={m} />
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right whitespace-nowrap">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Move ${m.name} up`}
+                      disabled={busy || index === 0}
+                      onClick={() => void act(() => move(index, index - 1))}
+                    >
+                      <ArrowUpIcon />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`Move ${m.name} down`}
+                      disabled={busy || index === stack.length - 1}
+                      onClick={() => void act(() => move(index, index + 1))}
+                    >
+                      <ArrowDownIcon />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon-sm"

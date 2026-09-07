@@ -46,6 +46,7 @@ import {
   modulesOf,
   modulesVisibleTo,
   publishModule,
+  reorderModules,
 } from './modules';
 import { openApiDocument } from './openapi';
 import { SCOPE_MODELS, SIMULATION, simulate } from './simulate';
@@ -152,6 +153,7 @@ const publishBody = z.object({
 });
 
 const enableBody = z.object({ module: UUID });
+const orderBody = z.object({ order: z.array(UUID).min(1).max(100) });
 const CELL = z.string().regex(/^[0-9a-f]{1,16}$/i, 'not a cell token');
 
 /** What a list accepts, checked at the edge so a bad value is a 400 and not a database error. */
@@ -719,6 +721,14 @@ export function createApp(options: AppOptions) {
       const { module: moduleId } = parse(enableBody, await json(c), 'module');
       const result = await enableModule(client, world, moduleId, userId);
       return c.json(result.module, result.enabled ? 201 : 200);
+    }),
+  );
+
+  /** Put the stack in a new order, nearest first. Owners only. */
+  app.put('/v1/worlds/:world/modules', (c) =>
+    administering(c, pool, async (client, world) => {
+      const { order } = parse(orderBody, await json(c), 'order');
+      return c.json({ modules: await reorderModules(client, world, order) });
     }),
   );
 

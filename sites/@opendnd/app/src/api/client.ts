@@ -201,6 +201,16 @@ export class ApiClient {
     });
   }
 
+  /** Put the world's modules in a new order, nearest first. Owners only. */
+  reorderModules(
+    world: string,
+    order: readonly string[],
+  ): Promise<{ modules: Module[] }> {
+    return this.body('PUT', `/v1/worlds/${world}/modules`, {
+      body: { order },
+    });
+  }
+
   disableModule(world: string, module: string): Promise<void> {
     return this.body('DELETE', `/v1/worlds/${world}/modules/${module}`);
   }

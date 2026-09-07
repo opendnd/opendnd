@@ -2287,4 +2287,69 @@ describe('the API: modules', () => {
     const calendars = await ada.get(`/v1/worlds/${table}/calendar`);
     expect((calendars.body as { resources: unknown[] }).resources).toEqual([]);
   });
+
+  it('announces publishing, enabling and disabling in the outbox, and reorders the stack', async () => {
+    const outbox = (w: string) =>
+      inWorld(
+        pool,
+        w,
+        async (c) =>
+          (
+            await c.query<{
+              action: string;
+              envelope: Record<string, unknown>;
+            }>(
+              `select action, envelope from event_outbox
+             where model = 'module' order by seq`,
+            )
+          ).rows,
+      );
+    const fromSetting = await outbox(setting);
+    expect(fromSetting.map((e) => e.action)).toEqual(['published']);
+    expect(fromSetting[0]!.envelope).toMatchObject({
+      type: 'opendnd.module.published',
+      digest: published.digest,
+      total: 3,
+    });
+
+    // A world of Drew's that reads both modules, in the order enabled.
+    const made = await drew.post('/v1/worlds', { name: 'Reader' });
+    const reader = (made.body as { id: string }).id;
+    await drew.post(`/v1/worlds/${reader}/modules`, { module: published.id });
+    await drew.post(`/v1/worlds/${reader}/modules`, { module: hidden.id });
+    const before = await drew.get(`/v1/worlds/${reader}/modules`);
+    expect(
+      (before.body as { modules: { id: string }[] }).modules.map((m) => m.id),
+    ).toEqual([published.id, hidden.id]);
+
+    const swapped = await drew.put(`/v1/worlds/${reader}/modules`, {
+      order: [hidden.id, published.id],
+    });
+    expect(swapped.status).toBe(200);
+    expect(
+      (
+        swapped.body as { modules: { id: string; position: number }[] }
+      ).modules.map((m) => [m.id, m.position]),
+    ).toEqual([
+      [hidden.id, 1],
+      [published.id, 2],
+    ]);
+    const partial = await drew.put(`/v1/worlds/${reader}/modules`, {
+      order: [hidden.id],
+    });
+    expect(partial.status).toBe(400);
+
+    await drew.delete(`/v1/worlds/${reader}/modules/${hidden.id}`);
+    const heard = await outbox(reader);
+    expect(heard.map((e) => e.action)).toEqual([
+      'enabled',
+      'enabled',
+      'reordered',
+      'disabled',
+    ]);
+    expect(heard[3]!.envelope).toMatchObject({
+      type: 'opendnd.module.disabled',
+      id: hidden.id,
+    });
+  });
 });

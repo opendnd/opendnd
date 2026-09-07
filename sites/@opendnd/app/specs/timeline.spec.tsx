@@ -83,7 +83,11 @@ describe('the timeline', () => {
   it('starts with what begins and ends, ordered by year and grouped, each span with its end', async () => {
     const { calls } = renderTimeline();
     expect(await screen.findByText('A coronation')).toBeInTheDocument();
-    const asked = calls.filter((c) => c.url.includes('/v1/worlds/'));
+    // Besides the world's own record, only the model with a beginning and an
+    // end is asked for.
+    const asked = calls.filter(
+      (c) => c.url.includes('/v1/worlds/') && !c.url.includes('/world/'),
+    );
     expect(asked).toHaveLength(1);
     expect(new URL(asked[0]!.url).searchParams.get('sort')).toBe('validTime');
     expect(asked[0]!.url).toContain('/happening');
@@ -134,5 +138,48 @@ describe('the timeline', () => {
     expect(
       screen.getByRole('button', { name: 'All years' }),
     ).toBeInTheDocument();
+  });
+
+  it('marks the world’s now among the years and lets an editor move it', async () => {
+    const user = userEvent.setup();
+    const { fetch, calls } = fakeFetch({
+      [`GET /v1/worlds/${WORLD_ID}/happening`]: () => ({
+        resources: happenings,
+      }),
+      [`GET /v1/worlds/${WORLD_ID}/world/${WORLD_ID}`]: () =>
+        Response.json(
+          {
+            id: WORLD_ID,
+            name: 'Testland',
+            standing: { trs: 'c', year: 1002 },
+          },
+          { headers: { etag: '"3"' } },
+        ),
+      [`PATCH /v1/worlds/${WORLD_ID}/world/${WORLD_ID}`]: async (request) => ({
+        id: WORLD_ID,
+        ...((await request.json()) as Record<string, unknown>),
+      }),
+    });
+    renderInWorld(<Timeline />, {
+      fetch,
+      ontology,
+      route: '/worlds/:world/timeline',
+      path: `/worlds/${WORLD_ID}/timeline`,
+    });
+    expect(await screen.findByText('Now: 1002')).toBeInTheDocument();
+    const years = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((h) => h.textContent);
+    expect(years).toEqual(['1000', '1002now', '1004']);
+
+    await user.clear(screen.getByLabelText('Move now to'));
+    await user.type(screen.getByLabelText('Move now to'), '1010');
+    await user.click(screen.getByRole('button', { name: 'Move' }));
+    await waitFor(() =>
+      expect(calls.some((c) => c.method === 'PATCH')).toBe(true),
+    );
+    const patch = calls.find((c) => c.method === 'PATCH')!;
+    expect(patch.headers.get('if-match')).toBe('"3"');
+    expect(await patch.json()).toEqual({ standing: { trs: 'c', year: 1010 } });
   });
 });
