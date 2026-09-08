@@ -503,6 +503,17 @@ describe('the API: actions', () => {
     // A recursive shape must not leave document-local pointers behind: an
     // OpenAPI reader resolves them against the root, which has no $defs.
     expect(JSON.stringify(doc)).not.toContain('#/$defs/');
+    // Every pointer must land on something. A reader stops at the first one
+    // that does not, so a schema named but never defined takes the whole
+    // document down rather than one route with it.
+    const pointed = new Set(
+      [...JSON.stringify(doc).matchAll(/#\/components\/schemas\/([^"]+)/g)].map(
+        (match) => match[1]!,
+      ),
+    );
+    expect(
+      [...pointed].filter((name) => !(name in doc.components.schemas)),
+    ).toEqual([]);
   });
 
   it('runs a history and returns it without saving anything', async () => {

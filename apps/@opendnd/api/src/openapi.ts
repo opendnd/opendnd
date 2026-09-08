@@ -395,6 +395,15 @@ const fixedSchemas = {
       id: { type: 'string' },
       name: { type: 'string' },
       description: { type: 'string' },
+      category: {
+        type: 'string',
+        description: 'The group the manifest places the model in.',
+      },
+      icon: {
+        type: 'string',
+        description:
+          'The icon the manifest names for the model, from the Lucide icon set.',
+      },
       generate: {
         type: 'object',
         description:
@@ -466,6 +475,19 @@ const fixedSchemas = {
       },
     },
     required: ['history'],
+  },
+  Reference: {
+    type: 'object',
+    description: 'A typed pointer to another record in the same world.',
+    properties: {
+      model: { type: 'string' },
+      id: { type: 'string', format: 'uuid' },
+      name: {
+        type: 'string',
+        description: 'The name of the record pointed at, for convenience.',
+      },
+    },
+    required: ['model', 'id'],
   },
   References: {
     type: 'object',
