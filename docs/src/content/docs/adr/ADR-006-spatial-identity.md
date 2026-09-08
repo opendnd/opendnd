@@ -46,3 +46,14 @@ A world that already exists usually exists as a drawing: a vector file of coastl
 - **Where the drawing sits on the globe is stated, not assumed**, and so is which vertical it runs in. A drawing already in the square a web map is served in is chopped; one drawn pole to pole is projected. The difference puts a pole a hemisphere out.
 - **A layer may be placed on its own.** A drawing is edited after it has been tiled, and a continent moves. Rather than choosing between the drawing and the pictures, each layer is placed where the pictures say it is, and the drawing becomes what the pictures were made from.
 - **Elevation is generated, not recovered.** A political map holds no height. What is taken from it is the coastline, as the constraint a generated heightfield must satisfy — which is what makes a drawn world and a generated one the same kind of thing, and is the point of doing any of this.
+
+## Decided later, 2026-09-08: the order water needs
+
+A heightfield is easy and a heightfield with working rivers is not. The failures are well known and each has a fix that only works in a particular place in the sequence, so the sequence is the decision.
+
+- **Ranges are lines, not noise.** A range is a spine with height falling away either side. Noise alone gives isolated peaks with no watershed between them, and without a watershed there is nothing for a river to be. A world that already says where its mountains are hands its spines in, and they are fixed points the rest is fitted around.
+- **Every hollow is filled before any water moves.** This is the step that decides whether the rivers work. It also leaves flats behind, where nothing is lower than anything else, so the flood records the way it came in: that is by construction a path to an outlet, and it is what a river follows across a plain rather than stopping on it.
+- **Weather is settled before water runs**, because rain is what a river carries, and a range's dry side should have small rivers rather than the same rivers as its wet side.
+- **Rivers are found, not drawn.** They are the cells where enough water has gathered. Given drained ground and the sea as the only sink, such a cell must have high ground above it and a way to the sea below it — so "begins in the mountains and ends in the ocean" is a property of the method rather than something to enforce afterwards.
+- **A world joins up east to west.** The map's side edges are not edges; only the poles are, and water reaching them has left what is modelled.
+- **Elevation is invented, and says so.** A drawn map holds no height. What the drawing constrains is the coastline; everything above and below it is generated, and the same generator with no coastline handed to it makes a world from nothing. That is what makes a drawn world and a generated one the same kind of thing.

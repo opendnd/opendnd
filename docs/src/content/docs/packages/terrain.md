@@ -74,6 +74,41 @@ landAt(raster, x, y); // true or false, immediately
 
 `landFraction` measures how much of a square is land, which is the one measurement that can be taken of both a drawing and a picture made from it — and so the way to check that a drawing has been put on the globe correctly.
 
+## Growing a world
+
+With a coastline in hand — read off a drawing or invented — `growWorld` makes the ground under it. The order is the whole thing, and it is not the obvious order:
+
+```ts
+import { growWorld, measure } from '@opendnd/terrain';
+
+const world = growWorld({
+  width, height, land, lake, wrapX: true,
+  seed: 'kur-ao',
+  latOfRow: (row) => latOf((row + 0.5) / height),
+});
+```
+
+1. **The coast is the constraint.** Distance from the shore gives the base: land rises inland, the shelf falls away offshore.
+2. **Ranges are lines, then roughened.** A range is a spine with height falling away either side and ridged noise along it, so it has summits and saddles. Loud noise over a continent gives isolated peaks with no watershed between them, and a world with no watershed has no rivers worth the name. Spines may also be handed in, for a world that already says where its mountains are.
+3. **Pits are filled before a drop of water moves.** Noise leaves hollows; a river running into one stops there, which is the commonest fault in a generated world. A priority flood raises every hollow until water can leave it, and remembers the way it came in — which is the way out of the flat the filling leaves behind, and what keeps a river from stranding on the plain it just made. Anything the world calls a lake is left as the sink it is meant to be.
+4. **Weather before water**, because rain is what a river carries. Temperature from latitude and the lapse rate; moisture from prevailing winds, picked up over sea and wrung out over rising ground, so a range has a wet side and a dry lee.
+5. **Flow**, by steepest descent, gathering each cell's rain plus everything above it.
+6. **Rivers are found, not drawn**: the cells where enough has gathered. Because the ground drains and the sea is the only sink, such a cell necessarily has high ground above it and a way down to the sea below it.
+7. **Ground cover last**, into the ontology's own `terrain` codes, with the water already in place.
+
+A world joins up east to west when `wrapX` is set, so a continent on the meridian is one continent and water leaving one edge arrives at the other. The map still ends at the poles, and water reaching the top or bottom row has left what is being modelled.
+
+## Measuring one world against another
+
+"As good as the world we already have" is a claim until it is a number. `measure` gives the numbers — land fraction, how the landmasses are distributed, how crinkly the coast is, elevation, and how rivers behave — and `within` holds one world to another's envelope.
+
+```ts
+const bar = measure(fromTheDrawing);
+const off = within(measure(fromNothing), bar); // [] when it clears the bar
+```
+
+Two of those only mean anything once there is water, and they are the ones worth watching: every river reaches the sea or a named lake, and no river begins below what its own catchment implies.
+
 ## Testing
 
 ```bash

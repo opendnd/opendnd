@@ -257,10 +257,10 @@
       "name": "@opendnd/terrain",
       "version": "0.0.0",
       "dependencies": {
+        "@opendnd/random": "workspace:*",
         "@opendnd/spatial": "workspace:*",
       },
       "devDependencies": {
-        "@opendnd/random": "workspace:*",
         "@types/bun": "*",
         "@types/node": "ts5.9",
         "@typescript-eslint/eslint-plugin": "^8",

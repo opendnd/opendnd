@@ -72,8 +72,7 @@ const packages: readonly PackageConfig[] = [
     name: '@opendnd/terrain',
     description:
       "A world's geography as data: reading the shapes out of a drawn map, and, from a coastline, the land beneath it. The same field however it arrived, so a world someone drew and a world nobody has drawn yet are the same kind of thing.",
-    deps: ['@opendnd/spatial@workspace:*'],
-    devDeps: ['@opendnd/random@workspace:*'],
+    deps: ['@opendnd/spatial@workspace:*', '@opendnd/random@workspace:*'],
   },
   {
     name: '@opendnd/generators',
