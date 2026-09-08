@@ -15,6 +15,7 @@ import type {
   Role,
   SearchHit,
   SimulateResult,
+  StoredFile,
   Usage,
   Vocabulary,
   World,
@@ -49,6 +50,8 @@ export type Query = Record<string, string | number | boolean | undefined>;
 
 export interface RequestOptions {
   readonly body?: unknown;
+  /** A file sent as itself, rather than a body sent as JSON. */
+  readonly file?: Blob;
   readonly query?: Query;
   /** The ETag a write expects to replace. Sent as `If-Match`. */
   readonly etag?: string;
@@ -171,6 +174,20 @@ export class ApiClient {
 
   usage(world: string): Promise<Usage> {
     return this.body('GET', `/v1/worlds/${world}/usage`);
+  }
+
+  /**
+   * Store a file in a world: a picture for a record, say. The answer's `path`
+   * is what the record carries, so the picture follows the world rather than
+   * the deployment it was uploaded to.
+   */
+  storeAsset(world: string, file: Blob): Promise<StoredFile> {
+    return this.body('POST', `/v1/worlds/${world}/assets`, { file });
+  }
+
+  /** The files a world holds. */
+  assets(world: string): Promise<{ assets: StoredFile[] }> {
+    return this.body('GET', `/v1/worlds/${world}/assets`);
   }
 
   /** How many records of each kind the world holds. Models with none are absent. */
@@ -447,7 +464,9 @@ export class ApiClient {
     const headers: Record<string, string> = { accept: 'application/json' };
     const token = await this.options.authorization();
     if (token) headers.authorization = `Bearer ${token}`;
-    if (options.body !== undefined) {
+    if (options.file !== undefined) {
+      headers['content-type'] = options.file.type;
+    } else if (options.body !== undefined) {
       headers['content-type'] = 'application/json';
     }
     if (options.etag) headers['if-match'] = options.etag;
@@ -457,9 +476,11 @@ export class ApiClient {
       response = await this.fetchImpl(url, {
         method,
         headers,
-        ...(options.body !== undefined
-          ? { body: JSON.stringify(options.body) }
-          : {}),
+        ...(options.file !== undefined
+          ? { body: options.file }
+          : options.body !== undefined
+            ? { body: JSON.stringify(options.body) }
+            : {}),
         ...(options.signal ? { signal: options.signal } : {}),
       });
     } catch (cause) {

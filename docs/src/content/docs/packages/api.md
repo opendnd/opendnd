@@ -47,6 +47,11 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 | `POST /v1/worlds/{world}/$import`                                                             | Save many resources in one transaction: `{ resources: [{ model, resource }] }`, or the Bundle `$export/json` produces, so a world exported from one place imports into another unchanged.                                                                 |
 | `GET /v1/worlds/{world}/$search?q=`                                                           | One search box across every model.                                                                                                                                                                                                                        |
 | `GET /v1/worlds/{world}/$counts`                                                            | How many records of each kind the world holds, resolved the way a listing resolves them. A model the world holds nothing of is absent rather than zero.                    |
+| `POST /v1/worlds/{world}/assets`                                                             | Store a file in a world: the body is the file, `Content-Type` says what it is. Pictures, fonts and documents only. Addressed by the digest of its content, so storing the same file twice stores it once. Editors.   |
+| `GET /v1/worlds/{world}/assets`                                                              | The files a world holds.   |
+| `GET /v1/worlds/{world}/assets/{id}`                                                         | Read a stored file. Not authenticated, because a browser asking for a picture sends nothing with it; the address is the digest. Cached for a year.   |
+| `DELETE /v1/worlds/{world}/assets/{id}`                                                      | Remove a stored file. Editors.   |
+| `GET /v1/worlds/{world}/tiles/{z}/{x}/{y}.png`                                               | One tile of a world's map, at the address web maps have used since the first one.   |
 | `GET /v1/worlds/{world}/{model}/{id}/references`                                              | Everything that points at a record.                                                                                                                                                                                                                       |
 | `GET /v1/worlds/{world}/{model}/{id}/history`                                                 | Every version of a record.                                                                                                                                                                                                                                |
 | `GET /v1/worlds/{world}/usage`                                                                | What has been spent on model calls. Owners only.                                                                                                                                                                                                          |
@@ -136,6 +141,12 @@ resource     (layer, model, id) with the validated body as jsonb
 The body is the resource as the ontology defines it. Beside it sit generated columns projecting the platform fields that get queried — name, canon status, perspective, module, provenance, the valid-time bounds, the revision — so the queries the API serves are indexable without opening the JSON. One table means a new model needs no migration.
 
 A world is also a `world` resource in its own layer, so its calendar, its coordinate system and its current in-world time are ontology content rather than platform settings.
+
+### Files
+
+Pictures and map tiles are not rows. They sit under `worlds/{world}/` in a store the API is the only way into, addressed by the digest of their content so that the same file stored twice is stored once and an address never comes to mean something else. `ASSETS_BUCKET`, which a deployment sets, puts them in that bucket; with nothing set they go in `OPENDND_ASSETS`, or `.assets` beside the API, which is what makes a world's pictures work on a machine with no cloud account behind it. See [ADR-017](/adr/adr-017-files-a-world-holds/).
+
+A world's tiles are filled from outside the API — `aws s3 sync <pyramid> s3://<bucket>/worlds/<id>/tiles/` for a deployment, or a copy into the folder locally — because a pyramid is tens of thousands of small files and sending each through HTTP is a waste of an afternoon.
 
 ## Identity
 

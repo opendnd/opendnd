@@ -190,6 +190,7 @@ export function openApiDocument(options: { url?: string } = {}) {
     tags: [
       { name: 'meta' },
       { name: 'worlds' },
+      { name: 'assets' },
       ...ids.map((id) => ({ name: id })),
     ],
     paths: { ...fixedPaths, ...paths },
@@ -475,6 +476,30 @@ const fixedSchemas = {
       },
     },
     required: ['history'],
+  },
+  Asset: {
+    type: 'object',
+    properties: {
+      id: {
+        type: 'string',
+        description:
+          'The digest of the content, and the extension of its type.',
+      },
+      contentType: { type: 'string' },
+      size: { type: 'integer', description: 'Bytes.' },
+      path: { type: 'string', description: 'Where the file is read from.' },
+    },
+    required: ['id', 'contentType', 'size', 'path'],
+  },
+  Assets: {
+    type: 'object',
+    properties: {
+      assets: {
+        type: 'array',
+        items: { $ref: '#/components/schemas/Asset' },
+      },
+    },
+    required: ['assets'],
   },
   Counts: {
     type: 'object',
@@ -868,6 +893,95 @@ const fixedPaths = {
           description: 'What matched',
           content: json({ $ref: '#/components/schemas/SearchResults' }),
         },
+      },
+    },
+  },
+  '/v1/worlds/{world}/assets': {
+    parameters: [world],
+    get: {
+      tags: ['assets'],
+      summary: 'The files a world holds',
+      responses: {
+        200: {
+          description: 'What is stored',
+          content: json({ $ref: '#/components/schemas/Assets' }),
+        },
+      },
+    },
+    post: {
+      tags: ['assets'],
+      summary: 'Store a file in a world',
+      description:
+        'The body is the file itself and `Content-Type` says what it is; pictures, fonts and documents are accepted and nothing else. A file is addressed by the digest of its content, so storing the same file twice stores it once and answers with the same address.',
+      requestBody: {
+        required: true,
+        content: {
+          'image/png': { schema: { type: 'string', format: 'binary' } },
+          'image/jpeg': { schema: { type: 'string', format: 'binary' } },
+          'image/svg+xml': { schema: { type: 'string', format: 'binary' } },
+        },
+      },
+      responses: {
+        201: {
+          description: 'Where it can be read',
+          content: json({ $ref: '#/components/schemas/Asset' }),
+        },
+        400: problem('Not a kind of file a world holds, or empty'),
+        403: problem('This world is not yours to change'),
+      },
+    },
+  },
+  '/v1/worlds/{world}/assets/{id}': {
+    parameters: [
+      world,
+      {
+        name: 'id',
+        in: 'path',
+        required: true,
+        schema: { type: 'string' },
+        description: 'The digest of the content and its extension.',
+      },
+    ],
+    get: {
+      tags: ['assets'],
+      summary: 'Read a stored file',
+      description:
+        'Not authenticated, because a browser asks for a picture in an `img` tag and sends nothing with it. What protects a file is that its address is a digest of its content, which cannot be guessed and is only found on a record in a world the reader may already read. The answer never changes, so it may be cached for a year.',
+      responses: {
+        200: { description: 'The file' },
+        404: problem('No such file in this world'),
+      },
+    },
+    delete: {
+      tags: ['assets'],
+      summary: 'Remove a stored file',
+      responses: {
+        204: { description: 'Gone' },
+        403: problem('This world is not yours to change'),
+      },
+    },
+  },
+  '/v1/worlds/{world}/tiles/{z}/{x}/{y}': {
+    parameters: [
+      world,
+      { name: 'z', in: 'path', required: true, schema: { type: 'integer' } },
+      { name: 'x', in: 'path', required: true, schema: { type: 'integer' } },
+      {
+        name: 'y',
+        in: 'path',
+        required: true,
+        schema: { type: 'string' },
+        description: 'The row and the extension, `12.png` say.',
+      },
+    ],
+    get: {
+      tags: ['assets'],
+      summary: "One tile of a world's map",
+      description:
+        'The address web maps have used for a tile since the first one. Unauthenticated and cached for the same reasons a stored file is.',
+      responses: {
+        200: { description: 'The tile' },
+        404: problem('The world has no tile there'),
       },
     },
   },

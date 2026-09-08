@@ -675,6 +675,10 @@ function emitString(schema: JsonSchema): string {
     case 'uri':
     case 'url':
       return 'z.url()';
+    // An address that may be relative, which is how a record points at a
+    // file the world itself holds without naming the deployment serving it.
+    case 'uri-reference':
+      return "z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' })";
     case 'date-time':
       return 'z.iso.datetime()';
     case 'date':

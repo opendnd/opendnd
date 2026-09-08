@@ -152,7 +152,8 @@
     },
     "portrait": {
       "type": "string",
-      "format": "uri"
+      "format": "uri-reference",
+      "description": "A picture of the person. Somewhere on the web, or a path to a file the world itself holds."
     }
   },
   "required": [],

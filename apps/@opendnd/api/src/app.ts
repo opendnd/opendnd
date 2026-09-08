@@ -21,6 +21,16 @@ import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import type { Pool, PoolClient } from 'pg';
 import { z } from 'zod';
 import { askWorld } from './ask';
+import {
+  ASSET_ID,
+  type AssetStore,
+  TILE_KEY,
+  assetId,
+  assetsFromEnv,
+  storedType,
+  typeOfKey,
+  worldPrefix,
+} from './assets';
 import { AUTHOR, authorAbout } from './author';
 import { inTransaction, inWorld } from './db';
 import { assertFormat, exportWorld } from './export';
@@ -124,6 +134,11 @@ export interface AppOptions {
    * configures, which with nothing set is an Ollama on the usual port.
    */
   readonly models?: ModelsFactory;
+  /**
+   * Where a world's pictures and map tiles are kept. Defaults to what the
+   * environment configures: the deployment's bucket, or a folder.
+   */
+  readonly assets?: AssetStore;
 }
 
 /** Every model id, so the route table can be built from the ontology. */
@@ -244,6 +259,7 @@ const memberBody = z
  */
 export function createApp(options: AppOptions) {
   const { pool } = options;
+  const assets = options.assets ?? assetsFromEnv();
   const modelsFor: ModelsFactory =
     options.models ?? ((request) => modelsFromEnv(request));
   const app = new Hono<Env>();
@@ -793,6 +809,106 @@ export function createApp(options: AppOptions) {
     ),
   );
 
+  /**
+   * A world's files: the pictures its records point at, and the tiles its map
+   * is drawn from.
+   *
+   * A file is addressed by the digest of its content, so the same picture
+   * uploaded twice is stored once and an address never means two things. A
+   * read is not authenticated, because a browser asks for a picture in an
+   * `img` tag and sends nothing with it; what protects a file is that its
+   * address cannot be guessed and is only found on a record in a world the
+   * reader may already read. Writing is a world's editors' business.
+   */
+  app.post('/v1/worlds/:world/assets', (c) =>
+    withWorld(c, true, async (_store, world) => {
+      const contentType = storedType(c.req.header('content-type'));
+      if (contentType === undefined) {
+        throw new ValidationError(
+          `a world holds pictures, fonts and documents; ${c.req.header('content-type') ?? 'nothing'} is not one of them`,
+          [{ path: ['content-type'], message: 'unsupported' }],
+        );
+      }
+      const body = new Uint8Array(await c.req.arrayBuffer());
+      if (body.byteLength === 0) {
+        throw new ValidationError('an empty file is not a file', [
+          { path: [], message: 'empty' },
+        ]);
+      }
+      const id = assetId(body, contentType);
+      await assets.put(`${worldPrefix(world)}assets/${id}`, body, contentType);
+      return c.json(
+        { id, contentType, size: body.byteLength, path: assetPath(world, id) },
+        201,
+      );
+    }),
+  );
+
+  app.get('/v1/worlds/:world/assets', (c) =>
+    withWorld(c, false, async (_store, world) => {
+      const prefix = `${worldPrefix(world)}assets/`;
+      const found = await assets.list(prefix, 1000);
+      return c.json({
+        assets: found.map((asset) => {
+          const id = asset.key.slice(prefix.length);
+          return {
+            id,
+            size: asset.size,
+            contentType: typeOfKey(id),
+            path: assetPath(world, id),
+          };
+        }),
+      });
+    }),
+  );
+
+  app.get('/v1/worlds/:world/assets/:id', async (c) => {
+    const world = uuidParam(c, 'world');
+    const id = param(c, 'id');
+    if (!ASSET_ID.test(id)) throw new NotFoundError('asset', id);
+    return serve(c, `${worldPrefix(world)}assets/${id}`);
+  });
+
+  app.delete('/v1/worlds/:world/assets/:id', (c) =>
+    withWorld(c, true, async (_store, world) => {
+      const id = param(c, 'id');
+      if (!ASSET_ID.test(id)) throw new NotFoundError('asset', id);
+      await assets.delete(`${worldPrefix(world)}assets/${id}`);
+      return c.body(null, 204);
+    }),
+  );
+
+  /**
+   * One tile of a world's map, at the address web maps have used since the
+   * first one. Unauthenticated for the same reason a picture is, and answered
+   * from what the world has: today the pictures somebody drew, and in time the
+   * tiles rendered from its terrain.
+   */
+  app.get('/v1/worlds/:world/tiles/:z/:x/:y', async (c) => {
+    const world = uuidParam(c, 'world');
+    const key = `${param(c, 'z')}/${param(c, 'x')}/${param(c, 'y')}`;
+    if (!TILE_KEY.test(key)) throw new NotFoundError('tile', key);
+    return serve(c, `${worldPrefix(world)}tiles/${key}`);
+  });
+
+  /**
+   * A stored file, or 404.
+   *
+   * The address is the digest of the content, so the answer to it can never
+   * change: it is given a year and marked immutable, which is what lets a
+   * map of twenty thousand tiles be drawn without asking twice for any of
+   * them.
+   */
+  async function serve(c: Context<Env>, key: string): Promise<Response> {
+    const asset = await assets.get(key);
+    if (!asset) throw new NotFoundError('asset', key);
+    return c.body(asset.body as unknown as ArrayBuffer, 200, {
+      'content-type': asset.contentType,
+      'content-length': String(asset.size),
+      'cache-control': 'public, max-age=31536000, immutable',
+    });
+  }
+
   /** Everything in a world, as a bundle or as prose. */
   app.get('/v1/worlds/:world/$export/:format', (c) => {
     const format = assertFormat(param(c, 'format'));
@@ -1009,6 +1125,11 @@ async function administering(
  * path from a handler typed only by its environment, so the absence that
  * cannot happen is still refused rather than passed on as undefined.
  */
+/** Where a stored file is read from, which is what a record points at. */
+export function assetPath(world: string, id: string): string {
+  return `/v1/worlds/${world}/assets/${id}`;
+}
+
 function param(c: Context<Env>, name: string): string {
   const value = c.req.param(name);
   if (value === undefined) {

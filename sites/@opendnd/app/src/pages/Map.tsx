@@ -11,6 +11,7 @@ import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import type { Resource, SearchHit } from '../api/types';
 import { useApi } from '../app/context';
+import { config } from '../config';
 import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
 import { recordPath, useWorld } from '../app/world';
@@ -126,7 +127,7 @@ export function MapPage() {
         .catch(() => undefined),
     [api, world.id],
   );
-  const baseMap = asBaseMap(base.data?.map);
+  const baseMap = asBaseMap(world.id, base.data?.map);
   const deepest = baseMap?.maxZoom ?? DEEPEST_ZOOM;
 
   const container = useRef<HTMLDivElement>(null);
@@ -704,12 +705,20 @@ function AsOf(props: {
   );
 }
 
-function asBaseMap(value: unknown): BaseMap | undefined {
+/**
+ * The pictures drawn beneath a world's records, as the world's own record
+ * describes them. A world that says nothing about where its tiles are is
+ * drawn from the ones it holds itself, which is where a map imported into
+ * this deployment puts them; a world may name a template instead when its
+ * pictures live somewhere else on the web.
+ */
+function asBaseMap(world: string, value: unknown): BaseMap | undefined {
   if (value === null || typeof value !== 'object') return undefined;
   const map = value as Record<string, unknown>;
-  if (typeof map.tiles !== 'string') return undefined;
+  if (map.source === 'terrain') return undefined;
+  const own = `${config.apiUrl}/v1/worlds/${world}/tiles/{z}/{x}/{y}.png`;
   return {
-    tiles: map.tiles,
+    tiles: typeof map.tiles === 'string' ? map.tiles : own,
     ...(typeof map.minZoom === 'number' ? { minZoom: map.minZoom } : {}),
     ...(typeof map.maxZoom === 'number' ? { maxZoom: map.maxZoom } : {}),
     ...(typeof map.attribution === 'string'

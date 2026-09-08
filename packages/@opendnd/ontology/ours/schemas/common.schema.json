@@ -380,8 +380,8 @@
         },
         "image": {
           "type": "string",
-          "format": "uri",
-          "description": "A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes."
+          "format": "uri-reference",
+          "description": "A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds."
         },
         "canonStatus": {
           "$ref": "https://docs.opendnd.org/ours/vocabularies/canon-status.schema.json"

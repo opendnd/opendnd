@@ -67,6 +67,8 @@ export const versions = {
   'aws-cdk': '^2.1139.0',
   esbuild: '^0.28.2',
   '@aws-sdk/client-eventbridge': '^3.1126.0',
+  // Where a deployment keeps pictures and map tiles.
+  '@aws-sdk/client-s3': '^3.1126.0',
   '@aws-sdk/client-secrets-manager': '^3.1126.0',
 
   // API

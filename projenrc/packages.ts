@@ -17,6 +17,8 @@ export interface PackageConfig {
   readonly tasks?: Record<string, { description: string; exec: string }>;
   /** Globs of generated source that eslint and prettier must leave alone. */
   readonly generated?: string[];
+  /** Extra paths this package alone keeps out of the repository. */
+  readonly ignore?: string[];
 }
 
 const packages: readonly PackageConfig[] = [
@@ -121,12 +123,17 @@ const apps: readonly PackageConfig[] = [
       '@opendnd/simulation@workspace:*',
       '@opendnd/llm@workspace:*',
       `@aws-sdk/client-eventbridge@${versions['@aws-sdk/client-eventbridge']}`,
+      `@aws-sdk/client-s3@${versions['@aws-sdk/client-s3']}`,
       `@aws-sdk/client-secrets-manager@${versions['@aws-sdk/client-secrets-manager']}`,
     ],
     devDeps: [
       `drizzle-kit@${versions['drizzle-kit']}`,
       `@types/pg@${versions['@types/pg']}`,
     ],
+    // Where a development machine keeps what a deployment keeps in a bucket:
+    // the pictures a world's records point at and the tiles its map is drawn
+    // from. Somebody's world, never the repository's.
+    ignore: ['.assets/'],
     // The API cannot be tested without a database, so its test task provides
     // the one the repository ships. Already running is a no-op.
     beforeTest:
@@ -228,6 +235,7 @@ function configureOne(
 
     // Scratch space used by tests that need to import a generated module.
     project.gitignore.addPatterns('specs/.tmp-*');
+    if (config.ignore) project.gitignore.addPatterns(...config.ignore);
 
     if (config.cdkApp) {
       new JsonFile(project, 'cdk.json', {

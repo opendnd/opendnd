@@ -22,7 +22,13 @@ describe('the published schemas under a conformant validator', () => {
     allErrors: true,
     // Formats are asserted by the code generator; here they only need to be
     // known so strict mode does not refuse them.
-    formats: { uuid: true, uri: true, 'date-time': true, date: true },
+    formats: {
+      uuid: true,
+      uri: true,
+      'uri-reference': true,
+      'date-time': true,
+      date: true,
+    },
   });
   for (const schema of bundle.schemas.values()) ajv.addSchema(schema as never);
 

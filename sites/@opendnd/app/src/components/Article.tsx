@@ -2,6 +2,7 @@ import { ChevronDownIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Markdown } from './Markdown';
+import { config } from '../config';
 import { type Resource, isReference } from '../api/types';
 import { recordPath, useWorld } from '../app/world';
 import { type Field, humanize } from '../schema/fields';
@@ -290,7 +291,24 @@ export function TimeText(props: {
 export function picture(resource: Record<string, unknown>): string | undefined {
   for (const key of ['image', 'portrait']) {
     const value = resource[key];
-    if (typeof value === 'string' && /^https?:\/\//.test(value)) return value;
+    if (typeof value === 'string') {
+      const found = assetUrl(value);
+      if (found) return found;
+    }
   }
+  return undefined;
+}
+
+/**
+ * Where a picture is actually fetched from.
+ *
+ * A record may point anywhere on the web, or at a file the world itself
+ * holds, which it names by the path the API serves it at. The second is
+ * resolved against this deployment's API, so a world exported from one
+ * deployment and imported into another still finds its own pictures.
+ */
+export function assetUrl(value: string): string | undefined {
+  if (/^https?:\/\//.test(value)) return value;
+  if (value.startsWith('/v1/')) return `${config.apiUrl}${value}`;
   return undefined;
 }

@@ -879,8 +879,8 @@ export const resourceBaseSchema = z.object({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -907,8 +907,8 @@ export const backgroundSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -959,8 +959,8 @@ export const beliefSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -999,8 +999,8 @@ export const calendarSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1058,8 +1058,8 @@ export const campaignSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   /** Out-of-universe by default: this is a record of play, not something that exists in the fiction. */
   perspective: perspectiveSchema.default("out-of-universe"),
@@ -1120,8 +1120,8 @@ export const characterSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   /** Out-of-universe by default: the being is a person in the world, this is the record of playing them. */
   perspective: perspectiveSchema.default("out-of-universe"),
@@ -1292,8 +1292,8 @@ export const claimSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1353,8 +1353,8 @@ export const classSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1470,8 +1470,8 @@ export const conditionSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1498,8 +1498,8 @@ export const cultureSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1551,8 +1551,8 @@ export const economySchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1596,8 +1596,8 @@ export const encounterSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   /** Out-of-universe by default: an encounter is preparation. Playing it produces an event, which is in-universe. */
   perspective: perspectiveSchema.default("out-of-universe"),
@@ -1673,8 +1673,8 @@ export const eventSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1735,8 +1735,8 @@ export const factionSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1782,8 +1782,8 @@ export const featSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1970,8 +1970,8 @@ export const languageSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2011,8 +2011,8 @@ export const personSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2105,7 +2105,8 @@ export const personSchema = z.strictObject({
     /** What the gene expresses as: blue eyes, a heavy build. */
     expression: z.string(),
   })).optional(),
-  portrait: z.url().optional(),
+  /** A picture of the person. Somewhere on the web, or a path to a file the world itself holds. */
+  portrait: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
 });
 export type Person = z.infer<typeof personSchema>;
 
@@ -2122,8 +2123,8 @@ export const placeSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2180,8 +2181,8 @@ export const populationSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2231,8 +2232,8 @@ export const proficiencySchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2270,8 +2271,8 @@ export const questSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2332,8 +2333,8 @@ export const relationshipSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2390,8 +2391,8 @@ export const sessionSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   /** Out-of-universe by default: this is a record of play, not something that exists in the fiction. */
   perspective: perspectiveSchema.default("out-of-universe"),
@@ -2445,8 +2446,8 @@ export const skillSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2475,8 +2476,8 @@ export const speciesSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2563,8 +2564,8 @@ export const spellSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2631,8 +2632,8 @@ export const statblockSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2755,8 +2756,8 @@ export const tenureSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2814,8 +2815,8 @@ export const titleSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2859,8 +2860,8 @@ export const workSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2898,8 +2899,8 @@ export const worldSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
-  image: z.url().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2924,10 +2925,12 @@ export const worldSchema = z.strictObject({
   currentTime: temporalPositionSchema.optional(),
   /** User id of the world owner. */
   owner: z.string().optional(),
-  /** The world's base map as picture tiles, the way web maps are served: a URL template with {z}, {x} and {y} in the web map projection, and the zooms it covers. Places are drawn over it from their cells. */
+  /** How the world's map is drawn beneath its records. With nothing else said, from the tiles the world holds, at /v1/worlds/{world}/tiles/{z}/{x}/{y}.png. A world whose pictures are hosted elsewhere may name a template instead. */
   map: z.strictObject({
-    /** URL template for one tile, with {z}, {x} and {y} where the zoom, column and row go. */
-    tiles: z.string(),
+    /** `tiles` draws pictures somebody made; `terrain` draws the world from its own terrain, at any depth. */
+    source: z.enum(["tiles", "terrain"]).default("tiles"),
+    /** URL template for one tile, with {z}, {x} and {y} where the zoom, column and row go. Absent means the world's own tiles. */
+    tiles: z.string().optional(),
     /** The coarsest zoom the tiles cover. */
     minZoom: z.int().min(0).max(24).optional(),
     /** The finest zoom the tiles cover. */

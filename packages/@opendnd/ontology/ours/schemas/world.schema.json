@@ -33,11 +33,16 @@
     },
     "map": {
       "type": "object",
-      "description": "The world's base map as picture tiles, the way web maps are served: a URL template with {z}, {x} and {y} in the web map projection, and the zooms it covers. Places are drawn over it from their cells.",
+      "description": "How the world's map is drawn beneath its records. With nothing else said, from the tiles the world holds, at /v1/worlds/{world}/tiles/{z}/{x}/{y}.png. A world whose pictures are hosted elsewhere may name a template instead.",
       "properties": {
+        "source": {
+          "enum": ["tiles", "terrain"],
+          "default": "tiles",
+          "description": "`tiles` draws pictures somebody made; `terrain` draws the world from its own terrain, at any depth."
+        },
         "tiles": {
           "type": "string",
-          "description": "URL template for one tile, with {z}, {x} and {y} where the zoom, column and row go."
+          "description": "URL template for one tile, with {z}, {x} and {y} where the zoom, column and row go. Absent means the world's own tiles."
         },
         "minZoom": {
           "type": "integer",
@@ -56,7 +61,6 @@
           "description": "Who drew the map, shown on it."
         }
       },
-      "required": ["tiles"],
       "additionalProperties": false
     }
   },

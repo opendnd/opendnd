@@ -236,3 +236,14 @@ export interface Answer {
   readonly sources: readonly Reference[];
   readonly spend?: Spend;
 }
+
+/** A file a world holds: a picture, a document, a tile. */
+export interface StoredFile {
+  /** The digest of the content, and the extension of its type. */
+  readonly id: string;
+  readonly contentType: string;
+  /** Bytes. */
+  readonly size: number;
+  /** Where it is read from, which is what a record carries. */
+  readonly path: string;
+}
