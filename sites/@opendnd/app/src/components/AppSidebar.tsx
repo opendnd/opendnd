@@ -23,7 +23,13 @@ import { useApp, useSession } from '../app/context';
 import { compactCount, useCounts } from '../app/counts';
 import { useMe } from '../app/me';
 import { useOntology } from '../app/ontology';
-import { CATEGORIES, SURFACES, categoryOf, offers } from '../app/surfaces';
+import {
+  CATEGORIES,
+  SURFACES,
+  categoryOf,
+  inGroup,
+  offers,
+} from '../app/surfaces';
 import {
   Collapsible,
   CollapsibleContent,
@@ -83,9 +89,9 @@ export function AppSidebar() {
       groups.set(key, [...(groups.get(key) ?? []), model]);
     }
     const order = [...CATEGORIES.map((c) => c.key), 'other'];
-    return [...groups.entries()].sort(
-      (a, b) => order.indexOf(a[0]) - order.indexOf(b[0]),
-    );
+    return [...groups.entries()]
+      .sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]))
+      .map(([key, models]) => [key, inGroup(key, models)] as const);
   }, [ontology, filter]);
 
   return (

@@ -2,6 +2,7 @@ import {
   BookMarkedIcon,
   BoxIcon,
   GlobeIcon,
+  LayoutGridIcon,
   type LucideIcon,
   MapPinIcon,
   ScrollTextIcon,
@@ -19,9 +20,10 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   play: SwordsIcon,
   people: UsersIcon,
   places: MapPinIcon,
-  history: ScrollTextIcon,
+  lore: ScrollTextIcon,
   rules: BookMarkedIcon,
   world: GlobeIcon,
+  platform: LayoutGridIcon,
 };
 
 export function categoryIcon(key: string | undefined): LucideIcon {

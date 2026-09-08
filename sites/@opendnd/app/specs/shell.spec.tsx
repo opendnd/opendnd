@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router/dom';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { AppProvider } from 'src/app/context';
 import { placeIn } from 'src/components/Layout';
+import { inGroup } from 'src/app/surfaces';
 import { MeProvider } from 'src/app/me';
 import { OntologyProvider } from 'src/app/ontology';
 import { AppSidebar } from 'src/components/AppSidebar';
@@ -101,6 +102,27 @@ describe('the shell', () => {
     await user.click(screen.getByRole('button', { name: 'Data' }));
     await user.click(screen.getByRole('button', { name: /Other/ }));
     expect(screen.getByRole('link', { name: 'Show' })).toBeInTheDocument();
+  });
+
+  it('lists a group with the model it is really about first, then the rest by name', () => {
+    const models = [
+      { id: 'zebra', name: 'Zebra' },
+      { id: 'person', name: 'Person' },
+      { id: 'ant', name: 'Ant' },
+    ];
+    // People is about people, so Person leads however the API happened to
+    // order them; everything else reads alphabetically.
+    expect(inGroup('people', models).map((m) => m.id)).toEqual([
+      'person',
+      'ant',
+      'zebra',
+    ]);
+    // A group with nothing at its heart is simply alphabetical.
+    expect(inGroup('platform', models).map((m) => m.id)).toEqual([
+      'ant',
+      'person',
+      'zebra',
+    ]);
   });
 
   it('tells a surface from a model in an address', () => {

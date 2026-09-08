@@ -53,7 +53,7 @@ export const SURFACES = {
     path: 'rules',
     label: 'Rules',
     description:
-      'The game itself: classes, backgrounds, feats, items, spells and stat blocks, as this world has them.',
+      'The game itself: species, classes, backgrounds, feats, items, spells and stat blocks, as this world has them.',
   },
   marketplace: {
     path: 'marketplace',
@@ -104,6 +104,8 @@ export interface Category {
   readonly key: string;
   readonly label: string;
   readonly description: string;
+  /** The model the group is really about, listed first among its own. */
+  readonly anchor?: string;
 }
 
 export const CATEGORIES: readonly Category[] = [
@@ -111,29 +113,62 @@ export const CATEGORIES: readonly Category[] = [
     key: 'play',
     label: 'Play',
     description: 'Campaigns, sessions, characters, quests and encounters.',
+    anchor: 'campaign',
   },
   {
     key: 'people',
     label: 'People',
-    description: 'Who is in the world and how they stand to one another.',
+    description: 'Who is in the world, and who holds power over whom.',
+    anchor: 'person',
   },
   {
     key: 'places',
     label: 'Places',
-    description: 'Where things are, and who lives there.',
+    description: 'Where things are, who lives there and how they are doing.',
+    anchor: 'place',
   },
   {
-    key: 'history',
-    label: 'History',
-    description: 'What happened, and what was written about it.',
+    key: 'lore',
+    label: 'Lore',
+    description:
+      'What the world knows about itself: its peoples, its history and its writings.',
+    anchor: 'event',
   },
   {
     key: 'rules',
     label: 'Rules',
-    description: 'The game itself: classes, spells, items and stat blocks.',
+    description:
+      'The game itself: species, classes, spells, items and stat blocks.',
+    anchor: 'class',
   },
-  { key: 'world', label: 'World', description: 'The world and its calendars.' },
+  {
+    key: 'world',
+    label: 'World',
+    description: 'The world and its calendars.',
+    anchor: 'world',
+  },
+  {
+    key: 'platform',
+    label: 'Platform',
+    description: 'The application itself, rather than the world it holds.',
+  },
 ];
+
+/**
+ * The models of one group in the order they are shown: the group's anchor
+ * first, because a person opening People wants Person, then the rest by name.
+ */
+export function inGroup<M extends { id: string; name: string }>(
+  key: string,
+  models: readonly M[],
+): M[] {
+  const anchor = CATEGORIES.find((c) => c.key === key)?.anchor;
+  return [...models].sort((a, b) => {
+    if (a.id === anchor) return -1;
+    if (b.id === anchor) return 1;
+    return a.name.localeCompare(b.name);
+  });
+}
 
 /** The category a model belongs to, or the last one for a model that says none. */
 export function categoryOf(model: { category?: string }): Category {

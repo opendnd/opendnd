@@ -89,4 +89,13 @@ Since the generated schemas now fix each reference to the model its manifest rel
 
 - **Every record may carry a picture.** `image` on the resource base is the address of a picture that stands for the record, a portrait, a cover, a map; the bytes live wherever pictures live, not in the record. A person's `portrait` stays, as the specific case it is.
 - **Every model names its icon.** A manifest's `icon` is a name from the Lucide icon set, in lower case with hyphens, so an application can show the model with a picture the ontology chose rather than one it guessed. It is optional; a model without one is shown with its group's.
-- **Every model names its group.** A manifest's `category`, one of `people`, `places`, `history`, `play`, `rules` or `world`, says which group the model is listed with. The groups are how an application lays out what would otherwise be thirty-two equal doors; the membership is the ontology's to decide, so a new model lands in its group by saying which it is in.
+- **Every model names its group.** A manifest's `category` says which group the model is listed with. The groups are how an application lays out what would otherwise be thirty-two equal doors; the membership is the ontology's to decide, so a new model lands in its group by saying which it is in.
+
+## Decided later, 2026-09-08: the groups, redrawn
+
+The groups a reader is offered were the ones the models happened to fall into, and three of them read oddly: a species sat with people, though a player meets it at character creation beside a class; a language and a belief sat with people, though neither is one; and a history group held only what happened and what was written about it.
+
+- **The groups are `play`, `people`, `places`, `lore`, `rules`, `world` and `platform`.** Play is what is being played. People is who exists and who holds power over whom, so a title, a tenure and a claim belong there with the person and the tie between two of them. Places is where things are and how they are doing, statistics included. Lore is what a world knows about itself: its peoples' ways, its tongues, its beliefs, what happened and what was written down. Rules is the game. World is the frame.
+- **`platform` is for models that describe the application rather than the world.** They are stored, versioned and published like any other record, and a reader should not meet one beside a calendar.
+- **`history` is gone**, its two models folded into `lore`.
+- **A group is led by the model it is about.** The membership is the ontology's; the order within a group is not stated here, because it is a reading decision and belongs to whatever is doing the reading.

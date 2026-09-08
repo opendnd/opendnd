@@ -3758,7 +3758,7 @@ export const modelInfo = {
     id: "belief",
     name: "Belief",
     description: "A belief held about a proposition.",
-    category: "people",
+    category: "lore",
     icon: "flame",
   },
   calendar: {
@@ -3807,7 +3807,7 @@ export const modelInfo = {
     id: "culture",
     name: "Culture",
     description: "A people's shared naming, language and customs.",
-    category: "people",
+    category: "lore",
     icon: "landmark",
   },
   economy: {
@@ -3828,7 +3828,7 @@ export const modelInfo = {
     id: "event",
     name: "Event",
     description: "Something that happened in-world.",
-    category: "history",
+    category: "lore",
     icon: "calendar-clock",
   },
   faction: {
@@ -3863,7 +3863,7 @@ export const modelInfo = {
     id: "language",
     name: "Language",
     description: "A language spoken or written in the world.",
-    category: "people",
+    category: "lore",
     icon: "languages",
   },
   person: {
@@ -3926,7 +3926,7 @@ export const modelInfo = {
     id: "species",
     name: "Species",
     description: "A kind of creature and its biology.",
-    category: "people",
+    category: "rules",
     icon: "dna",
   },
   spell: {
@@ -3961,7 +3961,7 @@ export const modelInfo = {
     id: "work",
     name: "Work",
     description: "A creative work in-world or out-of-world.",
-    category: "history",
+    category: "lore",
     icon: "book-open",
   },
   world: {

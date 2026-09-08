@@ -2,7 +2,7 @@ import { Link } from 'react-router';
 import type { ModelInfo } from '../api/types';
 import { compactCount, useCounts } from '../app/counts';
 import { useOntology } from '../app/ontology';
-import { CATEGORIES, categoryOf } from '../app/surfaces';
+import { CATEGORIES, categoryOf, inGroup } from '../app/surfaces';
 import { useWorld } from '../app/world';
 import { ModelIcon } from '../components/ModelIcon';
 import { Transfer } from '../components/Transfer';
@@ -52,7 +52,8 @@ export function ModelGroups(props: {
     <div className="flex flex-col gap-6">
       {[...groups.entries()]
         .sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]))
-        .map(([key, models]) => {
+        .map(([key, unordered]) => {
+          const models = inGroup(key, unordered);
           const category = CATEGORIES.find((c) => c.key === key);
           return (
             <section key={key} className="flex flex-col gap-2">

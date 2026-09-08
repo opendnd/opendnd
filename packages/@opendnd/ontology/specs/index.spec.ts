@@ -21,6 +21,31 @@ describe('@opendnd/ontology', () => {
     expect(issues.filter((i) => i.message.includes('no mapsTo'))).toEqual([]);
   });
 
+  it('places every model in one of the groups, with an icon of its own', () => {
+    // The application lists models by these groups and draws each with the
+    // icon its manifest names. A model that says neither would appear in an
+    // "Other" heap under a stand-in glyph, which is a mistake in the manifest
+    // rather than something for the application to cope with.
+    const groups = new Set([
+      'play',
+      'people',
+      'places',
+      'lore',
+      'rules',
+      'world',
+      'platform',
+    ]);
+    const bundle = loadOursDirectory(OURS_DIR);
+    const astray: string[] = [];
+    for (const model of bundle.models.values()) {
+      if (model.category === undefined || !groups.has(model.category)) {
+        astray.push(`${model.name}: category ${String(model.category)}`);
+      }
+      if (model.icon === undefined) astray.push(`${model.name}: no icon`);
+    }
+    expect(astray).toEqual([]);
+  });
+
   it('every model schema extends ResourceBase', () => {
     const bundle = loadOursDirectory(OURS_DIR);
     for (const model of bundle.models.values()) {

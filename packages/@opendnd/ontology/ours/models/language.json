@@ -6,7 +6,7 @@
   "system": "internal",
   "name": "Language",
   "description": "A language spoken or written in the world.",
-  "category": "people",
+  "category": "lore",
   "icon": "languages",
   "schema": "https://docs.opendnd.org/ours/schemas/language.schema.json",
   "relationships": [

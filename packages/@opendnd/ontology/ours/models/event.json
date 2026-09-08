@@ -6,7 +6,7 @@
   "system": "internal",
   "name": "Event",
   "description": "Something that happened in-world.",
-  "category": "history",
+  "category": "lore",
   "icon": "calendar-clock",
   "schema": "https://docs.opendnd.org/ours/schemas/event.schema.json",
   "relationships": [

@@ -34,7 +34,7 @@ export interface ModelInfo {
   readonly author?: GeneratorInfo;
   /** Present when the ontology says which fields date a record: what begins its span, and what ends it. */
   readonly validTime?: { readonly begin: string; readonly end?: string };
-  /** Which group of models this one is listed with: people, places, history, play, rules. */
+  /** Which group of models this one is listed with: play, people, places, lore, rules, world, platform. */
   readonly category?: string;
 }
 
