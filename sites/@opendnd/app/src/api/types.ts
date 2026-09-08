@@ -34,6 +34,8 @@ export interface ModelInfo {
   readonly author?: GeneratorInfo;
   /** Present when the ontology says which fields date a record: what begins its span, and what ends it. */
   readonly validTime?: { readonly begin: string; readonly end?: string };
+  /** Which group of models this one is listed with: people, places, history, play, rules. */
+  readonly category?: string;
 }
 
 /** A language model the deployment can write with. */
@@ -225,4 +227,12 @@ export interface PublishRequest {
   readonly license?: string;
   readonly summary?: string;
   readonly visibility?: Visibility;
+}
+
+/** An answer to a question about the world, from its records. */
+export interface Answer {
+  readonly answer: string;
+  /** The records the answer was drawn from. */
+  readonly sources: readonly Reference[];
+  readonly spend?: Spend;
 }

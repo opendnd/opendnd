@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Claim",
   "description": "One person's asserted right to a title.",
+  "category": "people",
   "schema": "https://docs.opendnd.org/ours/schemas/claim.schema.json",
   "relationships": [
     {

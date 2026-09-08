@@ -1904,6 +1904,7 @@ describe('the API: writing about a record', () => {
               ...asTaskConfig(DEFAULT_TASKS.chronicle),
               model: 'test-model',
             },
+            ask: { ...asTaskConfig(DEFAULT_TASKS.ask), model: 'test-model' },
           },
           ...(request.ledger ? { ledger: request.ledger } : {}),
           ...(request.world ? { world: request.world } : {}),
@@ -2064,6 +2065,40 @@ describe('the API: writing about a record', () => {
       (await reader.post(`/v1/worlds/${world}/person/${person}/$author`, {}))
         .status,
     ).toBe(403);
+  });
+  it('answers a question from the records the names in it match, and says which', async () => {
+    script.push('Ilsabet Marrow is on record here. Sources: Ilsabet Marrow.');
+    const asked = await drew.post(`/v1/worlds/${world}/$ask`, {
+      question: 'Who is Ilsabet Marrow, and where does she live?',
+    });
+    expect(asked.status).toBe(200);
+    const result = asked.body as {
+      answer: string;
+      sources: { model: string; id: string; name: string }[];
+      facts: string[];
+    };
+    expect(result.answer).toContain('Ilsabet Marrow');
+    expect(result.sources.map((s) => s.name)).toContain('Ilsabet Marrow');
+    // The model was told the world's own record and the person's facts.
+    expect(lastPrompt).toContain('World: Written');
+    expect(lastPrompt).toContain('Ilsabet Marrow');
+    expect(lastPrompt).toContain('Who is Ilsabet Marrow');
+    expect(result.facts.some((f) => f.includes('Ilsabet'))).toBe(true);
+
+    // A question naming nothing on record still gets an honest answer.
+    script.push('The records say nothing of that.');
+    const blank = await drew.post(`/v1/worlds/${world}/$ask`, {
+      question: 'what is the weather like',
+    });
+    expect(blank.status).toBe(200);
+    expect((blank.body as { sources: unknown[] }).sources).toEqual([]);
+
+    // Asking spends the world's budget, so it needs an account.
+    const nobody = client(app);
+    const refused = await nobody.post(`/v1/worlds/${world}/$ask`, {
+      question: 'Who is Ilsabet Marrow?',
+    });
+    expect(refused.status).toBe(401);
   });
 });
 

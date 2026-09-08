@@ -7,6 +7,7 @@ import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
 import { SURFACES, offers } from '../app/surfaces';
 import { recordPath, useWorld } from '../app/world';
+import { picture } from '../components/Article';
 import { ErrorNotice } from '../components/Notice';
 import { humanize } from '../schema/fields';
 import { Badge } from '@/components/ui/badge';
@@ -240,7 +241,17 @@ export function CampaignCard(props: {
     { model: string; id: string; name?: string } | undefined;
   return (
     <Link to={recordPath(world.id, props.model, c.id)} className="block h-full">
-      <Card className="h-full transition-colors hover:border-ring">
+      <Card className="h-full overflow-hidden pt-0 transition-colors hover:border-ring">
+        {picture(c) ? (
+          <img
+            src={picture(c)}
+            alt=""
+            className="aspect-video w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="aspect-[5/1] w-full bg-brand-muted" />
+        )}
         <CardHeader>
           <div className="flex items-center gap-2">
             <CardTitle className="font-display text-lg">

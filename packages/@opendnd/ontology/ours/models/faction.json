@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Faction",
   "description": "An organized group of any kind.",
+  "category": "people",
   "schema": "https://docs.opendnd.org/ours/schemas/faction.schema.json",
   "relationships": [
     {

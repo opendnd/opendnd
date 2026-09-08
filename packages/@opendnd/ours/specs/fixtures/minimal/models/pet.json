@@ -6,9 +6,19 @@
   "system": "internal",
   "name": "Pet",
   "description": "A companion animal.",
+  "category": "companions",
   "schema": "https://example.test/ours/schemas/pet.schema.json",
-  "relationships": [{ "predicate": "owner", "target": "Pet" }],
+  "relationships": [
+    {
+      "predicate": "owner",
+      "target": "Pet"
+    }
+  ],
   "mapsTo": [
-    { "system": "https://schema.org", "schema": "https://schema.org/Thing", "type": "partial" }
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/Thing",
+      "type": "partial"
+    }
   ]
 }

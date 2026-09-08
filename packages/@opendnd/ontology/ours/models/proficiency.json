@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Proficiency",
   "description": "Being trained in a weapon, a tool, a skill or a saving throw.",
+  "category": "rules",
   "schema": "https://docs.opendnd.org/ours/schemas/proficiency.schema.json",
   "relationships": [
     {

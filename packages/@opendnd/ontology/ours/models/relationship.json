@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Relationship",
   "description": "A tie between two people.",
+  "category": "people",
   "schema": "https://docs.opendnd.org/ours/schemas/relationship.schema.json",
   "relationships": [
     {

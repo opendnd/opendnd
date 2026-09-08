@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Species",
   "description": "A kind of creature and its biology.",
+  "category": "people",
   "schema": "https://docs.opendnd.org/ours/schemas/species.schema.json",
   "relationships": [
     {

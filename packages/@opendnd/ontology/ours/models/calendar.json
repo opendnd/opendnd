@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Calendar",
   "description": "A temporal reference system for in-world dates.",
+  "category": "world",
   "schema": "https://docs.opendnd.org/ours/schemas/calendar.schema.json",
   "relationships": [],
   "mapsTo": [

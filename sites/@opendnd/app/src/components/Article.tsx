@@ -107,6 +107,14 @@ export function Article(props: ArticleProps) {
           </p>
         )}
       </header>
+      {picture(resource) && (
+        <img
+          src={picture(resource)}
+          alt=""
+          className="max-h-72 w-full max-w-prose rounded-lg object-cover"
+          loading="lazy"
+        />
+      )}
       {typeof resource.description === 'string' && (
         <Markdown text={resource.description} />
       )}
@@ -276,4 +284,13 @@ export function TimeText(props: {
       {text}
     </Link>
   );
+}
+
+/** The picture a record carries, its own or a portrait, when it is an address. */
+export function picture(resource: Record<string, unknown>): string | undefined {
+  for (const key of ['image', 'portrait']) {
+    const value = resource[key];
+    if (typeof value === 'string' && /^https?:\/\//.test(value)) return value;
+  }
+  return undefined;
 }

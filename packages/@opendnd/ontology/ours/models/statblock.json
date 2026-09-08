@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Statblock",
   "description": "The rules view of a creature: what it can take, what it can do, and how dangerous it is.",
+  "category": "rules",
   "schema": "https://docs.opendnd.org/ours/schemas/statblock.schema.json",
   "relationships": [
     {

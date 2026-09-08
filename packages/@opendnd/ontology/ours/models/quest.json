@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Quest",
   "description": "Something a party is meant to do.",
+  "category": "play",
   "schema": "https://docs.opendnd.org/ours/schemas/quest.schema.json",
   "relationships": [
     {

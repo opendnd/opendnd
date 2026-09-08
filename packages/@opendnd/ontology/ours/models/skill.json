@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Skill",
   "description": "A skill, and the ability its checks are made against.",
+  "category": "rules",
   "schema": "https://docs.opendnd.org/ours/schemas/skill.schema.json",
   "relationships": [],
   "mapsTo": [

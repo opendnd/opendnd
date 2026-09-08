@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "World",
   "description": "A fictional universe: the root every other resource belongs to.",
+  "category": "world",
   "schema": "https://docs.opendnd.org/ours/schemas/world.schema.json",
   "relationships": [
     {

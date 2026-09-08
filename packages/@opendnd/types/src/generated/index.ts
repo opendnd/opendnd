@@ -879,6 +879,8 @@ export const resourceBaseSchema = z.object({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -905,6 +907,8 @@ export const backgroundSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -955,6 +959,8 @@ export const beliefSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -993,6 +999,8 @@ export const calendarSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1050,6 +1058,8 @@ export const campaignSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   /** Out-of-universe by default: this is a record of play, not something that exists in the fiction. */
   perspective: perspectiveSchema.default("out-of-universe"),
@@ -1110,6 +1120,8 @@ export const characterSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   /** Out-of-universe by default: the being is a person in the world, this is the record of playing them. */
   perspective: perspectiveSchema.default("out-of-universe"),
@@ -1280,6 +1292,8 @@ export const claimSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1339,6 +1353,8 @@ export const classSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1454,6 +1470,8 @@ export const conditionSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1480,6 +1498,8 @@ export const cultureSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1531,6 +1551,8 @@ export const economySchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1574,6 +1596,8 @@ export const encounterSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   /** Out-of-universe by default: an encounter is preparation. Playing it produces an event, which is in-universe. */
   perspective: perspectiveSchema.default("out-of-universe"),
@@ -1649,6 +1673,8 @@ export const eventSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1709,6 +1735,8 @@ export const factionSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1754,6 +1782,8 @@ export const featSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1791,6 +1821,7 @@ export const itemSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1923,7 +1954,6 @@ export const itemSchema = z.strictObject({
   limitedTo: z.string().optional(),
   /** How a poison is delivered. */
   poisonType: poisonTypeSchema.optional(),
-  image: z.url().optional(),
 });
 export type Item = z.infer<typeof itemSchema>;
 
@@ -1940,6 +1970,8 @@ export const languageSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -1979,6 +2011,8 @@ export const personSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2088,6 +2122,8 @@ export const placeSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2144,6 +2180,8 @@ export const populationSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2193,6 +2231,8 @@ export const proficiencySchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2230,6 +2270,8 @@ export const questSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2290,6 +2332,8 @@ export const relationshipSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2346,6 +2390,8 @@ export const sessionSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   /** Out-of-universe by default: this is a record of play, not something that exists in the fiction. */
   perspective: perspectiveSchema.default("out-of-universe"),
@@ -2399,6 +2445,8 @@ export const skillSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2427,6 +2475,8 @@ export const speciesSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2513,6 +2563,8 @@ export const spellSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2579,6 +2631,8 @@ export const statblockSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2701,6 +2755,8 @@ export const tenureSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2758,6 +2814,8 @@ export const titleSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2801,6 +2859,8 @@ export const workSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -2838,6 +2898,8 @@ export const worldSchema = z.strictObject({
   name: z.string().min(1),
   alternateNames: z.array(z.string()).optional(),
   description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. */
+  image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
@@ -3678,163 +3740,195 @@ export const modelInfo = {
     id: "background",
     name: "Background",
     description: "Where a character came from before they began adventuring.",
+    category: "rules",
   },
   belief: {
     id: "belief",
     name: "Belief",
     description: "A belief held about a proposition.",
+    category: "people",
   },
   calendar: {
     id: "calendar",
     name: "Calendar",
     description: "A temporal reference system for in-world dates.",
+    category: "world",
   },
   campaign: {
     id: "campaign",
     name: "Campaign",
     description: "A series of sessions a group plays in a world.",
+    category: "play",
   },
   character: {
     id: "character",
     name: "Character",
     description: "A person as played, in one campaign.",
+    category: "play",
   },
   claim: {
     id: "claim",
     name: "Claim",
     description: "One person's asserted right to a title.",
+    category: "people",
   },
   class: {
     id: "class",
     name: "Class",
     description: "An adventuring class and its subclasses.",
+    category: "rules",
   },
   condition: {
     id: "condition",
     name: "Condition",
     description: "A state a creature can be in that changes what it may do.",
+    category: "rules",
   },
   culture: {
     id: "culture",
     name: "Culture",
     description: "A people's shared naming, language and customs.",
+    category: "people",
   },
   economy: {
     id: "economy",
     name: "Economy",
     description: "A snapshot of a settlement's economy at a point in time.",
+    category: "places",
   },
   encounter: {
     id: "encounter",
     name: "Encounter",
     description: "A confrontation prepared for a party.",
+    category: "play",
   },
   event: {
     id: "event",
     name: "Event",
     description: "Something that happened in-world.",
+    category: "history",
   },
   faction: {
     id: "faction",
     name: "Faction",
     description: "An organized group of any kind.",
+    category: "people",
   },
   feat: {
     id: "feat",
     name: "Feat",
     description: "A talent taken in place of, or alongside, an ability score increase.",
+    category: "rules",
   },
   feature: {
     id: "feature",
     name: "Feature",
     description: "Something a character gains from a class, species, background, feat or item.",
+    category: "rules",
   },
   item: {
     id: "item",
     name: "Item",
     description: "A thing that can be owned, carried or used: equipment, magic items and poisons alike.",
+    category: "rules",
   },
   language: {
     id: "language",
     name: "Language",
     description: "A language spoken or written in the world.",
+    category: "people",
   },
   person: {
     id: "person",
     name: "Person",
     description: "A person in the world.",
+    category: "people",
   },
   place: {
     id: "place",
     name: "Place",
     description: "A location at any scale.",
+    category: "places",
   },
   population: {
     id: "population",
     name: "Population",
     description: "An aggregate head count at a place and time.",
+    category: "places",
   },
   proficiency: {
     id: "proficiency",
     name: "Proficiency",
     description: "Being trained in a weapon, a tool, a skill or a saving throw.",
+    category: "rules",
   },
   quest: {
     id: "quest",
     name: "Quest",
     description: "Something a party is meant to do.",
+    category: "play",
   },
   relationship: {
     id: "relationship",
     name: "Relationship",
     description: "A tie between two people.",
+    category: "people",
   },
   session: {
     id: "session",
     name: "Session",
     description: "One sitting of a campaign.",
+    category: "play",
   },
   skill: {
     id: "skill",
     name: "Skill",
     description: "A skill, and the ability its checks are made against.",
+    category: "rules",
   },
   species: {
     id: "species",
     name: "Species",
     description: "A kind of creature and its biology.",
+    category: "people",
   },
   spell: {
     id: "spell",
     name: "Spell",
     description: "A spell, its components, and what it does.",
+    category: "rules",
   },
   statblock: {
     id: "statblock",
     name: "Statblock",
     description: "The rules view of a creature: what it can take, what it can do, and how dangerous it is.",
+    category: "rules",
   },
   tenure: {
     id: "tenure",
     name: "Tenure",
     description: "One person's time holding a title.",
+    category: "people",
   },
   title: {
     id: "title",
     name: "Title",
     description: "A seat of authority in a faction.",
+    category: "people",
   },
   work: {
     id: "work",
     name: "Work",
     description: "A creative work in-world or out-of-world.",
+    category: "history",
   },
   world: {
     id: "world",
     name: "World",
     description: "A fictional universe: the root every other resource belongs to.",
+    category: "world",
   },
-} as const satisfies Record<ModelId, { id: ModelId; name: string; description?: string }>;
+} as const satisfies Record<ModelId, { id: ModelId; name: string; description?: string; category?: string }>;
 
 /** Fields the API sets itself. A request may omit them and cannot override them. */
 export const readOnlyFields = ["id","model","module","recorded","world"] as const;

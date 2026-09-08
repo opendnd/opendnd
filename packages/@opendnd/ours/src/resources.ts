@@ -68,6 +68,8 @@ export const modelSchema = oursResourceBaseSchema.extend({
   system: z.string().min(1),
   name: z.string().min(1),
   schema: z.url(),
+  /** Which group of models this one sits with when they are listed: people, places, history, play, rules. */
+  category: z.string().min(1).optional(),
   relationships: z.array(relationshipSchema).optional(),
   mapsTo: z.array(mapsToSchema).optional(),
   validTime: validTimeFieldsSchema.optional(),

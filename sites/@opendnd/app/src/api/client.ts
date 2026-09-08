@@ -1,4 +1,5 @@
 import type {
+  Answer,
   AuthorResult,
   HistoryEntry,
   Invitation,
@@ -170,6 +171,13 @@ export class ApiClient {
 
   usage(world: string): Promise<Usage> {
     return this.body('GET', `/v1/worlds/${world}/usage`);
+  }
+
+  /** Ask the world a question, answered from its records by a language model. */
+  ask(world: string, question: string, model?: string): Promise<Answer> {
+    return this.body('POST', `/v1/worlds/${world}/$ask`, {
+      body: { question, ...(model ? { model } : {}) },
+    });
   }
 
   // Modules

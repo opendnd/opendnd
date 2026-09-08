@@ -20,6 +20,7 @@ import { type RequestIdVariables, requestId } from 'hono/request-id';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import type { Pool, PoolClient } from 'pg';
 import { z } from 'zod';
+import { askWorld } from './ask';
 import { AUTHOR, authorAbout } from './author';
 import { inTransaction, inWorld } from './db';
 import { assertFormat, exportWorld } from './export';
@@ -153,6 +154,10 @@ const publishBody = z.object({
 });
 
 const enableBody = z.object({ module: UUID });
+const askBody = z.object({
+  question: z.string().trim().min(1).max(2000),
+  model: z.string().min(1).optional(),
+});
 const orderBody = z.object({ order: z.array(UUID).min(1).max(100) });
 const CELL = z.string().regex(/^[0-9a-f]{1,16}$/i, 'not a cell token');
 
@@ -573,6 +578,27 @@ export function createApp(options: AppOptions) {
    * commit that keeps what it paid for. Left unsaved, the work is returned to
    * read; a client that likes it imports it as it is.
    */
+  /**
+   * A question about the world, answered from its records by a language
+   * model. Anyone with an account who can read the world may ask; the spend
+   * is the world's, so a visitor to a public world needs an account too.
+   */
+  app.post('/v1/worlds/:world/$ask', (c) =>
+    withWorld(c, false, async (store, world, identity) => {
+      if (!identity) throw new UnauthorizedError('asking needs an account');
+      const request = parse(askBody, await json(c), 'ask');
+      const ledger = new PgLedger(store.client, world, identity.subject);
+      const llm = modelsFor({ world, ledger, requestedBy: identity.subject });
+      return c.json(
+        await askWorld(store, world, request, {
+          models: llm,
+          label: (m) => modelInfo[m].name,
+          spend: () => ledger.last,
+        }),
+      );
+    }),
+  );
+
   app.post('/v1/worlds/:world/:model/:id/$author', (c) =>
     write(c, async (store, model, world, identity) => {
       const request = parse(authorBody, await json(c), 'author');

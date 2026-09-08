@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Campaign",
   "description": "A series of sessions a group plays in a world.",
+  "category": "play",
   "schema": "https://docs.opendnd.org/ours/schemas/campaign.schema.json",
   "relationships": [
     {

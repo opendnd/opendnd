@@ -1,5 +1,6 @@
 import { type ModelId, models, readOnlyFields } from '@opendnd/types';
 import { toJSONSchema } from 'zod';
+import { ASK } from './ask';
 import { AUTHOR } from './author';
 import { GENERATORS } from './generate';
 import { SCOPE_MODELS, SIMULATION } from './simulate';
@@ -1057,6 +1058,38 @@ const fixedPaths = {
       description: SIMULATION.description,
       requestBody: body(SIMULATION.input),
       responses: { 200: { description: 'What the run produced' } },
+    },
+  },
+  '/v1/worlds/{world}/$ask': {
+    parameters: [world],
+    post: {
+      tags: ['language models'],
+      summary: 'Ask the world a question',
+      description: ASK.description,
+      requestBody: body(ASK.input),
+      responses: {
+        200: {
+          description:
+            'The answer, the records it rests on, and what the model was told',
+          content: json({
+            type: 'object',
+            properties: {
+              answer: { type: 'string' },
+              sources: {
+                type: 'array',
+                items: { $ref: '#/components/schemas/Reference' },
+              },
+              facts: { type: 'array', items: { type: 'string' } },
+              spend: { type: 'object' },
+            },
+            required: ['answer', 'sources', 'facts'],
+          }),
+        },
+        400: problem('No language model is configured for the task'),
+        401: problem('Asking needs an account'),
+        429: problem('The world has spent its budget'),
+        502: problem('The model failed'),
+      },
     },
   },
   '/v1/worlds/{world}/{model}/{id}/$author': {

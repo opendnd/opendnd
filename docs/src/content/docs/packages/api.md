@@ -20,7 +20,7 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 
 | Route | |
 |---|---|
-| `GET /v1/models` | The models this deployment serves, each with the name and description its manifest gives it, and, where something generates it, what that generator takes as JSON Schema. |
+| `GET /v1/models` | The models this deployment serves, each with the name, description and category its manifest gives it, which fields date it, and, where something generates it, what that generator takes as JSON Schema. |
 | `GET`/`POST` `/v1/worlds` | The caller's worlds, and creating one. |
 | `PATCH /v1/worlds/{world}` | Change a world's name, visibility or summary. Owners only; the world's own record follows. |
 | `POST /v1/worlds/{world}/members` | Admit someone by subject or by email, or change their role. Owners only. |
@@ -31,6 +31,7 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 | `POST /v1/worlds/{world}/{model}/$generate` | Generate from resources in the world, named by reference or id. Each resource that comes back carries its `model`, so the bundle can be imported as it is. |
 | `POST /v1/worlds/{world}/{model}/{id}/$simulate` | Run the history simulation over a world, a house or a place. `/v1/models` describes the request as JSON Schema, with every rate's default; the calendar, species and culture may be named by reference or id, or left out when the world has exactly one. |
 | `POST /v1/worlds/{world}/{model}/{id}/$author` | Ask a language model to write an article or chronicle about a record from the facts on file. The usage line is written in the same transaction; left unsaved, the work is returned to read and can be imported as it is. Editors and owners. |
+| `POST /v1/worlds/{world}/$ask` | Ask the world a question. The names in it are searched for, the records found are turned into facts, and a language model answers from those facts alone, naming its sources. Needs an account; billed to the world. |
 | `GET /v1/llm` | The language models the configured endpoints actually hold, and the model the writing task is configured with, so a client offers the choice. |
 | `GET /v1/worlds/{world}/$export/{format}` | Everything in the world, as a bundle or as prose. |
 | `POST /v1/worlds/{world}/$publish` | Snapshot the world's own content as a module: an immutable layer addressed by a digest of its content. Owners only; the same content publishes once. |

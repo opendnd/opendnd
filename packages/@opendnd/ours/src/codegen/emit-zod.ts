@@ -145,10 +145,11 @@ export function emitZodModule(bundle: OursBundle): string {
         ...(m.description
           ? [`    description: ${JSON.stringify(m.description)},`]
           : []),
+        ...(m.category ? [`    category: ${JSON.stringify(m.category)},`] : []),
         '  },',
       ].join('\n'),
     ),
-    '} as const satisfies Record<ModelId, { id: ModelId; name: string; description?: string }>;',
+    '} as const satisfies Record<ModelId, { id: ModelId; name: string; description?: string; category?: string }>;',
     '',
   );
 

@@ -1,5 +1,5 @@
 ---
-title: "@opendnd/app"
+title: '@opendnd/app'
 description: The application. Sign in, open a world, and read or author any resource through pages built from the ontology the API describes.
 ---
 
@@ -74,12 +74,12 @@ A record that came from a module says so in its record keeping, and a world that
 
 Settings are read at build time from `VITE_` variables, in the environment or in a `.env.local` file in the site directory. With nothing set, the development server uses the local API and development sign-in; a production build uses `https://api.opendnd.org` and Cognito.
 
-| Variable | |
-|---|---|
-| `VITE_API_URL` | Origin of the API. Default: the local API under the dev server, the public API otherwise. |
-| `VITE_AUTH` | `dev` or `cognito`. Default: `dev` under the dev server, `cognito` otherwise. |
-| `VITE_COGNITO_DOMAIN` | The hosted UI origin, e.g. `https://opendnd-dev.auth.us-east-1.amazoncognito.com`. |
-| `VITE_COGNITO_CLIENT_ID` | The user pool client id. |
+| Variable                 |                                                                                           |
+| ------------------------ | ----------------------------------------------------------------------------------------- |
+| `VITE_API_URL`           | Origin of the API. Default: the local API under the dev server, the public API otherwise. |
+| `VITE_AUTH`              | `dev` or `cognito`. Default: `dev` under the dev server, `cognito` otherwise.             |
+| `VITE_COGNITO_DOMAIN`    | The hosted UI origin, e.g. `https://opendnd-dev.auth.us-east-1.amazoncognito.com`.        |
+| `VITE_COGNITO_CLIENT_ID` | The user pool client id.                                                                  |
 
 A build that asks for Cognito without both Cognito settings refuses to sign anyone in rather than falling back to development sign-in. Development sign-in works only against an API started with `OPENDND_DEV_AUTH=on`; the API decides, not the application.
 
@@ -87,31 +87,31 @@ A build that asks for Cognito without both Cognito settings refuses to sign anyo
 
 Outside a world, the worlds page shows each world as a card with a cover drawn from its own map. Inside a world, the world is the whole frame, with these surfaces down the side; a surface that stands on a model is offered only when the ontology has it.
 
-| Surface | |
-|---|---|
-| Home | A greeting, a search, what the surfaces hold, the campaigns, and what changed last. |
-| Campaigns, Characters | The campaign layer as cards, with a way to start a new one. |
-| Maps | The world drawn from its cells, as of any year; a record opens beside the map. |
-| Timeline | Everything dated, in the order it began, with the world's now marked. |
-| Compendium | One search across everything, and the written works to browse. |
-| Marketplace | The modules the world reads, what it could enable, and publishing it. |
-| Data | Every kind of record as a table, with export and import. |
-| Settings | Name, members, spend and archiving. Owners only. |
+| Surface               |                                                                                     |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| Home                  | A greeting, a search, what the surfaces hold, the campaigns, and what changed last. |
+| Campaigns, Characters | The campaign layer as cards, with a way to start a new one.                         |
+| Maps                  | The world drawn from its cells, as of any year; a record opens beside the map.      |
+| Timeline              | Everything dated, in the order it began, with the world's now marked.               |
+| Compendium            | One search across everything, and the written works to browse.                      |
+| Marketplace           | The modules the world reads, what it could enable, and publishing it.               |
+| Data                  | Every kind of record as a table, with export and import.                            |
+| Settings              | Name, members, spend and archiving. Owners only.                                    |
 
-Every record page has an Inspect button that shows the record as the API holds it. Descriptions and long text render from Markdown.
+Two panels ride along on the right of every page, opened from the top right: Ask, a conversation with the world answered from its records by a language model with the records it drew on linked beneath each answer, written by the model the deployment configures for the task or, failing that, the first it holds, with a choice offered when it holds more than one; and Inspect, the record on the page as the API holds it, with its address and revision. Under Data, models are grouped as the ontology's manifests place them, play, people, places, history, rules, world, and Rules under World is the rules group on its own. Any record may carry an `image`, an address of a picture, which its cards and its article show; a person's `portrait` counts too. Descriptions and long text render from Markdown.
 
 ## What is where
 
-| Folder | |
-|---|---|
-| `src/config.ts` | The settings above, read from `import.meta.env`. |
-| `src/app/` | The session store, the ontology, the world scope, and `surfaces.ts`, the one place the navigation names models. |
-| `src/api/` | One method per API route, and the shapes the API answers with. |
-| `src/schema/` | The ontology as the API describes it, and the description of a schema as fields for a form or an article; cells, time and related records read from it. |
-| `src/components/` | The article, the schema-driven form and its controls, the reference picker, Markdown, the sidebar and the page frame. |
-| `src/components/ui/` | The component library's components, written by its CLI. Not edited by hand. |
-| `src/pages/` | One component per route. |
-| `specs/` | Vitest specs, run under jsdom against invented models and a fake `fetch`. |
+| Folder               |                                                                                                                                                         |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/config.ts`      | The settings above, read from `import.meta.env`.                                                                                                        |
+| `src/app/`           | The session store, the ontology, the world scope, and `surfaces.ts`, the one place the navigation names models.                                         |
+| `src/api/`           | One method per API route, and the shapes the API answers with.                                                                                          |
+| `src/schema/`        | The ontology as the API describes it, and the description of a schema as fields for a form or an article; cells, time and related records read from it. |
+| `src/components/`    | The article, the schema-driven form and its controls, the reference picker, Markdown, the sidebar and the page frame.                                   |
+| `src/components/ui/` | The component library's components, written by its CLI. Not edited by hand.                                                                             |
+| `src/pages/`         | One component per route.                                                                                                                                |
+| `specs/`             | Vitest specs, run under jsdom against invented models and a fake `fetch`.                                                                               |
 
 ## Adding a component
 

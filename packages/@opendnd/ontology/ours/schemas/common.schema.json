@@ -378,6 +378,11 @@
         "description": {
           "type": "string"
         },
+        "image": {
+          "type": "string",
+          "format": "uri",
+          "description": "A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes."
+        },
         "canonStatus": {
           "$ref": "https://docs.opendnd.org/ours/vocabularies/canon-status.schema.json"
         },

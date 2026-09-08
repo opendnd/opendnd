@@ -83,3 +83,8 @@ An adversarial review of the ontology against a conformant validator, a characte
 ## Relationships completed, 2026-09-06
 
 Since the generated schemas now fix each reference to the model its manifest relationship names ([ADR-004](/adr/adr-004-codegen-from-ours/)), a missing relationship is a field that accepts a pointer at anything and that no client can narrow. The manifests were read against every `Reference`-typed property and completed: an encounter's campaign; a character's classes, conditions, proficiencies, spells and the sources of its choices; a class's multiclassing proficiencies, subclass rows and level features; a person's death place; a relationship's fact places; and a second target where the description named one, so an item's owner may be a faction, a proficiency may be in an item, a feature may be granted by a species or a background, and a quest may be set by a faction. Fields whose descriptions say they point at anything, `about` on a belief, a quest or a work, stay untyped on purpose.
+
+## Pictures and groups, 2026-09-07
+
+- **Every record may carry a picture.** `image` on the resource base is the address of a picture that stands for the record, a portrait, a cover, a map; the bytes live wherever pictures live, not in the record. A person's `portrait` stays, as the specific case it is.
+- **Every model names its group.** A manifest's `category`, one of `people`, `places`, `history`, `play`, `rules` or `world`, says which group the model is listed with. The groups are how an application lays out what would otherwise be thirty-two equal doors; the membership is the ontology's to decide, so a new model lands in its group by saying which it is in.

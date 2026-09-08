@@ -1,7 +1,8 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { AppProvider } from 'src/app/context';
 import { placeIn } from 'src/components/Layout';
 import { MeProvider } from 'src/app/me';
@@ -41,6 +42,9 @@ function renderSidebar(path: string, ontology = petOntology()) {
 }
 
 describe('the shell', () => {
+  // Folds are remembered between visits; each test starts with none remembered.
+  beforeEach(() => localStorage.clear());
+
   it('lists the worlds outside one, and nothing of any world', async () => {
     renderSidebar('/worlds');
     expect(
@@ -53,16 +57,26 @@ describe('the shell', () => {
   });
 
   it('inside a world is the world: its surfaces, its data, and one door out', async () => {
+    const user = userEvent.setup();
     renderSidebar(`/worlds/${WORLD_ID}/pet`);
     expect(await screen.findByText('Play')).toBeInTheDocument();
     // The pet ontology has no campaigns or characters, so those are not offered.
     expect(
       screen.queryByRole('link', { name: 'Campaigns' }),
     ).not.toBeInTheDocument();
-    for (const surface of ['Maps', 'Timeline', 'Marketplace', 'Settings']) {
+    for (const surface of [
+      'Maps',
+      'Timeline',
+      'Rules',
+      'Marketplace',
+      'Settings',
+    ]) {
       expect(screen.getByRole('link', { name: surface })).toBeInTheDocument();
     }
-    // Every model is under Data, and the list can be narrowed.
+    // Data is folded until wanted; inside it the models sit by group.
+    expect(screen.queryByRole('link', { name: 'Pet' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Unfold Data' }));
+    await user.click(screen.getByRole('button', { name: /Other/ }));
     expect(screen.getByRole('link', { name: 'Pet' })).toHaveAttribute(
       'href',
       `/worlds/${WORLD_ID}/pet`,
@@ -75,6 +89,7 @@ describe('the shell', () => {
   });
 
   it('offers a surface only when the ontology has its model', async () => {
+    const user = userEvent.setup();
     renderSidebar(`/worlds/${WORLD_ID}/show`, troupeOntology());
     await screen.findByText('Play');
     expect(
@@ -83,10 +98,9 @@ describe('the shell', () => {
     expect(
       screen.queryByRole('link', { name: 'Compendium' }),
     ).not.toBeInTheDocument();
-    const data = within(
-      screen.getByText('Data').closest('[data-slot="sidebar-group"]')!,
-    );
-    expect(data.getByRole('link', { name: 'Show' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Unfold Data' }));
+    await user.click(screen.getByRole('button', { name: /Other/ }));
+    expect(screen.getByRole('link', { name: 'Show' })).toBeInTheDocument();
   });
 
   it('tells a surface from a model in an address', () => {

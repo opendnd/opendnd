@@ -1,5 +1,5 @@
 ---
-title: "ADR-015: One application, built from what the API describes"
+title: 'ADR-015: One application, built from what the API describes'
 description: A single-page application that learns the models, their shapes and their code lists from the API at run time, signs in through Cognito or a development mode, and renders every resource through pages generated from its schema.
 ---
 
@@ -46,7 +46,10 @@ Two further things are settled before any page is drawn. Working on the applicat
 
 - **A world is the frame.** Outside a world the application is a list of worlds, each shown as a large card with a cover drawn from its own map. Inside one, the world is the whole shell: its name at the top, its surfaces down the side, and one door out. Nothing of any other world shows while inside one, the way a tenant sees only its tenancy.
 - **Surfaces are named in one place.** The generic pages still learn every model from the API, but the navigation has a shape a person expects: Campaigns beside Characters, Maps beside the Timeline, a Compendium, a Marketplace, the Data, the Settings. Each surface that stands on a model names it in one table, `src/app/surfaces.ts`, and a surface whose model the ontology lacks is not offered. This is the one deliberate exception to the rule that the application names no model, and it is kept to that file.
-- **The look is OpenHI's.** The application shares OpenHI Studio's theme token for token: DM Sans for text, DM Serif Display for headings, warm zinc neutrals, forest green as the brand, sage, amber and clay as accents. The two are meant to read as one suite.
+- **One theme, taken whole.** The application's theme is DM Sans for text, DM Serif Display for headings, warm zinc neutrals, forest green as the brand, and sage, amber and clay as accents. It is copied token for token from a sibling product so the two read as one suite, and it is not tuned here.
 - **Prose is Markdown.** A record's description and its long text fields render from Markdown. A link to the web opens in a new tab; a link to nowhere stays as its words; an image that is not an address is left out rather than shown broken.
 - **The map has a year and a preview.** The map is drawn as of a year, the way a map service offers older imagery, and choosing a record that holds nothing opens it beside the map with the way to its page, rather than leaving the map.
 - **Every record can be inspected.** A record's page opens the record as the API holds it, with its address and revision, for the person who wants to see the data behind the article.
+- **Ask and Inspect ride along.** A panel on the right of every page, opened from the top right, either asks the world a question, answered by a language model from the records that match the names in it and linking those records, or shows the record on the page as the API holds it. Both follow the address, so they concern what is in front of the reader.
+- **Models are grouped as the ontology says.** A model's manifest names its category, and the Data section and the Rules surface list models by it; the icons and the words are the application's, the membership is the ontology's.
+- **Most people will not use Data.** The surfaces, and in time interfaces built on this data in a studio, do the work; a form built from a schema is the way in when nothing better exists yet, not the way the application is meant to be used.

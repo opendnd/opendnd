@@ -44,6 +44,7 @@ describe('emitZodModule', () => {
   it('emits each model’s name and description as its manifest states them', () => {
     expect(code).toContain('export const modelInfo = {');
     expect(code).toMatch(/pet: \{\n\s+id: "pet",\n\s+name: "Pet",/);
+    expect(code).toContain('category: "companions"');
   });
 
   it('produces a module that Bun can import and whose schema validates data', async () => {

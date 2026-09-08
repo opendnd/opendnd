@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Place",
   "description": "A location at any scale.",
+  "category": "places",
   "schema": "https://docs.opendnd.org/ours/schemas/place.schema.json",
   "relationships": [
     {

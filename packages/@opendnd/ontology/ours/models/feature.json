@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Feature",
   "description": "Something a character gains from a class, species, background, feat or item.",
+  "category": "rules",
   "schema": "https://docs.opendnd.org/ours/schemas/feature.schema.json",
   "relationships": [
     {

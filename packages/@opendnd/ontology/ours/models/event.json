@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Event",
   "description": "Something that happened in-world.",
+  "category": "history",
   "schema": "https://docs.opendnd.org/ours/schemas/event.schema.json",
   "relationships": [
     {

@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Item",
   "description": "A thing that can be owned, carried or used: equipment, magic items and poisons alike.",
+  "category": "rules",
   "schema": "https://docs.opendnd.org/ours/schemas/item.schema.json",
   "relationships": [
     {

@@ -17,6 +17,8 @@ export const TASKS = [
   'review',
   /** Vectors for search. */
   'embed',
+  /** Answer a question about a world from its records. */
+  'ask',
 ] as const;
 
 export type TaskName = (typeof TASKS)[number];
@@ -94,6 +96,16 @@ export const KNOWN_MODELS: readonly ModelSpec[] = [
  * or a single call can replace.
  */
 export const DEFAULT_TASKS: Readonly<Record<TaskName, Task>> = {
+  ask: {
+    system:
+      'You answer questions about a fictional world from the records you are ' +
+      'given and from nothing else. Answer briefly and plainly, as someone who ' +
+      'keeps those records. Where the records do not say, say so rather than ' +
+      'guess. Name the records your answer rests on.',
+    temperature: 0.3,
+    maxTokens: 1024,
+    think: false,
+  },
   chronicle: {
     system:
       'You are a chronicler of a fictional world. Write plainly, in the ' +

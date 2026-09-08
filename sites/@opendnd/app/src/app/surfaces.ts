@@ -49,6 +49,12 @@ export const SURFACES = {
     description:
       'Articles, chronicles and tales, and a search across everything on record.',
   },
+  rules: {
+    path: 'rules',
+    label: 'Rules',
+    description:
+      'The game itself: classes, backgrounds, feats, items, spells and stat blocks, as this world has them.',
+  },
   marketplace: {
     path: 'marketplace',
     label: 'Marketplace',
@@ -86,5 +92,56 @@ export function surfaceLabel(segment: string): string | undefined {
 export function offers(ontology: Ontology, surface: Surface): boolean {
   return (
     surface.model === undefined || ontology.model(surface.model) !== undefined
+  );
+}
+
+/**
+ * The groups models are listed in, as the ontology's manifests place them.
+ * The icon and the words are the application's; the membership is the
+ * ontology's, so a new model lands in its group by saying which it is in.
+ */
+export interface Category {
+  readonly key: string;
+  readonly label: string;
+  readonly description: string;
+}
+
+export const CATEGORIES: readonly Category[] = [
+  {
+    key: 'play',
+    label: 'Play',
+    description: 'Campaigns, sessions, characters, quests and encounters.',
+  },
+  {
+    key: 'people',
+    label: 'People',
+    description: 'Who is in the world and how they stand to one another.',
+  },
+  {
+    key: 'places',
+    label: 'Places',
+    description: 'Where things are, and who lives there.',
+  },
+  {
+    key: 'history',
+    label: 'History',
+    description: 'What happened, and what was written about it.',
+  },
+  {
+    key: 'rules',
+    label: 'Rules',
+    description: 'The game itself: classes, spells, items and stat blocks.',
+  },
+  { key: 'world', label: 'World', description: 'The world and its calendars.' },
+];
+
+/** The category a model belongs to, or the last one for a model that says none. */
+export function categoryOf(model: { category?: string }): Category {
+  return (
+    CATEGORIES.find((c) => c.key === model.category) ?? {
+      key: 'other',
+      label: 'Other',
+      description: 'Models that name no group.',
+    }
   );
 }

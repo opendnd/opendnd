@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Character",
   "description": "A person as played, in one campaign.",
+  "category": "play",
   "schema": "https://docs.opendnd.org/ours/schemas/character.schema.json",
   "relationships": [
     {

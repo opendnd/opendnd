@@ -1,6 +1,8 @@
-import { Fragment } from 'react';
+import { BracesIcon, SparklesIcon } from 'lucide-react';
+import { Fragment, useState } from 'react';
 import { Link, Navigate, Outlet, useLocation } from 'react-router';
 import { AppSidebar } from './AppSidebar';
+import { type PanelKind, RightPanel } from './RightPanel';
 import { useSession } from '../app/context';
 import { MeProvider, useMe } from '../app/me';
 import { OntologyProvider, useOntology } from '../app/ontology';
@@ -13,6 +15,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { Button } from '@/components/ui/button';
 import {
   SidebarInset,
   SidebarProvider,
@@ -32,6 +35,24 @@ export function RequireSession() {
 
 /** The frame around every signed-in page: a sidebar, a breadcrumb, the page. */
 export function Shell() {
+  const [panel, setPanel] = useState<PanelKind | undefined>(() => {
+    try {
+      const stored = localStorage.getItem('opendnd.panel');
+      return stored === 'ask' || stored === 'inspect' ? stored : undefined;
+    } catch {
+      return undefined;
+    }
+  });
+  const toggle = (kind: PanelKind) => {
+    const next = panel === kind ? undefined : kind;
+    setPanel(next);
+    try {
+      if (next) localStorage.setItem('opendnd.panel', next);
+      else localStorage.removeItem('opendnd.panel');
+    } catch {
+      // Then the panel is only remembered for this page.
+    }
+  };
   return (
     <MeProvider>
       <OntologyProvider>
@@ -42,9 +63,39 @@ export function Shell() {
             <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
               <SidebarTrigger className="-ml-1" />
               <Crumbs />
+              <div className="ml-auto flex items-center gap-1">
+                <Button
+                  variant={panel === 'ask' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  aria-pressed={panel === 'ask'}
+                  onClick={() => toggle('ask')}
+                >
+                  <SparklesIcon
+                    data-icon="inline-start"
+                    className="text-brand"
+                  />
+                  Ask
+                </Button>
+                <Button
+                  variant={panel === 'inspect' ? 'secondary' : 'ghost'}
+                  size="sm"
+                  aria-pressed={panel === 'inspect'}
+                  onClick={() => toggle('inspect')}
+                >
+                  <BracesIcon data-icon="inline-start" />
+                  Inspect
+                </Button>
+              </div>
             </header>
-            <div className="flex-1 p-6">
-              <Outlet />
+            <div className="flex min-h-0 flex-1">
+              <div className="min-w-0 flex-1 p-6">
+                <Outlet />
+              </div>
+              {panel && (
+                <div className="sticky top-12 hidden h-[calc(100vh-3rem)] lg:block">
+                  <RightPanel kind={panel} onClose={() => toggle(panel)} />
+                </div>
+              )}
             </div>
           </SidebarInset>
         </SidebarProvider>

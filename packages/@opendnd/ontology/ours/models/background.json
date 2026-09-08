@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Background",
   "description": "Where a character came from before they began adventuring.",
+  "category": "rules",
   "schema": "https://docs.opendnd.org/ours/schemas/background.schema.json",
   "relationships": [
     {

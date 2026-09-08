@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Encounter",
   "description": "A confrontation prepared for a party.",
+  "category": "play",
   "schema": "https://docs.opendnd.org/ours/schemas/encounter.schema.json",
   "relationships": [
     {

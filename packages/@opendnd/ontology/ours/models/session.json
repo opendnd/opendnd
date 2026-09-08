@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Session",
   "description": "One sitting of a campaign.",
+  "category": "play",
   "schema": "https://docs.opendnd.org/ours/schemas/session.schema.json",
   "relationships": [
     {

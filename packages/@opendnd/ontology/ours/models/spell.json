@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Spell",
   "description": "A spell, its components, and what it does.",
+  "category": "rules",
   "schema": "https://docs.opendnd.org/ours/schemas/spell.schema.json",
   "relationships": [
     {

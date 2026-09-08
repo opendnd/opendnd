@@ -6,6 +6,7 @@
   "system": "internal",
   "name": "Class",
   "description": "An adventuring class and its subclasses.",
+  "category": "rules",
   "schema": "https://docs.opendnd.org/ours/schemas/class.schema.json",
   "relationships": [
     {
