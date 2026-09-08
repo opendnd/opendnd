@@ -5,7 +5,9 @@ import { RouterProvider } from 'react-router/dom';
 import { ApiClient } from 'src/api/client';
 import type { World } from 'src/api/types';
 import { type AppServices, AppProvider } from 'src/app/context';
+import { CountsProvider } from 'src/app/counts';
 import { OntologyProvider } from 'src/app/ontology';
+import { PanelProvider } from 'src/app/panel';
 import { WorldProvider } from 'src/app/world';
 import { SessionStore, devSession } from 'src/auth/session';
 import type { Ontology } from 'src/schema/openapi';
@@ -90,7 +92,11 @@ export function renderInWorld(
         path: options.route ?? '*',
         element: (
           <OntologyProvider ontology={ontology}>
-            <WorldProvider world={world}>{ui}</WorldProvider>
+            <CountsProvider world={world.id}>
+              <PanelProvider>
+                <WorldProvider world={world}>{ui}</WorldProvider>
+              </PanelProvider>
+            </CountsProvider>
           </OntologyProvider>
         ),
       },

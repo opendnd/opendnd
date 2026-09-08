@@ -476,6 +476,17 @@ const fixedSchemas = {
     },
     required: ['history'],
   },
+  Counts: {
+    type: 'object',
+    properties: {
+      counts: {
+        type: 'object',
+        additionalProperties: { type: 'integer' },
+        description: 'Records held, by model id. Models with none are absent.',
+      },
+    },
+    required: ['counts'],
+  },
   Reference: {
     type: 'object',
     description: 'A typed pointer to another record in the same world.',
@@ -856,6 +867,21 @@ const fixedPaths = {
         200: {
           description: 'What matched',
           content: json({ $ref: '#/components/schemas/SearchResults' }),
+        },
+      },
+    },
+  },
+  '/v1/worlds/{world}/$counts': {
+    parameters: [world],
+    get: {
+      tags: ['meta'],
+      summary: 'How many records of each kind the world holds',
+      description:
+        'Counted the way a listing resolves them: a record the world overrides counts once, and a record the world has deleted does not count at all. A model the world holds nothing of is absent rather than zero.',
+      responses: {
+        200: {
+          description: 'A count per model',
+          content: json({ $ref: '#/components/schemas/Counts' }),
         },
       },
     },

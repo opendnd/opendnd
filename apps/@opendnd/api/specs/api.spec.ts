@@ -1070,6 +1070,41 @@ describe('the API: what a front end needs', () => {
     ).toBeGreaterThan(0);
   });
 
+  it('counts what the world holds, by kind, and forgets what it deleted', async () => {
+    const { status, body } = await drew.get(`/v1/worlds/${world}/$counts`);
+    expect(status).toBe(200);
+    const { counts } = body as { counts: Record<string, number> };
+
+    // Every count matches what listing that model actually returns.
+    for (const model of ['person', 'place', 'title']) {
+      const listed = await drew.get(`/v1/worlds/${world}/${model}?limit=500`);
+      expect(counts[model]).toBe(
+        (listed.body as { resources: unknown[] }).resources.length,
+      );
+    }
+    // A model this world holds nothing of is absent, not zero.
+    expect(counts.spell).toBeUndefined();
+
+    // What is deleted stops being counted. Two, so the kind is still held
+    // afterwards and the count is a number either side of the deletion.
+    const first = await drew.post(`/v1/worlds/${world}/language`, {
+      name: 'Counted Once',
+    });
+    await drew.post(`/v1/worlds/${world}/language`, { name: 'Counted Twice' });
+    const both = await drew.get(`/v1/worlds/${world}/$counts`);
+    const held = (both.body as { counts: Record<string, number> }).counts
+      .language;
+    expect(held).toBeGreaterThanOrEqual(2);
+
+    await drew.delete(
+      `/v1/worlds/${world}/language/${(first.body as { id: string }).id}`,
+    );
+    const after = await drew.get(`/v1/worlds/${world}/$counts`);
+    expect(
+      (after.body as { counts: Record<string, number> }).counts.language,
+    ).toBe(held! - 1);
+  });
+
   it('lists the versions of a record, so a page can show its history', async () => {
     await drew.patch(`/v1/worlds/${world}/place/${place}`, {
       population: 2300,

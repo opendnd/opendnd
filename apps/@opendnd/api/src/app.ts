@@ -783,6 +783,16 @@ export function createApp(options: AppOptions) {
     }),
   );
 
+  /**
+   * How many records of each kind this world holds, counted the way a listing
+   * would resolve them. Drawn beside every model in the navigation.
+   */
+  app.get('/v1/worlds/:world/$counts', (c) =>
+    withWorld(c, false, async (store) =>
+      c.json({ counts: await store.counts() }),
+    ),
+  );
+
   /** Everything in a world, as a bundle or as prose. */
   app.get('/v1/worlds/:world/$export/:format', (c) => {
     const format = assertFormat(param(c, 'format'));

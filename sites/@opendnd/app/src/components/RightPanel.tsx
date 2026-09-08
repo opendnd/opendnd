@@ -6,7 +6,13 @@ import {
   SparklesIcon,
   XIcon,
 } from 'lucide-react';
-import { type FormEvent, useEffect, useRef, useState } from 'react';
+import {
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { Link, useLocation } from 'react-router';
 import { JsonTree } from './JsonTree';
 import { placeIn } from './Layout';
@@ -109,6 +115,7 @@ interface Turn {
 
 function Ask(props: { readonly world: string; readonly worldName: string }) {
   const api = useApi();
+  const panel = usePanel();
   const key = `opendnd.ask.${props.world}`;
   const [turns, setTurns] = useState<Turn[]>(() => {
     try {
@@ -139,25 +146,48 @@ function Ask(props: { readonly world: string; readonly worldName: string }) {
     end.current?.scrollIntoView({ block: 'end' });
   }, [turns, key]);
 
-  const submit = async (event: FormEvent) => {
+  const put = useCallback(
+    async (text: string) => {
+      const q = text.trim();
+      if (!q) return;
+      setQuestion('');
+      setError(undefined);
+      setTurns((t) => [...t, { role: 'you', text: q }]);
+      setBusy(true);
+      try {
+        const answer = await api.ask(props.world, q, model);
+        setTurns((t) => [
+          ...t,
+          { role: 'world', text: answer.answer, sources: answer.sources },
+        ]);
+      } catch (cause) {
+        setError(cause instanceof Error ? cause : new Error(String(cause)));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [api, model, props.world],
+  );
+
+  // A question put from the page beneath, from the home screen say, arrives
+  // here rather than being answered somewhere the conversation cannot be seen.
+  // It waits for the catalogue, because a question sent before the deployment
+  // has said what it holds is a question sent with no model. The moment it was
+  // asked is remembered rather than trusting the clearing to land first: this
+  // effect runs again whenever anything around it changes.
+  const asked = panel.pending;
+  const consumed = useRef(0);
+  useEffect(() => {
+    if (!asked || asked.at === consumed.current) return;
+    if (busy || catalogue.loading) return;
+    consumed.current = asked.at;
+    panel.taken();
+    void put(asked.question);
+  }, [asked, busy, catalogue.loading, panel, put]);
+
+  const submit = (event: FormEvent) => {
     event.preventDefault();
-    const q = question.trim();
-    if (!q || busy) return;
-    setQuestion('');
-    setError(undefined);
-    setTurns((t) => [...t, { role: 'you', text: q }]);
-    setBusy(true);
-    try {
-      const answer = await api.ask(props.world, q, model);
-      setTurns((t) => [
-        ...t,
-        { role: 'world', text: answer.answer, sources: answer.sources },
-      ]);
-    } catch (cause) {
-      setError(cause instanceof Error ? cause : new Error(String(cause)));
-    } finally {
-      setBusy(false);
-    }
+    if (!busy) void put(question);
   };
 
   return (

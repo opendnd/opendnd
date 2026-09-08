@@ -3,7 +3,6 @@ import {
   BookOpenIcon,
   ChevronRightIcon,
   CompassIcon,
-  DatabaseIcon,
   DoorOpenIcon,
   HistoryIcon,
   LayoutGridIcon,
@@ -21,6 +20,7 @@ import { placeIn } from './Layout';
 import { ModelIcon, categoryIcon } from './ModelIcon';
 import type { ModelInfo } from '../api/types';
 import { useApp, useSession } from '../app/context';
+import { compactCount, useCounts } from '../app/counts';
 import { useMe } from '../app/me';
 import { useOntology } from '../app/ontology';
 import { CATEGORIES, SURFACES, categoryOf, offers } from '../app/surfaces';
@@ -59,6 +59,7 @@ export function AppSidebar() {
   const { signOut } = useApp();
   const me = useMe();
   const ontology = useOntology();
+  const counts = useCounts();
   const location = useLocation();
   const place = placeIn(location.pathname);
   const current = me.data?.worlds.find((w) => w.id === place.world);
@@ -203,12 +204,7 @@ export function AppSidebar() {
               />
             </Section>
 
-            <Section
-              label="Data"
-              storageKey="data"
-              defaultOpen={false}
-              icon={<DatabaseIcon className="size-3.5" />}
-            >
+            <Section label="Data" storageKey="data" defaultOpen={false}>
               <Entry
                 to={to(SURFACES.data.path)}
                 active={location.pathname === to(SURFACES.data.path)}
@@ -247,7 +243,12 @@ export function AppSidebar() {
                           {category?.label ?? 'Other'}
                         </span>
                         <span className="ml-auto font-mono text-[10px] text-muted-foreground">
-                          {models.length}
+                          {(() => {
+                            const held = counts.across(models);
+                            return held === undefined
+                              ? models.length
+                              : compactCount(held);
+                          })()}
                         </span>
                         <ChevronRightIcon className="transition-transform group-data-[open]/category:rotate-90" />
                       </CollapsibleTrigger>
@@ -265,6 +266,11 @@ export function AppSidebar() {
                                   className="size-3.5 text-muted-foreground"
                                 />
                                 <span className="truncate">{model.name}</span>
+                                {counts.of?.[model.id] !== undefined && (
+                                  <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground">
+                                    {compactCount(counts.of[model.id]!)}
+                                  </span>
+                                )}
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}

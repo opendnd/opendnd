@@ -86,7 +86,11 @@ describe('the timeline', () => {
     // Besides the world's own record, only the model with a beginning and an
     // end is asked for.
     const asked = calls.filter(
-      (c) => c.url.includes('/v1/worlds/') && !c.url.includes('/world/'),
+      (c) =>
+        c.url.includes('/v1/worlds/') &&
+        !c.url.includes('/world/') &&
+        // The frame counts the world; that is not the page asking.
+        !c.url.includes('$counts'),
     );
     expect(asked).toHaveLength(1);
     expect(new URL(asked[0]!.url).searchParams.get('sort')).toBe('validTime');

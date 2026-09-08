@@ -4,6 +4,7 @@ import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router';
 import { AppSidebar } from './AppSidebar';
 import { RightPanel } from './RightPanel';
 import { useSession } from '../app/context';
+import { CountsProvider } from '../app/counts';
 import { useMediaQuery } from '../app/hooks';
 import { MeProvider, useMe } from '../app/me';
 import { OntologyProvider, useOntology } from '../app/ontology';
@@ -39,18 +40,21 @@ export function RequireSession() {
 
 /** The frame around every signed-in page: a sidebar, a header, the page, and the panel on the right. */
 export function Shell() {
+  const location = useLocation();
   return (
     <MeProvider>
       <OntologyProvider>
-        <PanelProvider>
-          <SidebarProvider>
-            <AppSidebar />
-            <SidebarInset>
-              <Header />
-              <Body />
-            </SidebarInset>
-          </SidebarProvider>
-        </PanelProvider>
+        <CountsProvider world={placeIn(location.pathname).world}>
+          <PanelProvider>
+            <SidebarProvider>
+              <AppSidebar />
+              <SidebarInset>
+                <Header />
+                <Body />
+              </SidebarInset>
+            </SidebarProvider>
+          </PanelProvider>
+        </CountsProvider>
       </OntologyProvider>
     </MeProvider>
   );

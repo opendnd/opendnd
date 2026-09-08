@@ -424,6 +424,32 @@ export class Store {
   }
 
   /**
+   * How many resources of each model this world holds.
+   *
+   * Asked once for the whole world rather than a page per model, because it
+   * is drawn beside every model in the navigation and a world reading a stack
+   * of modules would otherwise be one request per kind. Resolution is the
+   * same as a listing's: a record a world overrides counts once, in the
+   * world, and a record the world has deleted does not count at all.
+   */
+  async counts(): Promise<Record<string, number>> {
+    const { rows } = await this.client.query<{ model: ModelId; n: string }>(
+      `select model, count(*) as n
+         from (
+           select distinct on (r.model, r.id) r.model, r.deleted_at
+             from resource r
+             join world_layer wl on wl.layer_id = r.layer_id
+            where wl.world_id = $1
+            order by r.model, r.id, wl.position
+         ) resolved
+        where deleted_at is null
+        group by model`,
+      [this.world],
+    );
+    return Object.fromEntries(rows.map((row) => [row.model, Number(row.n)]));
+  }
+
+  /**
    * Everything in this world that refers to a resource.
    *
    * The ontology is a web of references, so this is what a page about

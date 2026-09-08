@@ -173,6 +173,15 @@ export class ApiClient {
     return this.body('GET', `/v1/worlds/${world}/usage`);
   }
 
+  /** How many records of each kind the world holds. Models with none are absent. */
+  async counts(world: string): Promise<Record<string, number>> {
+    const { counts } = await this.body<{ counts: Record<string, number> }>(
+      'GET',
+      `/v1/worlds/${world}/$counts`,
+    );
+    return counts;
+  }
+
   /** Ask the world a question, answered from its records by a language model. */
   ask(world: string, question: string, model?: string): Promise<Answer> {
     return this.body('POST', `/v1/worlds/${world}/$ask`, {

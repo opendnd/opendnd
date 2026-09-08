@@ -21,11 +21,17 @@ export interface Panel {
   readonly open: boolean;
   readonly tab: PanelTab;
   readonly inspected?: Inspected;
+  /** A question asked from a page, waiting for the Ask tab to pick it up. */
+  readonly pending?: { readonly question: string; readonly at: number };
   readonly setOpen: (open: boolean) => void;
   /** Open the panel on one of its tabs. */
   readonly show: (tab: PanelTab) => void;
   /** Open the inspector on a record other than the page's own. */
   readonly inspect: (target: Inspected) => void;
+  /** Put a question to the world from elsewhere on the page, and open on it. */
+  readonly ask: (question: string) => void;
+  /** Said by the Ask tab once it has taken the pending question. */
+  readonly taken: () => void;
 }
 
 const KEY = 'opendnd.panel';
@@ -36,6 +42,8 @@ const PanelContext = createContext<Panel>({
   setOpen: () => undefined,
   show: () => undefined,
   inspect: () => undefined,
+  ask: () => undefined,
+  taken: () => undefined,
 });
 
 /**
@@ -57,6 +65,7 @@ export function PanelProvider(props: { readonly children: ReactNode }) {
     return { open: false, tab: 'ask' };
   });
   const [inspected, setInspected] = useState<Inspected>();
+  const [pending, setPending] = useState<{ question: string; at: number }>();
   const location = useLocation();
 
   useEffect(() => setInspected(undefined), [location.pathname]);
@@ -73,14 +82,22 @@ export function PanelProvider(props: { readonly children: ReactNode }) {
     () => ({
       ...state,
       inspected,
+      pending,
       setOpen: (open) => setState((s) => ({ ...s, open })),
       show: (tab) => setState({ open: true, tab }),
       inspect: (target) => {
         setInspected(target);
         setState({ open: true, tab: 'inspect' });
       },
+      // The same question twice running is still two questions, so the moment
+      // it was asked is part of what the Ask tab watches.
+      ask: (question) => {
+        setPending({ question, at: Date.now() });
+        setState({ open: true, tab: 'ask' });
+      },
+      taken: () => setPending(undefined),
     }),
-    [state, inspected],
+    [state, inspected, pending],
   );
   return (
     <PanelContext.Provider value={value}>

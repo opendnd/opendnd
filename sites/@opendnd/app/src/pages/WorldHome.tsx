@@ -1,10 +1,12 @@
-import { ArrowRightIcon, SearchIcon } from 'lucide-react';
+import { ArrowRightIcon, CompassIcon, SendIcon } from 'lucide-react';
 import { type FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link } from 'react-router';
 import type { Resource } from '../api/types';
 import { useApi, useSession } from '../app/context';
+import { compactCount, useCounts } from '../app/counts';
 import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
+import { usePanel } from '../app/panel';
 import { SURFACES, offers } from '../app/surfaces';
 import { recordPath, useWorld } from '../app/world';
 import { ErrorNotice } from '../components/Notice';
@@ -18,42 +20,39 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
-/** How many of a kind the home page counts before it stops counting. */
-const COUNT_TO = 500;
+/** How a suggestion is worded for each kind of record it is drawn from. */
+const ASKS: Record<string, (name: string) => string> = {
+  person: (name) => `Who is ${name}?`,
+  place: (name) => `Tell me about ${name}.`,
+  faction: (name) => `What does ${name} want?`,
+  event: (name) => `What happened at ${name}?`,
+};
+
+/** How many suggestions the greeting offers before it stops. */
+const SUGGESTIONS = 4;
 
 /**
- * Inside a world: a greeting, a search, the numbers, the campaigns, and what
- * changed last. The surfaces it shows are the ones the ontology can back.
+ * Inside a world: a question first. The world is asked in plain words and
+ * answers from its own records in the panel beside the page, with a few
+ * questions offered for anyone who does not know what to ask yet. Beneath
+ * that, the numbers, the campaigns, and what changed last.
  */
 export function WorldHome() {
   const api = useApi();
   const ontology = useOntology();
   const session = useSession();
+  const counts = useCounts();
+  const panel = usePanel();
   const { world } = useWorld();
-  const navigate = useNavigate();
-  const [query, setQuery] = useState('');
+  const [draft, setDraft] = useState('');
 
   const surfaces = [
     SURFACES.campaigns,
     SURFACES.characters,
     SURFACES.compendium,
   ].filter((s) => offers(ontology, s));
-  const counts = useRequest(
-    async () =>
-      Promise.all(
-        surfaces.map(async (s) => {
-          const page = await api.list(world.id, s.model!, { limit: COUNT_TO });
-          return {
-            surface: s,
-            count: page.resources.length,
-            more: page.next !== undefined,
-          };
-        }),
-      ),
-    [api, world.id, surfaces.map((s) => s.path).join(',')],
-  );
   const campaigns = useRequest(
     () =>
       offers(ontology, SURFACES.campaigns)
@@ -81,68 +80,119 @@ export function WorldHome() {
       .slice(0, 8);
   }, [api, world.id, surfaces.map((s) => s.path).join(',')]);
 
-  const search = (event: FormEvent) => {
-    event.preventDefault();
-    const q = query.trim();
-    void navigate(
-      q
-        ? `/worlds/${world.id}/${SURFACES.compendium.path}?q=${encodeURIComponent(q)}`
-        : `/worlds/${world.id}/${SURFACES.compendium.path}`,
+  // Suggestions are drawn from the world rather than written here, so they
+  // name things that actually exist and read differently in every world.
+  const suggestions = useRequest(async () => {
+    const kinds = ['person', 'place', 'faction', 'event'].filter((m) =>
+      ontology.model(m),
     );
+    const pages = await Promise.all(
+      kinds.map((m) => api.list(world.id, m, { limit: 1, sort: 'updatedAt' })),
+    );
+    const asked: string[] = [];
+    kinds.forEach((kind, i) => {
+      const name = pages[i]?.resources[0]?.name;
+      if (typeof name === 'string' && name !== '') {
+        asked.push(ASKS[kind]!(name));
+      }
+    });
+    return asked.slice(0, SUGGESTIONS);
+  }, [api, world.id, ontology]);
+
+  const put = (text: string) => {
+    const question = text.trim();
+    if (question === '') return;
+    setDraft('');
+    panel.ask(question);
+  };
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    put(draft);
   };
 
   const who = session?.name ?? session?.subject ?? 'there';
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-      <header className="flex flex-col items-center gap-3 pt-6 text-center">
+      <header className="flex flex-col items-center gap-3 pt-[min(12vh,5rem)] text-center">
         <span className="flex size-12 items-center justify-center rounded-full bg-brand-muted text-brand-muted-foreground">
-          <SearchIcon className="size-5" />
+          <CompassIcon className="size-5" />
         </span>
-        <h1 className="font-display text-4xl">
-          {greeting()}, {who}. {world.name} is open.
+        <h1 className="font-display text-3xl leading-tight sm:text-4xl">
+          {greeting()}, {who}. What would you like to know about {world.name}?
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Search it by name, or pick up where you left off.
+        <p className="max-w-lg text-sm text-muted-foreground">
+          Ask in plain words. The answer comes from what is on record and says
+          which records it drew on.
         </p>
+
         <form
-          onSubmit={search}
-          role="search"
-          className="mt-2 flex w-full max-w-xl gap-2"
+          onSubmit={submit}
+          className="mt-4 w-full max-w-2xl rounded-2xl border bg-card text-left shadow-sm transition-colors focus-within:border-ring"
         >
-          <Input
-            type="search"
-            aria-label="Search this world"
-            placeholder={`Search ${world.name}`}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+          <Textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                put(draft);
+              }
+            }}
+            aria-label={`Ask ${world.name} a question`}
+            placeholder={`Ask ${world.name} anything…`}
+            rows={3}
+            className="min-h-0 resize-none border-0 bg-transparent px-4 pt-4 pb-2 text-[15px] shadow-none focus-visible:ring-0"
           />
-          <Button type="submit">Search</Button>
+          <div className="flex items-center justify-between gap-3 px-3 pb-3">
+            <span className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span className="size-1.5 rounded-full bg-brand" />
+              Grounded in {world.name}&apos;s records
+            </span>
+            <Button type="submit" size="sm" disabled={draft.trim() === ''}>
+              <SendIcon />
+              Ask
+            </Button>
+          </div>
         </form>
+
+        {suggestions.data && suggestions.data.length > 0 && (
+          <div className="flex max-w-2xl flex-wrap justify-center gap-2">
+            {suggestions.data.map((question) => (
+              <button
+                key={question}
+                type="button"
+                onClick={() => put(question)}
+                title={question}
+                className="max-w-xs truncate rounded-full border bg-card px-3 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:border-ring hover:text-foreground"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+        )}
       </header>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {surfaces.map((s) => {
-          const found = counts.data?.find((c) => c.surface.path === s.path);
-          return (
-            <Link
-              key={s.path}
-              to={`/worlds/${world.id}/${s.path}`}
-              className="block"
+        {surfaces.map((s) => (
+          <Link
+            key={s.path}
+            to={`/worlds/${world.id}/${s.path}`}
+            className="block"
+          >
+            <Card
+              size="sm"
+              className="h-full transition-colors hover:border-ring"
             >
-              <Card
-                size="sm"
-                className="h-full transition-colors hover:border-ring"
-              >
-                <CardHeader>
-                  <CardDescription>{s.label}</CardDescription>
-                  <CardTitle className="font-display text-3xl">
-                    {found ? `${found.count}${found.more ? '+' : ''}` : '…'}
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-            </Link>
-          );
-        })}
+              <CardHeader>
+                <CardDescription>{s.label}</CardDescription>
+                <CardTitle className="font-display text-3xl">
+                  {counts.of ? compactCount(counts.of[s.model!] ?? 0) : '…'}
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </Link>
+        ))}
         <Link
           to={`/worlds/${world.id}/${SURFACES.data.path}`}
           className="block"
@@ -152,15 +202,16 @@ export function WorldHome() {
             className="h-full transition-colors hover:border-ring"
           >
             <CardHeader>
-              <CardDescription>Kinds of record</CardDescription>
+              <CardDescription>Records in all</CardDescription>
               <CardTitle className="font-display text-3xl">
-                {ontology.models.length}
+                {counts.across(ontology.models) === undefined
+                  ? '…'
+                  : compactCount(counts.across(ontology.models)!)}
               </CardTitle>
             </CardHeader>
           </Card>
         </Link>
       </section>
-      {counts.error && <ErrorNotice error={counts.error} />}
 
       {offers(ontology, SURFACES.campaigns) && (
         <section className="flex flex-col gap-3">

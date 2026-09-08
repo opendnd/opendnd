@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import type { ModelInfo } from '../api/types';
+import { compactCount, useCounts } from '../app/counts';
 import { useOntology } from '../app/ontology';
 import { CATEGORIES, categoryOf } from '../app/surfaces';
 import { useWorld } from '../app/world';
@@ -40,6 +41,7 @@ export function ModelGroups(props: {
   readonly world: string;
 }) {
   const ontology = useOntology();
+  const counts = useCounts();
   const groups = new Map<string, ModelInfo[]>();
   for (const model of props.models) {
     const key = categoryOf(model).key;
@@ -61,6 +63,11 @@ export function ModelGroups(props: {
                 <span className="text-xs text-muted-foreground">
                   {category?.description}
                 </span>
+                {counts.across(models) !== undefined && (
+                  <span className="ml-auto shrink-0 font-mono text-xs text-muted-foreground">
+                    {compactCount(counts.across(models)!)}
+                  </span>
+                )}
               </div>
               <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {models.map((model) => {
@@ -85,6 +92,11 @@ export function ModelGroups(props: {
                               {model.name}
                               {model.generate && (
                                 <Badge variant="outline">generates</Badge>
+                              )}
+                              {counts.of !== undefined && (
+                                <span className="ml-auto shrink-0 font-mono text-xs font-normal text-muted-foreground">
+                                  {compactCount(counts.of[model.id] ?? 0)}
+                                </span>
                               )}
                             </CardTitle>
                             {description && (

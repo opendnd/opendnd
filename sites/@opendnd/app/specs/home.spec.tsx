@@ -1,4 +1,5 @@
 import { screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { ModelInfo } from 'src/api/types';
 import { WorldHome } from 'src/pages/WorldHome';
@@ -6,6 +7,17 @@ import { Campaigns } from 'src/pages/Campaigns';
 import { type JsonSchema, ontologyFrom } from 'src/schema/openapi';
 import { WORLD_ID } from './fixtures/ontology';
 import { fakeFetch, renderInWorld } from './helpers';
+import { usePanel } from 'src/app/panel';
+
+/** Reports what the panel was told, since the panel itself is not on the page here. */
+function Probe() {
+  const panel = usePanel();
+  return (
+    <div data-testid="panel">
+      {panel.tab}:{panel.open ? 'open' : 'shut'}:{panel.pending?.question ?? ''}
+    </div>
+  );
+}
 
 /** An ontology with the models the home page's surfaces stand on. */
 const base: Record<string, JsonSchema> = {
@@ -29,6 +41,7 @@ const models: ModelInfo[] = [
   { id: 'character', name: 'Character' },
   { id: 'work', name: 'Work' },
   { id: 'place', name: 'Place' },
+  { id: 'person', name: 'Person' },
 ];
 const ontology = ontologyFrom(
   {
@@ -65,6 +78,15 @@ const campaigns = [
 
 function api() {
   return fakeFetch({
+    [`GET /v1/worlds/${WORLD_ID}/$counts`]: () => ({
+      counts: { campaign: 1, character: 0, work: 1240, place: 900, person: 2 },
+    }),
+    [`GET /v1/worlds/${WORLD_ID}/person`]: () => ({
+      resources: [{ id: 'per1', name: 'Wren of the Ford' }],
+    }),
+    [`GET /v1/worlds/${WORLD_ID}/place`]: () => ({
+      resources: [{ id: 'p1', name: 'Aldermere' }],
+    }),
     [`GET /v1/worlds/${WORLD_ID}/campaign`]: () => ({ resources: campaigns }),
     [`GET /v1/worlds/${WORLD_ID}/character`]: () => ({ resources: [] }),
     [`GET /v1/worlds/${WORLD_ID}/work`]: () => ({
@@ -81,18 +103,29 @@ function api() {
 }
 
 describe('a world’s home', () => {
-  it('greets, counts what the surfaces hold, and shows the campaigns and what changed last', async () => {
+  it('greets with a question box, its own suggestions, and what the world holds', async () => {
     const { fetch } = api();
     renderInWorld(<WorldHome />, { fetch, ontology });
     expect(
       await screen.findByRole('heading', {
         level: 1,
-        name: /Good (morning|afternoon|evening|night), tester\. Testland is open\./,
+        name: /Good (morning|afternoon|evening|night), tester\. What would you like to know about Testland\?/,
       }),
     ).toBeInTheDocument();
-    expect(await screen.findByText('1')).toBeInTheDocument();
-    // Five hundred or more reads as a floor, not a count.
-    expect(await screen.findByText('1+')).toBeInTheDocument();
+
+    // The numbers come from one count of the whole world, not a page per kind,
+    // and a large one is written the way a navigation writes it.
+    expect(await screen.findByText('1.2k')).toBeInTheDocument();
+    expect(await screen.findByText('2.1k')).toBeInTheDocument();
+
+    // Suggestions name things that are actually in this world.
+    expect(
+      await screen.findByRole('button', { name: 'Who is Wren of the Ford?' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Tell me about Aldermere.' }),
+    ).toBeInTheDocument();
+
     expect(screen.getByRole('link', { name: /Campaigns/ })).toHaveAttribute(
       'href',
       `/worlds/${WORLD_ID}/campaigns`,
@@ -107,6 +140,45 @@ describe('a world’s home', () => {
     const rows = recent.getAllByRole('listitem').map((li) => li.textContent);
     expect(rows[0]).toContain('A chronicle');
     expect(rows[1]).toContain('The Lantern Road');
+  });
+
+  it('hands a question to the panel rather than answering it here', async () => {
+    const { fetch } = api();
+    renderInWorld(
+      <>
+        <WorldHome />
+        <Probe />
+      </>,
+      { fetch, ontology },
+    );
+    const box = await screen.findByRole('textbox', {
+      name: 'Ask Testland a question',
+    });
+    await userEvent.type(box, 'Who holds the Lantern Road?');
+    await userEvent.click(screen.getByRole('button', { name: 'Ask' }));
+
+    expect(await screen.findByTestId('panel')).toHaveTextContent(
+      'ask:open:Who holds the Lantern Road?',
+    );
+    // The box is cleared, so the same question is not asked twice by accident.
+    expect(box).toHaveValue('');
+  });
+
+  it('asks a suggestion the moment it is chosen', async () => {
+    const { fetch } = api();
+    renderInWorld(
+      <>
+        <WorldHome />
+        <Probe />
+      </>,
+      { fetch, ontology },
+    );
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Who is Wren of the Ford?' }),
+    );
+    expect(await screen.findByTestId('panel')).toHaveTextContent(
+      'ask:open:Who is Wren of the Ford?',
+    );
   });
 
   it('lists campaigns as cards with a way to start one', async () => {
