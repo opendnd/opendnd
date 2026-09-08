@@ -48,7 +48,7 @@ A model's list shows, beside each name, the first few of its fields that fit in 
 
 ## The map
 
-Every world has a Map page, drawn from cells. A model whose schema has a cell field is drawn, which the application finds in the schemas rather than knowing; today that is places and encounters. With nothing chosen, the map shows the smallest cell that holds everything on the busiest face of the world, each record as a square where its cell is, coarser cells beneath finer ones. Choosing a square that has others inside it looks into it, choosing one that has nothing inside opens its record, and Out steps up a level. A record with a cell has an On the map button that opens the map on it. Records without a cell are listed beside the map, and an editor places one from there: choose it, then choose a square of the grid laid over the view, as fine as wanted. When the record in view has unplaced records referring to it, a county with towns that name it as their parent, say, one button scatters them all inside it. Generated places arrive with a cell already.
+Every world has a Map page that pans and zooms the way web maps do. When the world's own record names a base map, a URL template for picture tiles under `map`, those tiles are drawn beneath; otherwise the records are drawn on a blank globe. Over them sits every record of a model with a cell field, which the application finds in the schemas rather than knowing; today that is places and encounters. What is fetched follows the view: the view is sampled, the few cells under the samples are asked for what is inside them down to a level worth drawing at the zoom, with `?maxLevel=`, and their faces for anything coarser, so a zoomed-out map shows continents and kingdoms and a zoomed-in one the towns. A cell near a tile's size or bigger is drawn as its outline, a finer one as a mark, and each is labelled while there is room. Choosing one opens a short account of its record beside the map, with a way to the whole of it; the list beside the map does the same, and a search box finds a record by name and flies to it. A record with a cell has an On the map button that opens the map on it, and an editor gives a record that has none its place from here: Place on the map on the record, or its name in the search, then the spot on the map, at a cell as fine as the zoom or as chosen. The address follows the view, so a view can be shared.
 
 ## Linked records
 
@@ -87,18 +87,18 @@ A build that asks for Cognito without both Cognito settings refuses to sign anyo
 
 Outside a world, the worlds page shows each world as a card with a cover drawn from its own map. Inside a world, the world is the whole frame, with these surfaces down the side; a surface that stands on a model is offered only when the ontology has it.
 
-| Surface               |                                                                                     |
-| --------------------- | ----------------------------------------------------------------------------------- |
-| Home                  | A greeting, a search, what the surfaces hold, the campaigns, and what changed last. |
-| Campaigns, Characters | The campaign layer as cards, with a way to start a new one.                         |
-| Maps                  | The world drawn from its cells, as of any year; a record opens beside the map.      |
-| Timeline              | Everything dated, in the order it began, with the world's now marked.               |
-| Compendium            | One search across everything, and the written works to browse.                      |
-| Marketplace           | The modules the world reads, what it could enable, and publishing it.               |
-| Data                  | Every kind of record as a table, with export and import.                            |
-| Settings              | Name, members, spend and archiving. Owners only.                                    |
+| Surface               |                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Home                  | A greeting, a search, what the surfaces hold, the campaigns, and what changed last.                           |
+| Campaigns, Characters | The campaign layer as cards, with a way to start a new one.                                                   |
+| Maps                  | The world as a map that pans and zooms over its picture tiles, as of any year; a record opens beside the map. |
+| Timeline              | Everything dated, in the order it began, with the world's now marked.                                         |
+| Compendium            | One search across everything, and the written works to browse.                                                |
+| Marketplace           | The modules the world reads, what it could enable, and publishing it.                                         |
+| Data                  | Every kind of record as a table, with export and import.                                                      |
+| Settings              | Name, members, spend and archiving. Owners only.                                                              |
 
-Two panels ride along on the right of every page, opened from the top right: Ask, a conversation with the world answered from its records by a language model with the records it drew on linked beneath each answer, written by the model the deployment configures for the task or, failing that, the first it holds, with a choice offered when it holds more than one; and Inspect, the record on the page as the API holds it, with its address and revision. Under Data, models are grouped as the ontology's manifests place them, play, people, places, history, rules, world, and Rules under World is the rules group on its own. Any record may carry an `image`, an address of a picture, which its cards and its article show; a person's `portrait` counts too. Descriptions and long text render from Markdown.
+One panel rides along on the right of every page, opened from the switch at the top right and shown beside the page on a wide window and over it on a narrow one, in two tabs: Ask, a conversation with the world answered from its records by a language model with the records it drew on linked beneath each answer, written by the model the deployment configures for the task or, failing that, the first it holds, with a choice offered when it holds more than one; and Inspect, the record in front of the reader as the API holds it, as a tree that folds, with its address and revision. The inspector follows the address, or a row chosen in a table under Data, the way a data browser shows the record beside the table. A search of the whole world sits in the header on every page. Under Data, models are grouped as the ontology's manifests place them, play, people, places, history, rules, world, each with the icon its manifest names, and Rules under World is the rules group on its own; the groups in the sidebar fold from their headings. Any record may carry an `image`, an address of a picture, which its cards and its article show; a person's `portrait` counts too, and a record with neither gets a tile in a colour of its own with its initial on it. Descriptions and long text render from Markdown.
 
 ## What is where
 

@@ -4,6 +4,7 @@ import { Link, useParams, useSearchParams } from 'react-router';
 import type { Resource } from '../api/types';
 import { useApi } from '../app/context';
 import { useOntology } from '../app/ontology';
+import { usePanel } from '../app/panel';
 import { recordPath, useWorld } from '../app/world';
 import { Value } from '../components/Article';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
@@ -47,6 +48,7 @@ export function Records() {
   const api = useApi();
   const ontology = useOntology();
   const { world, canEdit } = useWorld();
+  const panel = usePanel();
   const { model = '' } = useParams();
   const [params, setParams] = useSearchParams();
   const name = params.get('name') ?? '';
@@ -230,11 +232,21 @@ export function Records() {
             </TableHeader>
             <TableBody>
               {listing.items.map((resource) => (
-                <TableRow key={resource.id}>
+                <TableRow
+                  key={resource.id}
+                  className="cursor-pointer"
+                  data-state={
+                    panel.inspected?.id === resource.id ? 'selected' : undefined
+                  }
+                  onClick={() =>
+                    panel.inspect({ world: world.id, model, id: resource.id })
+                  }
+                >
                   <TableCell>
                     <Link
                       className="font-medium underline-offset-4 hover:underline"
                       to={recordPath(world.id, model, resource.id)}
+                      onClick={(event) => event.stopPropagation()}
                     >
                       {resource.name ?? resource.id}
                     </Link>

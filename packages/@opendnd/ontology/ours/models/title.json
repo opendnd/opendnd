@@ -7,6 +7,7 @@
   "name": "Title",
   "description": "A seat of authority in a faction.",
   "category": "people",
+  "icon": "crown",
   "schema": "https://docs.opendnd.org/ours/schemas/title.schema.json",
   "relationships": [
     {

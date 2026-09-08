@@ -38,7 +38,10 @@ const sites: readonly SiteConfig[] = [
       // Long prose on a record, a wiki page say, is Markdown.
       `react-markdown@${versions['react-markdown']}`,
       `remark-gfm@${versions['remark-gfm']}`,
+      // The map page: panning and zooming over a world's picture tiles.
+      `leaflet@${versions.leaflet}`,
     ],
+    devDeps: [`@types/leaflet@${versions['@types/leaflet']}`],
   },
 ];
 

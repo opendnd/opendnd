@@ -1104,6 +1104,25 @@ describe('the API: what a front end needs', () => {
       ),
     ).toBe(false);
 
+    // A ceiling on the level keeps a zoomed-out map to what is big enough
+    // to draw: the town sits at level 20, so it is under a ceiling of 19.
+    const coarse = await drew.get(
+      `/v1/worlds/${world}/place?cell=50221&maxLevel=19&limit=500`,
+    );
+    expect(
+      (coarse.body as { resources: { name: string }[] }).resources.some(
+        (r) => r.name === 'Itumeist',
+      ),
+    ).toBe(false);
+    const fine = await drew.get(
+      `/v1/worlds/${world}/place?cell=50221&maxLevel=20&limit=500`,
+    );
+    expect(
+      (fine.body as { resources: { name: string }[] }).resources.map(
+        (r) => r.name,
+      ),
+    ).toContain('Itumeist');
+
     const nonsense = await drew.get(`/v1/worlds/${world}/place?cell=zzz`);
     expect(nonsense.status).toBe(400);
   });

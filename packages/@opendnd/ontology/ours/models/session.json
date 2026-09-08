@@ -7,6 +7,7 @@
   "name": "Session",
   "description": "One sitting of a campaign.",
   "category": "play",
+  "icon": "notebook-pen",
   "schema": "https://docs.opendnd.org/ours/schemas/session.schema.json",
   "relationships": [
     {

@@ -50,7 +50,7 @@ export function Campaigns() {
           one and the world's history starts to be played.
         </Notice>
       )}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))]">
         {page.data?.resources.map((c) => (
           <CampaignCard key={c.id} campaign={c} model={surface.model} />
         ))}

@@ -7,6 +7,7 @@
   "name": "Work",
   "description": "A creative work in-world or out-of-world.",
   "category": "history",
+  "icon": "book-open",
   "schema": "https://docs.opendnd.org/ours/schemas/work.schema.json",
   "relationships": [
     {

@@ -53,3 +53,9 @@ Two further things are settled before any page is drawn. Working on the applicat
 - **Ask and Inspect ride along.** A panel on the right of every page, opened from the top right, either asks the world a question, answered by a language model from the records that match the names in it and linking those records, or shows the record on the page as the API holds it. Both follow the address, so they concern what is in front of the reader.
 - **Models are grouped as the ontology says.** A model's manifest names its category, and the Data section and the Rules surface list models by it; the icons and the words are the application's, the membership is the ontology's.
 - **Most people will not use Data.** The surfaces, and in time interfaces built on this data in a studio, do the work; a form built from a schema is the way in when nothing better exists yet, not the way the application is meant to be used.
+
+## Decided later, 2026-09-07: one panel, and what the manifests say
+
+- **One panel, two tabs.** Ask and Inspect share one panel on the right, opened from one switch in the header, beside the page on a wide window and over it on a narrow one, so neither is ever out of reach. The inspector follows the address or a row chosen in a table, which is how a data browser is used: the table on the left, the record on the right.
+- **Icons come from the manifests.** Each model's manifest names its icon from the set the application draws with, and the application loads that icon by name; a manifest that names none gets its group's. The application still names no model.
+- **Cards are small.** A campaign or character is a row with a small picture, and a record without a picture gets a tile in a colour of its own with its initial on it, so lists read as lists of distinct things and a picture is an improvement rather than a requirement.

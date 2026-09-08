@@ -2,10 +2,11 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter } from 'react-router';
 import { RouterProvider } from 'react-router/dom';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppProvider } from 'src/app/context';
 import { MeProvider } from 'src/app/me';
 import { OntologyProvider } from 'src/app/ontology';
+import { PanelProvider } from 'src/app/panel';
 import { RightPanel } from 'src/components/RightPanel';
 import { PET_ID, WORLD_ID, petOntology, storedPet } from './fixtures/ontology';
 import { fakeFetch, testServices, testWorld } from './helpers';
@@ -16,6 +17,8 @@ function renderPanel(
   fetchImpl: typeof fetch,
 ) {
   const onClose = vi.fn();
+  // The provider opens on the tab that was remembered.
+  localStorage.setItem('opendnd.panel', kind);
   const router = createMemoryRouter(
     [
       {
@@ -23,7 +26,9 @@ function renderPanel(
         element: (
           <MeProvider>
             <OntologyProvider ontology={petOntology()}>
-              <RightPanel kind={kind} onClose={onClose} />
+              <PanelProvider>
+                <RightPanel onClose={onClose} />
+              </PanelProvider>
             </OntologyProvider>
           </MeProvider>
         ),
@@ -42,6 +47,8 @@ function renderPanel(
 const me = { 'GET /v1/me': () => ({ subject: 'tester', worlds: [testWorld] }) };
 
 describe('the right panel', () => {
+  beforeEach(() => localStorage.clear());
+
   it('inspects the record on the page as the API holds it', async () => {
     const { fetch } = fakeFetch({
       ...me,
@@ -49,11 +56,14 @@ describe('the right panel', () => {
         Response.json(storedPet, { headers: { etag: '"2"' } }),
     });
     renderPanel('inspect', `/worlds/${WORLD_ID}/pet/${PET_ID}`, fetch);
-    expect(await screen.findByText(/"name": "Biscuit"/)).toBeInTheDocument();
-    expect(screen.getByText('ETag "2"')).toBeInTheDocument();
+    expect(await screen.findByText('"Biscuit"')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Inspect' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
     expect(
       screen.getByText(`/v1/worlds/${WORLD_ID}/pet/${PET_ID}`),
-    ).toBeInTheDocument();
+    ).toHaveAttribute('title', 'ETag "2"');
   });
 
   it('asks nothing until a record is open, and says so', async () => {

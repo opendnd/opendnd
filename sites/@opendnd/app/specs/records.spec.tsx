@@ -2,6 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import type { ModelInfo } from 'src/api/types';
+import { PanelProvider, usePanel } from 'src/app/panel';
 import { Records } from 'src/pages/Records';
 import { type JsonSchema, ontologyFrom } from 'src/schema/openapi';
 import { WORLD_ID, storedPet } from './fixtures/ontology';
@@ -113,4 +114,40 @@ describe('a model’s list', () => {
       ).toBe(true),
     );
   });
+
+  it('chooses a row for the inspector, leaving the name as the way to the record', async () => {
+    const user = userEvent.setup();
+    const { fetch } = fakeFetch({
+      [`GET /v1/worlds/${WORLD_ID}/pet`]: () => ({ resources: [storedPet] }),
+    });
+    renderInWorld(
+      <PanelProvider>
+        <Records />
+        <Probe />
+      </PanelProvider>,
+      {
+        fetch,
+        path: `/worlds/${WORLD_ID}/pet`,
+        route: '/worlds/:world/:model',
+      },
+    );
+    const link = await screen.findByRole('link', { name: 'Biscuit' });
+    expect(screen.getByTestId('inspected')).toHaveTextContent('');
+    await user.click(link.closest('tr')!);
+    expect(screen.getByTestId('inspected')).toHaveTextContent(
+      `inspect:pet/${storedPet.id}`,
+    );
+  });
 });
+
+/** What the panel was asked to inspect, for the test to read. */
+function Probe() {
+  const panel = usePanel();
+  return (
+    <output data-testid="inspected">
+      {panel.inspected
+        ? `${panel.tab}:${panel.inspected.model}/${panel.inspected.id}`
+        : ''}
+    </output>
+  );
+}

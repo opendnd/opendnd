@@ -46,6 +46,10 @@ export const versions = {
   '@fontsource/dm-serif-display': '^5.3.0',
   '@fontsource-variable/jetbrains-mono': '^5.3.0',
   'react-markdown': '^10.1.0',
+  // The map: a slippy map over picture tiles, the way web maps have worked
+  // since the first one.
+  leaflet: '^1.9.4',
+  '@types/leaflet': '^1.9.21',
   'remark-gfm': '^4.0.1',
   jsdom: '^30.0.1',
   '@testing-library/react': '^16.3.3',

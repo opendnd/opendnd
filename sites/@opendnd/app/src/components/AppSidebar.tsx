@@ -1,32 +1,29 @@
 import {
   BookMarkedIcon,
   BookOpenIcon,
-  BoxIcon,
   ChevronRightIcon,
   CompassIcon,
   DatabaseIcon,
   DoorOpenIcon,
-  GlobeIcon,
   HistoryIcon,
+  LayoutGridIcon,
   LogOutIcon,
   MapIcon,
-  MapPinIcon,
-  ScrollTextIcon,
   SearchIcon,
   SettingsIcon,
   StoreIcon,
   SwordsIcon,
   UsersIcon,
 } from 'lucide-react';
-import { type FormEvent, type ReactNode, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { type ReactNode, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router';
 import { placeIn } from './Layout';
+import { ModelIcon, categoryIcon } from './ModelIcon';
 import type { ModelInfo } from '../api/types';
 import { useApp, useSession } from '../app/context';
 import { useMe } from '../app/me';
 import { useOntology } from '../app/ontology';
 import { CATEGORIES, SURFACES, categoryOf, offers } from '../app/surfaces';
-import { Button } from '@/components/ui/button';
 import {
   Collapsible,
   CollapsibleContent,
@@ -50,22 +47,12 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 
-/** The icon each group of models is shown with. */
-const CATEGORY_ICONS: Record<string, ReactNode> = {
-  play: <SwordsIcon />,
-  people: <UsersIcon />,
-  places: <MapPinIcon />,
-  history: <ScrollTextIcon />,
-  rules: <BookMarkedIcon />,
-  world: <GlobeIcon />,
-};
-
 /**
  * Outside a world, the worlds a person may open. Inside one, the world is the
  * whole frame: its surfaces to play and read by, its data by group, its
  * settings, and one door back out. The models under Data come from the API,
- * grouped as their manifests say; the surfaces above them are the shape a
- * person expects, named in one place.
+ * grouped as their manifests say and shown with the icons they name; the
+ * surfaces above them are the shape a person expects, named in one place.
  */
 export function AppSidebar() {
   const session = useSession();
@@ -76,6 +63,8 @@ export function AppSidebar() {
   const place = placeIn(location.pathname);
   const current = me.data?.worlds.find((w) => w.id === place.world);
   const [filter, setFilter] = useState('');
+  // One group of models open at a time keeps the list short enough to take in.
+  const [openGroup, setOpenGroup] = useState<string>();
 
   const inWorld = place.world !== undefined && current !== undefined;
   const to = (segment: string) => `/worlds/${place.world}/${segment}`;
@@ -127,7 +116,7 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent className="scrollbar-thin">
+      <SidebarContent className="gap-0">
         {!inWorld && (
           <SidebarGroup>
             <SidebarGroupLabel>Your worlds</SidebarGroupLabel>
@@ -160,12 +149,6 @@ export function AppSidebar() {
 
         {inWorld && (
           <>
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SearchBox world={place.world!} />
-              </SidebarGroupContent>
-            </SidebarGroup>
-
             <Section label="Play" storageKey="play">
               {offers(ontology, SURFACES.campaigns) && (
                 <Entry
@@ -224,33 +207,42 @@ export function AppSidebar() {
               label="Data"
               storageKey="data"
               defaultOpen={false}
-              to={to(SURFACES.data.path)}
               icon={<DatabaseIcon className="size-3.5" />}
             >
-              <div className="relative px-2 pb-1">
+              <Entry
+                to={to(SURFACES.data.path)}
+                active={location.pathname === to(SURFACES.data.path)}
+                label="Overview"
+                icon={<LayoutGridIcon />}
+              />
+              <div className="relative px-2 py-1">
                 <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <SidebarInput
                   type="search"
-                  className="h-8 pl-8 text-xs"
-                  placeholder="Filter kinds"
-                  aria-label="Filter kinds of record"
+                  className="h-7 pl-8 text-xs"
+                  placeholder="Filter resources"
+                  aria-label="Filter resources"
                   value={filter}
                   onChange={(e) => setFilter(e.target.value)}
                 />
               </div>
               {grouped.map(([key, models]) => {
                 const category = CATEGORIES.find((c) => c.key === key);
+                const Icon = categoryIcon(key);
                 return (
                   <Collapsible
                     key={key}
-                    defaultOpen={filter.trim() !== ''}
+                    open={filter.trim() !== '' || openGroup === key}
+                    onOpenChange={(open) =>
+                      setOpenGroup(open ? key : undefined)
+                    }
                     className="group/category"
                   >
                     <SidebarMenuItem>
                       <CollapsibleTrigger
                         render={<SidebarMenuButton className="text-[13px]" />}
                       >
-                        {CATEGORY_ICONS[key] ?? <BoxIcon />}
+                        <Icon />
                         <span className="truncate">
                           {category?.label ?? 'Other'}
                         </span>
@@ -260,13 +252,18 @@ export function AppSidebar() {
                         <ChevronRightIcon className="transition-transform group-data-[open]/category:rotate-90" />
                       </CollapsibleTrigger>
                       <CollapsibleContent>
-                        <SidebarMenuSub className="mr-0 pr-0">
+                        <SidebarMenuSub className="mr-0 gap-0 pr-0">
                           {models.map((model) => (
                             <SidebarMenuSubItem key={model.id}>
                               <SidebarMenuSubButton
+                                size="sm"
                                 isActive={model.id === place.model}
                                 render={<Link to={to(model.id)} />}
                               >
+                                <ModelIcon
+                                  model={model}
+                                  className="size-3.5 text-muted-foreground"
+                                />
                                 <span className="truncate">{model.name}</span>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
@@ -330,12 +327,14 @@ export function AppSidebar() {
   );
 }
 
-/** A group of the sidebar that folds, and remembers whether it was folded. */
+/**
+ * A group of the sidebar that folds when its heading is pressed anywhere,
+ * and remembers whether it was folded.
+ */
 function Section(props: {
   readonly label: string;
   readonly storageKey: string;
   readonly defaultOpen?: boolean;
-  readonly to?: string;
   readonly icon?: ReactNode;
   readonly children: ReactNode;
 }) {
@@ -358,29 +357,19 @@ function Section(props: {
   };
   return (
     <Collapsible open={open} onOpenChange={change} className="group/section">
-      <SidebarGroup>
-        <SidebarGroupLabel className="flex items-center gap-2 pr-1">
+      <SidebarGroup className="py-1">
+        <CollapsibleTrigger
+          render={
+            <button
+              type="button"
+              className="flex h-8 w-full items-center gap-2 rounded-md px-2 text-xs font-medium text-sidebar-foreground/70 ring-sidebar-ring outline-hidden transition-colors hover:text-sidebar-foreground focus-visible:ring-2"
+            />
+          }
+        >
           {props.icon}
-          {props.to ? (
-            <Link to={props.to} className="hover:underline">
-              {props.label}
-            </Link>
-          ) : (
-            <span>{props.label}</span>
-          )}
-          <CollapsibleTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="icon-xs"
-                className="ml-auto"
-                aria-label={`${open ? 'Fold' : 'Unfold'} ${props.label}`}
-              />
-            }
-          >
-            <ChevronRightIcon className="size-3.5 transition-transform group-data-[open]/section:rotate-90" />
-          </CollapsibleTrigger>
-        </SidebarGroupLabel>
+          <span>{props.label}</span>
+          <ChevronRightIcon className="ml-auto size-3.5 transition-transform group-data-[open]/section:rotate-90" />
+        </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarGroupContent className="flex flex-col gap-1">
             <SidebarMenu>{props.children}</SidebarMenu>
@@ -407,35 +396,5 @@ function Entry(props: {
         <span>{props.label}</span>
       </SidebarMenuButton>
     </SidebarMenuItem>
-  );
-}
-
-function SearchBox(props: { readonly world: string }) {
-  const [query, setQuery] = useState('');
-  const navigate = useNavigate();
-  const submit = (event: FormEvent) => {
-    event.preventDefault();
-    const q = query.trim();
-    if (q) {
-      void navigate(
-        `/worlds/${props.world}/compendium?q=${encodeURIComponent(q)}`,
-      );
-    }
-  };
-  return (
-    <form onSubmit={submit} role="search" className="relative px-2">
-      <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-muted-foreground" />
-      <SidebarInput
-        type="search"
-        className="pl-8"
-        placeholder="Search this world"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        aria-label="Search this world"
-      />
-      <Button type="submit" className="sr-only">
-        Search
-      </Button>
-    </form>
   );
 }

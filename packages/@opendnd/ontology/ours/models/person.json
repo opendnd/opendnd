@@ -7,6 +7,7 @@
   "name": "Person",
   "description": "A person in the world.",
   "category": "people",
+  "icon": "user",
   "schema": "https://docs.opendnd.org/ours/schemas/person.schema.json",
   "relationships": [
     {

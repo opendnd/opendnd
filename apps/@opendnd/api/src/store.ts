@@ -35,6 +35,12 @@ export interface ListOptions extends ReadOptions {
    * which is how a map asks for what is in view.
    */
   readonly cell?: string;
+  /**
+   * The finest cell level to include: only records placed at this level or a
+   * coarser one, which is how a map asks for what is big enough to draw at
+   * its zoom rather than for every hamlet on the continent.
+   */
+  readonly maxLevel?: number;
   /** Only these ids, which is how a page fetches what it refers to at once. */
   readonly ids?: readonly string[];
   /**
@@ -228,6 +234,15 @@ export class Store {
       const { min, max } = cellRange(options.cell);
       where.push(
         `cell_id between $${params.push(min)} and $${params.push(max)}`,
+      );
+    }
+    if (options.maxLevel !== undefined) {
+      // A cell's level is marked by its lowest set bit: two zero bits per
+      // level below the finest. A coarser cell has a higher lowest bit, so
+      // "at most this level" is one comparison on `cell_id & -cell_id`.
+      const lsb = 2n ** BigInt(2 * (30 - Math.min(options.maxLevel, 30)));
+      where.push(
+        `cell_id is not null and (cell_id & -cell_id) >= $${params.push(lsb.toString())}`,
       );
     }
     // Ordering by in-world time, or asking for a span of it, is asking about

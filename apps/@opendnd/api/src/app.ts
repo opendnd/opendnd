@@ -171,6 +171,7 @@ const listQuery = z.object({
   generatedBy: z.string().min(1).optional(),
   name: z.string().min(1).optional(),
   cell: CELL.optional(),
+  maxLevel: z.coerce.number().int().min(0).max(30).optional(),
   cursor: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(500).optional(),
   sort: z.enum(['id', 'name', 'updatedAt', 'validTime']).optional(),

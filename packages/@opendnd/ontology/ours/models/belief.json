@@ -7,6 +7,7 @@
   "name": "Belief",
   "description": "A belief held about a proposition.",
   "category": "people",
+  "icon": "flame",
   "schema": "https://docs.opendnd.org/ours/schemas/belief.schema.json",
   "relationships": [
     {

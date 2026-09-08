@@ -3,6 +3,7 @@ import type { ModelInfo } from '../api/types';
 import { useOntology } from '../app/ontology';
 import { CATEGORIES, categoryOf } from '../app/surfaces';
 import { useWorld } from '../app/world';
+import { ModelIcon } from '../components/ModelIcon';
 import { Transfer } from '../components/Transfer';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -77,6 +78,10 @@ export function ModelGroups(props: {
                         >
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
+                              <ModelIcon
+                                model={model}
+                                className="size-4 text-muted-foreground"
+                              />
                               {model.name}
                               {model.generate && (
                                 <Badge variant="outline">generates</Badge>

@@ -7,6 +7,7 @@
   "name": "Feat",
   "description": "A talent taken in place of, or alongside, an ability score increase.",
   "category": "rules",
+  "icon": "award",
   "schema": "https://docs.opendnd.org/ours/schemas/feat.schema.json",
   "relationships": [],
   "mapsTo": [

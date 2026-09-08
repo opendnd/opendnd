@@ -5,6 +5,7 @@ import {
   HistoryIcon,
   HourglassIcon,
   MapIcon,
+  MapPinIcon,
   PencilIcon,
   PlusIcon,
   Trash2Icon,
@@ -262,8 +263,22 @@ export function Record() {
             </Sheet>
           )}
         </div>
-        {(onMap || began !== undefined) && (
+        {(onMap ||
+          began !== undefined ||
+          (cellField !== undefined && canEdit)) && (
           <div className="flex flex-wrap gap-2">
+            {!onMap && cellField !== undefined && canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                render={
+                  <Link to={`/worlds/${world.id}/map?place=${model}/${id}`} />
+                }
+              >
+                <MapPinIcon data-icon="inline-start" />
+                Place on the map
+              </Button>
+            )}
             {onMap && (
               <Button
                 variant="outline"

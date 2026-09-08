@@ -7,6 +7,7 @@
   "name": "Economy",
   "description": "A snapshot of a settlement's economy at a point in time.",
   "category": "places",
+  "icon": "coins",
   "schema": "https://docs.opendnd.org/ours/schemas/economy.schema.json",
   "relationships": [
     {

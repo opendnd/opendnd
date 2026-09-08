@@ -7,6 +7,7 @@
   "name": "Encounter",
   "description": "A confrontation prepared for a party.",
   "category": "play",
+  "icon": "skull",
   "schema": "https://docs.opendnd.org/ours/schemas/encounter.schema.json",
   "relationships": [
     {

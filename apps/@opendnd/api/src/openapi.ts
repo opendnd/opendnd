@@ -281,6 +281,13 @@ const filters = [
       'A quadtree cell token. Returns everything at or inside the cell.',
   },
   {
+    name: 'maxLevel',
+    in: 'query',
+    schema: { type: 'integer', minimum: 0, maximum: 30 },
+    description:
+      'The finest cell level to include: only records placed at this level or a coarser one, which is how a map asks for what is big enough to draw.',
+  },
+  {
     name: 'ids',
     in: 'query',
     schema: { type: 'string' },

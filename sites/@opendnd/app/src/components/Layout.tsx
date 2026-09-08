@@ -1,12 +1,14 @@
-import { BracesIcon, SparklesIcon } from 'lucide-react';
-import { Fragment, useState } from 'react';
-import { Link, Navigate, Outlet, useLocation } from 'react-router';
+import { SearchIcon, SparklesIcon } from 'lucide-react';
+import { type FormEvent, Fragment, useState } from 'react';
+import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router';
 import { AppSidebar } from './AppSidebar';
-import { type PanelKind, RightPanel } from './RightPanel';
+import { RightPanel } from './RightPanel';
 import { useSession } from '../app/context';
+import { useMediaQuery } from '../app/hooks';
 import { MeProvider, useMe } from '../app/me';
 import { OntologyProvider, useOntology } from '../app/ontology';
-import { SURFACE_SEGMENTS, surfaceLabel } from '../app/surfaces';
+import { PanelProvider, usePanel } from '../app/panel';
+import { SURFACES, SURFACE_SEGMENTS, surfaceLabel } from '../app/surfaces';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,6 +18,8 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import {
   SidebarInset,
   SidebarProvider,
@@ -33,74 +37,113 @@ export function RequireSession() {
   return <Outlet />;
 }
 
-/** The frame around every signed-in page: a sidebar, a breadcrumb, the page. */
+/** The frame around every signed-in page: a sidebar, a header, the page, and the panel on the right. */
 export function Shell() {
-  const [panel, setPanel] = useState<PanelKind | undefined>(() => {
-    try {
-      const stored = localStorage.getItem('opendnd.panel');
-      return stored === 'ask' || stored === 'inspect' ? stored : undefined;
-    } catch {
-      return undefined;
-    }
-  });
-  const toggle = (kind: PanelKind) => {
-    const next = panel === kind ? undefined : kind;
-    setPanel(next);
-    try {
-      if (next) localStorage.setItem('opendnd.panel', next);
-      else localStorage.removeItem('opendnd.panel');
-    } catch {
-      // Then the panel is only remembered for this page.
-    }
-  };
   return (
     <MeProvider>
       <OntologyProvider>
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>
-            {/* Stays put while the page scrolls, so the way back is always in reach. */}
-            <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-              <SidebarTrigger className="-ml-1" />
-              <Crumbs />
-              <div className="ml-auto flex items-center gap-1">
-                <Button
-                  variant={panel === 'ask' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  aria-pressed={panel === 'ask'}
-                  onClick={() => toggle('ask')}
-                >
-                  <SparklesIcon
-                    data-icon="inline-start"
-                    className="text-brand"
-                  />
-                  Ask
-                </Button>
-                <Button
-                  variant={panel === 'inspect' ? 'secondary' : 'ghost'}
-                  size="sm"
-                  aria-pressed={panel === 'inspect'}
-                  onClick={() => toggle('inspect')}
-                >
-                  <BracesIcon data-icon="inline-start" />
-                  Inspect
-                </Button>
-              </div>
-            </header>
-            <div className="flex min-h-0 flex-1">
-              <div className="min-w-0 flex-1 p-6">
-                <Outlet />
-              </div>
-              {panel && (
-                <div className="sticky top-12 hidden h-[calc(100vh-3rem)] lg:block">
-                  <RightPanel kind={panel} onClose={() => toggle(panel)} />
-                </div>
-              )}
-            </div>
-          </SidebarInset>
-        </SidebarProvider>
+        <PanelProvider>
+          <SidebarProvider>
+            <AppSidebar />
+            <SidebarInset>
+              <Header />
+              <Body />
+            </SidebarInset>
+          </SidebarProvider>
+        </PanelProvider>
       </OntologyProvider>
     </MeProvider>
+  );
+}
+
+/** Stays put while the page scrolls: the way back, a search of the world, and the panel's switch. */
+function Header() {
+  const panel = usePanel();
+  const location = useLocation();
+  const place = placeIn(location.pathname);
+  return (
+    <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <SidebarTrigger className="-ml-1" />
+      <Crumbs />
+      {place.world && <WorldSearch world={place.world} />}
+      <div className="ml-auto flex items-center gap-1">
+        <Button
+          variant={panel.open ? 'secondary' : 'ghost'}
+          size="icon"
+          aria-label="Ask and inspect"
+          aria-pressed={panel.open}
+          onClick={() => panel.setOpen(!panel.open)}
+        >
+          <SparklesIcon className="text-brand" />
+        </Button>
+      </div>
+    </header>
+  );
+}
+
+/**
+ * The page, with the panel beside it on a wide window and over it on a
+ * narrow one, so it is never out of reach.
+ */
+function Body() {
+  const panel = usePanel();
+  const wide = useMediaQuery('(min-width: 1024px)');
+  const close = () => panel.setOpen(false);
+  return (
+    <div className="flex min-h-0 flex-1">
+      <div className="min-w-0 flex-1 p-6">
+        <Outlet />
+      </div>
+      {panel.open && wide && (
+        <div className="sticky top-12 h-[calc(100vh-3rem)]">
+          <RightPanel onClose={close} />
+        </div>
+      )}
+      {!wide && (
+        <Sheet open={panel.open} onOpenChange={(open) => !open && close()}>
+          <SheetContent
+            side="right"
+            className="w-96 gap-0 p-0 sm:max-w-96 [&>button]:hidden"
+          >
+            <SheetTitle className="sr-only">Ask and inspect</SheetTitle>
+            <RightPanel onClose={close} />
+          </SheetContent>
+        </Sheet>
+      )}
+    </div>
+  );
+}
+
+/** One search across the world, from anywhere in it. */
+function WorldSearch(props: { readonly world: string }) {
+  const [query, setQuery] = useState('');
+  const navigate = useNavigate();
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    const q = query.trim();
+    if (q) {
+      void navigate(
+        `/worlds/${props.world}/${SURFACES.compendium.path}?q=${encodeURIComponent(q)}`,
+      );
+      setQuery('');
+    }
+  };
+  return (
+    <form
+      onSubmit={submit}
+      role="search"
+      className="relative ml-2 hidden w-64 md:block lg:w-80"
+    >
+      <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        type="search"
+        className="h-8 bg-muted/50 pl-8 text-sm"
+        placeholder="Search this world"
+        aria-label="Search this world"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+    </form>
   );
 }
 

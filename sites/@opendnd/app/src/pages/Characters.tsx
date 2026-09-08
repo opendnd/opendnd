@@ -5,18 +5,11 @@ import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
 import { SURFACES, offers } from '../app/surfaces';
 import { recordPath, useWorld } from '../app/world';
-import { picture } from '../components/Article';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
+import { Thumb } from '../components/Thumb';
 import { humanize } from '../schema/fields';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 
 /** The characters played in this world, as cards. */
 export function Characters() {
@@ -59,7 +52,7 @@ export function Characters() {
           person and at the campaign, and carries the sheet.
         </Notice>
       )}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))]">
         {page.data?.resources.map((c) => {
           const person = c.person as
             { model: string; id: string; name?: string } | undefined;
@@ -69,39 +62,30 @@ export function Characters() {
             <Link
               key={c.id}
               to={recordPath(world.id, surface.model, c.id)}
-              className="block h-full"
+              className="flex gap-3 rounded-lg border bg-card p-3 transition-colors hover:border-ring"
             >
-              <Card className="h-full overflow-hidden pt-0 transition-colors hover:border-ring">
-                {picture(c) ? (
-                  <img
-                    src={picture(c)}
-                    alt=""
-                    className="aspect-video w-full object-cover"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div className="aspect-[5/1] w-full bg-brand-muted" />
-                )}
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="font-display text-lg">
-                      {c.name ?? person?.name ?? c.id}
-                    </CardTitle>
-                    {typeof c.level === 'number' && (
-                      <Badge variant="secondary" className="ml-auto">
-                        Level {c.level}
-                      </Badge>
-                    )}
-                  </div>
-                  {typeof c.status === 'string' && (
-                    <CardDescription>{humanize(c.status)}</CardDescription>
+              <Thumb resource={{ ...c, name: c.name ?? person?.name }} />
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="flex items-center gap-2">
+                  <span className="truncate font-display text-base leading-tight">
+                    {c.name ?? person?.name ?? c.id}
+                  </span>
+                  {typeof c.level === 'number' && (
+                    <Badge variant="secondary" className="ml-auto shrink-0">
+                      Level {c.level}
+                    </Badge>
                   )}
-                </CardHeader>
-                <CardContent className="flex flex-col gap-1 text-sm text-muted-foreground">
-                  {person && <span>Plays {person.name ?? 'someone'}</span>}
-                  {campaign && <span>In {campaign.name ?? 'a campaign'}</span>}
-                </CardContent>
-              </Card>
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {[
+                    person && `Plays ${person.name ?? 'someone'}`,
+                    campaign && `in ${campaign.name ?? 'a campaign'}`,
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  {typeof c.status === 'string' && ` · ${humanize(c.status)}`}
+                </span>
+              </span>
             </Link>
           );
         })}

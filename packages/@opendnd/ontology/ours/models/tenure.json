@@ -7,6 +7,7 @@
   "name": "Tenure",
   "description": "One person's time holding a title.",
   "category": "people",
+  "icon": "hourglass",
   "schema": "https://docs.opendnd.org/ours/schemas/tenure.schema.json",
   "relationships": [
     {

@@ -1,5 +1,5 @@
 ---
-title: "ADR-006: Spatial identity from planet to 5-foot square"
+title: 'ADR-006: Spatial identity from planet to 5-foot square'
 description: A cube-sphere quadtree gives every point on a world one nested id at every zoom level, down to a battle-map square; hexes are a derived view.
 ---
 
@@ -29,3 +29,10 @@ The Atlas needs Google-Maps-style zoom from a whole planet to a street, and the 
 - **Generated places are placed.** The settlement and realm generators give every place a cell at the level whose cells are about the size of its land, and every child a cell inside its parent's, clear of its siblings' where there is room, from the same seeded source as everything else, so a realm lands in the same place each time it is generated. A place too large for its parent's cell takes the level just below the parent's: containment is what the quadtree promises, not exact area. A generator asked for a place `within` another puts it inside that place's cell; asked for nothing, it chooses a spot on the world.
 - **Anything can be placed from the map.** A record without a cell is placed by choosing a square of a grid laid over the cell in view, at whatever level is wanted, and records that refer to the record in view can be scattered inside it in one go. Placement is a write to the record's cell field like any other, so it has a revision and an event.
 - **The map is the cells.** The application draws a world from the cell tokens its records carry, on one face at a time, without a tile server: a cell's position inside the cell in view is arithmetic on the token. Tiles for terrain and imagery remain the plan for when there is something to render into them; the identity they will be addressed by is already on every generated place.
+
+## Decided later, 2026-09-07: the map as a map
+
+- **The map pans and zooms over picture tiles.** The world's own record may name a base map under `map`: a URL template for tiles in the web map projection, with the zooms it covers and who drew it. The application draws those tiles beneath the records the way every web map has worked, and draws the records on a blank globe when there are none. Tiles are pictures; what a record's place means is still its cell.
+- **Cells are put on the map by the projection, in the application.** The cube-sphere projection is small enough that the application carries what it needs of it: a cell's centre and outline in latitude and longitude, and the cell under a point. The two copies are held to the same reference values by their tests.
+- **A view is fetched by sampling.** The view is sampled on a grid; the distinct cells under the samples, at a level coarse enough that there are few, are asked for what is inside them down to the finest level worth drawing at the zoom, and their faces for anything coarser. The API gained `maxLevel` for the ceiling, one comparison on the cell id's lowest set bit. This keeps a zoomed-out view of a world with thousands of places to a few requests for its continents and kingdoms.
+- **Placing is a click.** An editor comes to the map with a record and chooses its spot; the cell is as fine as the zoom, or as chosen. The grid laid over the view, and scattering a record's dependants inside it, went with the drawn-from-cells map; a whole world is placed by the generators' placement, as the seeds do.

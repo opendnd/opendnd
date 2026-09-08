@@ -7,6 +7,7 @@
   "name": "Character",
   "description": "A person as played, in one campaign.",
   "category": "play",
+  "icon": "user-round",
   "schema": "https://docs.opendnd.org/ours/schemas/character.schema.json",
   "relationships": [
     {

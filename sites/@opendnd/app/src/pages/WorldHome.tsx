@@ -7,14 +7,13 @@ import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
 import { SURFACES, offers } from '../app/surfaces';
 import { recordPath, useWorld } from '../app/world';
-import { picture } from '../components/Article';
 import { ErrorNotice } from '../components/Notice';
+import { Thumb } from '../components/Thumb';
 import { humanize } from '../schema/fields';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -185,7 +184,7 @@ export function WorldHome() {
               No campaigns yet. Start one from the campaigns page.
             </p>
           )}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))]">
             {campaigns.data?.resources.map((c) => (
               <CampaignCard
                 key={c.id}
@@ -230,7 +229,7 @@ export function WorldHome() {
   );
 }
 
-/** A campaign as a card, the way Studio shows a project. */
+/** A campaign as a card: its picture, its name and state, and a line about it. */
 export function CampaignCard(props: {
   readonly campaign: Resource;
   readonly model: string;
@@ -240,41 +239,33 @@ export function CampaignCard(props: {
   const setting = c.setting as
     { model: string; id: string; name?: string } | undefined;
   return (
-    <Link to={recordPath(world.id, props.model, c.id)} className="block h-full">
-      <Card className="h-full overflow-hidden pt-0 transition-colors hover:border-ring">
-        {picture(c) ? (
-          <img
-            src={picture(c)}
-            alt=""
-            className="aspect-video w-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="aspect-[5/1] w-full bg-brand-muted" />
-        )}
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CardTitle className="font-display text-lg">
-              {c.name ?? c.id}
-            </CardTitle>
-            {typeof c.status === 'string' && (
-              <Badge variant="secondary" className="ml-auto">
-                {humanize(c.status)}
-              </Badge>
-            )}
-          </div>
-          {typeof c.description === 'string' && c.description !== '' && (
-            <CardDescription className="line-clamp-3">
-              {c.description}
-            </CardDescription>
+    <Link
+      to={recordPath(world.id, props.model, c.id)}
+      className="flex h-full gap-3 rounded-lg border bg-card p-3 transition-colors hover:border-ring"
+    >
+      <Thumb resource={c} />
+      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span className="flex items-center gap-2">
+          <span className="truncate font-display text-base leading-tight">
+            {c.name ?? c.id}
+          </span>
+          {typeof c.status === 'string' && (
+            <Badge variant="secondary" className="ml-auto shrink-0">
+              {humanize(c.status)}
+            </Badge>
           )}
-        </CardHeader>
-        {setting && (
-          <CardContent className="text-sm text-muted-foreground">
-            Set in {setting.name ?? 'a place'}
-          </CardContent>
+        </span>
+        {typeof c.description === 'string' && c.description !== '' && (
+          <span className="line-clamp-2 text-xs text-muted-foreground">
+            {c.description}
+          </span>
         )}
-      </Card>
+        {setting && (
+          <span className="text-xs text-muted-foreground">
+            Set in {setting.name ?? 'a place'}
+          </span>
+        )}
+      </span>
     </Link>
   );
 }

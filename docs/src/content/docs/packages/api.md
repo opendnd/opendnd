@@ -1,5 +1,5 @@
 ---
-title: "@opendnd/api"
+title: '@opendnd/api'
 description: One route set per ontology model, over a store in which a world is the tenant.
 ---
 
@@ -18,37 +18,37 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 
 ## Routes
 
-| Route | |
-|---|---|
-| `GET /v1/models` | The models this deployment serves, each with the name, description and category its manifest gives it, which fields date it, and, where something generates it, what that generator takes as JSON Schema. |
-| `GET`/`POST` `/v1/worlds` | The caller's worlds, and creating one. |
-| `PATCH /v1/worlds/{world}` | Change a world's name, visibility or summary. Owners only; the world's own record follows. |
-| `POST /v1/worlds/{world}/members` | Admit someone by subject or by email, or change their role. Owners only. |
-| `DELETE /v1/worlds/{world}/invitations/{email}` | Withdraw an invitation that has not been taken up. |
-| `GET`/`POST` `/v1/worlds/{world}/{model}` | List and create. |
-| `GET`/`PUT`/`PATCH`/`DELETE` `/v1/worlds/{world}/{model}/{id}` | One resource. |
-| `POST /v1/{model}/$generate` | Generate without a world and without an account, sending the species, culture and calendar whole. |
-| `POST /v1/worlds/{world}/{model}/$generate` | Generate from resources in the world, named by reference or id. Each resource that comes back carries its `model`, so the bundle can be imported as it is. |
-| `POST /v1/worlds/{world}/{model}/{id}/$simulate` | Run the history simulation over a world, a house or a place. `/v1/models` describes the request as JSON Schema, with every rate's default; the calendar, species and culture may be named by reference or id, or left out when the world has exactly one. |
-| `POST /v1/worlds/{world}/{model}/{id}/$author` | Ask a language model to write an article or chronicle about a record from the facts on file. The usage line is written in the same transaction; left unsaved, the work is returned to read and can be imported as it is. Editors and owners. |
-| `POST /v1/worlds/{world}/$ask` | Ask the world a question. The names in it are searched for, the records found are turned into facts, and a language model answers from those facts alone, naming its sources. Needs an account; billed to the world. |
-| `GET /v1/llm` | The language models the configured endpoints actually hold, and the model the writing task is configured with, so a client offers the choice. |
-| `GET /v1/worlds/{world}/$export/{format}` | Everything in the world, as a bundle or as prose. |
-| `POST /v1/worlds/{world}/$publish` | Snapshot the world's own content as a module: an immutable layer addressed by a digest of its content. Owners only; the same content publishes once. |
-| `GET /v1/modules`, `GET /v1/modules/{module}` | The modules the caller may enable: public ones, and those published from worlds they belong to. |
-| `GET`/`POST`/`PUT` `/v1/worlds/{world}/modules`, `DELETE /v1/worlds/{world}/modules/{module}` | The modules a world reads beneath its own content; enabling one, disabling one, and putting them in a new order, nearest first. Owners change the stack. |
-| `GET /v1/openapi.json` | This API, described from the ontology. |
-| `GET /v1/vocabularies` | Every code list with its display text, for a form. |
-| `GET /v1/me` | The caller and the worlds they may open. |
-| `GET`/`DELETE` `/v1/worlds/{world}/members[/{subject}]` | Who belongs and who is invited, and removing someone. |
-| `DELETE /v1/worlds/{world}` | Archive a world. `GET /v1/worlds?archived=true` lists the archived ones to their owners. |
-| `POST /v1/worlds/{world}/$restore` | Bring an archived world back. |
-| `GET /health` | Up, and able to reach the database. |
-| `POST /v1/worlds/{world}/$import` | Save many resources in one transaction: `{ resources: [{ model, resource }] }`, or the Bundle `$export/json` produces, so a world exported from one place imports into another unchanged. |
-| `GET /v1/worlds/{world}/$search?q=` | One search box across every model. |
-| `GET /v1/worlds/{world}/{model}/{id}/references` | Everything that points at a record. |
-| `GET /v1/worlds/{world}/{model}/{id}/history` | Every version of a record. |
-| `GET /v1/worlds/{world}/usage` | What has been spent on model calls. Owners only. |
+| Route                                                                                         |                                                                                                                                                                                                                                                           |
+| --------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /v1/models`                                                                              | The models this deployment serves, each with the name, description and category its manifest gives it, which fields date it, and, where something generates it, what that generator takes as JSON Schema.                                                 |
+| `GET`/`POST` `/v1/worlds`                                                                     | The caller's worlds, and creating one.                                                                                                                                                                                                                    |
+| `PATCH /v1/worlds/{world}`                                                                    | Change a world's name, visibility or summary. Owners only; the world's own record follows.                                                                                                                                                                |
+| `POST /v1/worlds/{world}/members`                                                             | Admit someone by subject or by email, or change their role. Owners only.                                                                                                                                                                                  |
+| `DELETE /v1/worlds/{world}/invitations/{email}`                                               | Withdraw an invitation that has not been taken up.                                                                                                                                                                                                        |
+| `GET`/`POST` `/v1/worlds/{world}/{model}`                                                     | List and create.                                                                                                                                                                                                                                          |
+| `GET`/`PUT`/`PATCH`/`DELETE` `/v1/worlds/{world}/{model}/{id}`                                | One resource.                                                                                                                                                                                                                                             |
+| `POST /v1/{model}/$generate`                                                                  | Generate without a world and without an account, sending the species, culture and calendar whole.                                                                                                                                                         |
+| `POST /v1/worlds/{world}/{model}/$generate`                                                   | Generate from resources in the world, named by reference or id. Each resource that comes back carries its `model`, so the bundle can be imported as it is.                                                                                                |
+| `POST /v1/worlds/{world}/{model}/{id}/$simulate`                                              | Run the history simulation over a world, a house or a place. `/v1/models` describes the request as JSON Schema, with every rate's default; the calendar, species and culture may be named by reference or id, or left out when the world has exactly one. |
+| `POST /v1/worlds/{world}/{model}/{id}/$author`                                                | Ask a language model to write an article or chronicle about a record from the facts on file. The usage line is written in the same transaction; left unsaved, the work is returned to read and can be imported as it is. Editors and owners.              |
+| `POST /v1/worlds/{world}/$ask`                                                                | Ask the world a question. The names in it are searched for, the records found are turned into facts, and a language model answers from those facts alone, naming its sources. Needs an account; billed to the world.                                      |
+| `GET /v1/llm`                                                                                 | The language models the configured endpoints actually hold, and the model the writing task is configured with, so a client offers the choice.                                                                                                             |
+| `GET /v1/worlds/{world}/$export/{format}`                                                     | Everything in the world, as a bundle or as prose.                                                                                                                                                                                                         |
+| `POST /v1/worlds/{world}/$publish`                                                            | Snapshot the world's own content as a module: an immutable layer addressed by a digest of its content. Owners only; the same content publishes once.                                                                                                      |
+| `GET /v1/modules`, `GET /v1/modules/{module}`                                                 | The modules the caller may enable: public ones, and those published from worlds they belong to.                                                                                                                                                           |
+| `GET`/`POST`/`PUT` `/v1/worlds/{world}/modules`, `DELETE /v1/worlds/{world}/modules/{module}` | The modules a world reads beneath its own content; enabling one, disabling one, and putting them in a new order, nearest first. Owners change the stack.                                                                                                  |
+| `GET /v1/openapi.json`                                                                        | This API, described from the ontology.                                                                                                                                                                                                                    |
+| `GET /v1/vocabularies`                                                                        | Every code list with its display text, for a form.                                                                                                                                                                                                        |
+| `GET /v1/me`                                                                                  | The caller and the worlds they may open.                                                                                                                                                                                                                  |
+| `GET`/`DELETE` `/v1/worlds/{world}/members[/{subject}]`                                       | Who belongs and who is invited, and removing someone.                                                                                                                                                                                                     |
+| `DELETE /v1/worlds/{world}`                                                                   | Archive a world. `GET /v1/worlds?archived=true` lists the archived ones to their owners.                                                                                                                                                                  |
+| `POST /v1/worlds/{world}/$restore`                                                            | Bring an archived world back.                                                                                                                                                                                                                             |
+| `GET /health`                                                                                 | Up, and able to reach the database.                                                                                                                                                                                                                       |
+| `POST /v1/worlds/{world}/$import`                                                             | Save many resources in one transaction: `{ resources: [{ model, resource }] }`, or the Bundle `$export/json` produces, so a world exported from one place imports into another unchanged.                                                                 |
+| `GET /v1/worlds/{world}/$search?q=`                                                           | One search box across every model.                                                                                                                                                                                                                        |
+| `GET /v1/worlds/{world}/{model}/{id}/references`                                              | Everything that points at a record.                                                                                                                                                                                                                       |
+| `GET /v1/worlds/{world}/{model}/{id}/history`                                                 | Every version of a record.                                                                                                                                                                                                                                |
+| `GET /v1/worlds/{world}/usage`                                                                | What has been spent on model calls. Owners only.                                                                                                                                                                                                          |
 
 Adding a model to the ontology adds its route set. Nothing in the API names a model, and a test holds the route table and the OpenAPI description together: every mounted route is described.
 
@@ -64,7 +64,7 @@ Every failure has one shape: `{ error, code, requestId }`, with `issues` on a va
 
 Also `?canonStatus=`, `?perspective=`, `?module=`, `?generatedBy=`, `?name=` (prefix), `?ids=` (a set of ids, for what a page refers to), `?sort=id|name|updatedAt`, `?limit=` and `?cursor=`. A cursor is opaque and bound to the sort it came from. A review queue for generated content is `?canonStatus=generated`, which is a query rather than a feature.
 
-`?cell=` takes a quadtree cell token and returns everything at or inside it, at any depth. That is how a map asks for what is in view: a cell's descendants are a contiguous range of ids, so a bounding cell is two comparisons on an indexed column rather than a walk down the tree, at any zoom level.
+`?cell=` takes a quadtree cell token and returns everything at or inside it, at any depth. That is how a map asks for what is in view: a cell's descendants are a contiguous range of ids, so a bounding cell is two comparisons on an indexed column rather than a walk down the tree, at any zoom level. `?maxLevel=` puts a ceiling on how fine a cell may be: only records placed at that level or a coarser one, which is how a map zoomed out asks for the kingdoms and not every hamlet in them. A cell's level is marked by its lowest set bit, so the ceiling is one comparison too.
 
 ### What a page is made of
 

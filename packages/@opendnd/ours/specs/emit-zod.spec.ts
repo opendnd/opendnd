@@ -45,6 +45,7 @@ describe('emitZodModule', () => {
     expect(code).toContain('export const modelInfo = {');
     expect(code).toMatch(/pet: \{\n\s+id: "pet",\n\s+name: "Pet",/);
     expect(code).toContain('category: "companions"');
+    expect(code).toContain('icon: "paw-print"');
   });
 
   it('produces a module that Bun can import and whose schema validates data', async () => {

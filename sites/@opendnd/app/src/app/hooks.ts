@@ -54,3 +54,19 @@ export function useDebounced<T>(input: T, delayMs: number): T {
   }, [input, delayMs]);
   return value;
 }
+
+/** Whether the viewport matches a media query, following it as the window changes. Wide where there is no window to ask. */
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() =>
+    typeof matchMedia === 'function' ? matchMedia(query).matches : true,
+  );
+  useEffect(() => {
+    if (typeof matchMedia !== 'function') return undefined;
+    const media = matchMedia(query);
+    const follow = () => setMatches(media.matches);
+    follow();
+    media.addEventListener('change', follow);
+    return () => media.removeEventListener('change', follow);
+  }, [query]);
+  return matches;
+}

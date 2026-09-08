@@ -7,6 +7,7 @@
   "name": "Pet",
   "description": "A companion animal.",
   "category": "companions",
+  "icon": "paw-print",
   "schema": "https://example.test/ours/schemas/pet.schema.json",
   "relationships": [
     {

@@ -30,6 +30,34 @@
     "owner": {
       "type": "string",
       "description": "User id of the world owner."
+    },
+    "map": {
+      "type": "object",
+      "description": "The world's base map as picture tiles, the way web maps are served: a URL template with {z}, {x} and {y} in the web map projection, and the zooms it covers. Places are drawn over it from their cells.",
+      "properties": {
+        "tiles": {
+          "type": "string",
+          "description": "URL template for one tile, with {z}, {x} and {y} where the zoom, column and row go."
+        },
+        "minZoom": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24,
+          "description": "The coarsest zoom the tiles cover."
+        },
+        "maxZoom": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 24,
+          "description": "The finest zoom the tiles cover."
+        },
+        "attribution": {
+          "type": "string",
+          "description": "Who drew the map, shown on it."
+        }
+      },
+      "required": ["tiles"],
+      "additionalProperties": false
     }
   },
   "required": [],

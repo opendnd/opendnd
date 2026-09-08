@@ -7,6 +7,7 @@
   "name": "Class",
   "description": "An adventuring class and its subclasses.",
   "category": "rules",
+  "icon": "graduation-cap",
   "schema": "https://docs.opendnd.org/ours/schemas/class.schema.json",
   "relationships": [
     {

@@ -1,12 +1,14 @@
 import {
   BracesIcon,
   CopyIcon,
+  ExternalLinkIcon,
   SendIcon,
   SparklesIcon,
   XIcon,
 } from 'lucide-react';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router';
+import { JsonTree } from './JsonTree';
 import { placeIn } from './Layout';
 import { Markdown } from './Markdown';
 import { ErrorNotice, Loading } from './Notice';
@@ -15,70 +17,82 @@ import { useApi } from '../app/context';
 import { useRequest } from '../app/hooks';
 import { useMe } from '../app/me';
 import { useOntology } from '../app/ontology';
+import { type PanelTab, usePanel } from '../app/panel';
 import { recordPath } from '../app/world';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
-export type PanelKind = 'ask' | 'inspect';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 /**
- * The panel that rides along on the right of every page: a place to ask the
- * world questions, answered from its records, and the record on the page as
- * the API holds it. Both follow the address, so they always concern what is
- * in front of the reader.
+ * The panel that rides along on the right of every page, in two tabs: a
+ * place to ask the world questions, answered from its records, and the
+ * record in front of the reader as the API holds it. The inspector follows
+ * the address, or a record chosen on the page, a row of a table say.
  */
-export function RightPanel(props: {
-  readonly kind: PanelKind;
-  readonly onClose: () => void;
-}) {
+export function RightPanel(props: { readonly onClose: () => void }) {
+  const panel = usePanel();
   const location = useLocation();
   const place = placeIn(location.pathname);
   const me = useMe();
   const world = me.data?.worlds.find((w) => w.id === place.world);
+  const inspected =
+    panel.inspected ??
+    (place.world && place.model && place.id
+      ? { world: place.world, model: place.model, id: place.id }
+      : undefined);
   return (
     <aside
-      className="flex w-96 shrink-0 flex-col border-l bg-background"
-      aria-label={props.kind === 'ask' ? 'Ask the world' : 'Inspector'}
+      className="flex h-full w-96 shrink-0 flex-col border-l bg-background"
+      aria-label="Ask and inspect"
     >
-      <div className="flex h-12 items-center gap-2 border-b px-3">
-        {props.kind === 'ask' ? (
-          <SparklesIcon className="size-4 text-brand" />
-        ) : (
-          <BracesIcon className="size-4 text-muted-foreground" />
-        )}
-        <span className="font-display text-[15px]">
-          {props.kind === 'ask' ? 'Ask the world' : 'Inspector'}
-        </span>
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          className="ml-auto"
-          aria-label="Close panel"
-          onClick={props.onClose}
-        >
-          <XIcon />
-        </Button>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col">
-        {props.kind === 'ask' ? (
-          world ? (
+      <Tabs
+        value={panel.tab}
+        onValueChange={(value) => panel.show(value as PanelTab)}
+        className="flex min-h-0 flex-1 flex-col gap-0"
+      >
+        <div className="flex h-12 shrink-0 items-center gap-2 border-b px-2">
+          <TabsList>
+            <TabsTrigger value="ask">
+              <SparklesIcon className="text-brand" />
+              Ask
+            </TabsTrigger>
+            <TabsTrigger value="inspect">
+              <BracesIcon />
+              Inspect
+            </TabsTrigger>
+          </TabsList>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            className="ml-auto"
+            aria-label="Close panel"
+            onClick={props.onClose}
+          >
+            <XIcon />
+          </Button>
+        </div>
+        <TabsContent value="ask" className="flex min-h-0 flex-1 flex-col">
+          {world ? (
             <Ask world={world.id} worldName={world.name} />
           ) : (
             <Idle text="Open a world to ask about it." />
-          )
-        ) : place.world && place.model && place.id ? (
-          <Inspector world={place.world} model={place.model} id={place.id} />
-        ) : (
-          <Idle
-            text={
-              place.world
-                ? 'Open a record to see it as the API holds it.'
-                : 'Open a world, then a record, to inspect it.'
-            }
-          />
-        )}
-      </div>
+          )}
+        </TabsContent>
+        <TabsContent value="inspect" className="flex min-h-0 flex-1 flex-col">
+          {inspected ? (
+            <Inspector {...inspected} chosen={panel.inspected !== undefined} />
+          ) : (
+            <Idle
+              text={
+                place.world
+                  ? 'Open a record, or choose a row of a table, to see it as the API holds it.'
+                  : 'Open a world, then a record, to inspect it.'
+              }
+            />
+          )}
+        </TabsContent>
+      </Tabs>
     </aside>
   );
 }
@@ -231,6 +245,8 @@ function Inspector(props: {
   readonly world: string;
   readonly model: string;
   readonly id: string;
+  /** Whether this is a record chosen on the page rather than the page's own. */
+  readonly chosen: boolean;
 }) {
   const api = useApi();
   const ontology = useOntology();
@@ -239,37 +255,52 @@ function Inspector(props: {
     [api, props.world, props.model, props.id],
   );
   const json = record.data ? JSON.stringify(record.data.body, null, 2) : '';
+  const name = record.data?.body.name;
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2 p-3 text-sm">
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="outline">{ontology.label(props.model)}</Badge>
-        {record.data?.etag && (
-          <span className="font-mono text-xs text-muted-foreground">
-            ETag {record.data.etag}
-          </span>
+        {typeof name === 'string' && (
+          <span className="min-w-0 truncate font-medium">{name}</span>
         )}
-        <Button
-          variant="ghost"
-          size="xs"
-          className="ml-auto"
-          disabled={!json}
-          onClick={() => void navigator.clipboard?.writeText(json)}
-        >
-          <CopyIcon data-icon="inline-start" />
-          Copy
-        </Button>
+        <span className="ml-auto flex items-center gap-1">
+          {props.chosen && (
+            <Button
+              variant="ghost"
+              size="xs"
+              render={
+                <Link to={recordPath(props.world, props.model, props.id)} />
+              }
+            >
+              <ExternalLinkIcon data-icon="inline-start" />
+              Open
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="xs"
+            disabled={!json}
+            onClick={() => void navigator.clipboard?.writeText(json)}
+          >
+            <CopyIcon data-icon="inline-start" />
+            Copy
+          </Button>
+        </span>
       </div>
-      <code className="truncate font-mono text-[11px] text-muted-foreground">
+      <code
+        className="truncate font-mono text-[11px] text-muted-foreground"
+        title={record.data?.etag ? `ETag ${record.data.etag}` : undefined}
+      >
         /v1/worlds/{props.world}/{props.model}/{props.id}
       </code>
       {record.error && (
         <ErrorNotice error={record.error} onRetry={record.reload} />
       )}
       {record.loading && !record.data && <Loading />}
-      {json && (
-        <pre className="min-h-0 flex-1 overflow-auto rounded-md bg-muted p-3 font-mono text-xs leading-relaxed">
-          {json}
-        </pre>
+      {record.data && (
+        <div className="min-h-0 flex-1 overflow-auto rounded-md bg-muted/60 p-2 font-mono text-xs leading-relaxed">
+          <JsonTree value={record.data.body} />
+        </div>
       )}
     </div>
   );

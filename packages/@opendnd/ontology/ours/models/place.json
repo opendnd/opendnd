@@ -7,6 +7,7 @@
   "name": "Place",
   "description": "A location at any scale.",
   "category": "places",
+  "icon": "map-pin",
   "schema": "https://docs.opendnd.org/ours/schemas/place.schema.json",
   "relationships": [
     {

@@ -70,6 +70,11 @@ export const modelSchema = oursResourceBaseSchema.extend({
   schema: z.url(),
   /** Which group of models this one sits with when they are listed: people, places, history, play, rules. */
   category: z.string().min(1).optional(),
+  /** The icon the model is shown with: a name from the Lucide icon set, in lower case with hyphens. */
+  icon: z
+    .string()
+    .regex(/^[a-z0-9-]+$/)
+    .optional(),
   relationships: z.array(relationshipSchema).optional(),
   mapsTo: z.array(mapsToSchema).optional(),
   validTime: validTimeFieldsSchema.optional(),

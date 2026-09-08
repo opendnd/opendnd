@@ -7,6 +7,7 @@
   "name": "Feature",
   "description": "Something a character gains from a class, species, background, feat or item.",
   "category": "rules",
+  "icon": "puzzle",
   "schema": "https://docs.opendnd.org/ours/schemas/feature.schema.json",
   "relationships": [
     {

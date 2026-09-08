@@ -7,6 +7,7 @@
   "name": "Condition",
   "description": "A state a creature can be in that changes what it may do.",
   "category": "rules",
+  "icon": "activity",
   "schema": "https://docs.opendnd.org/ours/schemas/condition.schema.json",
   "relationships": [],
   "mapsTo": [

@@ -75,7 +75,7 @@ describe('the shell', () => {
     }
     // Data is folded until wanted; inside it the models sit by group.
     expect(screen.queryByRole('link', { name: 'Pet' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Unfold Data' }));
+    await user.click(screen.getByRole('button', { name: 'Data' }));
     await user.click(screen.getByRole('button', { name: /Other/ }));
     expect(screen.getByRole('link', { name: 'Pet' })).toHaveAttribute(
       'href',
@@ -98,7 +98,7 @@ describe('the shell', () => {
     expect(
       screen.queryByRole('link', { name: 'Compendium' }),
     ).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Unfold Data' }));
+    await user.click(screen.getByRole('button', { name: 'Data' }));
     await user.click(screen.getByRole('button', { name: /Other/ }));
     expect(screen.getByRole('link', { name: 'Show' })).toBeInTheDocument();
   });
