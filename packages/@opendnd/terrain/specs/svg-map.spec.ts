@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'bun:test';
 import {
   IDENTITY,
+  drawTile,
+  flatten,
+  outlinesOf,
+  pathDataOf,
   boundsOf,
   boxToWhole,
   matrixOf,
@@ -175,6 +179,77 @@ describe('reading path data', () => {
     const [ring] = ringsOf('M0 0L10 0L10 10L0 10Z');
     expect(inRing(ring!, [5, 5])).toBe(true);
     expect(inRing(ring!, [15, 5])).toBe(false);
+  });
+});
+
+describe('keeping the curves', () => {
+  it('keeps a curve as a curve, and flattens it only when asked', () => {
+    const [outline] = outlinesOf('M0 0C10 0 20 0 30 0L30 10Z');
+    expect(outline!.from).toEqual([0, 0]);
+    expect(outline!.segments).toHaveLength(2);
+    expect(outline!.segments[0]!.via).toEqual([
+      [10, 0],
+      [20, 0],
+    ]);
+    expect(outline!.segments[1]!.via).toBeUndefined();
+    // Flattening is a separate step, and how fine it is is the caller's.
+    expect(flatten(outline!, 0.1).length).toBeGreaterThan(
+      flatten(outline!, 10).length,
+    );
+  });
+
+  it('gives the curves back as path data, so a coast is drawn as it was drawn', () => {
+    const outlines = outlinesOf('M0 0C10 0 20 0 30 0Z');
+    expect(pathDataOf(outlines)).toBe('M0 0C10 0 20 0 30 0Z');
+    // With somewhere to put it: control points move with the rest.
+    expect(pathDataOf(outlines, ([x, y]) => [x * 2, y + 5])).toBe(
+      'M0 5C20 5 40 5 60 5Z',
+    );
+  });
+
+  it('carries the curves onto every shape it reads', () => {
+    const map = readDrawnMap(DRAWING);
+    const lens = map.shapes[2]!;
+    expect(lens.outlines).toHaveLength(1);
+    expect(lens.outlines[0]!.segments.some((s) => s.via)).toBe(true);
+    // The points and the curves describe the same shape.
+    expect(lens.rings[0]!.length).toBeGreaterThan(
+      lens.outlines[0]!.segments.length,
+    );
+  });
+});
+
+describe('drawing a tile', () => {
+  const map = readDrawnMap(DRAWING);
+
+  it('draws the shapes that reach the tile, as curves, over the sea', () => {
+    const svg = drawTile(map, {
+      box: { left: 0, top: 0, right: 500, bottom: 500 },
+      size: 256,
+    });
+    expect(svg).toContain('width="256"');
+    // The square continent and the lake in it are here; the far island is not.
+    expect(svg.match(/<path /g)).toHaveLength(2);
+    // Drawn as curves where the shape curved, and clipped to the tile.
+    expect(svg).toContain('clip-path');
+    expect(svg).toContain('fill-rule="evenodd"');
+  });
+
+  it('places the drawing into the tile, so the same coast lands in each', () => {
+    const whole = drawTile(map, {
+      box: { left: 100, top: 100, right: 400, bottom: 400 },
+      size: 300,
+    });
+    // The continent fills this tile corner to corner: 100 in the drawing is 0.
+    expect(whole).toContain('M0 0');
+  });
+
+  it('draws a curve as a curve in the tile it lands in', () => {
+    const svg = drawTile(map, {
+      box: { left: 500, top: 500, right: 800, bottom: 800 },
+      size: 256,
+    });
+    expect(svg).toContain('C');
   });
 });
 

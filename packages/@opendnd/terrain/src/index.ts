@@ -10,4 +10,5 @@ export * from './path-data';
 export * from './svg-map';
 export * from './fit';
 export * from './raster';
+export * from './draw';
 export * from './coverage';

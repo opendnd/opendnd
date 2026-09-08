@@ -1,8 +1,11 @@
 import {
+  type Outline,
   type Point,
   type Ring,
   boundsOf,
-  ringsOf,
+  flatten,
+  outlinesOf,
+  placeOutline,
   signedArea,
 } from './path-data';
 
@@ -27,8 +30,16 @@ export interface MapShape {
   /** The layer it was drawn on: a continent, usually. */
   readonly group: string;
   readonly kind: ShapeKind;
-  /** The outline, and any holes in it, in the drawing's own units. */
+  /**
+   * The outline, and any holes in it, as points in the drawing's own units.
+   * What geometry is asked of: what is inside, how big, which cells.
+   */
   readonly rings: readonly Ring[];
+  /**
+   * The same, with the curves the shape was drawn with. What a coast is
+   * drawn from, so it stays smooth however far in anyone zooms.
+   */
+  readonly outlines: readonly Outline[];
   /** `[minX, minY, maxX, maxY]`, for deciding quickly what a point cannot be in. */
   readonly bounds: readonly [number, number, number, number];
   /** Area in square drawing units, which orders continents before islands. */
@@ -109,9 +120,10 @@ export function readDrawnMap(svg: string, options: ReadOptions = {}): DrawnMap {
       placings[placings.length - 1]!,
       matrixOf(tag.attributes.transform),
     );
-    const rings = ringsOf(d, options.flatness).map((ring) =>
-      place(placing, ring),
-    );
+    const outlines = outlinesOf(d)
+      .map((outline) => placeOutline(outline, (point) => at(placing, point)))
+      .filter((outline) => outline.segments.length > 1);
+    const rings = outlines.map((outline) => flatten(outline, options.flatness));
     if (rings.length === 0) continue;
     const area = rings.reduce(
       (sum, ring) => sum + Math.abs(signedArea(ring)) / 2,
@@ -128,6 +140,7 @@ export function readDrawnMap(svg: string, options: ReadOptions = {}): DrawnMap {
         [...open].reverse().find((id) => id !== '' && !water.test(id)) ?? '',
       kind: wet ? 'water' : 'land',
       rings,
+      outlines,
       bounds: boundsOf(rings),
       area,
     });
@@ -213,10 +226,11 @@ export function times(outer: Matrix, inner: Matrix): Matrix {
   ];
 }
 
-function place(matrix: Matrix, ring: Ring): Ring {
-  if (matrix === IDENTITY) return ring;
+/** A point under a matrix. */
+export function at(matrix: Matrix, point: Point): Point {
+  if (matrix === IDENTITY) return point;
   const [a, b, c, d, e, f] = matrix;
-  return ring.map(([x, y]): Point => [a * x + c * y + e, b * x + d * y + f]);
+  return [a * point[0] + c * point[1] + e, b * point[0] + d * point[1] + f];
 }
 
 /** The `transform` of an element, as one matrix. */
@@ -281,10 +295,14 @@ export function placeGroups(
   const shapes = map.shapes.map((shape) => {
     const matrix = placings[shape.group];
     if (matrix === undefined) return shape;
-    const rings = shape.rings.map((ring) => place(matrix, ring as Ring));
+    const outlines = shape.outlines.map((outline) =>
+      placeOutline(outline, (point) => at(matrix, point)),
+    );
+    const rings = outlines.map((outline) => flatten(outline));
     return {
       ...shape,
       rings,
+      outlines,
       bounds: boundsOf(rings),
       area: rings.reduce(
         (sum, ring) => sum + Math.abs(signedArea(ring)) / 2,

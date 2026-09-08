@@ -19,24 +19,44 @@ export const FLATNESS = 0.35;
 
 const COMMANDS = new Set('MmLlHhVvCcSsQqTtAaZz');
 
+/** One step along an outline: a line to a point, or a curve through two. */
+export interface Segment {
+  readonly to: Point;
+  /** The two control points, when this step curves. */
+  readonly via?: readonly [Point, Point];
+}
+
+/** One closed outline of a shape, with its curves intact. */
+export interface Outline {
+  readonly from: Point;
+  readonly segments: readonly Segment[];
+}
+
 /**
- * The rings of one path.
+ * The outlines of one path, curves and all.
  *
- * A path may hold several: a country with an island off its coast is one
- * path with two subpaths, and a subpath that was never closed is closed
- * here, because a shape on a map is an area whatever the drawing says.
+ * A path may hold several: a country with an island off its coast is one path
+ * with two subpaths, and a subpath that was never closed is closed here,
+ * because a shape on a map is an area whatever the drawing says.
+ *
+ * Curves are kept rather than flattened as they are read. Everything that
+ * asks a geometric question — what is inside a shape, how long a coast is,
+ * which cells a country covers — wants points and gets them from `flatten`;
+ * everything that draws a coast wants the curve, and a coast flattened once
+ * at the wrong scale is a coast with corners in it forever.
  */
-export function ringsOf(d: string, flatness = FLATNESS): Ring[] {
-  const rings: Ring[] = [];
-  let ring: Point[] = [];
+export function outlinesOf(d: string): Outline[] {
+  const outlines: Outline[] = [];
+  let segments: Segment[] = [];
+  let from: Point = [0, 0];
   let at: Point = [0, 0];
   let start: Point = [0, 0];
   // The control point a smooth curve reflects, when the last command curved.
   let lastControl: Point | undefined;
 
   const finish = (): void => {
-    if (ring.length > 2) rings.push(ring);
-    ring = [];
+    if (segments.length > 0) outlines.push({ from, segments });
+    segments = [];
   };
 
   for (const [command, numbers] of commands(d)) {
@@ -54,34 +74,30 @@ export function ringsOf(d: string, flatness = FLATNESS): Ring[] {
       const effective = upper === 'M' && index > 0 ? 'L' : upper;
       const to = (x: number, y: number): Point =>
         relative ? [at[0] + x, at[1] + y] : [x, y];
+      const line = (point: Point): void => {
+        segments.push({ to: point });
+        at = point;
+        lastControl = undefined;
+      };
 
       switch (effective) {
         case 'M': {
           finish();
           at = to(args[0]!, args[1]!);
+          from = at;
           start = at;
-          ring = [at];
           lastControl = undefined;
           break;
         }
-        case 'L': {
-          at = to(args[0]!, args[1]!);
-          ring.push(at);
-          lastControl = undefined;
+        case 'L':
+          line(to(args[0]!, args[1]!));
           break;
-        }
-        case 'H': {
-          at = [relative ? at[0] + args[0]! : args[0]!, at[1]];
-          ring.push(at);
-          lastControl = undefined;
+        case 'H':
+          line([relative ? at[0] + args[0]! : args[0]!, at[1]]);
           break;
-        }
-        case 'V': {
-          at = [at[0], relative ? at[1] + args[0]! : args[0]!];
-          ring.push(at);
-          lastControl = undefined;
+        case 'V':
+          line([at[0], relative ? at[1] + args[0]! : args[0]!]);
           break;
-        }
         case 'C':
         case 'S': {
           const first =
@@ -91,7 +107,7 @@ export function ringsOf(d: string, flatness = FLATNESS): Ring[] {
           const rest = effective === 'C' ? 2 : 0;
           const second = to(args[rest]!, args[rest + 1]!);
           const end = to(args[rest + 2]!, args[rest + 3]!);
-          cubic(ring, at, first, second, end, flatness);
+          segments.push({ to: end, via: [first, second] });
           lastControl = second;
           at = end;
           break;
@@ -105,35 +121,32 @@ export function ringsOf(d: string, flatness = FLATNESS): Ring[] {
           const rest = effective === 'Q' ? 2 : 0;
           const end = to(args[rest]!, args[rest + 1]!);
           // A quadratic is the cubic with its controls two thirds of the way.
-          cubic(
-            ring,
-            at,
-            [
-              at[0] + (2 / 3) * (control[0] - at[0]),
-              at[1] + (2 / 3) * (control[1] - at[1]),
+          segments.push({
+            to: end,
+            via: [
+              [
+                at[0] + (2 / 3) * (control[0] - at[0]),
+                at[1] + (2 / 3) * (control[1] - at[1]),
+              ],
+              [
+                end[0] + (2 / 3) * (control[0] - end[0]),
+                end[1] + (2 / 3) * (control[1] - end[1]),
+              ],
             ],
-            [
-              end[0] + (2 / 3) * (control[0] - end[0]),
-              end[1] + (2 / 3) * (control[1] - end[1]),
-            ],
-            end,
-            flatness,
-          );
+          });
           lastControl = control;
           at = end;
           break;
         }
-        case 'A': {
+        case 'A':
           // Arcs are not drawn on these maps. Treated as the line they span,
           // which is wrong by the bulge of the arc and right about the ends.
-          at = to(args[5]!, args[6]!);
-          ring.push(at);
-          lastControl = undefined;
+          line(to(args[5]!, args[6]!));
           break;
-        }
         case 'Z': {
           finish();
           at = start;
+          from = start;
           lastControl = undefined;
           break;
         }
@@ -144,7 +157,82 @@ export function ringsOf(d: string, flatness = FLATNESS): Ring[] {
     } while (step > 0 && index < numbers.length);
   }
   finish();
-  return rings;
+  return outlines;
+}
+
+/**
+ * An outline as a run of points, each curve subdivided until it is flat
+ * enough. How flat is decided from the curve itself rather than by a fixed
+ * count, so a long sweeping coast and a tight inlet each get what they need.
+ */
+export function flatten(outline: Outline, flatness = FLATNESS): Ring {
+  const points: Point[] = [outline.from];
+  let at = outline.from;
+  for (const segment of outline.segments) {
+    if (segment.via) {
+      cubic(points, at, segment.via[0], segment.via[1], segment.to, flatness);
+    } else {
+      points.push(segment.to);
+    }
+    at = segment.to;
+  }
+  return points;
+}
+
+/** The rings of one path: its outlines, flattened. */
+export function ringsOf(d: string, flatness = FLATNESS): Ring[] {
+  return outlinesOf(d)
+    .map((outline) => flatten(outline, flatness))
+    .filter((ring) => ring.length > 2);
+}
+
+/**
+ * Outlines back as an SVG `d`, optionally moved on the way.
+ *
+ * This is how a coast is drawn: as the curves it was drawn with, so it is as
+ * smooth at the depth of a bay as it is at the width of a continent.
+ */
+export function pathDataOf(
+  outlines: readonly Outline[],
+  place: (point: Point) => Point = (point) => point,
+): string {
+  const say = (point: Point): string => {
+    const [x, y] = place(point);
+    return `${round(x)} ${round(y)}`;
+  };
+  return outlines
+    .map((outline) => {
+      let d = `M${say(outline.from)}`;
+      for (const segment of outline.segments) {
+        d += segment.via
+          ? `C${say(segment.via[0])} ${say(segment.via[1])} ${say(segment.to)}`
+          : `L${say(segment.to)}`;
+      }
+      return `${d}Z`;
+    })
+    .join('');
+}
+
+/** Moves an outline, control points and all. */
+export function placeOutline(
+  outline: Outline,
+  place: (point: Point) => Point,
+): Outline {
+  return {
+    from: place(outline.from),
+    segments: outline.segments.map((segment) =>
+      segment.via
+        ? {
+            to: place(segment.to),
+            via: [place(segment.via[0]), place(segment.via[1])] as const,
+          }
+        : { to: place(segment.to) },
+    ),
+  };
+}
+
+function round(value: number): number {
+  return Math.round(value * 100) / 100;
 }
 
 /** How many numbers each command takes, per repeat. */

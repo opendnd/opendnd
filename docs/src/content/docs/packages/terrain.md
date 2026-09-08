@@ -49,6 +49,20 @@ const placed = placeGroups(map, {
 });
 ```
 
+## Drawing a tile
+
+The point of reading a drawing rather than tracing pictures of it is that the coast stays a curve, so a tile is SVG: the same béziers the coast was drawn with, placed into the tile's own coordinates.
+
+```ts
+import { drawTile } from '@opendnd/terrain';
+
+drawTile(map, { box: { left: 0, top: 0, right: 160, bottom: 160 }, size: 256 });
+```
+
+A bay is then as smooth at the zoom of a bay as at the zoom of a continent, which a grid of samples can never be — a coast sampled once at the wrong scale has corners in it forever. Shapes that cross the tile's edge are drawn whole and clipped, because a coast cut at a tile edge and a coast that ends at one look different and only one of them is right.
+
+Curves survive the whole way: `outlinesOf` keeps them, `flatten` turns one into points when geometry is being asked rather than drawn, and `pathDataOf` hands them back as an SVG `d`. A shape carries both — `rings` for what is inside it, `outlines` for what it looks like.
+
 ## Filling a grid
 
 Asking a shape whether it holds a point is fine for one point and hopeless for a million: a coastline is thousands of segments and a world is thousands of coastlines. `rasterize` draws the shapes into a grid once, by scanlines, and every later question becomes a lookup. Shapes are drawn in the order the drawing gives, so a lake over a continent is water and an island in the lake is land again.
