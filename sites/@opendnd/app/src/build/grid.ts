@@ -115,3 +115,25 @@ export function usedRows(placed: readonly Placed[]): number {
 export function inReadingOrder(placed: readonly Placed[]): Placed[] {
   return [...placed].sort((a, b) => a.row - b.row || a.col - b.col);
 }
+
+/**
+ * Somewhere to put a block, trying its own size first and then smaller.
+ *
+ * A page that is nearly full has no room for a block six cells wide, but it
+ * usually has room for a smaller one, and a block that shrinks to fit is a
+ * better answer than a click that does nothing. Undefined only when the page
+ * is full to the last cell.
+ */
+export function roomFor(
+  size: { readonly w: number; readonly h: number },
+  placed: readonly Placed[],
+  preferred?: { readonly col: number; readonly row: number },
+): GridRect | undefined {
+  for (let h = Math.min(size.h, MAX_SPAN_H); h >= 1; h -= 1) {
+    for (let w = Math.min(size.w, GRID_COLS); w >= 1; w -= 1) {
+      const slot = findFreeSlot({ w, h }, placed, preferred);
+      if (slot) return slot;
+    }
+  }
+  return undefined;
+}

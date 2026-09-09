@@ -32,6 +32,7 @@ describe('@opendnd/types', () => {
       'place',
       'population',
       'proficiency',
+      'project',
       'quest',
       'relationship',
       'session',

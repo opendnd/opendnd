@@ -5,6 +5,7 @@ import { AppSidebar } from './AppSidebar';
 import { RightPanel } from './RightPanel';
 import { useSession } from '../app/context';
 import { CountsProvider } from '../app/counts';
+import { ProjectsProvider } from '../build/projects';
 import { useMediaQuery } from '../app/hooks';
 import { MeProvider, useMe } from '../app/me';
 import { OntologyProvider, useOntology } from '../app/ontology';
@@ -45,15 +46,17 @@ export function Shell() {
     <MeProvider>
       <OntologyProvider>
         <CountsProvider world={placeIn(location.pathname).world}>
-          <PanelProvider>
-            <SidebarProvider>
-              <AppSidebar />
-              <SidebarInset>
-                <Header />
-                <Body />
-              </SidebarInset>
-            </SidebarProvider>
-          </PanelProvider>
+          <ProjectsProvider world={placeIn(location.pathname).world}>
+            <PanelProvider>
+              <SidebarProvider>
+                <AppSidebar />
+                <SidebarInset>
+                  <Header />
+                  <Body />
+                </SidebarInset>
+              </SidebarProvider>
+            </PanelProvider>
+          </ProjectsProvider>
         </CountsProvider>
       </OntologyProvider>
     </MeProvider>

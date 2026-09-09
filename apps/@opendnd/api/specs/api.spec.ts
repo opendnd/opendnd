@@ -96,7 +96,7 @@ describe('the API', () => {
     const ids = (body as { models: { id: string }[] }).models.map((m) => m.id);
     expect(ids).toContain('place');
     expect(ids).toContain('person');
-    expect(ids.length).toBe(32);
+    expect(ids.length).toBe(33);
   });
 
   it('gives a user their own worlds and no one else', async () => {

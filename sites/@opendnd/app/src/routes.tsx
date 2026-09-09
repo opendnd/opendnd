@@ -14,6 +14,8 @@ import { Marketplace } from './pages/Marketplace';
 import { Record } from './pages/Record';
 import { Records } from './pages/Records';
 import { Rules } from './pages/Rules';
+import { Build } from './pages/Build';
+import { Canvas } from './pages/Canvas';
 import { Settings } from './pages/Settings';
 import { SignIn } from './pages/SignIn';
 import { Simulate } from './pages/Simulate';
@@ -54,6 +56,11 @@ export const routes: RouteObject[] = [
                   { path: 'data', element: <Data /> },
                   { path: 'map', element: <MapPage /> },
                   { path: 'timeline', element: <Timeline /> },
+                  { path: 'build', element: <Build /> },
+                  {
+                    path: 'build/:project/:page',
+                    element: <Canvas />,
+                  },
                   { path: 'settings', element: <Settings /> },
                   { path: ':model', element: <Records /> },
                   { path: ':model/new', element: <Edit /> },

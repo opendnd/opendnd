@@ -10,7 +10,7 @@ import { formatPosition, isPosition } from '../schema/time';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Page } from '../build/Page';
-import { PAGES } from '../build/pages';
+import { usePageLayout } from '../build/projects';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -442,5 +442,5 @@ function MoveNow(props: {
 
 /** The timeline page: one block, on the grid like everything else. */
 export function Timeline() {
-  return <Page page={PAGES.timeline} />;
+  return <Page page={usePageLayout('timeline')} />;
 }

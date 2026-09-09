@@ -138,6 +138,11 @@ const LAYERS: Record<
       'proficiency',
     ],
   },
+  platform: {
+    title: 'Platform',
+    note: 'Not the world but the thing looking at it: how a world arranges its own pages. Stored as records so that a layout has revisions, roles and an export like anything else.',
+    models: ['project'],
+  },
 };
 // The bundle keys models by URL; the layers name them by id.
 const byId = new Map([...bundle.models.values()].map((m) => [m.id, m]));

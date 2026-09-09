@@ -2260,6 +2260,69 @@ export const proficiencySchema = z.strictObject({
 });
 export type Proficiency = z.infer<typeof proficiencySchema>;
 
+/** An application a world builds for itself: pages of blocks laid out on a grid. A project is a record like any other, so it has revisions, roles, export and import, and can be carried between worlds inside a module — which is how somebody publishes a setting that looks like itself and not like the default. */
+export const projectSchema = z.strictObject({
+  /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  model: z.string().optional(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateNames: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  recorded: recordedSchema,
+  provenance: provenanceSchema.optional(),
+  citations: z.array(citationSchema).optional(),
+  tags: z.array(z.string()).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
+  module: z.string().optional(),
+  /** One line about what the project is for, shown wherever it is listed. */
+  tagline: z.string().optional(),
+  /** A draft is visible only to those who can edit the world; a published project is what everyone else sees. */
+  status: z.enum(["draft", "published", "retired"]).default("draft"),
+  /** The pages of the project, in the order they are offered. */
+  pages: z.array(z.strictObject({
+    /** Stable within the project, so a layout survives a rename. */
+    id: z.string(),
+    name: z.string(),
+    /** The address the page answers to inside the world. */
+    path: z.string().regex(new RegExp("^[a-z0-9]+(?:-[a-z0-9]+)*$")),
+    /** A name from the application's icon set. */
+    icon: z.string().optional(),
+    /** A world page stands on its own; a record page is about one record and is reached from it. */
+    scope: z.enum(["world", "record"]).default("world"),
+    /** For a record page, the model whose records it is about. */
+    model: z.string().optional(),
+    /** Whether the rows are a fixed height that grows with what is on them, or share the height of the window. A page that is one map wants the second. */
+    rows: z.enum(["fit", "fill"]).default("fit"),
+    /** The blocks on the page and where they sit: col and row are grid lines counted from one, w and h are how many cells across and down. */
+    blocks: z.array(z.strictObject({
+      /** Unique within the page, so a page may hold two of the same block. */
+      id: z.string(),
+      /** The catalogue id of the block to draw. */
+      block: z.string(),
+      col: z.int().min(1).max(6),
+      row: z.int().min(1).max(8),
+      w: z.int().min(1).max(6),
+      h: z.int().min(1).max(4),
+      /** How this block is set up here, in whatever shape the block asks for. */
+      options: z.record(z.string(), z.unknown()).optional(),
+    })),
+  })),
+  /** The built-in pages this project takes the place of, by their path. A world that customizes its front page names 'home' here, and the built-in one steps aside. */
+  replaces: z.array(z.string()).optional(),
+});
+export type Project = z.infer<typeof projectSchema>;
+
 /** Something a party is meant to do, and how far they have got with it. In-universe as the world's own errand, or out-of-universe as a thread the gamemaster is holding; the perspective field says which. */
 export const questSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
@@ -3736,6 +3799,7 @@ export const models = {
   place: placeSchema,
   population: populationSchema,
   proficiency: proficiencySchema,
+  project: projectSchema,
   quest: questSchema,
   relationship: relationshipSchema,
   session: sessionSchema,
@@ -3898,6 +3962,13 @@ export const modelInfo = {
     description: "Being trained in a weapon, a tool, a skill or a saving throw.",
     category: "rules",
     icon: "target",
+  },
+  project: {
+    id: "project",
+    name: "Project",
+    description: "An application a world builds for itself, as pages of blocks.",
+    category: "platform",
+    icon: "layout-grid",
   },
   quest: {
     id: "quest",

@@ -31,7 +31,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Page } from '../build/Page';
-import { PAGES } from '../build/pages';
+import { usePageLayout } from '../build/projects';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -744,5 +744,5 @@ function nameOf(resource: Resource): string {
 
 /** The map page: one block, filling the window. */
 export function MapPage() {
-  return <Page page={PAGES.map} />;
+  return <Page page={usePageLayout('map')} />;
 }

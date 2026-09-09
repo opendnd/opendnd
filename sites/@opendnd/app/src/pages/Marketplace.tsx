@@ -11,7 +11,9 @@ import { useApi } from '../app/context';
 import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
 import { useWorld } from '../app/world';
+import { BLOCKS, isPlaceable } from '../build/blocks';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -41,6 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 
 /**
@@ -69,8 +72,73 @@ export function Marketplace() {
           </span>
         </Notice>
       )}
-      <Modules canManage={isOwner} />
-      {isOwner && <Publish />}
+      <Tabs defaultValue="modules">
+        <TabsList>
+          <TabsTrigger value="modules">Modules</TabsTrigger>
+          <TabsTrigger value="blocks">Blocks</TabsTrigger>
+        </TabsList>
+        <TabsContent value="modules" className="flex flex-col gap-6">
+          <Modules canManage={isOwner} />
+          {isOwner && <Publish />}
+        </TabsContent>
+        <TabsContent value="blocks">
+          <Blocks />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+/**
+ * The other half of a marketplace: what a page can be made of, rather than
+ * what a world can be filled with. Content and presentation are bought in the
+ * same place because they are bought for the same reason.
+ */
+function Blocks() {
+  const { world } = useWorld();
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted-foreground">
+        Blocks are what pages are built from. Everything here can be placed on a
+        page of {world.name}&apos;s own, except where it says otherwise.
+      </p>
+      <ul className="divide-y rounded-lg border">
+        {BLOCKS.map((block) => {
+          const Icon = block.icon;
+          const usable = isPlaceable(block);
+          return (
+            <li key={block.id} className="flex items-start gap-3 px-3 py-2">
+              <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              <span className="flex min-w-0 flex-col">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm font-medium">{block.name}</span>
+                  <Badge variant="outline" className="text-muted-foreground">
+                    {block.category}
+                  </Badge>
+                  {!usable && (
+                    <Badge variant="secondary">
+                      {block.status === 'third-party'
+                        ? 'From somebody else'
+                        : 'Not built yet'}
+                    </Badge>
+                  )}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {block.description}
+                </span>
+                {block.bindings.length > 0 && (
+                  <span className="text-xs text-muted-foreground">
+                    Reads {block.bindings.join(', ')}.
+                  </span>
+                )}
+              </span>
+              <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                {block.size.w}×{block.size.h}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

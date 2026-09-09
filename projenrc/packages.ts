@@ -242,7 +242,14 @@ function configureOne(
 
     // Scratch space used by tests that need to import a generated module.
     project.gitignore.addPatterns('specs/.tmp-*');
-    if (config.ignore) project.gitignore.addPatterns(...config.ignore);
+    if (config.ignore) {
+      project.gitignore.addPatterns(...config.ignore);
+      // And out of the package. npm reads .npmignore *instead of* .gitignore
+      // when both exist, and projen always writes one, so anything ignored
+      // here would otherwise be published: a development machine's copy of
+      // somebody's world went into the tarball until this was said twice.
+      project.npmignore?.addPatterns(...config.ignore);
+    }
 
     if (config.cdkApp) {
       new JsonFile(project, 'cdk.json', {

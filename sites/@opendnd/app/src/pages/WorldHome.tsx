@@ -1,5 +1,5 @@
 import { Page } from '../build/Page';
-import { PAGES } from '../build/pages';
+import { usePageLayout } from '../build/projects';
 
 /**
  * Inside a world: a question first, then the numbers, the campaigns, and what
@@ -11,7 +11,7 @@ import { PAGES } from '../build/pages';
 export function WorldHome() {
   return (
     <div className="mx-auto w-full max-w-5xl">
-      <Page page={PAGES.home} />
+      <Page page={usePageLayout('home')} />
     </div>
   );
 }

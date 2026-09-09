@@ -1,0 +1,14 @@
+{
+  "resourceType": "Model",
+  "id": "project",
+  "url": "https://docs.opendnd.org/ours/models/project.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Project",
+  "description": "An application a world builds for itself, as pages of blocks.",
+  "category": "platform",
+  "icon": "layout-grid",
+  "schema": "https://docs.opendnd.org/ours/schemas/project.schema.json",
+  "relationships": [],
+  "mapsTo": []
+}

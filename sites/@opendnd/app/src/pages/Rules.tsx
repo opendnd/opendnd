@@ -4,7 +4,7 @@ import { SURFACES, categoryOf } from '../app/surfaces';
 import { useWorld } from '../app/world';
 import { Notice } from '../components/Notice';
 import { Page } from '../build/Page';
-import { PAGES } from '../build/pages';
+import { usePageLayout } from '../build/projects';
 
 /** The game's rules as this world has them: the models the ontology groups under rules. */
 export function RulesSurface() {
@@ -32,5 +32,5 @@ export function RulesSurface() {
 
 /** The rules page: one block, on the grid like everything else. */
 export function Rules() {
-  return <Page page={PAGES.rules} />;
+  return <Page page={usePageLayout('rules')} />;
 }

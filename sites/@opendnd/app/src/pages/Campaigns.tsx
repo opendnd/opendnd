@@ -8,7 +8,7 @@ import { SURFACES, offers } from '../app/surfaces';
 import { useWorld } from '../app/world';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
 import { Page } from '../build/Page';
-import { PAGES } from '../build/pages';
+import { usePageLayout } from '../build/projects';
 import { Button } from '@/components/ui/button';
 
 /** Every campaign in this world, as cards. A block, placed by a page. */
@@ -63,5 +63,5 @@ export function CampaignList() {
 
 /** The campaigns page: one block, on the grid like everything else. */
 export function Campaigns() {
-  return <Page page={PAGES.campaigns} />;
+  return <Page page={usePageLayout('campaigns')} />;
 }

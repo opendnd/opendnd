@@ -1,0 +1,104 @@
+{
+  "$id": "https://docs.opendnd.org/ours/schemas/project.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Project",
+  "type": "object",
+  "description": "An application a world builds for itself: pages of blocks laid out on a grid. A project is a record like any other, so it has revisions, roles, export and import, and can be carried between worlds inside a module — which is how somebody publishes a setting that looks like itself and not like the default.",
+  "allOf": [
+    {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "tagline": {
+      "type": "string",
+      "description": "One line about what the project is for, shown wherever it is listed."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "published", "retired"],
+      "default": "draft",
+      "description": "A draft is visible only to those who can edit the world; a published project is what everyone else sees."
+    },
+    "pages": {
+      "type": "array",
+      "description": "The pages of the project, in the order they are offered.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable within the project, so a layout survives a rename."
+          },
+          "name": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string",
+            "description": "The address the page answers to inside the world.",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "icon": {
+            "type": "string",
+            "description": "A name from the application's icon set."
+          },
+          "scope": {
+            "type": "string",
+            "enum": ["world", "record"],
+            "default": "world",
+            "description": "A world page stands on its own; a record page is about one record and is reached from it."
+          },
+          "model": {
+            "type": "string",
+            "description": "For a record page, the model whose records it is about."
+          },
+          "rows": {
+            "type": "string",
+            "enum": ["fit", "fill"],
+            "default": "fit",
+            "description": "Whether the rows are a fixed height that grows with what is on them, or share the height of the window. A page that is one map wants the second."
+          },
+          "blocks": {
+            "type": "array",
+            "description": "The blocks on the page and where they sit: col and row are grid lines counted from one, w and h are how many cells across and down.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique within the page, so a page may hold two of the same block."
+                },
+                "block": {
+                  "type": "string",
+                  "description": "The catalogue id of the block to draw."
+                },
+                "col": { "type": "integer", "minimum": 1, "maximum": 6 },
+                "row": { "type": "integer", "minimum": 1, "maximum": 8 },
+                "w": { "type": "integer", "minimum": 1, "maximum": 6 },
+                "h": { "type": "integer", "minimum": 1, "maximum": 4 },
+                "options": {
+                  "type": "object",
+                  "description": "How this block is set up here, in whatever shape the block asks for.",
+                  "additionalProperties": true
+                }
+              },
+              "required": ["id", "block", "col", "row", "w", "h"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": ["id", "name", "path", "blocks"],
+        "additionalProperties": false
+      }
+    },
+    "replaces": {
+      "type": "array",
+      "description": "The built-in pages this project takes the place of, by their path. A world that customizes its front page names 'home' here, and the built-in one steps aside.",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": ["pages"],
+  "additionalProperties": false
+}

@@ -32,7 +32,15 @@ export function validateBundle(bundle: OursBundle): ValidationIssue[] {
     if (!bundle.schemas.has(model.schema)) {
       error(model.url, `schema ${model.schema} is not in the bundle`);
     }
-    if (!model.mapsTo || model.mapsTo.length === 0) {
+    // An alignment is a claim that some other vocabulary describes the same
+    // thing, which is worth having for everything the fiction contains. A
+    // model in the platform category describes the application looking at the
+    // fiction — how a world arranges its own pages — and there is nothing out
+    // there for that to line up with, so it is not asked for one.
+    if (
+      model.category !== 'platform' &&
+      (!model.mapsTo || model.mapsTo.length === 0)
+    ) {
       warning(model.url, 'model has no mapsTo alignment');
     }
   }

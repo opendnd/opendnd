@@ -8,6 +8,7 @@ import {
   inReadingOrder,
   isFree,
   overlaps,
+  roomFor,
   usedRows,
 } from 'src/build/grid';
 
@@ -99,5 +100,35 @@ describe('the grid a page is laid out on', () => {
   it('grows with its content and is empty when there is none', () => {
     expect(usedRows([])).toBe(0);
     expect(usedRows([at('a', 1, 2, 1, 3)])).toBe(4);
+  });
+});
+
+describe('finding room on a page', () => {
+  it('shrinks a block rather than refusing it, when the page is nearly full', () => {
+    // Every row taken but the last cell of the last one.
+    const nearly = [
+      ...Array.from({ length: GRID_ROWS - 1 }, (_, index) =>
+        at(`r${index}`, 1, index + 1, GRID_COLS, 1),
+      ),
+      at('last', 1, GRID_ROWS, GRID_COLS - 1, 1),
+    ];
+    expect(findFreeSlot({ w: 6, h: 4 }, nearly)).toBeUndefined();
+    expect(roomFor({ w: 6, h: 4 }, nearly)).toEqual({
+      col: GRID_COLS,
+      row: GRID_ROWS,
+      w: 1,
+      h: 1,
+    });
+  });
+
+  it('gives a block its own size when the page has room for it', () => {
+    expect(roomFor({ w: 3, h: 2 }, [])).toEqual({ col: 1, row: 1, w: 3, h: 2 });
+  });
+
+  it('has nothing to offer a page with no cell left', () => {
+    const full = Array.from({ length: GRID_ROWS }, (_, index) =>
+      at(`r${index}`, 1, index + 1, GRID_COLS, 1),
+    );
+    expect(roomFor({ w: 1, h: 1 }, full)).toBeUndefined();
   });
 });

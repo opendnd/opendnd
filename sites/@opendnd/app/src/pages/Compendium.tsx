@@ -25,7 +25,7 @@ import {
   EmptyTitle,
 } from '@/components/ui/empty';
 import { Page } from '../build/Page';
-import { PAGES } from '../build/pages';
+import { usePageLayout } from '../build/projects';
 import { Input } from '@/components/ui/input';
 import {
   Item,
@@ -264,5 +264,5 @@ export function CompendiumSurface() {
 
 /** The compendium page: one block, on the grid like everything else. */
 export function Compendium() {
-  return <Page page={PAGES.compendium} />;
+  return <Page page={usePageLayout('compendium')} />;
 }

@@ -6,6 +6,7 @@ import {
   DoorOpenIcon,
   HistoryIcon,
   LayoutGridIcon,
+  LayoutTemplateIcon,
   LogOutIcon,
   MapIcon,
   SearchIcon,
@@ -156,6 +157,27 @@ export function AppSidebar() {
 
         {inWorld && (
           <>
+            <Section label="Build" storageKey="build">
+              <Entry
+                to={`/worlds/${place.world}`}
+                active={location.pathname === `/worlds/${place.world}`}
+                label="Home"
+                icon={<CompassIcon />}
+              />
+              <Entry
+                to={to('build')}
+                active={active('build')}
+                label="Projects"
+                icon={<LayoutTemplateIcon />}
+              />
+              <Entry
+                to={to(SURFACES.marketplace.path)}
+                active={active(SURFACES.marketplace.path)}
+                label={SURFACES.marketplace.label}
+                icon={<StoreIcon />}
+              />
+            </Section>
+
             <Section label="Play" storageKey="play">
               {offers(ontology, SURFACES.campaigns) && (
                 <Entry
@@ -201,12 +223,6 @@ export function AppSidebar() {
                 active={active(SURFACES.rules.path)}
                 label={SURFACES.rules.label}
                 icon={<BookMarkedIcon />}
-              />
-              <Entry
-                to={to(SURFACES.marketplace.path)}
-                active={active(SURFACES.marketplace.path)}
-                label={SURFACES.marketplace.label}
-                icon={<StoreIcon />}
               />
             </Section>
 

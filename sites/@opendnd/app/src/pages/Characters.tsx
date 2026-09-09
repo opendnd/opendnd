@@ -10,7 +10,7 @@ import { Thumb } from '../components/Thumb';
 import { humanize } from '../schema/fields';
 import { Badge } from '@/components/ui/badge';
 import { Page } from '../build/Page';
-import { PAGES } from '../build/pages';
+import { usePageLayout } from '../build/projects';
 import { Button } from '@/components/ui/button';
 
 /** The characters played in this world, as cards. A block, placed by a page. */
@@ -98,5 +98,5 @@ export function CharacterList() {
 
 /** The characters page: one block, on the grid like everything else. */
 export function Characters() {
-  return <Page page={PAGES.characters} />;
+  return <Page page={usePageLayout('characters')} />;
 }
