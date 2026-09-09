@@ -1,5 +1,10 @@
 import { type ReactNode, createContext, useContext, useMemo } from 'react';
-import { type Project, layoutFor, projectOf } from './project';
+import {
+  type Project,
+  layoutFor,
+  projectOf,
+  recordLayoutFor,
+} from './project';
 import type { PageLayout } from './Page';
 import { useApi } from '../app/context';
 import { useRequest } from '../app/hooks';
@@ -17,6 +22,8 @@ export interface Projects {
   readonly loading: boolean;
   /** The layout to draw for a path: the world's own, or the built-in one. */
   layoutFor(path: string): PageLayout;
+  /** The layout for a record of this model, when there is one. */
+  recordLayoutFor(model: string): PageLayout | undefined;
   reload(): void;
 }
 
@@ -24,6 +31,7 @@ const Context = createContext<Projects>({
   all: [],
   loading: false,
   layoutFor: (path) => layoutFor(path, []).layout,
+  recordLayoutFor: (model) => recordLayoutFor(model, []),
   reload: () => undefined,
 });
 
@@ -49,6 +57,7 @@ export function ProjectsProvider(props: {
       all,
       loading: request.loading,
       layoutFor: (path) => layoutFor(path, all).layout,
+      recordLayoutFor: (model) => recordLayoutFor(model, all),
       reload: request.reload,
     }),
     [all, request.loading, request.reload],

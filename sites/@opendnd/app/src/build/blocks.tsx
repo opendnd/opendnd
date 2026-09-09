@@ -1,8 +1,12 @@
 import {
+  AwardIcon,
+  BackpackIcon,
   BookOpenIcon,
   CalendarClockIcon,
   CompassIcon,
+  DicesIcon,
   FileTextIcon,
+  HeartPulseIcon,
   HistoryIcon,
   ImageIcon,
   LayoutGridIcon,
@@ -13,8 +17,12 @@ import {
   ScrollTextIcon,
   SearchIcon,
   ShieldIcon,
+  SmileIcon,
+  SparklesIcon,
   SwordsIcon,
   TableIcon,
+  TargetIcon,
+  UserIcon,
   UsersIcon,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -24,6 +32,15 @@ import {
   CountsBlock,
   RecentBlock,
 } from './blocks/home';
+import {
+  SheetAbilities,
+  SheetChecks,
+  SheetCombat,
+  SheetEquipment,
+  SheetHeader,
+  SheetSpells,
+  SheetTraining,
+} from './blocks/sheet';
 import { CampaignList } from '../pages/Campaigns';
 import { CharacterList } from '../pages/Characters';
 import { CompendiumSurface } from '../pages/Compendium';
@@ -191,8 +208,115 @@ export const BLOCKS: readonly Block[] = [
     render: () => <RulesSurface />,
   }),
 
+  // The character sheet, which is the arrangement a player already knows,
+  // arrived at the same way as any other page.
+  block({
+    id: 'sheet-header',
+    name: 'Character header',
+    category: 'Play',
+    description:
+      'Who this is: their name, their classes and level, their background, and who plays them.',
+    icon: UserIcon,
+    bindings: ['character', 'class', 'background', 'person'],
+    size: { w: 6, h: 1 },
+    scope: 'record',
+    render: (props) => <SheetHeader record={props.record} />,
+  }),
+  block({
+    id: 'sheet-abilities',
+    name: 'Ability scores',
+    category: 'Play',
+    description:
+      'The six scores and their modifiers. Click a score to change it and the whole sheet follows.',
+    icon: DicesIcon,
+    bindings: ['character'],
+    size: { w: 2, h: 2 },
+    scope: 'record',
+    render: (props) => <SheetAbilities record={props.record} />,
+  }),
+  block({
+    id: 'sheet-checks',
+    name: 'Saves and skills',
+    category: 'Play',
+    description:
+      'Saving throws and every skill the world has, with the proficiency bonus where it applies.',
+    icon: TargetIcon,
+    bindings: ['character', 'skill', 'proficiency'],
+    size: { w: 2, h: 4 },
+    scope: 'record',
+    render: (props) => <SheetChecks record={props.record} />,
+  }),
+  block({
+    id: 'sheet-combat',
+    name: 'Hit points and combat',
+    category: 'Play',
+    description:
+      'Hit points as they stand, hit dice, initiative, what is noticed without looking, and any conditions.',
+    icon: HeartPulseIcon,
+    bindings: ['character', 'class', 'condition'],
+    size: { w: 4, h: 2 },
+    scope: 'record',
+    render: (props) => <SheetCombat record={props.record} />,
+  }),
+  block({
+    id: 'sheet-training',
+    name: 'Feats and proficiencies',
+    category: 'Play',
+    description: 'What this character can do that another of their level cannot.',
+    icon: AwardIcon,
+    bindings: ['character', 'feat', 'proficiency'],
+    size: { w: 2, h: 2 },
+    scope: 'record',
+    render: (props) => <SheetTraining record={props.record} />,
+  }),
+  block({
+    id: 'sheet-equipment',
+    name: 'Equipment',
+    category: 'Play',
+    description: 'What the character carries, what is in hand and what is attuned.',
+    icon: BackpackIcon,
+    bindings: ['character', 'item'],
+    size: { w: 2, h: 2 },
+    scope: 'record',
+    render: (props) => <SheetEquipment record={props.record} />,
+  }),
+  block({
+    id: 'sheet-spells',
+    name: 'Spells',
+    category: 'Play',
+    description: 'Spells known and prepared, and the slots spent since the last rest.',
+    icon: SparklesIcon,
+    bindings: ['character', 'spell'],
+    size: { w: 6, h: 2 },
+    scope: 'record',
+    render: (props) => <SheetSpells record={props.record} />,
+  }),
+
   // Listed, not yet written. The marketplace shows these so that a page can
   // be planned around them and nobody is promised one that does not exist.
+  block({
+    id: 'sheet-attacks',
+    name: 'Attacks',
+    category: 'Play',
+    description:
+      'What the character swings and throws, with the bonus to hit and the damage.',
+    icon: SwordsIcon,
+    bindings: ['character', 'item', 'statblock'],
+    size: { w: 4, h: 2 },
+    scope: 'record',
+    status: 'roadmap',
+  }),
+  block({
+    id: 'sheet-personality',
+    name: 'Personality',
+    category: 'Play',
+    description: 'Traits, ideals, bonds and flaws — what the character is like.',
+    icon: SmileIcon,
+    bindings: ['character', 'background'],
+    size: { w: 2, h: 2 },
+    scope: 'record',
+    status: 'roadmap',
+  }),
   block({
     id: 'article',
     name: 'Article',

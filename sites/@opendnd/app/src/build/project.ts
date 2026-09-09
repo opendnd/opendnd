@@ -1,5 +1,5 @@
 import type { PageLayout } from './Page';
-import { PAGES, type BuiltInPage } from './pages';
+import { PAGES, RECORD_PAGES, type BuiltInPage } from './pages';
 import { clampRect, type Placed } from './grid';
 import type { Resource } from '../api/types';
 
@@ -168,4 +168,22 @@ export function copyOf(page: ProjectPage, worldName: string): Record<string, unk
       },
     ],
   };
+}
+
+/**
+ * The layout for one record's own page: the world's, when it has published
+ * one for this model, and otherwise the one the application ships.
+ */
+export function recordLayoutFor(
+  model: string,
+  projects: readonly Project[],
+): PageLayout | undefined {
+  for (const project of projects) {
+    if (project.status !== 'published') continue;
+    const page = project.pages.find(
+      (one) => one.scope === 'record' && one.model === model,
+    );
+    if (page) return page.layout;
+  }
+  return (RECORD_PAGES as Record<string, PageLayout>)[model];
 }

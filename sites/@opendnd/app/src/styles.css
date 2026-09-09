@@ -354,3 +354,39 @@
 .leaflet-tooltip.map-label::before {
   display: none;
 }
+
+/*
+ * A character sheet on paper.
+ *
+ * What a player prints is the sheet and nothing else: no navigation, no
+ * panel, no tabs. The grid stays a grid — the arrangement on paper is the
+ * arrangement on screen, which is the point of it being a grid in the first
+ * place — but the cells stop scrolling inside themselves, because paper has
+ * no scrollbars and a clipped list is a lost one.
+ */
+@media print {
+  body {
+    background: #fff;
+  }
+  [data-slot='sidebar-wrapper'] > [data-slot='sidebar'],
+  [data-slot='sidebar-inset'] > header,
+  [data-slot='tabs-list'],
+  [data-print='hide'] {
+    display: none !important;
+  }
+  .sheet-print [data-slot='tabs-content'],
+  .sheet-print {
+    overflow: visible !important;
+  }
+  .sheet-print * {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+  .sheet-print section {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+  @page {
+    margin: 12mm;
+  }
+}

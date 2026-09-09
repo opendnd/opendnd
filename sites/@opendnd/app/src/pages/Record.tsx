@@ -19,6 +19,9 @@ import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
 import { recordPath, useWorld } from '../app/world';
 import { Article } from '../components/Article';
+import { Page } from '../build/Page';
+import { EditingProvider, SavingMark } from '../build/sheet/Editable';
+import { useProjects } from '../build/projects';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
 import { cellModels, parseCell } from '../schema/cells';
 import { type Field, describe } from '../schema/fields';
@@ -59,12 +62,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 /** One resource: its article, what links to it, and its history. */
 export function Record() {
   const api = useApi();
   const ontology = useOntology();
   const { world, canEdit } = useWorld();
+  const projects = useProjects();
   const { model = '', id = '' } = useParams();
   const [params, setParams] = useSearchParams();
   const navigate = useNavigate();
@@ -128,6 +133,12 @@ export function Record() {
     );
   }
 
+  const sheet = projects.recordLayoutFor(model);
+  const links =
+    references.data && references.data.length > 0 ? (
+      <ReferenceList hits={references.data} world={world.id} id={id} />
+    ) : undefined;
+
   const notAtTime =
     resource.error instanceof Problem &&
     resource.error.code === 'not-found' &&
@@ -162,21 +173,49 @@ export function Record() {
           )
         )}
         {resource.loading && !resource.data && <Loading />}
-        {resource.data && (
-          <Article
-            resource={resource.data.body}
-            root={root}
-            seeAlso={
-              references.data && references.data.length > 0 ? (
-                <ReferenceList
-                  hits={references.data}
-                  world={world.id}
+        {resource.data &&
+          (sheet ? (
+            // A model with a page of its own leads with it: a player opening
+            // a character wants the sheet, and the article second.
+            <Tabs defaultValue="sheet" className="min-h-0">
+              <TabsList>
+                <TabsTrigger value="sheet">Sheet</TabsTrigger>
+                <TabsTrigger value="article">Article</TabsTrigger>
+                <TabsTrigger value="data">Data</TabsTrigger>
+              </TabsList>
+              <TabsContent value="sheet" className="sheet-print">
+                <EditingProvider
+                  model={model}
                   id={id}
+                  canEdit={canEdit && !asOf}
+                  onSaved={resource.reload}
+                >
+                  <div className="flex justify-end">
+                    <SavingMark />
+                  </div>
+                  <Page page={sheet} record={resource.data.body} />
+                </EditingProvider>
+              </TabsContent>
+              <TabsContent value="article">
+                <Article
+                  resource={resource.data.body}
+                  root={root}
+                  seeAlso={links}
                 />
-              ) : undefined
-            }
-          />
-        )}
+              </TabsContent>
+              <TabsContent value="data">
+                <pre className="overflow-x-auto rounded-md bg-muted p-3 font-mono text-xs leading-relaxed">
+                  {JSON.stringify(resource.data.body, null, 2)}
+                </pre>
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <Article
+              resource={resource.data.body}
+              root={root}
+              seeAlso={links}
+            />
+          ))}
       </div>
 
       <aside className="flex flex-col gap-4 text-sm">

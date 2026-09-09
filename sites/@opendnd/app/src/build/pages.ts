@@ -58,3 +58,24 @@ export const PAGES = {
 } satisfies Record<string, PageLayout>;
 
 export type BuiltInPage = keyof typeof PAGES;
+
+/**
+ * The pages a record is shown on, by the model they are about.
+ *
+ * A world page stands on its own; a record page is about one record and is
+ * reached from it, which is why these are keyed by model rather than by path.
+ */
+export const RECORD_PAGES = {
+  character: {
+    rows: 'fit',
+    blocks: [
+      at('header', 'sheet-header', 1, 1, 6, 1),
+      at('abilities', 'sheet-abilities', 1, 2, 2, 2),
+      at('combat', 'sheet-combat', 3, 2, 4, 2),
+      at('checks', 'sheet-checks', 1, 4, 2, 4),
+      at('training', 'sheet-training', 3, 4, 2, 2),
+      at('equipment', 'sheet-equipment', 5, 4, 2, 2),
+      at('spells', 'sheet-spells', 3, 6, 4, 2),
+    ],
+  },
+} satisfies Record<string, PageLayout>;
