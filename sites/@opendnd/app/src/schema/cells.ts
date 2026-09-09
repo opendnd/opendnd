@@ -317,6 +317,16 @@ export interface Coverage {
   readonly cells: string[];
   /** The faces those cells lie on, to ask for what is coarser than they are. */
   readonly faces: string[];
+  /**
+   * A few points of the view, as fine cells, to ask whose ground they are.
+   *
+   * Not the sample cells: those are as big as the view, and a country holds
+   * ground in pieces far smaller than that, so asking what holds a square the
+   * size of the screen finds only whatever is bigger still. A point is the
+   * question that has an answer — this spot is in that kingdom — and a
+   * handful of them across the view names everything worth naming in it.
+   */
+  readonly points: string[];
   readonly sampleLevel: number;
   /** The finest level worth drawing at this zoom. */
   readonly maxLevel: number;
@@ -366,7 +376,20 @@ export function coverage(
       const faces = [
         ...new Set(cells.map((t) => ancestor(parseCell(t)!, 0)!.token)),
       ];
-      return { cells, faces, sampleLevel, maxLevel };
+      // The corners, the edges and the middle, fine enough to be a spot on
+      // the ground rather than a stretch of it.
+      const spotLevel = Math.min(maxLevel + 4, 20);
+      const spots = [
+        ...new Set(
+          points
+            .filter(
+              (_, index) =>
+                index % 2 === 0 && Math.floor(index / (grid + 1)) % 2 === 0,
+            )
+            .map((p) => cellAtLatLng(p, spotLevel).token),
+        ),
+      ].slice(0, most);
+      return { cells, faces, points: spots, sampleLevel, maxLevel };
     }
     sampleLevel--;
   }

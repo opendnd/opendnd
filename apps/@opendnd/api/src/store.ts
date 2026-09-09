@@ -249,10 +249,23 @@ export class Store {
       // of a map zoomed in on a field finds nothing at all.
       const { min, max } = cellRange(options.covers);
       const lsb = 'cell_id & -cell_id';
+      // Two ways to hold somewhere. The place sits at a cell large enough to
+      // contain it — a continent's own square holds everything on it. Or the
+      // place holds ground, and one of the cells it holds contains it.
+      //
+      // This part is a scan of the layer, and cannot be otherwise yet. An
+      // index over the array would answer it, but the operator that asks
+      // "does this array hold any of these" is not leakproof, and the table
+      // forces row-level security, so the planner is not allowed to use it
+      // before the policy has run. Making it an index scan means holding the
+      // cells as rows of their own with a plain integer to compare, which is
+      // a table this does not have.
+      const above = ancestorTokens(options.covers);
       where.push(
-        `cell_id is not null` +
+        `((cell_id is not null` +
           ` and cell_id - ((${lsb}) - 1) <= $${params.push(min)}` +
-          ` and cell_id + ((${lsb}) - 1) >= $${params.push(max)}`,
+          ` and cell_id + ((${lsb}) - 1) >= $${params.push(max)})` +
+          ` or body -> 'extent' ?| $${params.push(above)}::text[])`,
       );
     }
     if (options.maxLevel !== undefined) {
@@ -932,6 +945,37 @@ export function cellRange(token: string): { min: string; max: string } {
   const min = BigInt.asIntN(64, id - (lowest - 1n));
   const max = BigInt.asIntN(64, id + (lowest - 1n));
   return { min: min.toString(), max: max.toString() };
+}
+
+/**
+ * The tokens of a cell and of every cell containing it, coarsest last.
+ *
+ * A place holds ground as a set of cells, and holding somewhere means holding
+ * that cell or one it sits inside. There are only ever thirty-odd cells above
+ * any point, so "does this set contain an ancestor of X" is a short list of
+ * exact matches rather than a search — which is a question an index can
+ * answer, where a range test over an array is not.
+ */
+export function ancestorTokens(token: string): string[] {
+  if (!/^[0-9a-f]{1,16}$/i.test(token)) {
+    throw new ValidationError(`${token} is not a cell token`, [
+      { path: ['covers'], message: 'not a cell token' },
+    ]);
+  }
+  const id = BigInt(`0x${token.padEnd(16, '0')}`);
+  /* eslint-disable-next-line no-bitwise -- the level marker bit again */
+  const lowest = id & -id;
+  // The marker of a face, the coarsest cell there is: two bits per level for
+  // thirty levels, so the sixtieth bit.
+  const face = 4n ** 30n;
+  const out: string[] = [];
+  for (let step = lowest; step <= face; step *= 4n) {
+    // Clear everything below this level, then set the level's own marker.
+    const above = (id / (step * 2n)) * (step * 2n) + step;
+    const hex = BigInt.asUintN(64, above).toString(16).padStart(16, '0');
+    out.push(hex.replace(/0+$/, '') || '0');
+  }
+  return [...new Set(out)];
 }
 
 /** Drop the fields the server sets, whatever a request says about them. */

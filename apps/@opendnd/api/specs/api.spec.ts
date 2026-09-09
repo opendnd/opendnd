@@ -1105,6 +1105,27 @@ describe('the API: what a front end needs', () => {
     // A cell covers itself, so the town is there too.
     expect(covering).toContain('A Town In It');
 
+    // A place holding ground covers everywhere in it, not only near its own
+    // square: a country is found from anywhere inside its borders.
+    const holding = await drew.post(`/v1/worlds/${world}/place`, {
+      name: 'A Realm That Holds Ground',
+      placeType: 'kingdom',
+      // Its own square is far away; what it holds is around the town.
+      cell: '37',
+      extent: ['950000', '950004'],
+    });
+    const held = await drew.get(
+      `/v1/worlds/${world}/place?covers=${townCell}&limit=100`,
+    );
+    expect(
+      (held.body as { resources: { name: string }[] }).resources.map(
+        (r) => r.name,
+      ),
+    ).toContain('A Realm That Holds Ground');
+    await drew.delete(
+      `/v1/worlds/${world}/place/${(holding.body as { id: string }).id}`,
+    );
+
     // Somewhere else on the world is covered by neither.
     const elsewhere = await drew.get(
       `/v1/worlds/${world}/place?covers=37&limit=100`,

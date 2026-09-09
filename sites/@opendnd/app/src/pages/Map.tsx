@@ -250,17 +250,19 @@ export function MapPage() {
   // than anything on screen and which the first question can never find.
   const plan = view ? coverage(view, { below: DRAWN_BELOW }) : undefined;
   const planKey = plan
-    ? `${plan.cells.join(' ')}|${plan.sampleLevel}|${plan.maxLevel}`
+    ? `${plan.cells.join(' ')}|${plan.points.join(' ')}|${plan.maxLevel}`
     : '';
   const records = useRequest(
     async () => {
       if (!plan) return [] as Entry[];
       const queries = [
         ...plan.cells.map((cell) => ({ cell, maxLevel: plan.maxLevel })),
-        // One "what am I inside" for each sampled square, rather than sweeping
-        // a whole face for everything coarse: a world of a hundred and fifty
-        // kingdoms is all coarse, and every one of them would come back.
-        ...plan.cells.map((cell) => ({ covers: cell })),
+        // One "whose ground is this" for each sampled spot, rather than
+        // sweeping a whole face for everything coarse: a world of a hundred
+        // and fifty kingdoms is all coarse, and every one of them would come
+        // back. A spot rather than a square, because a kingdom holds its
+        // ground in pieces smaller than the view.
+        ...plan.points.map((cell) => ({ covers: cell })),
       ];
       const pages = await Promise.all(
         models.flatMap((m) =>

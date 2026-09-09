@@ -3,6 +3,8 @@ import { CellId } from '@opendnd/spatial';
 import {
   IDENTITY,
   coveringOf,
+  divide,
+  shareOfGlobe,
   drawTile,
   flatten,
   outlinesOf,
@@ -412,5 +414,89 @@ describe('the ground a place holds', () => {
     expect(
       coveringOf(shape, fit, { maxLevel: 14, most: 40 }).length,
     ).toBeLessThan(160);
+  });
+
+  it('shares one piece of ground out among the places seated on it', () => {
+    const cells = coveringOf(shape, fit, { maxLevel: 8, most: 200 });
+    const west = toLatLng(fit, [485, 500]);
+    const east = toLatLng(fit, [515, 500]);
+    const shared = divide(cells, [
+      { key: 'west', at: west },
+      { key: 'east', at: east },
+    ]);
+    // Everything is held, once.
+    expect([...shared.west!, ...shared.east!].sort()).toEqual(
+      [...cells].sort(),
+    );
+    expect(shared.west!.length).toBeGreaterThan(0);
+    expect(shared.east!.length).toBeGreaterThan(0);
+    // And what each holds is the half it is seated in.
+    for (const token of shared.west!) {
+      expect(CellId.fromToken(token).centerLatLng().lng).toBeLessThan(east.lng);
+    }
+  });
+
+  it('finds ground under a cell that spans the meridian where the day changes', () => {
+    // Far east and far north, where the cells the search starts from are the
+    // ones whose corners lie on either side of the line: west of one and
+    // east of the other, so that anything between them looks like nowhere.
+    const eastward = readDrawnMap(
+      `<svg viewBox="0 0 1000 1000"><g id="Far"><path ` +
+        `d="M945 230L975 230L975 265L945 265Z"/></g></svg>`,
+    );
+    const cells = coveringOf(eastward.shapes[0]!, fit, {
+      maxLevel: 9,
+      most: 300,
+    });
+    expect(cells.length).toBeGreaterThan(0);
+    const middle = CellId.fromLatLng(toLatLng(fit, [960, 247]), 20);
+    expect(
+      cells.map(CellId.fromToken).some((cell) => cell.contains(middle)),
+    ).toBe(true);
+  });
+
+  it('says how much of the globe the ground is', () => {
+    // Six faces, so one face is a sixth; four of its quarters are the face.
+    expect(shareOfGlobe(['1'])).toBeCloseTo(1 / 6, 12);
+    const face = CellId.fromFaceIJ(0, 0, 0, 0);
+    expect(
+      shareOfGlobe(face.children().map((child) => child.token())),
+    ).toBeCloseTo(1 / 6, 12);
+    // And a patch of a drawing is a patch of the world.
+    const cells = coveringOf(shape, fit, { maxLevel: 9, most: 300 });
+    expect(shareOfGlobe(cells)).toBeGreaterThan(0);
+    expect(shareOfGlobe(cells)).toBeLessThan(0.01);
+  });
+
+  it('gives one place seated alone the whole of it', () => {
+    const cells = coveringOf(shape, fit, { maxLevel: 8, most: 200 });
+    const only = divide(cells, [
+      { key: 'only', at: toLatLng(fit, [500, 500]) },
+    ]);
+    expect(only.only).toEqual(cells);
+  });
+
+  it('divides the border between neighbours instead of giving it to both', () => {
+    // Two squares meeting along one edge, as two countries do.
+    const pair = readDrawnMap(
+      `<svg viewBox="0 0 1000 1000">` +
+        `<g id="West"><path d="M400 460L500 460L500 540L400 540Z"/></g>` +
+        `<g id="East"><path d="M500 460L600 460L600 540L500 540Z"/></g>` +
+        `</svg>`,
+    );
+    // Coarse enough that the border runs through cells rather than along
+    // them, which is when both sides would otherwise claim the same ground.
+    const held = pair.shapes.map((one) =>
+      coveringOf(one, fit, { maxLevel: 7, most: 24 }),
+    );
+    const west = held[0]!.map(CellId.fromToken);
+    const east = held[1]!.map(CellId.fromToken);
+    expect(west.length).toBeGreaterThan(0);
+    expect(east.length).toBeGreaterThan(0);
+    for (const mine of west) {
+      for (const theirs of east) {
+        expect(mine.contains(theirs) || theirs.contains(mine)).toBe(false);
+      }
+    }
   });
 });

@@ -282,6 +282,19 @@ const filters = [
       'A quadtree cell token. Returns everything at or inside the cell.',
   },
   {
+    name: 'covers',
+    in: 'query',
+    schema: { type: 'string', pattern: '^[0-9a-f]{1,16}$' },
+    description:
+      'A quadtree cell token, asked the other way round: returns what holds ' +
+      'that ground rather than what is on it. A record holds it if its own ' +
+      'cell contains the cell, or if the cell is one of those the record ' +
+      'lists in `extent`, or inside one of them. Ask it of a spot rather ' +
+      'than of a square: a kingdom holds its ground in pieces smaller than a ' +
+      'screenful, so a square the size of the view finds only what is bigger ' +
+      'still.',
+  },
+  {
     name: 'maxLevel',
     in: 'query',
     schema: { type: 'integer', minimum: 0, maximum: 30 },

@@ -110,4 +110,32 @@ describe('cells on the sphere', () => {
       expect(close.faces).toContain(ancestor(parseCell(token)!, 0)!.token);
     }
   });
+
+  it('asks whose ground it is standing on a spot, not over a square', () => {
+    const close = coverage({
+      north: 34,
+      south: 30,
+      east: -60,
+      west: -64,
+      zoom: 7,
+    });
+    expect(close.points.length).toBeGreaterThan(0);
+    expect(close.points.length).toBeLessThanOrEqual(8);
+    for (const token of close.points) {
+      const spot = parseCell(token)!;
+      // Finer than anything the view is fetched by, and finer than anything
+      // drawn at this zoom: a kingdom holds ground in pieces smaller than a
+      // screenful, and a square the size of the screen would miss all of it.
+      expect(spot.level).toBeGreaterThan(close.maxLevel);
+      expect(spot.level).toBeGreaterThan(close.sampleLevel);
+      // And every spot is somewhere in the view.
+      expect(
+        close.cells.some(
+          (cell) =>
+            parseCell(cell)!.token ===
+            ancestor(spot, parseCell(cell)!.level)!.token,
+        ),
+      ).toBe(true);
+    }
+  });
 });
