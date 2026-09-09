@@ -66,3 +66,13 @@ A border is a curve, and a curve is a poor thing to own. You cannot ask it what 
 - **`cell` stays what it was**: where a place *is*, one cell at its own scale. `extent` is what it *covers*. A town has the first and not the second; a kingdom has both.
 - **A covering is built the way any quadtree covering is**: start at the faces, keep a cell wholly inside the shape, discard one wholly outside, split the ones on the edge, and stop at a given fineness or a given number of cells. The number matters more than the fineness — a country wants a hundred or two cells, not the ten thousand an exact border would take.
 - **The drawing is still the drawing.** A covering approximates a border and is not it; a map is drawn from the curves. The extent is for the questions a record has to answer — who holds this ground, how much of it is there, what is next to what.
+
+## Decided later, 2026-09-09: the map is drawn, not stored
+
+A pyramid of pictures is a map somebody made once, at the sizes they thought of. A hand-drawn world tiled for the web typically stops around zoom seven, which is about the width of a county, and below that there is nothing at all — while the point of the quadtree has always been that the same identity runs from a planet to a five-foot square.
+
+- **A tile is rendered when it is asked for**, from one file per world holding its coastlines as the curves they were drawn with. A few milliseconds a tile, no twenty thousand files, and the map changes the moment the world does. The file is written from a drawing somebody made or by the generator for a world nobody has drawn, and nothing downstream can tell which.
+- **The extension says where a tile comes from.** `.png` is a picture somebody made; `.svg` is drawn now. That keeps the route free of the database, which matters because a map asks for a hundred tiles at once and none of them should cost a query.
+- **Below the depth the map was drawn at, the coast is generated** — by midpoint displacement seeded from the position of each point, so the same stretch of coast is the same shape at every zoom, from any machine, however the map is cut into tiles. A coast that shimmered as you zoomed would be worse than a smooth one.
+- **What cannot be seen is not drawn.** A shape smaller than a pixel is dropped and points closer than half a pixel are thinned away; without it the tile for the whole world carries every coastline in the world at full precision, which was three megabytes for a picture 256 pixels across.
+- **A list can be asked what covers a square, not only what is inside one.** A county is not in the view the way a town is — the view is in the county — and a map that only ever asks the first question finds nothing at all once it is zoomed in past the size of a country.

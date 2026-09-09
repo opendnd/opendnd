@@ -164,7 +164,7 @@ function sharesOf(
 
 /**
  * Whether one world is within reach of another on every measurement that has
- * a tolerance. What "as good as Kur-Ao" is checked with.
+ * a tolerance. What "as good as the world we already have" is checked with.
  */
 export function within(
   made: Measurements,

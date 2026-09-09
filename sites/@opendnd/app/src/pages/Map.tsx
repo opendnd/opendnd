@@ -244,19 +244,23 @@ export function MapPage() {
     // Only a move changes the address here; the rest of it is left as it is.
   }, [view]);
 
-  // What is in view: the cells under it, and the coarser things on their faces.
+  // What is in view, which is two questions. What is *inside* the squares under
+  // the view — the towns and the encounters. And what the view is *inside* —
+  // the county, the kingdom, the continent, whose own squares are far larger
+  // than anything on screen and which the first question can never find.
   const plan = view ? coverage(view, { below: DRAWN_BELOW }) : undefined;
   const planKey = plan
-    ? `${plan.cells.join(' ')}|${plan.faces.join(' ')}|${plan.sampleLevel}|${plan.maxLevel}`
+    ? `${plan.cells.join(' ')}|${plan.sampleLevel}|${plan.maxLevel}`
     : '';
   const records = useRequest(
     async () => {
       if (!plan) return [] as Entry[];
       const queries = [
         ...plan.cells.map((cell) => ({ cell, maxLevel: plan.maxLevel })),
-        ...(plan.sampleLevel > 0
-          ? plan.faces.map((cell) => ({ cell, maxLevel: plan.sampleLevel - 1 }))
-          : []),
+        // One "what am I inside" for each sampled square, rather than sweeping
+        // a whole face for everything coarse: a world of a hundred and fifty
+        // kingdoms is all coarse, and every one of them would come back.
+        ...plan.cells.map((cell) => ({ covers: cell })),
       ];
       const pages = await Promise.all(
         models.flatMap((m) =>
@@ -715,8 +719,11 @@ function AsOf(props: {
 function asBaseMap(world: string, value: unknown): BaseMap | undefined {
   if (value === null || typeof value !== 'object') return undefined;
   const map = value as Record<string, unknown>;
-  if (map.source === 'terrain') return undefined;
-  const own = `${config.apiUrl}/v1/worlds/${world}/tiles/{z}/{x}/{y}.png`;
+  // A world drawn from its own coastlines is asked for SVG, which is rendered
+  // when the tile is wanted and is therefore right at any depth. One that has
+  // pictures somebody made is asked for those, which stop where they stop.
+  const drawn = map.source === 'terrain';
+  const own = `${config.apiUrl}/v1/worlds/${world}/tiles/{z}/{x}/{y}.${drawn ? 'svg' : 'png'}`;
   return {
     tiles: typeof map.tiles === 'string' ? map.tiles : own,
     ...(typeof map.minZoom === 'number' ? { minZoom: map.minZoom } : {}),

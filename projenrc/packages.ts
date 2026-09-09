@@ -125,6 +125,7 @@ const apps: readonly PackageConfig[] = [
       `zod@${versions.zod}`,
       '@opendnd/types@workspace:*',
       '@opendnd/spatial@workspace:*',
+      '@opendnd/terrain@workspace:*',
       '@opendnd/generators@workspace:*',
       '@opendnd/simulation@workspace:*',
       '@opendnd/llm@workspace:*',

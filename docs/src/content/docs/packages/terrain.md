@@ -83,7 +83,7 @@ import { growWorld, measure } from '@opendnd/terrain';
 
 const world = growWorld({
   width, height, land, lake, wrapX: true,
-  seed: 'kur-ao',
+  seed: 'a-world',
   latOfRow: (row) => latOf((row + 0.5) / height),
 });
 ```

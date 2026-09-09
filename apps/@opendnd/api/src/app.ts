@@ -72,6 +72,7 @@ import {
   type WriteOptions,
   isModel,
 } from './store';
+import { forget, renderTile } from './tiles';
 import {
   ROLES,
   VISIBILITIES,
@@ -187,6 +188,10 @@ const listQuery = z.object({
   name: z.string().min(1).optional(),
   cell: CELL.optional(),
   maxLevel: z.coerce.number().int().min(0).max(30).optional(),
+  covers: z
+    .string()
+    .regex(/^[0-9a-f]{1,16}$/)
+    .optional(),
   cursor: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(500).optional(),
   sort: z.enum(['id', 'name', 'updatedAt', 'validTime']).optional(),
@@ -837,6 +842,8 @@ export function createApp(options: AppOptions) {
       }
       const id = assetId(body, contentType);
       await assets.put(`${worldPrefix(world)}assets/${id}`, body, contentType);
+      // Redrawing a world's shapes changes every tile of its map.
+      if (contentType === 'application/json') forget(world);
       return c.json(
         { id, contentType, size: body.byteLength, path: assetPath(world, id) },
         201,
@@ -887,7 +894,26 @@ export function createApp(options: AppOptions) {
   app.get('/v1/worlds/:world/tiles/:z/:x/:y', async (c) => {
     const world = uuidParam(c, 'world');
     const key = `${param(c, 'z')}/${param(c, 'x')}/${param(c, 'y')}`;
-    if (!TILE_KEY.test(key)) throw new NotFoundError('tile', key);
+    const parts = TILE_KEY.exec(key);
+    if (!parts) throw new NotFoundError('tile', key);
+
+    // The extension says where the tile comes from. A picture is one somebody
+    // made; an SVG is drawn now, from the world's own coastlines, which is
+    // right at any depth rather than only at the ones somebody thought of.
+    if (parts[4] === 'svg') {
+      const drawn = await renderTile(
+        assets,
+        world,
+        Number(parts[1]),
+        Number(parts[2]),
+        Number(parts[3]),
+      );
+      if (drawn === undefined) throw new NotFoundError('tile', key);
+      return c.body(drawn, 200, {
+        'content-type': 'image/svg+xml',
+        'cache-control': 'public, max-age=31536000, immutable',
+      });
+    }
     return serve(c, `${worldPrefix(world)}tiles/${key}`);
   });
 

@@ -1,4 +1,11 @@
-import { type Point, pathDataOf } from './path-data';
+import { finestFor, withDetail } from './detail';
+import type { Noise } from './noise';
+import {
+  type Outline,
+  type Point,
+  type Segment,
+  pathDataOf,
+} from './path-data';
 import type { DrawnMap, MapShape } from './svg-map';
 
 /**
@@ -33,6 +40,14 @@ export interface TileRequest {
   /** How many pixels across the tile is. */
   readonly size?: number;
   readonly palette?: Partial<Palette>;
+  /**
+   * Roughness for the depths the drawing does not reach. Below the size the
+   * map was drawn at, a coast would otherwise be the smooth curve somebody
+   * drew; given this, it keeps being a coast all the way down.
+   */
+  readonly detail?: Noise;
+  /** The finest the drawing itself goes, in drawing units. Below it, detail. */
+  readonly drawnTo?: number;
 }
 
 /**
@@ -55,13 +70,34 @@ export function drawTile(map: DrawnMap, request: TileRequest): string {
   // A little beyond the tile, so a coastline's own thickness never leaves a
   // seam along the edge where the next tile begins.
   const margin = (box.right - box.left) * 0.02;
-  const shown = map.shapes.filter((shape) => overlaps(shape, box, margin));
+  // A shape smaller than a pixel or two is a smudge, and drawing five hundred
+  // of them into one tile costs more than the whole rest of the map.
+  const tiny = ((box.right - box.left) / size) * 1.5;
+  const shown = map.shapes.filter(
+    (shape) => overlaps(shape, box, margin) && bigEnough(shape, tiny),
+  );
+
+  // A pixel's worth of the drawing at this zoom. Nothing finer is worth
+  // making, and nothing coarser looks like a coast.
+  const finest = finestFor(box, size);
+  const deeper =
+    request.detail !== undefined && finest < (request.drawnTo ?? 6);
 
   const parts: string[] = [
     `<rect width="${size}" height="${size}" fill="${palette.sea}"/>`,
   ];
   for (const shape of shown) {
-    const d = pathDataOf(shape.outlines, place);
+    const outlines = deeper
+      ? shape.outlines.map((outline) =>
+          withDetail(outline, request.detail!, finest),
+        )
+      : shape.outlines;
+    // Points closer together than half a pixel cannot be told apart once
+    // drawn, and a coastline has thousands of them.
+    const d = pathDataOf(
+      outlines.map((outline) => thinned(outline, finest / 3)),
+      place,
+    );
     if (d === '') continue;
     const fill = shape.kind === 'land' ? palette.land : palette.water;
     parts.push(
@@ -92,4 +128,36 @@ function overlaps(
     maxY >= box.top - margin &&
     minY <= box.bottom + margin
   );
+}
+
+/** Whether a shape covers enough of the tile to be worth drawing at all. */
+function bigEnough(shape: MapShape, least: number): boolean {
+  const [minX, minY, maxX, maxY] = shape.bounds;
+  return maxX - minX > least || maxY - minY > least;
+}
+
+/**
+ * An outline with the points nobody could see taken out.
+ *
+ * A coast drawn for a continent has a point every few feet; a tile showing the
+ * whole world has a pixel every few miles. Keeping both is the difference
+ * between a tile of three kilobytes and one of three megabytes.
+ */
+function thinned(outline: Outline, least: number): Outline {
+  if (least <= 0) return outline;
+  const segments: Segment[] = [];
+  let last = outline.from;
+  for (let i = 0; i < outline.segments.length; i += 1) {
+    const segment = outline.segments[i]!;
+    const span = Math.hypot(segment.to[0] - last[0], segment.to[1] - last[1]);
+    // The last one is always kept, or the outline stops short of closing.
+    if (span < least && i < outline.segments.length - 1) continue;
+    // A curve shorter than a few pixels is a straight line once drawn, and
+    // costs three points to say so. Most of a coastline is such curves.
+    segments.push(
+      segment.via && span < least * 6 ? { to: segment.to } : segment,
+    );
+    last = segment.to;
+  }
+  return { from: outline.from, segments };
 }

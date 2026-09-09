@@ -51,6 +51,7 @@ Without a Cognito pool configured the API is anonymous-only. `OPENDND_DEV_AUTH=o
 | `GET /v1/worlds/{world}/assets`                                                              | The files a world holds.   |
 | `GET /v1/worlds/{world}/assets/{id}`                                                         | Read a stored file. Not authenticated, because a browser asking for a picture sends nothing with it; the address is the digest. Cached for a year.   |
 | `DELETE /v1/worlds/{world}/assets/{id}`                                                      | Remove a stored file. Editors.   |
+| `GET /v1/worlds/{world}/tiles/{z}/{x}/{y}.svg`                                               | The same tile drawn now, from the coastlines the world holds under `terrain.json`, so it is right at any depth rather than only at the ones somebody made pictures of.   |
 | `GET /v1/worlds/{world}/tiles/{z}/{x}/{y}.png`                                               | One tile of a world's map, at the address web maps have used since the first one.   |
 | `GET /v1/worlds/{world}/{model}/{id}/references`                                              | Everything that points at a record.                                                                                                                                                                                                                       |
 | `GET /v1/worlds/{world}/{model}/{id}/history`                                                 | Every version of a record.                                                                                                                                                                                                                                |
@@ -77,6 +78,8 @@ Also `?canonStatus=`, `?perspective=`, `?module=`, `?generatedBy=`, `?name=` (pr
 `{id}/references` answers "what points at this". The ontology is a web of references — the events a person took part in, the titles they held, the claims pressed on them — so this is what an article about something is assembled from. Asking each model in turn and filtering would mean reading the world to draw one page.
 
 `{id}/history` lists every version of a record with the time it was written, and each of those times is something to pass back as `?asOf=`.
+
+A list takes `?cell=` for what is inside a square and `?covers=` for what the square is inside. They are different questions and a map asks both: a town is in the view, and the view is in the kingdom, whose own square is larger than anything on screen.
 
 `$search` matches names by substring across every model at once, narrowable with `?models=place,title`. A person looking for Itumeist does not know whether it is a place, a title or a house, and here it is likely to be all three.
 

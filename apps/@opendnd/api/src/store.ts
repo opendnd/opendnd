@@ -41,6 +41,12 @@ export interface ListOptions extends ReadOptions {
    * its zoom rather than for every hamlet on the continent.
    */
   readonly maxLevel?: number;
+  /**
+   * Only what covers this cell: records whose own cell contains it. The
+   * question a map asks when it wants to know where it is, rather than what
+   * is here.
+   */
+  readonly covers?: string;
   /** Only these ids, which is how a page fetches what it refers to at once. */
   readonly ids?: readonly string[];
   /**
@@ -234,6 +240,19 @@ export class Store {
       const { min, max } = cellRange(options.cell);
       where.push(
         `cell_id between $${params.push(min)} and $${params.push(max)}`,
+      );
+    }
+    if (options.covers !== undefined) {
+      // The other way round from `cell`: not what is inside this square, but
+      // what this square is inside. A country is not in the view the way a
+      // town is — the view is in the country — and asking the first question
+      // of a map zoomed in on a field finds nothing at all.
+      const { min, max } = cellRange(options.covers);
+      const lsb = 'cell_id & -cell_id';
+      where.push(
+        `cell_id is not null` +
+          ` and cell_id - ((${lsb}) - 1) <= $${params.push(min)}` +
+          ` and cell_id + ((${lsb}) - 1) >= $${params.push(max)}`,
       );
     }
     if (options.maxLevel !== undefined) {

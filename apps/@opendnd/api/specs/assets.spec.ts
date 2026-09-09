@@ -181,6 +181,55 @@ describe('what a world keeps as files', () => {
     ).toBe(404);
   });
 
+  it("draws a tile from the world's own shapes, at any depth", async () => {
+    // A world with one square island in the middle of it.
+    const store = new FileAssets(root);
+    await store.put(
+      `worlds/${world}/terrain.json`,
+      new TextEncoder().encode(
+        JSON.stringify({
+          width: 1000,
+          height: 1000,
+          seed: 'a test',
+          drawnTo: 6,
+          shapes: [
+            {
+              group: 'Somewhere',
+              kind: 'land',
+              d: 'M300 300L700 300L700 700L300 700Z',
+            },
+          ],
+        }),
+      ),
+      'application/json',
+    );
+
+    const middle = await call('GET', `/v1/worlds/${world}/tiles/0/0/0.svg`);
+    expect(middle.status).toBe(200);
+    expect(middle.headers.get('content-type')).toBe('image/svg+xml');
+    expect(middle.headers.get('cache-control')).toContain('immutable');
+    const svg = await middle.text();
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('<path');
+
+    // Deeper than anything was drawn at: still a tile, and still drawn.
+    const deep = await call(
+      'GET',
+      `/v1/worlds/${world}/tiles/14/8192/8192.svg`,
+    );
+    expect(deep.status).toBe(200);
+
+    // The same tile twice is the same picture, or a map would shimmer.
+    const again = await call('GET', `/v1/worlds/${world}/tiles/0/0/0.svg`);
+    expect(await again.text()).toBe(svg);
+
+    // A world with no shapes has nothing to draw.
+    const nowhere = crypto.randomUUID();
+    expect(
+      (await call('GET', `/v1/worlds/${nowhere}/tiles/0/0/0.svg`)).status,
+    ).toBe(404);
+  });
+
   it('knows which types it holds and what each key holds', () => {
     expect(storedType('image/png; charset=binary')).toBe('image/png');
     expect(storedType('text/html')).toBeUndefined();

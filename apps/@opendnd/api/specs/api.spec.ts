@@ -1070,6 +1070,58 @@ describe('the API: what a front end needs', () => {
     ).toBeGreaterThan(0);
   });
 
+  it('answers what a place is inside, not only what is inside it', async () => {
+    // The town is at a fine cell; the realm holding it at a coarse one.
+    const realm = await drew.post(`/v1/worlds/${world}/place`, {
+      name: 'The Wide Realm',
+      placeType: 'kingdom',
+      cell: '95',
+    });
+    const town = await drew.post(`/v1/worlds/${world}/place`, {
+      name: 'A Town In It',
+      placeType: 'town',
+      cell: '9500004',
+    });
+    const townCell = '9500004';
+
+    // Asking what is inside the town's own square finds the town.
+    const inside = await drew.get(
+      `/v1/worlds/${world}/place?cell=${townCell}&limit=100`,
+    );
+    const names = (
+      inside.body as { resources: { name: string }[] }
+    ).resources.map((r) => r.name);
+    expect(names).toContain('A Town In It');
+    expect(names).not.toContain('The Wide Realm');
+
+    // Asking what covers it finds the realm, which is the other question.
+    const over = await drew.get(
+      `/v1/worlds/${world}/place?covers=${townCell}&limit=100`,
+    );
+    const covering = (
+      over.body as { resources: { name: string }[] }
+    ).resources.map((r) => r.name);
+    expect(covering).toContain('The Wide Realm');
+    // A cell covers itself, so the town is there too.
+    expect(covering).toContain('A Town In It');
+
+    // Somewhere else on the world is covered by neither.
+    const elsewhere = await drew.get(
+      `/v1/worlds/${world}/place?covers=37&limit=100`,
+    );
+    expect(
+      (elsewhere.body as { resources: { name: string }[] }).resources.map(
+        (r) => r.name,
+      ),
+    ).not.toContain('The Wide Realm');
+
+    for (const made of [realm, town]) {
+      await drew.delete(
+        `/v1/worlds/${world}/place/${(made.body as { id: string }).id}`,
+      );
+    }
+  });
+
   it('counts what the world holds, by kind, and forgets what it deleted', async () => {
     const { status, body } = await drew.get(`/v1/worlds/${world}/$counts`);
     expect(status).toBe(200);

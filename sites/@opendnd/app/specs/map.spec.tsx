@@ -82,12 +82,16 @@ const camps = [
 function listed(request: Request) {
   const url = new URL(request.url);
   const cell = parseCell(url.searchParams.get('cell'));
+  // `covers` is the other question: not what is inside this square, but what
+  // this square is inside.
+  const covers = parseCell(url.searchParams.get('covers'));
   const maxLevel = Number(url.searchParams.get('maxLevel') ?? 30);
   return {
     resources: camps.filter((c) => {
       const spot = parseCell(c.spot);
       if (!spot) return false;
       if (cell && !contains(cell, spot)) return false;
+      if (covers && !contains(spot, covers)) return false;
       return spot.level <= maxLevel;
     }),
   };
@@ -160,13 +164,18 @@ describe('the map', () => {
       calls
         .filter((c) => c.url.includes('/camp?'))
         .map((c) => new URL(c.url).searchParams);
-    // Every request is bounded by a cell and a level: the sample cells down
-    // to level 8, and their faces for what is coarser than the samples.
-    await waitFor(() =>
-      expect(asked().some((q) => Number(q.get('maxLevel')) < 8)).toBe(true),
-    );
-    expect(asked().every((q) => q.has('cell') && q.has('maxLevel'))).toBe(true);
+    // Two questions per sampled square, and every request is bounded by one.
+    // What is inside it, down to level 8, which is as fine as zoom 4 draws;
+    // and what it is inside, which is how a county larger than the screen is
+    // found at all.
+    await waitFor(() => expect(asked().length).toBeGreaterThan(1));
+    expect(
+      asked().every(
+        (q) => (q.has('cell') && q.has('maxLevel')) || q.has('covers'),
+      ),
+    ).toBe(true);
     expect(asked().some((q) => q.get('maxLevel') === '8')).toBe(true);
+    expect(asked().some((q) => q.has('covers'))).toBe(true);
     // A model without a cell field is not asked; only camps sit on the map.
     expect(calls.some((c) => c.url.includes('/song'))).toBe(false);
   });
