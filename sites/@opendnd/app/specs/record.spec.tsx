@@ -33,19 +33,18 @@ function renderTroupe() {
 }
 
 describe('a record’s page', () => {
-  it('lists what links here by kind, saying through which field and when, in date order', async () => {
+  it('lists what links here under See also, by kind, through which field and when', async () => {
     renderTroupe();
-    const heading = await screen.findByText('What links here');
-    const card = within(heading.closest('[data-slot="card"]')!);
-    const items = card.getAllByRole('listitem');
+    const heading = await screen.findByRole('heading', { name: 'See also' });
+    const section = within(heading.closest('section')!);
+    const items = section.getAllByRole('listitem');
     expect(items.map((li) => li.textContent)).toEqual([
       expect.stringMatching(/^Opening Nightas troupe · played on /),
       expect.stringMatching(/^Second Nightas troupe · played on /),
     ]);
-    expect(card.getByRole('link', { name: 'Opening Night' })).toHaveAttribute(
-      'href',
-      `/worlds/${WORLD_ID}/show/${storedShow.id}`,
-    );
+    expect(
+      section.getByRole('link', { name: 'Opening Night' }),
+    ).toHaveAttribute('href', `/worlds/${WORLD_ID}/show/${storedShow.id}`);
   });
 
   it('offers to make linked records, with the link in the address', async () => {

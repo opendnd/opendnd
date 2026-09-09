@@ -133,8 +133,11 @@ export function Record() {
     resource.error.code === 'not-found' &&
     at !== '';
 
+  // The article takes the pane and the tools take a rail beside it: an
+  // encyclopedia page with a box floated into it needs the width, and the
+  // buttons do not grow with it.
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)]">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_18rem]">
       <div className="flex flex-col gap-4">
         {asOf && (
           <Notice
@@ -159,7 +162,21 @@ export function Record() {
           )
         )}
         {resource.loading && !resource.data && <Loading />}
-        {resource.data && <Article resource={resource.data.body} root={root} />}
+        {resource.data && (
+          <Article
+            resource={resource.data.body}
+            root={root}
+            seeAlso={
+              references.data && references.data.length > 0 ? (
+                <ReferenceList
+                  hits={references.data}
+                  world={world.id}
+                  id={id}
+                />
+              ) : undefined
+            }
+          />
+        )}
       </div>
 
       <aside className="flex flex-col gap-4 text-sm">
@@ -362,24 +379,7 @@ export function Record() {
           </Card>
         )}
 
-        <Card size="sm">
-          <CardHeader>
-            <CardTitle>What links here</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {references.error && <ErrorNotice error={references.error} />}
-            {references.data?.length === 0 && (
-              <p className="text-muted-foreground">
-                Nothing refers to this yet.
-              </p>
-            )}
-            <ReferenceList
-              hits={references.data ?? []}
-              world={world.id}
-              id={id}
-            />
-          </CardContent>
-        </Card>
+        {references.error && <ErrorNotice error={references.error} />}
 
         <Card size="sm">
           <CardHeader>

@@ -292,15 +292,20 @@
 .prose-record h4 {
   @apply font-display mt-6 leading-tight;
 }
+/*
+ * Headings inside prose are subheads. The page's own title and its section
+ * headings sit above them, so a chapter heading written into an imported
+ * page must not come out larger than the section it is part of.
+ */
 .prose-record h1 {
-  @apply text-2xl;
+  @apply text-lg;
 }
 .prose-record h2 {
-  @apply text-xl;
+  @apply text-base;
 }
 .prose-record h3,
 .prose-record h4 {
-  @apply text-lg;
+  @apply text-sm font-medium;
 }
 .prose-record ul {
   @apply list-disc pl-6;
