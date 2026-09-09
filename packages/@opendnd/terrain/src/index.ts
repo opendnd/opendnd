@@ -11,6 +11,7 @@ export * from './svg-map';
 export * from './fit';
 export * from './raster';
 export * from './draw';
+export * from './covering';
 export * from './noise';
 export * from './shore';
 export * from './ranges';

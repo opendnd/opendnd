@@ -2144,6 +2144,8 @@ export const placeSchema = z.strictObject({
     name: z.string().optional(),
   }).optional(),
   feature: featureSchema.optional(),
+  /** The ground this place holds, as quadtree cells. A border is a curve, which cannot be owned or compared; a set of cells can be. Whether a place holds somewhere is then a prefix test, and when a border moves, cells change hands — which is what a border moving is. Coarse cells inland, fine ones along the edge. `cell` is where the place is; this is what it covers. */
+  extent: z.array(cellSchema).optional(),
   /** Quadtree cell token for this place at its own scale (a realm at a coarse level, a building at a fine one). Containment is a prefix relationship. See ADR-006. */
   cell: cellSchema.optional(),
   population: z.int().min(0).optional(),

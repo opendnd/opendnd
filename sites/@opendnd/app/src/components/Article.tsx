@@ -24,6 +24,9 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 
+/** How many values a list may show before it is folded away instead. */
+const MANY = 12;
+
 /** Fields the article renders in its own way, or not at all. */
 const HANDLED: ReadonlySet<string> = new Set([
   'id',
@@ -196,6 +199,34 @@ export function Value(props: {
   if (isReference(value)) return <ReferenceLink reference={value} />;
   if (isSpan(value) || isPosition(value)) return <TimeText value={value} />;
   if (Array.isArray(value)) {
+    // A long list of plain values — the cells a country holds, say — is data
+    // rather than reading, and a page of it buries everything the record
+    // actually says. It is counted, and opened by anyone who wants it.
+    const plain = value.every(
+      (item) => item === null || typeof item !== 'object',
+    );
+    if (plain && value.length > MANY) {
+      return (
+        <Collapsible>
+          <CollapsibleTrigger
+            render={
+              <button
+                type="button"
+                className="flex items-center gap-1 text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              />
+            }
+          >
+            <ChevronDownIcon className="size-3.5 transition-transform group-data-[open]:rotate-180" />
+            {value.length} values
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <p className="mt-1 max-h-64 overflow-y-auto font-mono text-xs break-words text-muted-foreground">
+              {value.map(String).join(', ')}
+            </p>
+          </CollapsibleContent>
+        </Collapsible>
+      );
+    }
     return (
       <ul className="flex list-disc flex-col gap-1 pl-5">
         {value.map((item, index) => (

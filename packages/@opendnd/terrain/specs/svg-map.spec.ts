@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'bun:test';
+import { CellId } from '@opendnd/spatial';
 import {
   IDENTITY,
+  coveringOf,
   drawTile,
   flatten,
   outlinesOf,
@@ -362,5 +364,53 @@ describe('putting a drawing on a globe', () => {
     // share of a pole-to-pole drawing stops short of the top.
     expect(tileInDrawing(flat, 1, 0, 0).top).toBeCloseTo(27.494, 2);
     expect(tileInDrawing(flat, 1, 0, 0).bottom).toBeCloseTo(500, 6);
+  });
+});
+
+describe('the ground a place holds', () => {
+  /** A square of the drawing, which on the globe is a patch near the equator. */
+  const patch = readDrawnMap(
+    `<svg viewBox="0 0 1000 1000"><g id="Somewhere">` +
+      `<path d="M480 480L520 480L520 520L480 520Z"/></g></svg>`,
+  );
+  const fit = wholeDrawing(1000, 1000);
+  const shape = patch.shapes[0]!;
+
+  it('covers a shape with cells, finer where it is asked to be', () => {
+    const coarse = coveringOf(shape, fit, { maxLevel: 6, most: 64 });
+    const fine = coveringOf(shape, fit, { maxLevel: 9, most: 400 });
+    expect(coarse.length).toBeGreaterThan(0);
+    expect(fine.length).toBeGreaterThan(coarse.length);
+    // Every cell is a token: hex, with the trailing zeroes struck off.
+    for (const token of fine) expect(token).toMatch(/^[0-9a-f]{1,16}$/);
+  });
+
+  it('covers the middle of the shape and nothing far from it', () => {
+    const cells = coveringOf(shape, fit, { maxLevel: 8, most: 200 }).map(
+      CellId.fromToken,
+    );
+    const middle = CellId.fromLatLng(toLatLng(fit, [500, 500]), 20);
+    expect(cells.some((cell) => cell.contains(middle))).toBe(true);
+    // The far side of the world is not part of a patch on this side of it.
+    const elsewhere = CellId.fromLatLng({ lat: -60, lng: 170 }, 20);
+    expect(cells.some((cell) => cell.contains(elsewhere))).toBe(false);
+  });
+
+  it('keeps no cell inside another, so nothing is held twice', () => {
+    const cells = coveringOf(shape, fit, { maxLevel: 9, most: 300 }).map(
+      CellId.fromToken,
+    );
+    for (const cell of cells) {
+      for (const other of cells) {
+        if (cell.equals(other)) continue;
+        expect(other.contains(cell)).toBe(false);
+      }
+    }
+  });
+
+  it('stops at the number of cells it was told to carry', () => {
+    expect(
+      coveringOf(shape, fit, { maxLevel: 14, most: 40 }).length,
+    ).toBeLessThan(160);
   });
 });

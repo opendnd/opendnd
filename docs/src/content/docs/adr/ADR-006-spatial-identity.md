@@ -57,3 +57,12 @@ A heightfield is easy and a heightfield with working rivers is not. The failures
 - **Rivers are found, not drawn.** They are the cells where enough water has gathered. Given drained ground and the sea as the only sink, such a cell must have high ground above it and a way to the sea below it — so "begins in the mountains and ends in the ocean" is a property of the method rather than something to enforce afterwards.
 - **A world joins up east to west.** The map's side edges are not edges; only the poles are, and water reaching them has left what is modelled.
 - **Elevation is invented, and says so.** A drawn map holds no height. What the drawing constrains is the coastline; everything above and below it is generated, and the same generator with no coastline handed to it makes a world from nothing. That is what makes a drawn world and a generated one the same kind of thing.
+
+## Decided later, 2026-09-09: a place holds cells
+
+A border is a curve, and a curve is a poor thing to own. You cannot ask it what it covers without measuring, two of them cannot be compared without arithmetic, and nothing about it survives being written into a record except as a picture.
+
+- **A place has an `extent`: the quadtree cells it holds.** Coarse cells inland, fine ones along the edge. Whether a place holds somewhere is then a prefix test rather than a geometry problem, two places can be compared by set arithmetic, and **when a border moves, cells change hands — which is what a border moving is**. That makes conquest an ordinary edit rather than a redrawing.
+- **`cell` stays what it was**: where a place *is*, one cell at its own scale. `extent` is what it *covers*. A town has the first and not the second; a kingdom has both.
+- **A covering is built the way any quadtree covering is**: start at the faces, keep a cell wholly inside the shape, discard one wholly outside, split the ones on the edge, and stop at a given fineness or a given number of cells. The number matters more than the fineness — a country wants a hundred or two cells, not the ten thousand an exact border would take.
+- **The drawing is still the drawing.** A covering approximates a border and is not it; a map is drawn from the curves. The extent is for the questions a record has to answer — who holds this ground, how much of it is there, what is next to what.
