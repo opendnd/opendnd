@@ -9,10 +9,12 @@ import { ErrorNotice, Loading, Notice } from '../components/Notice';
 import { Thumb } from '../components/Thumb';
 import { humanize } from '../schema/fields';
 import { Badge } from '@/components/ui/badge';
+import { Page } from '../build/Page';
+import { PAGES } from '../build/pages';
 import { Button } from '@/components/ui/button';
 
-/** The characters played in this world, as cards. */
-export function Characters() {
+/** The characters played in this world, as cards. A block, placed by a page. */
+export function CharacterList() {
   const api = useApi();
   const ontology = useOntology();
   const { world, canEdit } = useWorld();
@@ -92,4 +94,9 @@ export function Characters() {
       </div>
     </div>
   );
+}
+
+/** The characters page: one block, on the grid like everything else. */
+export function Characters() {
+  return <Page page={PAGES.characters} />;
 }

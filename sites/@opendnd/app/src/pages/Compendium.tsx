@@ -24,6 +24,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Page } from '../build/Page';
+import { PAGES } from '../build/pages';
 import { Input } from '@/components/ui/input';
 import {
   Item,
@@ -39,7 +41,7 @@ import {
  * written works, articles, chronicles and tales, to browse when nothing is
  * being searched for.
  */
-export function Compendium() {
+export function CompendiumSurface() {
   const api = useApi();
   const ontology = useOntology();
   const { world, canEdit } = useWorld();
@@ -258,4 +260,9 @@ export function Compendium() {
       )}
     </div>
   );
+}
+
+/** The compendium page: one block, on the grid like everything else. */
+export function Compendium() {
+  return <Page page={PAGES.compendium} />;
 }

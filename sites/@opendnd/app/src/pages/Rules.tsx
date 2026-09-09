@@ -3,9 +3,11 @@ import { useOntology } from '../app/ontology';
 import { SURFACES, categoryOf } from '../app/surfaces';
 import { useWorld } from '../app/world';
 import { Notice } from '../components/Notice';
+import { Page } from '../build/Page';
+import { PAGES } from '../build/pages';
 
 /** The game's rules as this world has them: the models the ontology groups under rules. */
-export function Rules() {
+export function RulesSurface() {
   const ontology = useOntology();
   const { world } = useWorld();
   const models = ontology.models.filter((m) => categoryOf(m).key === 'rules');
@@ -26,4 +28,9 @@ export function Rules() {
       )}
     </div>
   );
+}
+
+/** The rules page: one block, on the grid like everything else. */
+export function Rules() {
+  return <Page page={PAGES.rules} />;
 }

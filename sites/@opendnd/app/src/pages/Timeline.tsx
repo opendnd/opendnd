@@ -9,6 +9,8 @@ import { ErrorNotice, Loading, Notice } from '../components/Notice';
 import { formatPosition, isPosition } from '../schema/time';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Page } from '../build/Page';
+import { PAGES } from '../build/pages';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -28,7 +30,7 @@ interface Entry {
  * each; the page starts with those whose records both begin and end, the
  * things that happen and the things that last, and any model can be added.
  */
-export function Timeline() {
+export function TimelineSurface() {
   const api = useApi();
   const ontology = useOntology();
   const { world, canEdit } = useWorld();
@@ -436,4 +438,9 @@ function MoveNow(props: {
       </Button>
     </form>
   );
+}
+
+/** The timeline page: one block, on the grid like everything else. */
+export function Timeline() {
+  return <Page page={PAGES.timeline} />;
 }

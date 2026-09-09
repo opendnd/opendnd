@@ -1,16 +1,18 @@
 import { PlusIcon } from 'lucide-react';
 import { Link } from 'react-router';
-import { CampaignCard } from './WorldHome';
+import { CampaignCard } from '../components/CampaignCard';
 import { useApi } from '../app/context';
 import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
 import { SURFACES, offers } from '../app/surfaces';
 import { useWorld } from '../app/world';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
+import { Page } from '../build/Page';
+import { PAGES } from '../build/pages';
 import { Button } from '@/components/ui/button';
 
-/** The campaigns played in this world, as cards. */
-export function Campaigns() {
+/** Every campaign in this world, as cards. A block, placed by a page. */
+export function CampaignList() {
   const api = useApi();
   const ontology = useOntology();
   const { world, canEdit } = useWorld();
@@ -57,4 +59,9 @@ export function Campaigns() {
       </div>
     </div>
   );
+}
+
+/** The campaigns page: one block, on the grid like everything else. */
+export function Campaigns() {
+  return <Page page={PAGES.campaigns} />;
 }

@@ -30,6 +30,8 @@ import {
 } from '../schema/cells';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Page } from '../build/Page';
+import { PAGES } from '../build/pages';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -98,7 +100,7 @@ interface Viewport extends View {
  *
  * An editor places a record from here: come with it, then choose the spot.
  */
-export function MapPage() {
+export function MapSurface() {
   const api = useApi();
   const ontology = useOntology();
   const { world, canEdit } = useWorld();
@@ -738,4 +740,9 @@ function asBaseMap(world: string, value: unknown): BaseMap | undefined {
 
 function nameOf(resource: Resource): string {
   return typeof resource.name === 'string' ? resource.name : resource.id;
+}
+
+/** The map page: one block, filling the window. */
+export function MapPage() {
+  return <Page page={PAGES.map} />;
 }
