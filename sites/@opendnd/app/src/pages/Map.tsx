@@ -152,6 +152,7 @@ export function MapSurface() {
   const mapRef = useRef<L.Map | null>(null);
   const drawn = useRef<L.LayerGroup | null>(null);
   const held = useRef<L.LayerGroup | null>(null);
+  const resizing = useRef<ResizeObserver | null>(null);
   const clickRef =
     useRef<(at: { lat: number; lng: number }) => void>(undefined);
   const [view, setView] = useState<Viewport>();
@@ -190,10 +191,17 @@ export function MapSurface() {
   useEffect(() => {
     const element = container.current;
     if (!element || base.loading || mapRef.current) return undefined;
+    // The whole of a world, and no more of it. A drawn world is served as
+    // tiles that do not repeat, so letting the view wander past the edge asks
+    // for columns that were never drawn: at zoom 2 Leaflet was fetching
+    // columns minus two through five where four exist, and painting the four
+    // that came back empty as bands of nothing down the side of the map.
+    const edge = L.latLngBounds([-85.05, -180], [85.05, 180]);
     const map = L.map(element, {
       minZoom: baseMap?.minZoom ?? 0,
       maxZoom: deepest,
-      worldCopyJump: true,
+      maxBounds: edge,
+      maxBoundsViscosity: 1,
       attributionControl: baseMap?.attribution !== undefined,
       // Where every map on the web puts them, and out of the way of the
       // things that float over the top left.
@@ -205,12 +213,32 @@ export function MapSurface() {
         minZoom: baseMap.minZoom ?? 0,
         maxZoom: deepest,
         noWrap: true,
+        bounds: edge,
         ...(baseMap.attribution ? { attribution: baseMap.attribution } : {}),
       }).addTo(map);
     }
     // Ground first, so a name is never behind the shading of its own land.
     held.current = L.layerGroup().addTo(map);
     drawn.current = L.layerGroup().addTo(map);
+    // Leaflet measures its box once and listens only to the window. This box
+    // changes without the window doing anything — the sidebar collapses, the
+    // panel opens, a block is resized on a canvas — and a map that has not
+    // been told is a map drawn for a box it is no longer in, pinned to one
+    // corner with a band of nothing beside it.
+    // And the world fills the frame. Zoomed far enough out the whole world is
+    // narrower than the window, and what is beside it is not ocean, it is
+    // nothing — so that zoom is not offered. Which zoom that is depends on
+    // the size of the frame, so it is worked out again whenever that changes.
+    const fill = () => {
+      map.invalidateSize();
+      const least = map.getBoundsZoom(edge, true);
+      if (Number.isFinite(least) && least !== map.getMinZoom()) {
+        map.setMinZoom(Math.max(baseMap?.minZoom ?? 0, least));
+      }
+    };
+    const watching = new ResizeObserver(fill);
+    watching.observe(element);
+    resizing.current = watching;
     const read = () => {
       const bounds = map.getBounds();
       const centre = map.getCenter();
@@ -247,9 +275,12 @@ export function MapSurface() {
     read();
     mapRef.current = map;
     return () => {
+      resizing.current?.disconnect();
+      resizing.current = null;
       map.remove();
       mapRef.current = null;
       drawn.current = null;
+      held.current = null;
     };
     // The map is made once; the address and the base map are read at that moment.
   }, [base.loading]);
@@ -356,7 +387,7 @@ export function MapSurface() {
     for (const entry of entries) {
       const fill = fillOf(entry.model);
       const named = entry.cell.level <= zoom + NAMED_BELOW;
-      let at = centerOf(entry.cell);
+      let at = middleOf(entry) ?? centerOf(entry.cell);
       if (map) {
         // A place found because the view is *inside* it has its middle
         // somewhere off the screen — stand in the middle of a kingdom and the
@@ -487,6 +518,31 @@ export function MapSurface() {
     );
     setPreview(entry);
   };
+
+  /**
+   * Where a place's name belongs: the middle of the ground it holds.
+   *
+   * A record says where it is with one cell, and for a continent that cell is a
+   * quarter of a face — a square whose centre can be a thousand miles out to
+   * sea. Where a place also says which cells it *holds*, that is the real
+   * answer, and the name goes in the middle of it.
+   */
+  function middleOf(entry: Entry): { lat: number; lng: number } | undefined {
+    const extent = entry.resource.extent;
+    if (!Array.isArray(extent) || extent.length === 0) return undefined;
+    let lat = 0;
+    let lng = 0;
+    let count = 0;
+    for (const token of extent) {
+      const cell = parseCell(String(token));
+      if (!cell) continue;
+      const at = centerOf(cell);
+      lat += at.lat;
+      lng += at.lng;
+      count += 1;
+    }
+    return count === 0 ? undefined : { lat: lat / count, lng: lng / count };
+  }
 
   /** A record found by name: fly to it, or say it is not placed yet. */
   const found = async (hit: SearchHit) => {

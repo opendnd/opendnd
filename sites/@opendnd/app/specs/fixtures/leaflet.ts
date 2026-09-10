@@ -17,6 +17,18 @@ export interface FakeLayer {
 export class FakeMap {
   /** Big enough to hold the whole of the projection below, so that nothing
    *  in a test is dropped for being off the screen. */
+  getBoundsZoom() {
+    return 0;
+  }
+
+  getMinZoom() {
+    return 0;
+  }
+
+  setMinZoom() {}
+
+  invalidateSize() {}
+
   getSize() {
     return { x: 360 * 400, y: 180 * 400 };
   }
@@ -136,6 +148,7 @@ const L = {
   // carrying a tooltip.
   marker: (latlng: unknown, options: unknown) => layer('name', latlng, options),
   control: { zoom: () => ({ addTo: () => undefined }) },
+  latLngBounds: (a: unknown, b: unknown) => ({ a, b }),
 };
 
 export default L;
