@@ -1,7 +1,9 @@
 import { type ReactNode, createContext, useContext, useMemo } from 'react';
 import {
   type Project,
+  appsOff,
   layoutFor,
+  offers,
   projectOf,
   recordLayoutFor,
 } from './project';
@@ -24,6 +26,10 @@ export interface Projects {
   layoutFor(path: string): PageLayout;
   /** The layout for a record of this model, when there is one. */
   recordLayoutFor(model: string): PageLayout | undefined;
+  /** The bundled applications this world has turned off, by id. */
+  readonly off: ReadonlySet<string>;
+  /** Whether a bundled page is still offered here. */
+  offers(path: string): boolean;
   reload(): void;
 }
 
@@ -32,6 +38,8 @@ const Context = createContext<Projects>({
   loading: false,
   layoutFor: (path) => layoutFor(path, []).layout,
   recordLayoutFor: (model) => recordLayoutFor(model, []),
+  off: new Set<string>(),
+  offers: () => true,
   reload: () => undefined,
 });
 
@@ -48,19 +56,37 @@ export function ProjectsProvider(props: {
         : Promise.resolve(undefined),
     [api, world],
   );
+  // Which bundled applications this world uses is a fact about the world, so
+  // it is kept on the world's own record beside its calendar and its map.
+  const settings = useRequest(
+    () =>
+      world
+        ? api
+            .get(world, 'world', world)
+            .then((got) => got.body)
+            .catch(() => undefined)
+        : Promise.resolve(undefined),
+    [api, world],
+  );
   const all = useMemo(
     () => (request.data?.resources ?? []).map(projectOf),
     [request.data],
   );
+  const off = useMemo(() => appsOff(settings.data), [settings.data]);
   const value = useMemo<Projects>(
     () => ({
       all,
       loading: request.loading,
       layoutFor: (path) => layoutFor(path, all).layout,
       recordLayoutFor: (model) => recordLayoutFor(model, all),
-      reload: request.reload,
+      off,
+      offers: (path) => offers(path, off),
+      reload: () => {
+        request.reload();
+        settings.reload();
+      },
     }),
-    [all, request.loading, request.reload],
+    [all, request.loading, request.reload, settings.reload, off],
   );
   return <Context.Provider value={value}>{props.children}</Context.Provider>;
 }

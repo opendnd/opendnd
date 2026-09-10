@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { GRID_COLS, MAX_SPAN_H } from 'src/build/grid';
-import { builtIn, copyOf, layoutFor, projectOf } from 'src/build/project';
+import {
+  BUNDLED,
+  FLOOR,
+  appsOff,
+  builtIn,
+  copyOf,
+  layoutFor,
+  offers,
+  projectFor,
+  projectOf,
+} from 'src/build/project';
 import type { Resource } from 'src/api/types';
 
 const record = (body: Record<string, unknown>) =>
@@ -122,6 +132,48 @@ describe('customizing a page', () => {
     for (const page of shipped.pages) {
       expect(page.name.length).toBeGreaterThan(0);
       expect(page.layout.blocks.length).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('the applications OpenDnD ships', () => {
+  it('are projects like any other, made of pages that exist', () => {
+    for (const app of BUNDLED) {
+      const project = projectFor(app);
+      expect(project.pages.length).toBe(app.pages.length);
+      for (const page of project.pages) {
+        expect(page.layout.blocks.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('are all on until a world turns one off', () => {
+    expect(appsOff(undefined).size).toBe(0);
+    expect(appsOff({ apps: { off: ['atlas'] } })).toEqual(new Set(['atlas']));
+    // And nonsense on the record is not an application anybody turned off.
+    expect(appsOff({ apps: 'no' }).size).toBe(0);
+  });
+
+  it('take their pages with them when they go', () => {
+    const off = new Set(['atlas']);
+    expect(offers('map', off)).toBe(false);
+    expect(offers('campaigns', off)).toBe(true);
+    // The front page is the floor, not an application: it cannot be removed.
+    expect(offers('home', new Set(['play', 'atlas', 'library']))).toBe(true);
+    // A page belonging to no application is nobody's to withhold.
+    expect(offers('somewhere-else', off)).toBe(true);
+  });
+
+  it('between them cover every page the application ships but the floor', () => {
+    const inApps = new Set<string>(
+      BUNDLED.flatMap((a) => a.pages.map((p) => p.path)),
+    );
+    for (const page of builtIn().pages) {
+      expect(
+        inApps.has(page.path) ||
+          (FLOOR as readonly string[]).includes(page.path),
+        page.path,
+      ).toBe(true);
     }
   });
 });

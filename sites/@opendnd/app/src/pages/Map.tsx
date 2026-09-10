@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
+  ListIcon,
   MapPinIcon,
   MinusIcon,
   PlusIcon,
@@ -16,7 +17,7 @@ import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
 import { recordPath, useWorld } from '../app/world';
 import { Markdown } from '../components/Markdown';
-import { ErrorNotice, Loading, Notice } from '../components/Notice';
+import { ErrorNotice, Notice } from '../components/Notice';
 import {
   type Cell,
   type View,
@@ -28,7 +29,6 @@ import {
   parseCell,
   zoomFor,
 } from '../schema/cells';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Page } from '../build/Page';
 import { usePageLayout } from '../build/projects';
@@ -55,11 +55,27 @@ const FILLS = [
 /** How many levels below a tile-sized cell are still drawn, as marks. */
 const DRAWN_BELOW = 4;
 
-/** A cell this near a tile's size, or bigger, is drawn as its outline. */
-const OUTLINED_BELOW = 2;
+/**
+ * A cell this near a tile's size, or bigger, is a place you are *in* rather
+ * than a place you can see, so it is written across the map instead of marked
+ * on it — a continent's name in large letters, the way an atlas does it.
+ */
+const NAMED_BELOW = 2;
 
 /** Up to this many things in view, every one is labelled. */
 const MOST_LABELS = 40;
+
+/** How many of a place's cells are shaded when it is picked out. */
+const MOST_CELLS = 1200;
+
+/** How near, in pixels, two marks may be before the second is left out. */
+const CROWDED = 22;
+
+/** How far from the edge a name is held when its own middle is off the map. */
+const EDGE = 56;
+
+/** And how far from the top, which is where the map's own controls float. */
+const EDGE_TOP = 104;
 
 /** How far a base map without its own limit may be zoomed. */
 const DEEPEST_ZOOM = 14;
@@ -135,6 +151,7 @@ export function MapSurface() {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const drawn = useRef<L.LayerGroup | null>(null);
+  const held = useRef<L.LayerGroup | null>(null);
   const clickRef =
     useRef<(at: { lat: number; lng: number }) => void>(undefined);
   const [view, setView] = useState<Viewport>();
@@ -143,6 +160,8 @@ export function MapSurface() {
   const [busy, setBusy] = useState(false);
   const [placeError, setPlaceError] = useState<Error>();
   const [notice, setNotice] = useState<string>();
+  // Closed by default: the map is the thing, and a list over it is a choice.
+  const [listing, setListing] = useState(false);
 
   const placing = useRequest(async (): Promise<Placing | undefined> => {
     if (!placingKey) return undefined;
@@ -176,7 +195,11 @@ export function MapSurface() {
       maxZoom: deepest,
       worldCopyJump: true,
       attributionControl: baseMap?.attribution !== undefined,
+      // Where every map on the web puts them, and out of the way of the
+      // things that float over the top left.
+      zoomControl: false,
     });
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
     if (baseMap) {
       L.tileLayer(baseMap.tiles, {
         minZoom: baseMap.minZoom ?? 0,
@@ -185,6 +208,8 @@ export function MapSurface() {
         ...(baseMap.attribution ? { attribution: baseMap.attribution } : {}),
       }).addTo(map);
     }
+    // Ground first, so a name is never behind the shading of its own land.
+    held.current = L.layerGroup().addTo(map);
     drawn.current = L.layerGroup().addTo(map);
     const read = () => {
       const bounds = map.getBounds();
@@ -305,42 +330,81 @@ export function MapSurface() {
   const fillOf = (model: string) =>
     FILLS[models.findIndex((m) => m.model === model) % FILLS.length]!;
 
-  // Draw what is in view: outlines for the coarse, marks for the fine.
+  /**
+   * Draw what is in view.
+   *
+   * A big place is its name written across the map and a small one is a mark
+   * with its name beside it, which is how every map anybody has used works.
+   * It used to be drawn as the square of its quadtree cell, and a square is
+   * the one thing a country is definitely not: the outline of a continent's
+   * level-one cell is a rectangle in the sea with a coastline somewhere
+   * inside it. The cell is how the map *finds* a place, not what it looks
+   * like.
+   */
   useEffect(() => {
     const group = drawn.current;
     if (!group || !view) return;
     group.clearLayers();
     const zoom = Math.round(view.zoom);
     const labelled = entries.length <= MOST_LABELS;
+    // Nothing is drawn on top of something already drawn. Eighty places in a
+    // corner of the world is eighty marks in a heap, which says less than one
+    // does; the coarser a place is the earlier it comes, so what survives the
+    // crowd is the biggest thing there. Zooming in gives the rest their room.
+    const taken: { x: number; y: number }[] = [];
+    const map = mapRef.current;
     for (const entry of entries) {
       const fill = fillOf(entry.model);
-      const outline =
-        entry.cell.level <= zoom + OUTLINED_BELOW
-          ? outlineOf(entry.cell)
-          : undefined;
-      const shape = outline
-        ? L.polygon(
-            outline.map((p) => [p.lat, p.lng] as [number, number]),
-            {
-              color: fill,
-              weight: 1.5,
-              opacity: 0.8,
-              fillColor: fill,
-              fillOpacity: 0.08,
-            },
-          )
-        : L.circleMarker(centerOf(entry.cell), {
-            radius: 5,
+      const named = entry.cell.level <= zoom + NAMED_BELOW;
+      let at = centerOf(entry.cell);
+      if (map) {
+        // A place found because the view is *inside* it has its middle
+        // somewhere off the screen — stand in the middle of a kingdom and the
+        // cell its name hangs from can be a hundred miles away. So the name
+        // of somewhere you are in is kept on the screen, sliding along the
+        // edge as you pan, which is what every map does with a country.
+        const size = map.getSize();
+        const point = map.latLngToContainerPoint(at);
+        const inside = {
+          x: Math.min(Math.max(point.x, EDGE), Math.max(EDGE, size.x - EDGE)),
+          y: Math.min(
+            Math.max(point.y, EDGE_TOP),
+            Math.max(EDGE_TOP, size.y - EDGE),
+          ),
+        };
+        if (named && (inside.x !== point.x || inside.y !== point.y)) {
+          at = map.containerPointToLatLng([inside.x, inside.y]);
+        } else if (!named && (inside.x !== point.x || inside.y !== point.y)) {
+          // A mark, unlike a name, belongs where the thing is or nowhere.
+          continue;
+        }
+        const room = named ? CROWDED * 2 : CROWDED;
+        const crowded = taken.some(
+          (other) =>
+            Math.abs(other.x - inside.x) < room &&
+            Math.abs(other.y - inside.y) < room,
+        );
+        if (crowded) continue;
+        taken.push({ x: inside.x, y: inside.y });
+      }
+      const shape = named
+        ? L.marker(at, {
+            opacity: 0,
+            interactive: true,
+            keyboard: false,
+          })
+        : L.circleMarker(at, {
+            radius: 4,
             color: fill,
             weight: 1.5,
             fillColor: fill,
             fillOpacity: 0.9,
           });
       shape.bindTooltip(nameOf(entry.resource), {
-        permanent: labelled || entry.cell.level <= zoom + 1,
-        direction: outline ? 'center' : 'right',
-        className: 'map-label',
-        ...(outline ? {} : { offset: [8, 0] }),
+        permanent: named || labelled || entry.cell.level <= zoom + 1,
+        direction: named ? 'center' : 'right',
+        className: named ? 'map-label map-label-wide' : 'map-label',
+        ...(named ? {} : { offset: [8, 0] }),
       });
       shape.on('click', (event) => {
         if (placing.data) clickRef.current?.(event.latlng);
@@ -350,6 +414,37 @@ export function MapSurface() {
     }
     // fillOf is a function of models, which modelsKey stands for.
   }, [entries, view, modelsKey, placing.data]);
+
+  /**
+   * The ground the picked-out place holds, shaded.
+   *
+   * This is the one honest way to show a country's shape: not a bounding
+   * square but the cells it actually owns, which is what the record says and
+   * what a border moving would change.
+   */
+  useEffect(() => {
+    const group = held.current;
+    if (!group) return;
+    group.clearLayers();
+    const extent = preview?.resource.extent;
+    if (!Array.isArray(extent)) return;
+    const fill = fillOf(preview!.model);
+    for (const token of extent.slice(0, MOST_CELLS)) {
+      const cell = parseCell(String(token));
+      const outline = cell && outlineOf(cell);
+      if (!outline) continue;
+      L.polygon(
+        outline.map((p) => [p.lat, p.lng] as [number, number]),
+        {
+          stroke: false,
+          fillColor: fill,
+          fillOpacity: 0.18,
+          interactive: false,
+        },
+      ).addTo(group);
+    }
+    // fillOf is a function of models, which modelsKey stands for.
+  }, [preview, modelsKey]);
 
   // Placing: a click gives the record the cell under it at the chosen level.
   const level = placeLevel ?? (view ? Math.round(view.zoom) + DRAWN_BELOW : 8);
@@ -421,142 +516,170 @@ export function MapSurface() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <header className="flex flex-wrap items-center gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Map</h1>
-        {view && <Badge variant="outline">Zoom {Math.round(view.zoom)}</Badge>}
-        <span className="flex-1" />
-        <AsOf
-          year={asOf}
-          onChange={(year) =>
-            keep((q) => (year ? q.set('at', year) : q.delete('at')))
-          }
-        />
-      </header>
+    /*
+     * The map is the page. Everything else floats over it — the search, what
+     * is in view, the year, the zoom — because a map with a rail beside it is
+     * a map you are looking at through a letterbox, and every map anybody
+     * uses gives the whole window to the ground and puts its controls on top.
+     */
+    <div className="relative h-full min-h-96 overflow-hidden rounded-lg border">
+      <div
+        ref={container}
+        role="application"
+        aria-label="Map of the world"
+        className={`absolute inset-0 ${placing.data ? 'cursor-crosshair' : ''}`}
+      />
 
-      {records.error && (
-        <ErrorNotice error={records.error} onRetry={records.reload} />
-      )}
-      {placeError && <ErrorNotice error={placeError} />}
-      {notice && (
-        <Notice
-          title={notice}
-          action={
-            <Button
-              variant="ghost"
-              size="xs"
-              onClick={() => setNotice(undefined)}
-            >
-              <XIcon />
-            </Button>
-          }
-        />
-      )}
-      {placing.data && (
-        <Notice
-          title={`Placing ${nameOf(placing.data.resource)}`}
-          action={
-            <Button variant="outline" size="xs" onClick={finishPlacing}>
-              <XIcon data-icon="inline-start" />
-              Cancel
-            </Button>
-          }
-        >
-          <span className="flex flex-wrap items-center gap-2">
-            Choose its spot on the map. It will take a level {level} cell; zoom
-            in for a finer one, or set the level here.
-            <Button
-              variant="outline"
-              size="icon-xs"
-              aria-label="Coarser cell"
-              disabled={level <= 1}
-              onClick={() => setPlaceLevel(level - 1)}
-            >
-              <MinusIcon />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon-xs"
-              aria-label="Finer cell"
-              disabled={level >= 30}
-              onClick={() => setPlaceLevel(level + 1)}
-            >
-              <PlusIcon />
-            </Button>
-          </span>
-        </Notice>
-      )}
-
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_15rem]">
-        <div
-          ref={container}
-          role="application"
-          aria-label="Map of the world"
-          className={`h-[calc(100vh-12rem)] min-h-96 overflow-hidden rounded-lg border ${
-            placing.data ? 'cursor-crosshair' : ''
-          }`}
-        />
-        <aside className="flex min-h-0 flex-col gap-4 text-sm lg:max-h-[calc(100vh-12rem)] lg:overflow-y-auto">
-          <Find world={world.id} onFound={(hit) => void found(hit)} />
-          <div>
-            <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              In view
-            </h2>
-            {records.loading && !records.data && <Loading />}
-            <ul className="mt-1 flex flex-col gap-0.5">
-              {entries.slice(0, 80).map((entry) => (
-                <li
-                  key={`${entry.model}/${entry.resource.id}`}
-                  className="flex items-center gap-2"
+      {/*
+        Above the map's own layers. Leaflet stacks its panes up to 800 and its
+        controls on top of those, so anything floating over the ground has to
+        say where it stands or it ends up under the tiles.
+      */}
+      <div className="pointer-events-none absolute inset-0 z-[1000] flex flex-col gap-2 p-3">
+        <div className="flex items-start gap-2">
+          <div className="pointer-events-auto flex w-72 flex-col gap-2">
+            <Find world={world.id} onFound={(hit) => void found(hit)} />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full bg-background shadow-lg"
+                aria-expanded={listing}
+                onClick={() => setListing(!listing)}
+              >
+                <ListIcon data-icon="inline-start" />
+                {records.loading && !records.data
+                  ? 'Looking'
+                  : entries.length === 0
+                    ? 'Nothing in view'
+                    : `${entries.length} in view`}
+              </Button>
+            </div>
+            {listing && (
+              <div className="max-h-[calc(100%-8rem)] overflow-y-auto rounded-lg border bg-background/95 p-2 text-sm shadow-lg backdrop-blur">
+                <ul aria-label="In view" className="flex flex-col gap-0.5">
+                  {entries.slice(0, 80).map((entry) => (
+                    <li
+                      key={`${entry.model}/${entry.resource.id}`}
+                      className="flex items-center gap-2"
+                    >
+                      <span
+                        className="size-2.5 shrink-0 rounded-full"
+                        style={{ background: fillOf(entry.model) }}
+                      />
+                      <button
+                        type="button"
+                        className="truncate text-left underline-offset-4 hover:underline"
+                        onClick={() => go(entry)}
+                      >
+                        {nameOf(entry.resource)}
+                      </button>
+                    </li>
+                  ))}
+                  {entries.length > 80 && (
+                    <li className="text-muted-foreground">
+                      and {entries.length - 80} more
+                    </li>
+                  )}
+                  {records.data && entries.length === 0 && (
+                    <li className="text-muted-foreground">
+                      Nothing placed in view.
+                    </li>
+                  )}
+                </ul>
+                <ul
+                  aria-label="What the map draws"
+                  className="mt-2 flex flex-wrap gap-x-3 border-t pt-2 text-xs text-muted-foreground"
                 >
-                  <span
-                    className="size-2.5 shrink-0 rounded-full"
-                    style={{ background: fillOf(entry.model) }}
-                  />
-                  <button
-                    type="button"
-                    className="truncate text-left underline-offset-4 hover:underline"
-                    onClick={() => go(entry)}
-                  >
-                    {nameOf(entry.resource)}
-                  </button>
-                </li>
-              ))}
-              {entries.length > 80 && (
-                <li className="text-muted-foreground">
-                  and {entries.length - 80} more
-                </li>
-              )}
-              {records.data && entries.length === 0 && (
-                <li className="text-muted-foreground">
-                  Nothing placed in view.
-                </li>
-              )}
-            </ul>
-          </div>
-          <div>
-            <h2 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Drawn
-            </h2>
-            <ul className="mt-1 flex flex-col gap-0.5">
-              {models.map((m) => (
-                <li key={m.model} className="flex items-center gap-2">
-                  <span
-                    className="size-2.5 shrink-0 rounded-full"
-                    style={{ background: fillOf(m.model) }}
-                  />
-                  {ontology.label(m.model)}
-                </li>
-              ))}
-            </ul>
-            {!baseMap && base.data && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                This world has no picture tiles yet; its records are drawn on a
-                blank globe.
-              </p>
+                  {models.map((m) => (
+                    <li key={m.model} className="flex items-center gap-1.5">
+                      <span
+                        className="size-2 shrink-0 rounded-full"
+                        style={{ background: fillOf(m.model) }}
+                      />
+                      {ontology.label(m.model)}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
-        </aside>
+
+          <div className="pointer-events-auto ml-auto flex items-center gap-2 rounded-full border bg-background px-2 py-1 shadow-lg">
+            {view && (
+              <span className="px-1 text-xs text-muted-foreground">
+                Zoom {Math.round(view.zoom)}
+              </span>
+            )}
+            <AsOf
+              year={asOf}
+              onChange={(year) =>
+                keep((q) => (year ? q.set('at', year) : q.delete('at')))
+              }
+            />
+          </div>
+        </div>
+
+        <div className="pointer-events-auto flex w-full max-w-md flex-col gap-2">
+          {records.error && (
+            <ErrorNotice error={records.error} onRetry={records.reload} />
+          )}
+          {placeError && <ErrorNotice error={placeError} />}
+          {notice && (
+            <Notice
+              title={notice}
+              action={
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => setNotice(undefined)}
+                >
+                  <XIcon />
+                </Button>
+              }
+            />
+          )}
+          {placing.data && (
+            <Notice
+              title={`Placing ${nameOf(placing.data.resource)}`}
+              action={
+                <Button variant="outline" size="xs" onClick={finishPlacing}>
+                  <XIcon data-icon="inline-start" />
+                  Cancel
+                </Button>
+              }
+            >
+              <span className="flex flex-wrap items-center gap-2">
+                Choose its spot on the map. It will take a level {level} cell;
+                zoom in for a finer one, or set the level here.
+                <Button
+                  variant="outline"
+                  size="icon-xs"
+                  aria-label="Coarser cell"
+                  disabled={level <= 1}
+                  onClick={() => setPlaceLevel(level - 1)}
+                >
+                  <MinusIcon />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon-xs"
+                  aria-label="Finer cell"
+                  disabled={level >= 30}
+                  onClick={() => setPlaceLevel(level + 1)}
+                >
+                  <PlusIcon />
+                </Button>
+              </span>
+            </Notice>
+          )}
+          {!baseMap && base.data && !placing.data && !notice && (
+            <p className="w-fit rounded-full bg-background/90 px-3 py-1 text-xs text-muted-foreground shadow-sm backdrop-blur">
+              This world has no picture tiles yet; its records are drawn on a
+              blank globe.
+            </p>
+          )}
+        </div>
       </div>
 
       <Sheet
@@ -640,11 +763,12 @@ function Find(props: {
   };
   return (
     <form onSubmit={submit} role="search" className="flex flex-col gap-1">
-      <div className="relative">
-        <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+      {/* A pill floating over the ground, the way every map has one. */}
+      <div className="relative rounded-full border bg-background shadow-lg">
+        <SearchIcon className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
-          className="h-8 pl-8 text-sm"
+          className="h-10 rounded-full border-transparent bg-transparent pl-9 text-sm shadow-none"
           placeholder="Find on the map"
           aria-label="Find on the map"
           value={query}
@@ -653,7 +777,7 @@ function Find(props: {
       </div>
       {error && <ErrorNotice error={error} />}
       {hits && (
-        <ul className="flex flex-col gap-0.5">
+        <ul className="flex flex-col gap-0.5 rounded-lg border bg-background/95 p-1 text-sm shadow-lg backdrop-blur">
           {hits.map((hit) => (
             <li key={`${hit.model}/${hit.id}`}>
               <button

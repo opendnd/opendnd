@@ -2,7 +2,7 @@ import { CopyIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useApi } from '../app/context';
 import { useWorld } from '../app/world';
-import { builtIn, copyOf } from '../build/project';
+import { BUNDLED, FLOOR, builtIn, copyOf } from '../build/project';
 import { useProjects } from '../build/projects';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
 import { Badge } from '@/components/ui/badge';
@@ -24,6 +24,8 @@ export function Build() {
   const { world, canEdit } = useWorld();
   const projects = useProjects();
   const shipped = builtIn();
+  const pageOf = (path: string) =>
+    shipped.pages.find((one) => one.path === path);
   const [busy, setBusy] = useState<string | undefined>(undefined);
   const [error, setError] = useState<Error | undefined>(undefined);
 
@@ -122,39 +124,122 @@ export function Build() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl">
-          Pages of the project OpenDnD ships
-        </h2>
+        <h2 className="font-display text-xl">Applications OpenDnD ships</h2>
         <p className="text-sm text-muted-foreground">
-          Read only, and drawn by the same renderer as anything you build.
+          Each is a project of pages and blocks, drawn by the same renderer as
+          anything you build. Copy a page to make it yours; turn a whole
+          application off in{' '}
+          <Link
+            className="underline underline-offset-4"
+            to={`/worlds/${world.id}/settings`}
+          >
+            settings
+          </Link>
+          .
         </p>
-        <ul className="divide-y rounded-lg border">
-          {shipped.pages.map((page) => (
-            <li key={page.id} className="flex items-center gap-3 px-3 py-2">
-              <span className="text-sm">{page.name}</span>
-              <span className="text-xs text-muted-foreground">
-                {count(page.layout.blocks.length)}
+        <div className="flex flex-col gap-3">
+          {/*
+            The front page belongs to no application, because a world has to
+            have one. It can still be made this world's own.
+          */}
+          <div className="rounded-lg border">
+            <div className="flex items-center gap-2 border-b px-3 py-2">
+              <span className="font-display text-base">The front page</span>
+              <span className="truncate text-xs text-muted-foreground">
+                Where a world opens. Every world has one; it cannot be turned
+                off.
               </span>
-              {replaced.has(page.path) && (
-                <Badge variant="outline" className="text-muted-foreground">
-                  Replaced by this world
-                </Badge>
-              )}
-              {canEdit && (
-                <Button
-                  variant="outline"
-                  size="xs"
-                  className="ml-auto"
-                  disabled={busy !== undefined}
-                  onClick={() => void customize(page.path)}
-                >
-                  <CopyIcon data-icon="inline-start" />
-                  {busy === page.path ? 'Copying…' : 'Customize'}
-                </Button>
-              )}
-            </li>
-          ))}
-        </ul>
+            </div>
+            <ul className="divide-y">
+              {FLOOR.map((path) => {
+                const shipped = pageOf(path);
+                return (
+                  <li key={path} className="flex items-center gap-3 px-3 py-2">
+                    <span className="text-sm">{shipped?.name ?? path}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {count(shipped?.layout.blocks.length ?? 0)}
+                    </span>
+                    {replaced.has(path) && (
+                      <Badge
+                        variant="outline"
+                        className="text-muted-foreground"
+                      >
+                        Replaced by this world
+                      </Badge>
+                    )}
+                    {canEdit && (
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        className="ml-auto"
+                        disabled={busy !== undefined}
+                        onClick={() => void customize(path)}
+                      >
+                        <CopyIcon data-icon="inline-start" />
+                        {busy === path ? 'Copying…' : 'Customize'}
+                      </Button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+          {BUNDLED.map((app) => {
+            const on = !projects.off.has(app.id);
+            return (
+              <div key={app.id} className="rounded-lg border">
+                <div className="flex items-center gap-2 border-b px-3 py-2">
+                  <span className="font-display text-base">{app.name}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {app.tagline}
+                  </span>
+                  <Badge
+                    variant={on ? 'secondary' : 'outline'}
+                    className="ml-auto shrink-0"
+                  >
+                    {on ? 'On' : 'Off'}
+                  </Badge>
+                </div>
+                <ul className="divide-y">
+                  {app.pages.map((page) => {
+                    const shipped = pageOf(page.path);
+                    return (
+                      <li
+                        key={page.path}
+                        className="flex items-center gap-3 px-3 py-2"
+                      >
+                        <span className="text-sm">{page.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {count(shipped?.layout.blocks.length ?? 0)}
+                        </span>
+                        {replaced.has(page.path) && (
+                          <Badge
+                            variant="outline"
+                            className="text-muted-foreground"
+                          >
+                            Replaced by this world
+                          </Badge>
+                        )}
+                        {canEdit && (
+                          <Button
+                            variant="outline"
+                            size="xs"
+                            className="ml-auto"
+                            disabled={busy !== undefined}
+                            onClick={() => void customize(page.path)}
+                          >
+                            <CopyIcon data-icon="inline-start" />
+                            {busy === page.path ? 'Copying…' : 'Customize'}
+                          </Button>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
       </section>
     </div>
   );

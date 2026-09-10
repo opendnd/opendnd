@@ -4,7 +4,7 @@
  * can read it and a way to fire its events.
  */
 export interface FakeLayer {
-  readonly kind: 'polygon' | 'marker';
+  readonly kind: 'polygon' | 'marker' | 'name';
   readonly latlngs: unknown;
   readonly options: unknown;
   tooltip?: string;
@@ -15,6 +15,21 @@ export interface FakeLayer {
 }
 
 export class FakeMap {
+  /** Big enough to hold the whole of the projection below, so that nothing
+   *  in a test is dropped for being off the screen. */
+  getSize() {
+    return { x: 360 * 400, y: 180 * 400 };
+  }
+
+  containerPointToLatLng(point: [number, number]) {
+    return { lat: 90 - point[1] / 400, lng: point[0] / 400 - 180 };
+  }
+
+  /** Somewhere different for every place, so nothing is crowded out. */
+  latLngToContainerPoint(at: { lat: number; lng: number }) {
+    return { x: (at.lng + 180) * 400, y: (90 - at.lat) * 400 };
+  }
+
   readonly handlers: Record<string, (event: unknown) => void> = {};
   bounds = { north: 60, south: -10, east: 60, west: -60 };
   zoom = 4;
@@ -117,6 +132,10 @@ const L = {
     layer('polygon', latlngs, options),
   circleMarker: (latlng: unknown, options: unknown) =>
     layer('marker', latlng, options),
+  // A big place is a name written on the map, which is an invisible marker
+  // carrying a tooltip.
+  marker: (latlng: unknown, options: unknown) => layer('name', latlng, options),
+  control: { zoom: () => ({ addTo: () => undefined }) },
 };
 
 export default L;

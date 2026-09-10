@@ -6,6 +6,8 @@ import { useApi, useSession } from '../app/context';
 import { useRequest } from '../app/hooks';
 import { useMe } from '../app/me';
 import { useWorld } from '../app/world';
+import { BUNDLED } from '../build/project';
+import { useProjects } from '../build/projects';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
 import {
   AlertDialog,
@@ -75,6 +77,7 @@ export function Settings() {
         Settings for {world.name}
       </h1>
       <About />
+      <Applications />
       <Members />
       <Spend />
       <Archive />
@@ -503,6 +506,92 @@ function Archive() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Which of the bundled applications this world uses.
+ *
+ * They are projects like anything a world builds for itself, and turning one
+ * off takes its pages out of the navigation — a world that only wants an
+ * atlas should not have to look at a compendium it will never fill. What
+ * somebody else publishes will arrive here beside them.
+ */
+function Applications() {
+  const api = useApi();
+  const { world } = useWorld();
+  const projects = useProjects();
+  const [busy, setBusy] = useState<string | undefined>(undefined);
+  const [error, setError] = useState<Error | undefined>(undefined);
+
+  const set = async (id: string, on: boolean) => {
+    setBusy(id);
+    setError(undefined);
+    const off = new Set(projects.off);
+    if (on) off.delete(id);
+    else off.add(id);
+    try {
+      await api.patch(world.id, 'world', world.id, {
+        apps: { off: [...off] },
+      });
+      projects.reload();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause : new Error(String(cause)));
+    } finally {
+      setBusy(undefined);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Applications</CardTitle>
+        <CardDescription>
+          What {world.name} is made of. Each of these is a project of pages and
+          blocks, the same as anything you build under Build — turn one off and
+          its pages leave the navigation.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-2">
+        {error && <ErrorNotice error={error} />}
+        {BUNDLED.map((app) => {
+          const on = !projects.off.has(app.id);
+          return (
+            <div
+              key={app.id}
+              className="flex items-center gap-3 rounded-lg border px-3 py-2"
+            >
+              <span className="flex min-w-0 flex-col">
+                <span className="text-sm font-medium">{app.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {app.tagline}
+                </span>
+              </span>
+              <span className="ml-auto shrink-0 text-xs text-muted-foreground">
+                {app.pages.map((page) => page.name).join(', ')}
+              </span>
+              <Button
+                variant={on ? 'secondary' : 'outline'}
+                size="xs"
+                className="shrink-0"
+                disabled={busy !== undefined}
+                aria-pressed={on}
+                onClick={() => void set(app.id, !on)}
+              >
+                {on ? 'On' : 'Off'}
+              </Button>
+            </div>
+          );
+        })}
+        {projects.all.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {world.name} has {projects.all.length} project
+            {projects.all.length === 1 ? '' : 's'} of its own as well, under
+            Build.
+          </p>
+        )}
       </CardContent>
     </Card>
   );

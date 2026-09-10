@@ -3003,6 +3003,11 @@ export const worldSchema = z.strictObject({
     /** Who drew the map, shown on it. */
     attribution: z.string().optional(),
   }).optional(),
+  /** Which of the applications bundled with OpenDnD this world uses. Everything is on until it is turned off, so a world that has never thought about it has everything; a world that only wants an atlas turns the rest off and its navigation shrinks to match. */
+  apps: z.strictObject({
+    /** Bundled projects this world has turned off, by id. */
+    off: z.array(z.string()).optional(),
+  }).optional(),
 });
 export type World = z.infer<typeof worldSchema>;
 

@@ -36,7 +36,10 @@
       "description": "How the world's map is drawn beneath its records. With nothing else said, from the tiles the world holds, at /v1/worlds/{world}/tiles/{z}/{x}/{y}.png. A world whose pictures are hosted elsewhere may name a template instead.",
       "properties": {
         "source": {
-          "enum": ["tiles", "terrain"],
+          "enum": [
+            "tiles",
+            "terrain"
+          ],
           "default": "tiles",
           "description": "`tiles` draws pictures somebody made; `terrain` draws the world from its own terrain, at any depth."
         },
@@ -59,6 +62,20 @@
         "attribution": {
           "type": "string",
           "description": "Who drew the map, shown on it."
+        }
+      },
+      "additionalProperties": false
+    },
+    "apps": {
+      "type": "object",
+      "description": "Which of the applications bundled with OpenDnD this world uses. Everything is on until it is turned off, so a world that has never thought about it has everything; a world that only wants an atlas turns the rest off and its navigation shrinks to match.",
+      "properties": {
+        "off": {
+          "type": "array",
+          "description": "Bundled projects this world has turned off, by id.",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "additionalProperties": false

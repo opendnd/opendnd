@@ -100,17 +100,75 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-/** The pages the application ships with, as a project nobody can edit. */
-export function builtIn(): Project {
-  const named: Record<BuiltInPage, { name: string; rows?: 'fill' }> = {
-    home: { name: 'Home' },
-    campaigns: { name: 'Campaigns' },
-    characters: { name: 'Characters' },
-    compendium: { name: 'Compendium' },
-    rules: { name: 'Rules' },
-    map: { name: 'Map' },
-    timeline: { name: 'Timeline' },
+/**
+ * The applications OpenDnD is shipped with.
+ *
+ * They are projects like any other — the same pages, the same blocks, the
+ * same renderer — which is the point: what a world can build for itself is
+ * what the application is built from. A world turns one off and its pages go
+ * with it, so somebody who wants an atlas and nothing else can have that.
+ *
+ * The home page is not among them. A world has to have a front page, and an
+ * application you cannot turn off is not an application, it is the floor.
+ */
+export interface BundledApp {
+  readonly id: string;
+  readonly name: string;
+  readonly tagline: string;
+  readonly pages: readonly { readonly path: BuiltInPage; readonly name: string }[];
+}
+
+export const BUNDLED: readonly BundledApp[] = [
+  {
+    id: 'play',
+    name: 'Play',
+    tagline: 'Campaigns and characters, and the order things happened in.',
+    pages: [
+      { path: 'campaigns', name: 'Campaigns' },
+      { path: 'characters', name: 'Characters' },
+      { path: 'timeline', name: 'Timeline' },
+    ],
+  },
+  {
+    id: 'atlas',
+    name: 'Atlas',
+    tagline: 'The world drawn from its own coastlines, at any year.',
+    pages: [{ path: 'map', name: 'Map' }],
+  },
+  {
+    id: 'library',
+    name: 'Library',
+    tagline: 'What the world has written down, and the rules it is played by.',
+    pages: [
+      { path: 'compendium', name: 'Compendium' },
+      { path: 'rules', name: 'Rules' },
+    ],
+  },
+];
+
+/** The front page, which every world has and nobody can turn off. */
+export const FLOOR: readonly BuiltInPage[] = ['home'];
+
+/** A bundled application as the project it is. */
+export function projectFor(app: BundledApp): Project {
+  return {
+    id: `bundled:${app.id}`,
+    name: app.name,
+    tagline: app.tagline,
+    status: 'published',
+    replaces: [],
+    pages: app.pages.map((page) => ({
+      id: page.path,
+      name: page.name,
+      path: page.path,
+      scope: 'world' as const,
+      layout: PAGES[page.path],
+    })),
   };
+}
+
+/** Every page the application ships, whether or not a world uses it. */
+export function builtIn(): Project {
   return {
     id: 'built-in',
     name: 'OpenDnD',
@@ -119,12 +177,29 @@ export function builtIn(): Project {
     replaces: [],
     pages: Object.entries(PAGES).map(([path, layout]) => ({
       id: path,
-      name: named[path as BuiltInPage].name,
+      name:
+        BUNDLED.flatMap((app) => app.pages).find((one) => one.path === path)
+          ?.name ?? 'Home',
       path,
       scope: 'world' as const,
       layout,
     })),
   };
+}
+
+/** Which bundled applications a world has turned off. */
+export function appsOff(world: Record<string, unknown> | undefined): Set<string> {
+  const apps = (world?.apps ?? {}) as { off?: unknown };
+  return new Set(Array.isArray(apps.off) ? apps.off.map(String) : []);
+}
+
+/** Whether a world still offers a bundled page. */
+export function offers(path: string, off: ReadonlySet<string>): boolean {
+  if ((FLOOR as readonly string[]).includes(path)) return true;
+  const app = BUNDLED.find((one) =>
+    one.pages.some((page) => page.path === path),
+  );
+  return !app || !off.has(app.id);
 }
 
 /**

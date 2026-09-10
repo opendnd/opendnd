@@ -154,12 +154,14 @@ describe('the map', () => {
   it('fetches the cells under the view down to a level worth drawing, and lists what it finds', async () => {
     const { calls } = renderMap();
     await mapAt(4);
-    const list = await screen.findByRole('heading', { name: 'In view' });
-    const aside = list.parentElement!;
-    await within(aside).findByText('The Valley');
-    expect(within(aside).getByText('North Camp')).toBeInTheDocument();
+    // The list is over the map rather than beside it, and opens when asked.
+    const open = await screen.findByRole('button', { name: /in view/ });
+    await userEvent.click(open);
+    const list = screen.getByRole('list', { name: 'In view' });
+    await within(list).findByText('The Valley');
+    expect(within(list).getByText('North Camp')).toBeInTheDocument();
     // Four levels below a tile-sized cell is as fine as zoom 4 draws: level 8.
-    expect(within(aside).queryByText('Tiny Hamlet')).not.toBeInTheDocument();
+    expect(within(list).queryByText('Tiny Hamlet')).not.toBeInTheDocument();
     const asked = () =>
       calls
         .filter((c) => c.url.includes('/camp?'))
@@ -180,15 +182,18 @@ describe('the map', () => {
     expect(calls.some((c) => c.url.includes('/song'))).toBe(false);
   });
 
-  it('draws a coarse cell as its outline and a fine one as a mark, each labelled', async () => {
+  it('writes a big place across the map and marks a small one, each named', async () => {
     renderMap();
     await mapAt(4);
     await waitFor(() =>
       expect(fake.layers.map((l) => l.tooltip)).toContain('The Valley'),
     );
     const byName = Object.fromEntries(fake.layers.map((l) => [l.tooltip, l]));
-    expect(byName['The Valley']!.kind).toBe('polygon');
+    // A place larger than the view is its name, not a rectangle: the square
+    // of a valley's quadtree cell is not the shape of the valley.
+    expect(byName['The Valley']!.kind).toBe('name');
     expect(byName['North Camp']!.kind).toBe('marker');
+    expect(fake.layers.some((l) => l.kind === 'polygon')).toBe(false);
   });
 
   it('opens a short account of a record from its mark, with the way to the whole of it', async () => {

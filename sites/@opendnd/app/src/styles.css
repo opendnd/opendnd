@@ -354,6 +354,24 @@
 .leaflet-tooltip.map-label::before {
   display: none;
 }
+/*
+ * The name of somewhere you are inside rather than looking at: a continent, a
+ * kingdom. An atlas sets these larger, letter-spaced and unboxed, across the
+ * land itself, and never draws a rectangle round them.
+ */
+.leaflet-tooltip.map-label-wide {
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow:
+    0 1px 2px var(--background),
+    0 -1px 2px var(--background),
+    1px 0 2px var(--background),
+    -1px 0 2px var(--background);
+}
 
 /*
  * A character sheet on paper.

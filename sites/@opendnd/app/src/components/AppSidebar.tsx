@@ -24,6 +24,7 @@ import { useApp, useSession } from '../app/context';
 import { compactCount, useCounts } from '../app/counts';
 import { useMe } from '../app/me';
 import { useOntology } from '../app/ontology';
+import { useProjects } from '../build/projects';
 import {
   CATEGORIES,
   SURFACES,
@@ -66,6 +67,7 @@ export function AppSidebar() {
   const { signOut } = useApp();
   const me = useMe();
   const ontology = useOntology();
+  const projects = useProjects();
   const counts = useCounts();
   const location = useLocation();
   const place = placeIn(location.pathname);
@@ -164,12 +166,63 @@ export function AppSidebar() {
                 label="Home"
                 icon={<CompassIcon />}
               />
-              <Entry
-                to={to('build')}
-                active={active('build')}
-                label="Projects"
-                icon={<LayoutTemplateIcon />}
-              />
+              {/*
+                The world's own projects, each one reachable without going
+                through a list first — the way Studio does it, because a
+                project you are working on is somewhere you go back to.
+              */}
+              <Collapsible defaultOpen className="group/projects">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger
+                    render={
+                      <SidebarMenuButton isActive={active('build')}>
+                        <LayoutTemplateIcon />
+                        <span>Projects</span>
+                        <ChevronRightIcon className="ml-auto transition-transform group-data-[panel-open]/projects:rotate-90" />
+                      </SidebarMenuButton>
+                    }
+                  />
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {projects.all.map((project) => (
+                        <SidebarMenuSubItem key={project.id}>
+                          <SidebarMenuSubButton
+                            isActive={location.pathname.includes(project.id)}
+                            render={
+                              <Link
+                                to={
+                                  project.pages[0]
+                                    ? `${to('build')}/${project.id}/${project.pages[0].id}`
+                                    : to('build')
+                                }
+                              />
+                            }
+                          >
+                            <span
+                              className={`size-2 shrink-0 rounded-full ${
+                                project.status === 'published'
+                                  ? 'bg-success'
+                                  : 'bg-muted-foreground/50'
+                              }`}
+                            />
+                            <span className="truncate">{project.name}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
+                          className="text-muted-foreground"
+                          render={<Link to={to('build')} />}
+                        >
+                          {projects.all.length === 0
+                            ? 'Build one'
+                            : 'All projects'}
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
               <Entry
                 to={to(SURFACES.marketplace.path)}
                 active={active(SURFACES.marketplace.path)}
@@ -178,53 +231,61 @@ export function AppSidebar() {
               />
             </Section>
 
-            <Section label="Play" storageKey="play">
-              {offers(ontology, SURFACES.campaigns) && (
+            {projects.offers('campaigns') && (
+              <Section label="Play" storageKey="play">
+                {offers(ontology, SURFACES.campaigns) && (
+                  <Entry
+                    to={to(SURFACES.campaigns.path)}
+                    active={active(SURFACES.campaigns.path)}
+                    label={SURFACES.campaigns.label}
+                    icon={<SwordsIcon />}
+                  />
+                )}
+                {offers(ontology, SURFACES.characters) && (
+                  <Entry
+                    to={to(SURFACES.characters.path)}
+                    active={active(SURFACES.characters.path)}
+                    label={SURFACES.characters.label}
+                    icon={<UsersIcon />}
+                  />
+                )}
+                {projects.offers('map') && (
+                  <Entry
+                    to={to(SURFACES.map.path)}
+                    active={active(SURFACES.map.path)}
+                    label={SURFACES.map.label}
+                    icon={<MapIcon />}
+                  />
+                )}
                 <Entry
-                  to={to(SURFACES.campaigns.path)}
-                  active={active(SURFACES.campaigns.path)}
-                  label={SURFACES.campaigns.label}
-                  icon={<SwordsIcon />}
+                  to={to(SURFACES.timeline.path)}
+                  active={active(SURFACES.timeline.path)}
+                  label={SURFACES.timeline.label}
+                  icon={<HistoryIcon />}
                 />
-              )}
-              {offers(ontology, SURFACES.characters) && (
-                <Entry
-                  to={to(SURFACES.characters.path)}
-                  active={active(SURFACES.characters.path)}
-                  label={SURFACES.characters.label}
-                  icon={<UsersIcon />}
-                />
-              )}
-              <Entry
-                to={to(SURFACES.map.path)}
-                active={active(SURFACES.map.path)}
-                label={SURFACES.map.label}
-                icon={<MapIcon />}
-              />
-              <Entry
-                to={to(SURFACES.timeline.path)}
-                active={active(SURFACES.timeline.path)}
-                label={SURFACES.timeline.label}
-                icon={<HistoryIcon />}
-              />
-            </Section>
+              </Section>
+            )}
 
-            <Section label="World" storageKey="world">
-              {offers(ontology, SURFACES.compendium) && (
+            {projects.offers('compendium') && (
+              <Section label="World" storageKey="world">
+                {offers(ontology, SURFACES.compendium) && (
+                  <Entry
+                    to={to(SURFACES.compendium.path)}
+                    active={
+                      active(SURFACES.compendium.path) || active('search')
+                    }
+                    label={SURFACES.compendium.label}
+                    icon={<BookOpenIcon />}
+                  />
+                )}
                 <Entry
-                  to={to(SURFACES.compendium.path)}
-                  active={active(SURFACES.compendium.path) || active('search')}
-                  label={SURFACES.compendium.label}
-                  icon={<BookOpenIcon />}
+                  to={to(SURFACES.rules.path)}
+                  active={active(SURFACES.rules.path)}
+                  label={SURFACES.rules.label}
+                  icon={<BookMarkedIcon />}
                 />
-              )}
-              <Entry
-                to={to(SURFACES.rules.path)}
-                active={active(SURFACES.rules.path)}
-                label={SURFACES.rules.label}
-                icon={<BookMarkedIcon />}
-              />
-            </Section>
+              </Section>
+            )}
 
             <Section label="Data" storageKey="data" defaultOpen={false}>
               <Entry
