@@ -15,6 +15,7 @@ import { useApi } from '../app/context';
 import { config } from '../config';
 import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
+import { humanize } from '../schema/fields';
 import { recordPath, useWorld } from '../app/world';
 import { Markdown } from '../components/Markdown';
 import { ErrorNotice, Notice } from '../components/Notice';
@@ -34,14 +35,6 @@ import { Page } from '../build/Page';
 import { usePageLayout } from '../build/projects';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
 
 /** Colours, one per model that sits on the map, in the order the ontology lists them. */
 const FILLS = [
@@ -191,17 +184,18 @@ export function MapSurface() {
   useEffect(() => {
     const element = container.current;
     if (!element || base.loading || mapRef.current) return undefined;
-    // The whole of a world, and no more of it. A drawn world is served as
-    // tiles that do not repeat, so letting the view wander past the edge asks
-    // for columns that were never drawn: at zoom 2 Leaflet was fetching
-    // columns minus two through five where four exist, and painting the four
-    // that came back empty as bands of nothing down the side of the map.
-    const edge = L.latLngBounds([-85.05, -180], [85.05, 180]);
+    // A world is round east to west and stops at its poles, which is what
+    // every map of a globe does: sail west from one coast and you arrive at
+    // the other, so the map repeats sideways and fills any window with world
+    // rather than with nothing. North and south it ends, and the view is held
+    // there rather than drifting off into blank paper.
+    const poles = L.latLngBounds([-85.05, -720], [85.05, 720]);
     const map = L.map(element, {
       minZoom: baseMap?.minZoom ?? 0,
       maxZoom: deepest,
-      maxBounds: edge,
-      maxBoundsViscosity: 1,
+      maxBounds: poles,
+      maxBoundsViscosity: 0.6,
+      worldCopyJump: true,
       attributionControl: baseMap?.attribution !== undefined,
       // Where every map on the web puts them, and out of the way of the
       // things that float over the top left.
@@ -212,8 +206,9 @@ export function MapSurface() {
       L.tileLayer(baseMap.tiles, {
         minZoom: baseMap.minZoom ?? 0,
         maxZoom: deepest,
-        noWrap: true,
-        bounds: edge,
+        // The tiles repeat: the API draws the column east of the last as
+        // the first again.
+        noWrap: false,
         ...(baseMap.attribution ? { attribution: baseMap.attribution } : {}),
       }).addTo(map);
     }
@@ -225,18 +220,7 @@ export function MapSurface() {
     // panel opens, a block is resized on a canvas — and a map that has not
     // been told is a map drawn for a box it is no longer in, pinned to one
     // corner with a band of nothing beside it.
-    // And the world fills the frame. Zoomed far enough out the whole world is
-    // narrower than the window, and what is beside it is not ocean, it is
-    // nothing — so that zoom is not offered. Which zoom that is depends on
-    // the size of the frame, so it is worked out again whenever that changes.
-    const fill = () => {
-      map.invalidateSize();
-      const least = map.getBoundsZoom(edge, true);
-      if (Number.isFinite(least) && least !== map.getMinZoom()) {
-        map.setMinZoom(Math.max(baseMap?.minZoom ?? 0, least));
-      }
-    };
-    const watching = new ResizeObserver(fill);
+    const watching = new ResizeObserver(() => map.invalidateSize());
     watching.observe(element);
     resizing.current = watching;
     const read = () => {
@@ -611,7 +595,84 @@ export function MapSurface() {
                     : `${entries.length} in view`}
               </Button>
             </div>
-            {listing && (
+            {preview && (
+              /*
+                What you clicked, over the map and beside it — not a drawer
+                from the right. A place on a map is looked at *with* the map:
+                the mark stays where it is, the ground stays visible, and
+                clicking somewhere else moves the card rather than opening a
+                second one. Closing it leaves you where you were.
+              */
+              <div
+                role="group"
+                aria-label={nameOf(preview.resource)}
+                className="flex max-h-[26rem] flex-col overflow-hidden rounded-lg border bg-background shadow-lg"
+              >
+                <div className="flex items-start gap-2 border-b p-3">
+                  <div className="flex min-w-0 flex-col">
+                    <p className="font-display truncate text-lg leading-tight">
+                      {nameOf(preview.resource)}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {ontology.label(preview.model)}
+                      {typeof preview.resource.placeType === 'string' &&
+                        ` · ${humanize(preview.resource.placeType)}`}
+                      {Array.isArray(preview.resource.extent) &&
+                        ` · ${preview.resource.extent.length} cells held`}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="ml-auto shrink-0"
+                    aria-label="Close"
+                    onClick={() => setPreview(undefined)}
+                  >
+                    <XIcon />
+                  </Button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">
+                  {typeof preview.resource.description === 'string' &&
+                  preview.resource.description !== '' ? (
+                    <Markdown
+                      text={preview.resource.description
+                        .split(/\n\s*\n/)
+                        .slice(0, 2)
+                        .join('\n\n')}
+                      className="prose-record text-sm"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Nothing written about this yet.
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2 border-t p-2">
+                  <Button
+                    size="sm"
+                    render={
+                      <Link
+                        to={recordPath(
+                          world.id,
+                          preview.model,
+                          preview.resource.id,
+                        )}
+                      />
+                    }
+                  >
+                    Open
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => go(preview)}
+                  >
+                    Centre on it
+                  </Button>
+                </div>
+              </div>
+            )}
+            {listing && !preview && (
               <div className="max-h-[calc(100%-8rem)] overflow-y-auto rounded-lg border bg-background/95 p-2 text-sm shadow-lg backdrop-blur">
                 <ul aria-label="In view" className="flex flex-col gap-0.5">
                   {entries.slice(0, 80).map((entry) => (
@@ -737,62 +798,6 @@ export function MapSurface() {
           )}
         </div>
       </div>
-
-      <Sheet
-        open={preview !== undefined}
-        onOpenChange={(open) => !open && setPreview(undefined)}
-      >
-        <SheetContent
-          side="right"
-          className="flex flex-col gap-4 overflow-y-auto"
-        >
-          {preview && (
-            <>
-              <SheetHeader>
-                <SheetTitle className="font-display text-2xl">
-                  {nameOf(preview.resource)}
-                </SheetTitle>
-                <SheetDescription>
-                  {ontology.label(preview.model)}
-                  {typeof preview.resource.canonStatus === 'string' &&
-                    ` · ${preview.resource.canonStatus}`}
-                </SheetDescription>
-              </SheetHeader>
-              <div className="px-4">
-                {typeof preview.resource.description === 'string' &&
-                preview.resource.description !== '' ? (
-                  <Markdown
-                    text={preview.resource.description
-                      .split(/\n\s*\n/)
-                      .slice(0, 3)
-                      .join('\n\n')}
-                    className="prose-record text-sm"
-                  />
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    Nothing written about this yet.
-                  </p>
-                )}
-              </div>
-              <SheetFooter>
-                <Button
-                  render={
-                    <Link
-                      to={recordPath(
-                        world.id,
-                        preview.model,
-                        preview.resource.id,
-                      )}
-                    />
-                  }
-                >
-                  Learn more
-                </Button>
-              </SheetFooter>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }

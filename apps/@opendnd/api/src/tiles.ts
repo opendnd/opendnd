@@ -126,13 +126,19 @@ export async function renderTile(
   if (!found) return undefined;
   const { map, noise, drawnTo } = found;
   const across = 2 ** z;
+  if (y < 0 || y >= across) return undefined;
+  // East of the last column is the first column again. A world is round: sail
+  // west from one coast and you arrive at the other, and a map that stopped
+  // at the edge of its drawing would be saying otherwise. It is also what
+  // lets a map zoomed out fill a wide window with world instead of nothing.
+  const column = ((x % across) + across) % across;
   const wide = map.width / across;
   const tall = map.height / across;
   return drawTile(map, {
     box: {
-      left: x * wide,
+      left: column * wide,
       top: y * tall,
-      right: (x + 1) * wide,
+      right: (column + 1) * wide,
       bottom: (y + 1) * tall,
     },
     size: 256,

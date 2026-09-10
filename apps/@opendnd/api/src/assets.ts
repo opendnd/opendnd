@@ -89,7 +89,10 @@ export function assetId(body: Uint8Array, contentType: string): string {
 
 export const ASSET_ID = /^[0-9a-f]{64}\.[a-z0-9]{2,5}$/;
 /** `{z}/{x}/{y}.{extension}`, the way web maps have addressed tiles since the first one. */
-export const TILE_KEY = /^(\d{1,2})\/(\d{1,7})\/(\d{1,7})\.(png|jpg|webp|svg)$/;
+// A column may be negative, or past the last one: a round world repeats, and
+// a map wider than the world it is showing asks for the copies either side.
+export const TILE_KEY =
+  /^(\d{1,2})\/(-?\d{1,7})\/(\d{1,7})\.(png|jpg|webp|svg)$/;
 
 /** Everything a world keeps sits under this, so one world cannot read another's. */
 export function worldPrefix(world: string): string {

@@ -421,6 +421,8 @@ describe('the API', () => {
 
 describe('the API: actions', () => {
   let pool: Pool;
+  /** Worlds made inside a test, which outlive it unless they are listed. */
+  const strays: string[] = [];
   let app: ReturnType<typeof createApp>;
   let drew: ReturnType<typeof client>;
   let world: string;
@@ -473,7 +475,9 @@ describe('the API: actions', () => {
 
   afterAll(async () => {
     if (!pool) return;
-    await pool.query('delete from layer where id = $1', [world]);
+    for (const id of [world, ...strays]) {
+      await pool.query('delete from layer where id = $1', [id]);
+    }
     await pool.query('delete from app_user where subject = $1', [
       who('drew-actions'),
     ]);
@@ -723,6 +727,7 @@ describe('the API: actions', () => {
     };
     const made = await drew.post('/v1/worlds', { name: 'Copied Realm' });
     const copy = (made.body as { id: string }).id;
+    strays.push(copy);
 
     const imported = await drew.post(`/v1/worlds/${copy}/$import`, bundle);
     expect(imported.status).toBe(201);
@@ -2246,6 +2251,8 @@ function anonymousClient(app: ReturnType<typeof createApp>) {
 
 describe('the API: modules', () => {
   let pool: Pool;
+  /** Worlds made inside a test, which outlive it unless they are listed. */
+  const strays: string[] = [];
   let app: ReturnType<typeof createApp>;
   let drew: ReturnType<typeof client>;
   let ada: ReturnType<typeof client>;
@@ -2282,7 +2289,18 @@ describe('the API: modules', () => {
   });
 
   afterAll(async () => {
-    await pool?.end();
+    if (!pool) return;
+    // Worlds and the modules published from them are both layers, and both
+    // outlive the run unless they are taken away. Left alone, a development
+    // database collects a fresh Reach Setting and Drawer every time the
+    // tests are run, and the marketplace fills up with forty copies of them.
+    for (const id of [setting, secret, table, published?.id, ...strays]) {
+      if (id) await pool.query('delete from layer where id = $1', [id]);
+    }
+    await pool.query('delete from app_user where subject = any($1)', [
+      [who('drew-modules'), who('ada-modules')],
+    ]);
+    await pool.end();
   });
 
   it('publishes a world as a module addressed by its content, once', async () => {
@@ -2488,6 +2506,7 @@ describe('the API: modules', () => {
     // A world of Drew's that reads both modules, in the order enabled.
     const made = await drew.post('/v1/worlds', { name: 'Reader' });
     const reader = (made.body as { id: string }).id;
+    strays.push(reader);
     await drew.post(`/v1/worlds/${reader}/modules`, { module: published.id });
     await drew.post(`/v1/worlds/${reader}/modules`, { module: hidden.id });
     const before = await drew.get(`/v1/worlds/${reader}/modules`);

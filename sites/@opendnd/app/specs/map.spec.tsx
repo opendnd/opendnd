@@ -204,11 +204,14 @@ describe('the map', () => {
     );
     const valleyLayer = fake.layers.find((l) => l.tooltip === 'The Valley')!;
     valleyLayer.handlers.click!({ latlng: centerOf(valley) });
-    const sheet = await screen.findByRole('dialog');
-    expect(within(sheet).getByText('A green valley.')).toBeInTheDocument();
-    expect(
-      within(sheet).getByRole('link', { name: 'Learn more' }),
-    ).toHaveAttribute('href', `/worlds/${WORLD_ID}/camp/${camps[0]!.id}`);
+    // A card over the map, not a drawer from the side: the map stays live
+    // and the mark you clicked stays where it is.
+    const card = await screen.findByRole('group', { name: 'The Valley' });
+    expect(within(card).getByText('A green valley.')).toBeInTheDocument();
+    expect(within(card).getByRole('link', { name: 'Open' })).toHaveAttribute(
+      'href',
+      `/worlds/${WORLD_ID}/camp/${camps[0]!.id}`,
+    );
   });
 
   it('places a record brought to it at the cell under the click, as fine as the zoom', async () => {
@@ -265,6 +268,8 @@ describe('the map', () => {
     await waitFor(() => expect(map.zoom).toBe(11));
     const centre = centerOf(north);
     expect(map.center.lat).toBeCloseTo(centre.lat, 5);
-    expect(await screen.findByRole('dialog')).toHaveTextContent('North Camp');
+    expect(
+      await screen.findByRole('group', { name: 'North Camp' }),
+    ).toBeInTheDocument();
   });
 });
