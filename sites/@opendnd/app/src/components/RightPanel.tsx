@@ -217,10 +217,10 @@ function Ask(props: { readonly world: string; readonly worldName: string }) {
                   <p className="mt-2 flex flex-wrap gap-1">
                     {turn.sources.map((s) => (
                       <Link
-                        key={`${s.model}/${s.id}`}
-                        to={recordPath(props.world, s.model, s.id)}
+                        key={`${s.type}/${s.id}`}
+                        to={recordPath(props.world, s.type.toLowerCase(), s.id)}
                       >
-                        <Badge variant="outline">{s.name ?? s.id}</Badge>
+                        <Badge variant="outline">{s.display ?? s.id}</Badge>
                       </Link>
                     ))}
                   </p>

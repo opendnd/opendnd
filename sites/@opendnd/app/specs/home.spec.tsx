@@ -28,7 +28,7 @@ const base: Record<string, JsonSchema> = {
   setting: {
     type: 'object',
     properties: {
-      model: { const: 'place' },
+      type: { const: 'Place' },
       id: { type: 'string' },
       name: { type: 'string' },
     },
@@ -60,19 +60,15 @@ const ontology = ontologyFrom(
   models,
   [],
 );
-const recorded = (updatedAt: string) => ({
-  createdAt: updatedAt,
-  updatedAt,
-  revision: 1,
-});
+const meta = (lastUpdated: string) => ({ versionId: '1', lastUpdated });
 const campaigns = [
   {
     id: 'c0000000-0000-4000-8000-000000000001',
     name: 'The Lantern Road',
     status: 'running',
     description: 'A road, a lantern, a long night.',
-    setting: { model: 'place', id: 'p1', name: 'Aldermere' },
-    recorded: recorded('2026-09-06T10:00:00Z'),
+    setting: { type: 'Place', id: 'p1', display: 'Aldermere' },
+    meta: meta('2026-09-06T10:00:00Z'),
   },
 ];
 
@@ -94,7 +90,7 @@ function api() {
         {
           id: 'w1',
           name: 'A chronicle',
-          recorded: recorded('2026-09-07T10:00:00Z'),
+          meta: meta('2026-09-07T10:00:00Z'),
         },
       ],
       next: 'more',

@@ -25,7 +25,7 @@
       "minimum": 0,
       "description": "The level at which it is gained, for a class or subclass feature."
     },
-    "spells": {
+    "spell": {
       "type": "array",
       "description": "Spells the feature grants, and how often they may be cast.",
       "items": {
@@ -48,7 +48,7 @@
         "additionalProperties": false
       }
     },
-    "proficiencyChoices": {
+    "proficiencyChoice": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice",
       "description": "Proficiencies the feature lets a character choose."
     },

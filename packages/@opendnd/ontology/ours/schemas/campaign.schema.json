@@ -22,7 +22,7 @@
       "type": "string",
       "description": "User id of whoever runs it. A user, not a person in the world: running a game is not something that happens in the fiction."
     },
-    "players": {
+    "player": {
       "type": "array",
       "items": {
         "type": "string"
@@ -50,7 +50,7 @@
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition",
       "description": "Where the party currently stands in the world's own calendar."
     },
-    "characters": {
+    "character": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"

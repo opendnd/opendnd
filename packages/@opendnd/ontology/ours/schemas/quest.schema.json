@@ -21,7 +21,7 @@
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "Who set it."
     },
-    "objectives": {
+    "objective": {
       "type": "array",
       "description": "The steps it breaks into, each done or not.",
       "items": {
@@ -44,7 +44,7 @@
         "additionalProperties": false
       }
     },
-    "about": {
+    "subject": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"

@@ -68,11 +68,7 @@ describe('generate', () => {
       world,
       name: 'Test',
       canonStatus: 'generated',
-      recorded: {
-        createdAt: '2026-09-03T12:00:00Z',
-        updatedAt: '2026-09-03T12:00:00Z',
-        revision: 1,
-      },
+      meta: { versionId: '1', lastUpdated: '2026-09-03T12:00:00Z' },
       ...toPersonFields(g),
     });
     expect(person.genome?.chromosomes['23']).toBe(g.chromosomes['23']);

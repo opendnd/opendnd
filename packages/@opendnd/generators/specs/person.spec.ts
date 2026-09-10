@@ -24,11 +24,11 @@ describe('personGenerator', () => {
     expect(person.derivedId).toBe(derivedId(world, 'dynasty/thorne/3'));
     expect(person.provenance?.generatedBy).toBe('person@1.0.0');
     expect(person.provenance?.seed).toBe('dynasty/thorne/3');
-    expect(person.provenance?.derivedFrom?.map((r) => r.model)).toEqual([
+    expect(person.provenance?.derivedFrom?.map((r) => r.type)).toEqual([
       'species',
       'culture',
     ]);
-    expect(person.recorded.createdAt).toBe(now);
+    expect(person.provenance?.recorded).toBe(now);
     expect(person.species?.id).toBe(species.id);
     expect(person.culture?.id).toBe(culture.id);
     expect(person.genome?.chromosomes['23']).toMatch(/^X\d+=[XY]\d+$/);
@@ -52,7 +52,7 @@ describe('personGenerator', () => {
       { species, culture, sex: 'female', name: 'Livia Honoria' },
       ctx(),
     );
-    expect(p.sex).toBe('female');
+    expect(p.gender).toBe('female');
     expect(p.name).toBe('Livia Honoria');
     expect(p.genome?.chromosomes['23']).toMatch(/^X\d+=X\d+$/);
   });

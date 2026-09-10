@@ -5,7 +5,7 @@ import { checkHistory } from 'src';
 const world = '3c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a11';
 const trs = 'c0000000-0000-4000-8000-000000000001';
 const now = '2026-09-03T12:00:00Z';
-const recorded = { createdAt: now, updatedAt: now, revision: 1 };
+const meta = { versionId: '1', lastUpdated: now };
 const person = (
   id: string,
   name: string,
@@ -17,7 +17,7 @@ const person = (
   name,
   canonStatus: 'canon',
   perspective: 'in-universe',
-  recorded,
+  meta,
   status: died === undefined ? 'alive' : 'dead',
   birth: { time: { trs, year: born, precision: 'year' } },
   ...(died === undefined
@@ -26,7 +26,7 @@ const person = (
 });
 const event = (
   id: string,
-  type: Event['eventType'],
+  type: Event['type'],
   year: number,
   participants: Array<[string, ParticipantRole]>,
 ): Event => ({
@@ -35,11 +35,11 @@ const event = (
   name: `${type} ${year}`,
   canonStatus: 'canon',
   perspective: 'in-universe',
-  recorded,
-  eventType: type,
-  when: { begin: { trs, year, precision: 'year' } },
-  participants: participants.map(([pid, role]) => ({
-    actor: { model: 'person', id: pid },
+  meta,
+  type: type,
+  occurred: { begin: { trs, year, precision: 'year' } },
+  participant: participants.map(([pid, role]) => ({
+    actor: { type: 'Person', id: pid },
     role,
   })),
 });
@@ -106,9 +106,9 @@ describe('checkHistory', () => {
       name: id,
       canonStatus: 'canon',
       perspective: 'in-universe',
-      recorded,
-      title: { model: 'title', id: 'o1', name: 'Lord' },
-      holder: { model: 'person', id: holder },
+      meta,
+      title: { type: 'Title', id: 'o1', display: 'Lord' },
+      holder: { type: 'Person', id: holder },
       validTime: {
         begin: { trs, year: begin, precision: 'year' },
         ...(end === undefined
@@ -175,14 +175,14 @@ describe('checkHistory', () => {
           name: 't1',
           canonStatus: 'canon',
           perspective: 'in-universe',
-          recorded,
-          title: { model: 'title', id: 'o1', name: 'Lord' },
-          holder: { model: 'person', id: A },
+          meta,
+          title: { type: 'Title', id: 'o1', display: 'Lord' },
+          holder: { type: 'Person', id: A },
           validTime: {
             begin: { trs, year: 1020, precision: 'year' },
             end: { trs, year: 1035, precision: 'year' },
           },
-          ended: { model: 'event', id: 'e1' },
+          ended: { type: 'Event', id: 'e1' },
         },
       ],
     });

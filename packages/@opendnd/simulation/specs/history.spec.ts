@@ -33,8 +33,8 @@ const calendar = calendarSchema.parse({
   world,
   name: 'Common Reckoning',
   canonStatus: 'canon',
-  recorded: { createdAt: now, updatedAt: now, revision: 1 },
-  months: [{ name: 'Year', length: 360 }],
+  meta: { versionId: '1', lastUpdated: now },
+  month: [{ name: 'Year', length: 360 }],
 });
 
 /** A duchy of counties, so the simulation has several houses to run. */
@@ -79,8 +79,10 @@ describe('historyGenerator', () => {
       expect(p.canonStatus).toBe('generated');
       expect(p.provenance?.generatedBy).toMatch(/^(person|history)@/);
     }
-    expect(out.events.map((e) => e.when.begin?.year ?? 0)).toEqual(
-      [...out.events.map((e) => e.when.begin?.year ?? 0)].sort((a, b) => a - b),
+    expect(out.events.map((e) => e.occurred.begin?.year ?? 0)).toEqual(
+      [...out.events.map((e) => e.occurred.begin?.year ?? 0)].sort(
+        (a, b) => a - b,
+      ),
     );
   });
 
@@ -91,7 +93,7 @@ describe('historyGenerator', () => {
     expect(held).toEqual(titleIds);
     expect(
       out.events.filter(
-        (e) => e.eventType === 'coronation' && e.when.begin?.year === 1000,
+        (e) => e.type === 'coronation' && e.occurred.begin?.year === 1000,
       ).length,
     ).toBe(realm.titles.length);
     for (const titleId of titleIds) {
@@ -109,7 +111,7 @@ describe('historyGenerator', () => {
   });
 
   it('links every succession to what caused it', () => {
-    const successions = out.events.filter((e) => e.eventType === 'succession');
+    const successions = out.events.filter((e) => e.type === 'succession');
     expect(successions.length).toBeGreaterThan(0);
     const causes = new Set<string>();
     for (const s of successions) {
@@ -118,16 +120,14 @@ describe('historyGenerator', () => {
       expect(s.causedBy?.length).toBe(1);
       const cause = out.events.find((e) => e.id === s.causedBy![0].id);
       // A title changes hands when its holder dies, or is deposed by war.
-      expect(['death', 'deposition']).toContain(cause!.eventType);
-      causes.add(cause!.eventType);
+      expect(['death', 'deposition']).toContain(cause!.type);
+      causes.add(cause!.type);
     }
     expect(causes.has('death')).toBe(true);
   });
 
   it('ties vassals to their lieges, and only between living holders', () => {
-    const homage = out.relationships.filter(
-      (r) => r.relationshipType === 'liege-vassal',
-    );
+    const homage = out.relationships.filter((r) => r.type === 'liege-vassal');
     expect(homage.length).toBeGreaterThan(0);
     const holders = new Set(out.tenures.map((t) => t.holder.id));
     for (const bond of homage) {
@@ -146,7 +146,7 @@ describe('historyGenerator', () => {
   });
 
   it('makes matches between houses as well as with commoners', () => {
-    const marriages = out.events.filter((e) => e.eventType === 'marriage');
+    const marriages = out.events.filter((e) => e.type === 'marriage');
     expect(marriages.length).toBeGreaterThan(0);
     const dynastic = marriages.filter((e) => e.description?.includes('match'));
     expect(dynastic.length).toBeGreaterThan(0);
@@ -166,13 +166,13 @@ describe('historyGenerator', () => {
     for (const c of out.claims) {
       expect(c.basis).toBe('inheritance');
       const claimant = out.people.find((p) => p.id === c.claimant.id)!;
-      expect(claimant.sex).toBe('female');
+      expect(claimant.gender).toBe('female');
       expect(c.through).toBeDefined();
     }
 
-    const wars = out.events.filter((e) => e.eventType === 'war');
+    const wars = out.events.filter((e) => e.type === 'war');
     expect(wars.length).toBeGreaterThan(0);
-    const battles = out.events.filter((e) => e.eventType === 'battle');
+    const battles = out.events.filter((e) => e.type === 'battle');
     expect(battles.length).toBeGreaterThan(0);
     const warIds = new Set(wars.map((w) => w.id));
     for (const b of battles) {
@@ -186,8 +186,8 @@ describe('historyGenerator', () => {
       expect(own.length).toBeLessThanOrEqual(8);
       // A concluded war is dated to its last battle or later, and says how it ended.
       if (war.outcome !== undefined) {
-        expect(war.when.end?.year).toBeGreaterThanOrEqual(
-          war.when.begin!.year!,
+        expect(war.occurred.end?.year).toBeGreaterThanOrEqual(
+          war.occurred.begin!.year!,
         );
       }
       const wins = own.filter((b) => b.outcome === 'attacker').length;
@@ -199,32 +199,34 @@ describe('historyGenerator', () => {
     const won = wars.filter((w) => w.outcome === 'attacker');
     for (const war of won) {
       const deposition = out.events.find(
-        (e) => e.eventType === 'deposition' && e.partOf?.id === war.id,
+        (e) => e.type === 'deposition' && e.partOf?.id === war.id,
       );
       expect(deposition).toBeDefined();
-      const deposed = deposition!.participants!.find(
+      const deposed = deposition!.participant!.find(
         (p) => p.role === 'deposed',
       )!.actor.id;
       const ended = out.tenures.find((t) => t.ended?.id === deposition!.id)!;
       expect(ended.holder.id).toBe(deposed);
-      expect(ended.validTime?.end?.year).toBe(deposition!.when.begin?.year);
+      expect(ended.validTime?.end?.year).toBe(deposition!.occurred.begin?.year);
     }
   });
 
   it('tracks every settlement separately through the years', () => {
     const settlements = realm.places.filter((p) =>
-      ['hamlet', 'village', 'town', 'city', 'metropolis'].includes(p.placeType),
+      ['hamlet', 'village', 'town', 'city', 'metropolis'].includes(p.type),
     );
     expect(settlements.length).toBeGreaterThan(1);
-    const counted = new Set(out.populations.map((p) => p.place.id));
+    const counted = new Set(out.populations.map((p) => p.subject.id));
     expect(counted).toEqual(new Set(settlements.map((p) => p.id)));
-    expect(new Set(out.economies.map((e) => e.place.id))).toEqual(counted);
-    const years = new Set(out.populations.map((p) => p.at.year));
+    expect(new Set(out.economies.map((e) => e.subject.id))).toEqual(counted);
+    const years = new Set(out.populations.map((p) => p.effective.year));
     expect(years.has(1000)).toBe(true);
     expect(years.has(1200)).toBe(true);
     // Prosperity drifts independently, so not every town shares a fortune.
     const fortunes = new Set(
-      out.economies.filter((e) => e.at.year === 1200).map((e) => e.prosperity),
+      out.economies
+        .filter((e) => e.effective.year === 1200)
+        .map((e) => e.prosperity),
     );
     expect(fortunes.size).toBeGreaterThan(1);
   });
@@ -241,7 +243,9 @@ describe('historyGenerator', () => {
       birth: {
         time: { trs: calendar.id, year: born, precision: 'year' as const },
       },
-      memberOf: [{ model: 'faction' as const, id: house.id, name: house.name }],
+      memberOf: [
+        { type: 'Faction' as const, id: house.id, display: house.name },
+      ],
     });
     const lord = founder('lord', 'male', 970);
     const lady = founder('lady', 'female', 975);
@@ -250,11 +254,11 @@ describe('historyGenerator', () => {
       world,
       name: `Death of ${lord.name}`,
       canonStatus: 'canon',
-      recorded: { createdAt: now, updatedAt: now, revision: 1 },
-      eventType: 'death',
-      when: { begin: { trs: calendar.id, year: 1012 } },
-      participants: [
-        { actor: { model: 'person', id: lord.id }, role: 'deceased' },
+      meta: { versionId: '1', lastUpdated: now },
+      type: 'death',
+      occurred: { begin: { trs: calendar.id, year: 1012 } },
+      participant: [
+        { actor: { type: 'Person', id: lord.id }, role: 'deceased' },
       ],
     });
     const result = historyGenerator.generate(
@@ -268,12 +272,12 @@ describe('historyGenerator', () => {
     );
     const deaths = result.events.filter(
       (e) =>
-        e.eventType === 'death' &&
-        e.participants?.some(
+        e.type === 'death' &&
+        e.participant?.some(
           (p) => p.actor.id === lord.id && p.role === 'deceased',
         ),
     );
-    expect(deaths.map((d) => d.when.begin?.year)).toEqual([1012]);
+    expect(deaths.map((d) => d.occurred.begin?.year)).toEqual([1012]);
     expect(result.people.find((p) => p.id === lord.id)?.death?.time?.year).toBe(
       1012,
     );

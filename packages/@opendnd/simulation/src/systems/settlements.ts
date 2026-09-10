@@ -67,13 +67,13 @@ export function settlements(
       ...stamp(HISTORY_GENERATOR, childContext(pctx, 'economy')),
       name: `${place.name} economy, ${year}`,
       perspective: 'in-universe',
-      place: placeRef,
-      at: yearOf(input.calendar, year),
+      subject: placeRef,
+      effective: yearOf(input.calendar, year),
       prosperity: settlement.prosperity,
-      industries: industriesFor(
+      industry: industriesFor(
         count,
         settlement.prosperity,
-        place.resources ?? [],
+        place.resource ?? [],
         pctx.rng.child('industries'),
       ),
       livestock: livestockFor(count),
@@ -109,8 +109,8 @@ function drift(
         ? `Fortune returns to ${place.name}`
         : `Hard times come to ${place.name}`,
       description: `${place.name} is now ${next.replace('-', ' ')}.`,
-      participants: [],
-      locations: [ref('place', place)],
+      participant: [],
+      location: [ref('place', place)],
       outcome: next,
     }),
   );

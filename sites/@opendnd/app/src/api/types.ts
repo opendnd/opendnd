@@ -112,16 +112,19 @@ export interface Vocabulary {
   readonly codes: readonly VocabularyCode[];
 }
 
-/** Any resource. `id`, `world` and `model` are set by the API on the way out. */
+/**
+ * Any resource. `id`, `world`, `resourceType` and `meta` are set by the API
+ * on the way out.
+ */
 export type Resource = Record<string, unknown> & {
   readonly id: string;
   readonly world?: string;
-  readonly model?: string;
+  readonly resourceType?: string;
   readonly name?: string;
-  readonly recorded?: {
-    readonly createdAt?: string;
-    readonly updatedAt?: string;
-    readonly revision?: number;
+  readonly meta?: {
+    readonly versionId?: string;
+    readonly lastUpdated?: string;
+    readonly profile?: readonly string[];
   };
 };
 
@@ -182,18 +185,31 @@ export interface WorldPatch {
 
 /** A pointer to another resource, as the ontology's `Reference`. */
 export interface Reference {
-  readonly model: string;
+  readonly type: string;
   readonly id: string;
-  readonly name?: string;
+  readonly display?: string;
 }
 
 export function isReference(value: unknown): value is Reference {
   return (
     typeof value === 'object' &&
     value !== null &&
-    typeof (value as Reference).model === 'string' &&
+    typeof (value as Reference).type === 'string' &&
     typeof (value as Reference).id === 'string'
   );
+}
+
+/**
+ * A model id and a resource type say the same thing in different cases: a
+ * `place` is published as a `Place`. Routes and the ontology are keyed by the
+ * id; a record and every reference to one carry the type.
+ */
+export function modelOfReference(reference: Reference): string {
+  return reference.type.toLowerCase();
+}
+
+export function resourceTypeOf(model: string): string {
+  return model.charAt(0).toUpperCase() + model.slice(1);
 }
 
 /**

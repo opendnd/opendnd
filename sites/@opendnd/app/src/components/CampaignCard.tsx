@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 import { Thumb } from './Thumb';
-import type { Resource } from '../api/types';
+import type { Reference, Resource } from '../api/types';
 import { recordPath, useWorld } from '../app/world';
 import { humanize } from '../schema/fields';
 import { Badge } from '@/components/ui/badge';
@@ -12,8 +12,7 @@ export function CampaignCard(props: {
 }) {
   const { world } = useWorld();
   const c = props.campaign;
-  const setting = c.setting as
-    { model: string; id: string; name?: string } | undefined;
+  const setting = c.setting as Reference | undefined;
   return (
     <Link
       to={recordPath(world.id, props.model, c.id)}
@@ -38,7 +37,7 @@ export function CampaignCard(props: {
         )}
         {setting && (
           <span className="text-xs text-muted-foreground">
-            Set in {setting.name ?? 'a place'}
+            Set in {setting.display ?? 'a place'}
           </span>
         )}
       </span>

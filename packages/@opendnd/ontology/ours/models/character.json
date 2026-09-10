@@ -23,7 +23,7 @@
       "target": "Background"
     },
     {
-      "predicate": "feats",
+      "predicate": "feat",
       "target": "Feat"
     },
     {
@@ -35,39 +35,39 @@
       "target": "Item"
     },
     {
-      "predicate": "classes.class",
+      "predicate": "class.class",
       "target": "Class"
     },
     {
-      "predicate": "conditions",
+      "predicate": "condition",
       "target": "Condition"
     },
     {
-      "predicate": "proficiencies",
+      "predicate": "proficiency",
       "target": "Proficiency"
     },
     {
-      "predicate": "spells.known",
+      "predicate": "spellcasting.known",
       "target": "Spell"
     },
     {
-      "predicate": "spells.prepared",
+      "predicate": "spellcasting.prepared",
       "target": "Spell"
     },
     {
-      "predicate": "choices.source",
+      "predicate": "choice.source",
       "target": "Class"
     },
     {
-      "predicate": "choices.source",
+      "predicate": "choice.source",
       "target": "Feature"
     },
     {
-      "predicate": "choices.source",
+      "predicate": "choice.source",
       "target": "Background"
     },
     {
-      "predicate": "choices.source",
+      "predicate": "choice.source",
       "target": "Feat"
     }
   ],

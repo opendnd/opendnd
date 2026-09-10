@@ -11,7 +11,7 @@
   "schema": "https://docs.opendnd.org/ours/schemas/encounter.schema.json",
   "relationships": [
     {
-      "predicate": "place",
+      "predicate": "location",
       "target": "Place"
     },
     {
@@ -27,11 +27,11 @@
       "target": "Campaign"
     },
     {
-      "predicate": "adversaries.actor",
+      "predicate": "adversary.actor",
       "target": "Statblock"
     },
     {
-      "predicate": "adversaries.actor",
+      "predicate": "adversary.actor",
       "target": "Person"
     }
   ],

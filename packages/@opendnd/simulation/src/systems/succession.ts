@@ -46,9 +46,9 @@ export function succession(
     const deathEvent = predecessor
       ? state.events.find(
           (e) =>
-            e.eventType === 'death' &&
-            e.when.begin?.year === year &&
-            e.participants?.some(
+            e.type === 'death' &&
+            e.occurred.begin?.year === year &&
+            e.participant?.some(
               (p) => p.actor.id === predecessor.id && p.role === 'deceased',
             ),
         )
@@ -91,7 +91,7 @@ export function succession(
             description: predecessor
               ? `No heir could be found after the death of ${predecessor.name}.`
               : 'No eligible holder could be found.',
-            participants: predecessor
+            participant: predecessor
               ? [
                   {
                     actor: ref('person', predecessor),
@@ -99,7 +99,7 @@ export function succession(
                   },
                 ]
               : [],
-            ...(seat ? { locations: [seat] } : {}),
+            ...(seat ? { location: [seat] } : {}),
             ...(deathEvent ? { causedBy: [ref('event', deathEvent)] } : {}),
             outcome: 'vacant',
           }),
@@ -118,7 +118,7 @@ export function succession(
             description: `${cadet.name} founds a cadet branch of ${state.houses.get(state.houseOf(cadet.id)!)?.name ?? 'the house'}.`,
           }
         : {}),
-      participants: [
+      participant: [
         { actor: ref('person', heir), role: 'successor' },
         ...(predecessor
           ? [
@@ -129,7 +129,7 @@ export function succession(
             ]
           : []),
       ],
-      ...(seat ? { locations: [seat] } : {}),
+      ...(seat ? { location: [seat] } : {}),
       ...(deathEvent ? { causedBy: [ref('event', deathEvent)] } : {}),
     });
     state.addEvent(event);
@@ -172,7 +172,7 @@ function recordClaims(
   const heirBorn = heir.birth?.time?.year ?? 0;
   for (const child of state.children(predecessor.id)) {
     if (child.id === heir.id || !state.isAlive(child)) continue;
-    if (child.sex === 'male') continue;
+    if (child.gender === 'male') continue;
     if ((child.birth?.time?.year ?? 0) >= heirBorn) continue;
     const already = state.claims.some(
       (c) =>
@@ -204,7 +204,7 @@ function investCadet(
   title: Title,
   lifecycle: Lifecycle,
 ): Person | undefined {
-  const liegeHouse = state.houses.get(title.faction.id)?.parent?.id;
+  const liegeHouse = state.houses.get(title.faction.id)?.partOf?.id;
   if (liegeHouse === undefined) return undefined;
   const liegeTitle = state.titleOfHouse(liegeHouse);
   const liege = liegeTitle
@@ -236,12 +236,12 @@ function homage(
   if (!holder) return;
   const houseId = title.faction.id;
 
-  const liegeHouse = state.houses.get(houseId)?.parent?.id;
+  const liegeHouse = state.houses.get(houseId)?.partOf?.id;
   const liege = liegeHouse ? holderOfHouse(state, liegeHouse) : undefined;
   if (liege && liege.id !== holder.id) bond(state, input, yctx, liege, holder);
 
   for (const house of state.houses.values()) {
-    if (house.parent?.id !== houseId) continue;
+    if (house.partOf?.id !== houseId) continue;
     const vassalTitle = state.titleOfHouse(house.id);
     const vassal = vassalTitle ? holderOf(state, vassalTitle.id) : undefined;
     if (vassal && vassal.id !== holder.id) {
@@ -259,7 +259,7 @@ function bond(
 ): void {
   const already = state.relationships.some(
     (r) =>
-      r.relationshipType === 'liege-vassal' &&
+      r.type === 'liege-vassal' &&
       r.party1.id === liege.id &&
       r.party2.id === vassal.id,
   );
@@ -272,7 +272,7 @@ function bond(
       liege,
       vassal,
       {
-        facts: [{ type: 'homage', time: yearOf(input.calendar, state.year) }],
+        fact: [{ type: 'homage', time: yearOf(input.calendar, state.year) }],
         validTime: { begin: yearOf(input.calendar, state.year) },
       },
     ),
@@ -311,7 +311,7 @@ export function chooseHeir(
   const eligible = (p: Person) =>
     state.isAlive(p) &&
     state.houseOf(p.id) === houseId &&
-    (law !== 'agnatic' || p.sex === 'male');
+    (law !== 'agnatic' || p.gender === 'male');
   const members = state.livingMembers(houseId).filter(eligible);
   if (members.length === 0) return undefined;
 
@@ -328,8 +328,8 @@ export function chooseHeir(
     const sorted = [...children].sort(byBirth);
     return law === 'male-preference'
       ? [
-          ...sorted.filter((c) => c.sex === 'male'),
-          ...sorted.filter((c) => c.sex !== 'male'),
+          ...sorted.filter((c) => c.gender === 'male'),
+          ...sorted.filter((c) => c.gender !== 'male'),
         ]
       : sorted;
   };

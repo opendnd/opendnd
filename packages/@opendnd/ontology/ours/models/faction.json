@@ -11,7 +11,7 @@
   "schema": "https://docs.opendnd.org/ours/schemas/faction.schema.json",
   "relationships": [
     {
-      "predicate": "parent",
+      "predicate": "partOf",
       "target": "Faction"
     },
     {
@@ -38,6 +38,12 @@
       "system": "http://www.w3.org/ns/org",
       "schema": "http://www.w3.org/ns/org#Organization",
       "type": "one-to-one"
+    },
+    {
+      "system": "http://hl7.org/fhir",
+      "schema": "http://hl7.org/fhir/StructureDefinition/Organization",
+      "type": "partial",
+      "comment": "An Organization is a faction with no politics: parent is partOf and factionType is type. Its seat, motto, sigil and the span between founded and dissolved have no counterpart."
     }
   ]
 }

@@ -10,7 +10,7 @@
     }
   ],
   "properties": {
-    "itemCategory": {
+    "type": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/item-category.schema.json"
     },
     "instanceOf": {
@@ -67,7 +67,7 @@
     "rarity": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/rarity.schema.json"
     },
-    "properties": {
+    "property": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/vocabularies/weapon-property.schema.json"
@@ -214,7 +214,7 @@
       "type": "boolean",
       "description": "Whether this is one form of a family of items, a +1 sword among +X swords."
     },
-    "variants": {
+    "form": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"

@@ -47,7 +47,7 @@
       },
       "additionalProperties": false
     },
-    "languages": {
+    "language": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"

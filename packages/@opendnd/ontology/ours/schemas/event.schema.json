@@ -10,19 +10,19 @@
     }
   ],
   "properties": {
-    "eventType": {
+    "type": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/event-type.schema.json"
     },
-    "when": {
+    "occurred": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TimeSpan"
     },
-    "locations": {
+    "location": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       }
     },
-    "participants": {
+    "participant": {
       "type": "array",
       "items": {
         "type": "object",
@@ -55,8 +55,8 @@
     }
   },
   "required": [
-    "eventType",
-    "when"
+    "type",
+    "occurred"
   ],
   "unevaluatedProperties": false
 }

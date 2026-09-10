@@ -111,7 +111,7 @@ export function useSheet(character: Record<string, unknown>): Sheet {
     const inSkills = new Set<string>();
     const inSaves = new Set<string>();
     for (const one of found?.proficiencies ?? []) {
-      const kind = one.proficiencyType;
+      const kind = one.type;
       const points = one.reference as { model?: string; id?: string } | undefined;
       if (kind === 'saving-throw' && typeof one.ability === 'string') {
         inSaves.add(one.ability);

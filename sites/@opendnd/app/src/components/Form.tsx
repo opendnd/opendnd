@@ -21,7 +21,7 @@ export const RECORD_KEEPING: ReadonlySet<string> = new Set([
   'validTime',
   'derivedId',
   'provenance',
-  'citations',
+  'citation',
 ]);
 
 export interface SchemaFormProps {

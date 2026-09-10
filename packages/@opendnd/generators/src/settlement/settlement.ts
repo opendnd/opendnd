@@ -120,48 +120,50 @@ export const settlementGenerator: Generator<SettlementInput, SettlementOutput> =
         ...stamp(settlementGenerator, ctx),
         name,
         perspective: 'in-universe',
-        placeType: input.tier as PlaceType,
+        type: input.tier as PlaceType,
         terrain,
-        resources,
+        resource: resources,
         area,
         cell,
         population: count,
-        ...(input.parent ? { parent: input.parent } : {}),
-        ...(input.controlledBy ? { controlledBy: input.controlledBy } : {}),
+        ...(input.parent ? { partOf: input.parent } : {}),
+        ...(input.controlledBy
+          ? { managingOrganization: input.controlledBy }
+          : {}),
       };
       const placeRef: ReferenceTo<'place'> = {
-        model: 'place',
+        type: 'Place',
         id: place.id,
-        name,
+        display: name,
       };
 
       const population: Population = {
         ...stamp(settlementGenerator, childContext(ctx, 'population')),
         name: `${name} population, ${input.year}`,
         perspective: 'in-universe',
-        place: placeRef,
+        subject: placeRef,
         species: {
-          model: 'species',
+          type: 'Species',
           id: input.species.id,
-          name: input.species.name,
+          display: input.species.name,
         },
         culture: {
-          model: 'culture',
+          type: 'Culture',
           id: input.culture.id,
-          name: input.culture.name,
+          display: input.culture.name,
         },
         count,
-        at,
+        effective: at,
       };
 
       const economy: Economy = {
         ...stamp(settlementGenerator, childContext(ctx, 'economy')),
         name: `${name} economy, ${input.year}`,
         perspective: 'in-universe',
-        place: placeRef,
-        at,
+        subject: placeRef,
+        effective: at,
         prosperity,
-        industries: industriesFor(
+        industry: industriesFor(
           count,
           prosperity,
           resources,
@@ -234,10 +236,10 @@ export function industriesFor(
   prosperity: Prosperity,
   resources: readonly Resource[],
   rng: Rng,
-): NonNullable<Economy['industries']> {
+): NonNullable<Economy['industry']> {
   const factor = PROSPERITY_FACTOR[prosperity];
   const have = new Set(resources);
-  const out: NonNullable<Economy['industries']> = [];
+  const out: NonNullable<Economy['industry']> = [];
   for (const [industry, spec] of Object.entries(INDUSTRIES) as Array<
     [keyof typeof INDUSTRIES, (typeof INDUSTRIES)[keyof typeof INDUSTRIES]]
   >) {

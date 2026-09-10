@@ -115,16 +115,16 @@ describe('the API', () => {
 
   it('validates a write against the model schema and says what is wrong', async () => {
     const bad = await drew.post(`/v1/worlds/${world}/place`, {
-      placeType: 'not-a-place-type',
+      type: 'not-a-place-type',
     });
     expect(bad.status).toBe(400);
-    expect((bad.body as { error: string }).error).toContain('placeType');
+    expect((bad.body as { error: string }).error).toContain('type');
   });
 
   it('creates, reads, patches and deletes a resource', async () => {
     const made = await drew.post(`/v1/worlds/${world}/place`, {
       name: 'Itumeist',
-      placeType: 'town',
+      type: 'town',
       population: 2300,
     });
     expect(made.status).toBe(201);
@@ -132,12 +132,12 @@ describe('the API', () => {
       id: string;
       world: string;
       canonStatus: string;
-      recorded: { revision: number };
+      meta: { versionId: string };
     };
     // The platform fields belong to the API, not to the request.
     expect(place.world).toBe(world);
     expect(place.canonStatus).toBe('proposed');
-    expect(place.recorded.revision).toBe(1);
+    expect(place.meta.versionId).toBe('1');
 
     const read = await drew.get(`/v1/worlds/${world}/place/${place.id}`);
     expect((read.body as { name: string }).name).toBe('Itumeist');
@@ -149,8 +149,8 @@ describe('the API', () => {
     expect((patched.body as { population: number }).population).toBe(2500);
     expect((patched.body as { name: string }).name).toBe('Itumeist');
     expect(
-      (patched.body as { recorded: { revision: number } }).recorded.revision,
-    ).toBe(2);
+      (patched.body as { meta: { versionId: string } }).meta.versionId,
+    ).toBe('2');
 
     const listed = await drew.get(
       `/v1/worlds/${world}/place?canonStatus=canon&name=Itum`,
@@ -168,7 +168,7 @@ describe('the API', () => {
   it('keeps the authoring history readable after a change', async () => {
     const made = await drew.post(`/v1/worlds/${world}/place`, {
       name: 'Thornehold',
-      placeType: 'hamlet',
+      type: 'hamlet',
       population: 120,
     });
     const id = (made.body as { id: string }).id;
@@ -189,13 +189,13 @@ describe('the API', () => {
     // first: the ontology will not accept a bare number as a date.
     const calendar = await drew.post(`/v1/worlds/${world}/calendar`, {
       name: 'Common Reckoning',
-      months: [{ name: 'Year', length: 360 }],
+      month: [{ name: 'Year', length: 360 }],
     });
     const trs = (calendar.body as { id: string }).id;
     const tenure = await drew.post(`/v1/worlds/${world}/tenure`, {
       name: 'Count of Itumeist, Apiustu Nuriatia',
-      title: { model: 'title', id: crypto.randomUUID() },
-      holder: { model: 'person', id: crypto.randomUUID() },
+      title: { type: 'Title', id: crypto.randomUUID() },
+      holder: { type: 'Person', id: crypto.randomUUID() },
       validTime: { begin: { trs, year: 1010 }, end: { trs, year: 1038 } },
     });
     expect(tenure.status).toBe(201);
@@ -209,7 +209,7 @@ describe('the API', () => {
   it('will not let a stranger read or write a private world', async () => {
     expect((await stranger.get(`/v1/worlds/${world}/place`)).status).toBe(403);
     expect(
-      (await stranger.post(`/v1/worlds/${world}/place`, { placeType: 'town' }))
+      (await stranger.post(`/v1/worlds/${world}/place`, { type: 'town' }))
         .status,
     ).toBe(403);
     expect((await anonymous.get(`/v1/worlds/${world}/place`)).status).toBe(401);
@@ -228,7 +228,7 @@ describe('the API', () => {
     );
     expect((await stranger.get(`/v1/worlds/${shared}/place`)).status).toBe(200);
     expect(
-      (await stranger.post(`/v1/worlds/${shared}/place`, { placeType: 'town' }))
+      (await stranger.post(`/v1/worlds/${shared}/place`, { type: 'town' }))
         .status,
     ).toBe(403);
   });
@@ -253,7 +253,7 @@ describe('the API', () => {
     ).toBe(204);
     const written = await stranger.post(`/v1/worlds/${world}/place`, {
       name: 'Added by an editor',
-      placeType: 'village',
+      type: 'village',
     });
     expect(written.status).toBe(201);
   });
@@ -348,7 +348,7 @@ describe('the API', () => {
     ).json();
     const calendar = await drew.post(`/v1/worlds/${world}/calendar`, {
       name: 'Common Reckoning',
-      months: [{ name: 'Year', length: 360 }],
+      month: [{ name: 'Year', length: 360 }],
     });
     // The fixtures carry ids, and an earlier test saved them; a second post
     // of the same id is a conflict, so these are saved as new records.
@@ -377,15 +377,16 @@ describe('the API', () => {
       seedPath: 'place/village-1',
     });
     expect(generated.status).toBe(200);
-    const resources = (generated.body as { resources: { model: string }[] })
-      .resources;
-    expect(resources.map((r) => r.model).sort()).toEqual([
-      'economy',
-      'place',
-      'population',
+    const resources = (
+      generated.body as { resources: { resourceType: string }[] }
+    ).resources;
+    expect(resources.map((r) => r.resourceType).sort()).toEqual([
+      'Economy',
+      'Place',
+      'Population',
     ]);
 
-    // Because each carries its model, the bundle imports as it is.
+    // Because each says what it is, the bundle imports as it is.
     const imported = await drew.post(`/v1/worlds/${world}/$import`, {
       resources,
     });
@@ -451,7 +452,7 @@ describe('the API: actions', () => {
     );
     const calendar = await drew.post(`/v1/worlds/${world}/calendar`, {
       name: 'Common Reckoning',
-      months: [{ name: 'Year', length: 360 }],
+      month: [{ name: 'Year', length: 360 }],
     });
 
     // The realm is generated through the world, naming its species, culture
@@ -499,7 +500,7 @@ describe('the API: actions', () => {
     expect(doc.components.schemas.place).toBeDefined();
     expect(
       (doc.components.schemas.place as { properties: Record<string, unknown> })
-        .properties.placeType,
+        .properties.type,
     ).toBeDefined();
     expect(Object.keys(doc.components.schemas).length).toBeGreaterThanOrEqual(
       16,
@@ -606,7 +607,7 @@ describe('the API: actions', () => {
     const calendars = await drew.get(`/v1/worlds/${world}/calendar?limit=1`);
     const founded = await drew.post(`/v1/worlds/${world}/place`, {
       name: 'The Old Keep',
-      placeType: 'region',
+      type: 'region',
       founded: {
         trs: (calendars.body as { resources: { id: string }[] }).resources[0]!
           .id,
@@ -670,7 +671,7 @@ describe('the API: actions', () => {
       {
         years: 5,
         startYear: 1000,
-        calendar: { model: 'calendar', id: calendars[0]!.id },
+        calendar: { type: 'Calendar', id: calendars[0]!.id },
       },
     );
     expect(status).toBe(200);
@@ -680,9 +681,9 @@ describe('the API: actions', () => {
   it('narrows a run to one house inside the realm', async () => {
     const houses = await drew.get(`/v1/worlds/${world}/faction?limit=500`);
     const all = (
-      houses.body as { resources: { id: string; parent?: unknown }[] }
+      houses.body as { resources: { id: string; partOf?: unknown }[] }
     ).resources;
-    const vassal = all.find((f) => f.parent !== undefined)!;
+    const vassal = all.find((f) => f.partOf !== undefined)!;
     const { status, body } = await drew.post(
       `/v1/worlds/${world}/faction/${vassal.id}/$simulate`,
       { years: 20, startYear: 1000 },
@@ -783,31 +784,31 @@ describe('the API: actions', () => {
       culture: cultureId,
       calendar: calendarId,
       year: 1000,
-      within: { model: 'place', id: duchy.id },
+      within: { type: 'Place', id: duchy.id },
     });
     expect(made.status).toBe(200);
     const places = (
       made.body as {
         resources: {
-          model: string;
+          resourceType: string;
           cell?: string;
-          placeType: string;
-          parent?: { id: string };
+          type: string;
+          partOf?: { id: string };
         }[];
       }
-    ).resources.filter((r) => r.model === 'place');
+    ).resources.filter((r) => r.resourceType === 'Place');
     expect(places.length).toBeGreaterThan(1);
     const outer = CellId.fromToken(duchy.cell!);
     for (const place of places) {
       expect(outer.contains(CellId.fromToken(place.cell!))).toBe(true);
     }
-    const county = places.find((p) => p.placeType === 'county')!;
-    expect(county.parent?.id).toBe(duchy.id);
+    const county = places.find((p) => p.type === 'county')!;
+    expect(county.partOf?.id).toBe(duchy.id);
 
     // A place without a cell has nowhere to put anything.
     const bare = await drew.post(`/v1/worlds/${world}/place`, {
       name: 'Nowhere in particular',
-      placeType: 'region',
+      type: 'region',
     });
     expect(bare.status).toBe(201);
     const refused = await drew.post(`/v1/worlds/${world}/place/$generate`, {
@@ -843,7 +844,7 @@ describe('the API: actions', () => {
   it('leaves events unpublished when the sink fails', async () => {
     await drew.post(`/v1/worlds/${world}/place`, {
       name: 'Somewhere New',
-      placeType: 'hamlet',
+      type: 'hamlet',
     });
     const before = await pending(pool, world);
     expect(before).toBeGreaterThan(0);
@@ -886,13 +887,16 @@ async function pending(pool: Pool, world: string): Promise<number> {
 }
 
 /** Which model a generated resource belongs to, from the fields it carries. */
+/**
+ * Which collection a generated record belongs in.
+ *
+ * It says so itself now: every record carries the type it is, so this is a
+ * lower-casing rather than a guess from the fields it happens to have.
+ */
 function modelOf(resource: Record<string, unknown>): string {
-  if ('placeType' in resource) return 'place';
-  if ('factionType' in resource) return 'faction';
-  if ('rank' in resource) return 'title';
-  if ('prosperity' in resource) return 'economy';
-  if ('count' in resource) return 'population';
-  return 'person';
+  const type = resource.resourceType;
+  if (typeof type !== 'string') throw new Error('a record with no type');
+  return type.toLowerCase();
 }
 
 describe('the API: what a front end needs', () => {
@@ -919,7 +923,7 @@ describe('the API: what a front end needs', () => {
       (
         await drew.post(`/v1/worlds/${world}/place`, {
           name: 'Itumeist',
-          placeType: 'town',
+          type: 'town',
           // A cell deep in the quadtree, so a coarse cell should contain it.
           cell: '502206e25c3',
         })
@@ -929,7 +933,7 @@ describe('the API: what a front end needs', () => {
       (
         await drew.post(`/v1/worlds/${world}/person`, {
           name: 'Ociaman Nuriatia',
-          residence: { model: 'place', id: place },
+          residence: { type: 'Place', id: place },
         })
       ).body as { id: string }
     ).id;
@@ -937,7 +941,7 @@ describe('the API: what a front end needs', () => {
       name: 'Count of Itumeist',
       rank: 2,
       successionLaw: 'male-preference',
-      faction: { model: 'faction', id: crypto.randomUUID() },
+      faction: { type: 'Faction', id: crypto.randomUUID() },
     });
     // Asserted here so a schema this setup does not satisfy fails loudly
     // rather than confusing an assertion further down.
@@ -989,7 +993,7 @@ describe('the API: what a front end needs', () => {
       resource: {
         id: crypto.randomUUID(),
         name: `Hamlet ${i}`,
-        placeType: 'hamlet',
+        type: 'hamlet',
         canonStatus: 'generated',
       },
     }));
@@ -1079,12 +1083,12 @@ describe('the API: what a front end needs', () => {
     // The town is at a fine cell; the realm holding it at a coarse one.
     const realm = await drew.post(`/v1/worlds/${world}/place`, {
       name: 'The Wide Realm',
-      placeType: 'kingdom',
+      type: 'kingdom',
       cell: '95',
     });
     const town = await drew.post(`/v1/worlds/${world}/place`, {
       name: 'A Town In It',
-      placeType: 'town',
+      type: 'town',
       cell: '9500004',
     });
     const townCell = '9500004';
@@ -1114,7 +1118,7 @@ describe('the API: what a front end needs', () => {
     // square: a country is found from anywhere inside its borders.
     const holding = await drew.post(`/v1/worlds/${world}/place`, {
       name: 'A Realm That Holds Ground',
-      placeType: 'kingdom',
+      type: 'kingdom',
       // Its own square is far away; what it holds is around the town.
       cell: '37',
       extent: ['950000', '950004'],
@@ -1309,7 +1313,7 @@ describe('the API: what a front end needs', () => {
     const id = (made.body as { id: string }).id;
     await drew.post(`/v1/worlds/${id}/place`, {
       name: 'Still Here',
-      placeType: 'village',
+      type: 'village',
     });
 
     expect((await drew.delete(`/v1/worlds/${id}`)).status).toBe(204);
@@ -1382,12 +1386,12 @@ describe('the API: the campaign layer', () => {
     // A dungeon is a place and a party is a faction. Neither needed a model.
     const dungeon = await drew.post(`/v1/worlds/${world}/place`, {
       name: 'The Sunken Vault',
-      placeType: 'dungeon',
+      type: 'dungeon',
     });
     expect(dungeon.status).toBe(201);
     const party = await drew.post(`/v1/worlds/${world}/faction`, {
       name: 'The Kaviapat Four',
-      factionType: 'party',
+      type: 'party',
     });
     expect(party.status).toBe(201);
   });
@@ -1400,7 +1404,7 @@ describe('the API: the campaign layer', () => {
     const campaign = await drew.post(`/v1/worlds/${world}/campaign`, {
       name: 'The Itumeist Succession',
       status: 'running',
-      players: ['drew', 'sam'],
+      player: ['drew', 'sam'],
       beganOn: '2026-01-10',
     });
     expect(campaign.status).toBe(201);
@@ -1414,8 +1418,8 @@ describe('the API: the campaign layer', () => {
       name: 'Ociaman, of the Kaviapat Four',
       status: 'active',
       level: 3,
-      person: { model: 'person', id: person },
-      campaign: { model: 'campaign', id: campaignId },
+      person: { type: 'Person', id: person },
+      campaign: { type: 'Campaign', id: campaignId },
       player: 'sam',
     });
     expect(character.status).toBe(201);
@@ -1423,15 +1427,15 @@ describe('the API: the campaign layer', () => {
     const quest = await drew.post(`/v1/worlds/${world}/quest`, {
       name: 'Recover the Vault Seal',
       status: 'active',
-      campaign: { model: 'campaign', id: campaignId },
-      objectives: [
+      campaign: { type: 'Campaign', id: campaignId },
+      objective: [
         { summary: 'Reach the vault', done: true },
         { summary: 'Find the seal' },
       ],
     });
     expect(quest.status).toBe(201);
     expect(
-      (quest.body as { objectives: { done?: boolean }[] }).objectives.filter(
+      (quest.body as { objective: { done?: boolean }[] }).objective.filter(
         (o) => o.done,
       ),
     ).toHaveLength(1);
@@ -1453,7 +1457,7 @@ describe('the API: the campaign layer', () => {
       (
         await drew.post(`/v1/worlds/${world}/calendar`, {
           name: 'Common Reckoning',
-          months: [{ name: 'Year', length: 360 }],
+          month: [{ name: 'Year', length: 360 }],
         })
       ).body as { id: string }
     ).id;
@@ -1461,7 +1465,7 @@ describe('the API: the campaign layer', () => {
       (
         await drew.post(`/v1/worlds/${world}/place`, {
           name: 'The Antechamber',
-          placeType: 'room',
+          type: 'room',
         })
       ).body as { id: string }
     ).id;
@@ -1469,7 +1473,7 @@ describe('the API: the campaign layer', () => {
     const encounter = await drew.post(`/v1/worlds/${world}/encounter`, {
       name: 'Ambush in the antechamber',
       difficulty: 'hard',
-      place: { model: 'place', id: place },
+      location: { type: 'Place', id: place },
       cell: '502206e25c3',
     });
     expect(encounter.status).toBe(201);
@@ -1481,9 +1485,9 @@ describe('the API: the campaign layer', () => {
     // world's own calendar. The encounter stays as the thing set up.
     const event = await drew.post(`/v1/worlds/${world}/event`, {
       name: 'The antechamber ambush',
-      eventType: 'battle',
-      when: { begin: { trs: calendar, year: 1038 } },
-      locations: [{ model: 'place', id: place }],
+      type: 'battle',
+      occurred: { begin: { trs: calendar, year: 1038 } },
+      location: [{ type: 'Place', id: place }],
     });
     expect(event.status).toBe(201);
     expect((event.body as { perspective: string }).perspective).toBe(
@@ -1492,7 +1496,7 @@ describe('the API: the campaign layer', () => {
 
     const played = await drew.patch(
       `/v1/worlds/${world}/encounter/${(encounter.body as { id: string }).id}`,
-      { played: { model: 'event', id: (event.body as { id: string }).id } },
+      { played: { type: 'Event', id: (event.body as { id: string }).id } },
     );
     expect(played.status).toBe(200);
 
@@ -1513,11 +1517,11 @@ describe('the API: the campaign layer', () => {
     const events = await drew.get(`/v1/worlds/${world}/event`);
     const produced = (
       events.body as { resources: { id: string }[] }
-    ).resources.map((e) => ({ model: 'event', id: e.id }));
+    ).resources.map((e) => ({ type: 'Event', id: e.id }));
 
     const session = await drew.post(`/v1/worlds/${world}/session`, {
       name: 'Session 4',
-      campaign: { model: 'campaign', id: campaign },
+      campaign: { type: 'Campaign', id: campaign },
       number: 4,
       playedOn: '2026-02-14T19:00:00Z',
       durationMinutes: 210,
@@ -1597,7 +1601,7 @@ describe('the API: hardening', () => {
   it('answers with the revision as an ETag and refuses a write that has not seen it', async () => {
     const made = await drew.post(`/v1/worlds/${world}/place`, {
       name: 'Itumeist',
-      placeType: 'town',
+      type: 'town',
     });
     expect(made.status).toBe(201);
     expect(made.headers.get('etag')).toBe('"1"');
@@ -1605,7 +1609,7 @@ describe('the API: hardening', () => {
 
     const replaced = await drew.put(
       `/v1/worlds/${world}/place/${id}`,
-      { name: 'Itumeist', placeType: 'city' },
+      { name: 'Itumeist', type: 'city' },
       { 'if-match': '"1"' },
     );
     expect(replaced.status).toBe(200);
@@ -1614,18 +1618,18 @@ describe('the API: hardening', () => {
     // A second editor who still holds revision 1 does not overwrite the city.
     const stale = await drew.put(
       `/v1/worlds/${world}/place/${id}`,
-      { name: 'Itumeist', placeType: 'village' },
+      { name: 'Itumeist', type: 'village' },
       { 'if-match': '"1"' },
     );
     expect(stale.status).toBe(412);
     expect((stale.body as { code: string }).code).toBe('stale');
     const now = await drew.get(`/v1/worlds/${world}/place/${id}`);
-    expect((now.body as { placeType: string }).placeType).toBe('city');
+    expect((now.body as { type: string }).type).toBe('city');
     expect(now.headers.get('etag')).toBe('"2"');
 
     const nonsense = await drew.put(
       `/v1/worlds/${world}/place/${id}`,
-      { name: 'Itumeist', placeType: 'city' },
+      { name: 'Itumeist', type: 'city' },
       { 'if-match': 'whenever' },
     );
     expect(nonsense.status).toBe(400);
@@ -1636,13 +1640,13 @@ describe('the API: hardening', () => {
     const first = await drew.post(`/v1/worlds/${world}/place`, {
       id,
       name: 'Once',
-      placeType: 'village',
+      type: 'village',
     });
     expect(first.status).toBe(201);
     const second = await drew.post(`/v1/worlds/${world}/place`, {
       id,
       name: 'Twice',
-      placeType: 'village',
+      type: 'village',
     });
     expect(second.status).toBe(409);
     expect((second.body as { code: string }).code).toBe('conflict');
@@ -1655,7 +1659,7 @@ describe('the API: hardening', () => {
     await drew.post(`/v1/worlds/${world}/place`, {
       id,
       name: 'Phoenix',
-      placeType: 'village',
+      type: 'village',
     });
     expect((await drew.delete(`/v1/worlds/${world}/place/${id}`)).status).toBe(
       204,
@@ -1663,7 +1667,7 @@ describe('the API: hardening', () => {
     const again = await drew.post(`/v1/worlds/${world}/place`, {
       id,
       name: 'Phoenix, rebuilt',
-      placeType: 'town',
+      type: 'town',
     });
     expect(again.status).toBe(201);
     expect(again.headers.get('etag')).toBe('"3"');
@@ -1682,7 +1686,7 @@ describe('the API: hardening', () => {
   it('applies a merge patch: null clears a field and objects merge', async () => {
     const made = await drew.post(`/v1/worlds/${world}/place`, {
       name: 'Patched',
-      placeType: 'village',
+      type: 'village',
       description: 'to be removed',
       validTime: { begin: { trs, year: 100 } },
     });
@@ -1737,7 +1741,7 @@ describe('the API: hardening', () => {
     for (const name of ['Cedar', 'Ash', 'Birch']) {
       const made = await drew.post(`/v1/worlds/${orchard}/place`, {
         name,
-        placeType: 'village',
+        type: 'village',
       });
       ids[name] = (made.body as { id: string }).id;
     }
@@ -1984,7 +1988,7 @@ describe('the API: hardening', () => {
     expect(schemas.person!.properties!.id).toBeDefined();
     expect(schemas.personInput!.properties!.id).toBeUndefined();
     expect(schemas.personInput!.required ?? []).not.toContain('world');
-    expect(schemas.personInput!.required ?? []).not.toContain('recorded');
+    expect(schemas.personInput!.required ?? []).not.toContain('meta');
   });
 
   it('reports the database in its health check', async () => {
@@ -2066,7 +2070,7 @@ describe('the API: writing about a record', () => {
         await drew.post(`/v1/worlds/${world}/person`, {
           name: 'Ilsabet Marrow',
           description: 'A river-warden of the ford.',
-          sex: 'female',
+          gender: 'female',
           status: 'alive',
         })
       ).body as { id: string }
@@ -2124,7 +2128,7 @@ describe('the API: writing about a record', () => {
     expect(status).toBe(200);
     const result = body as {
       work: Record<string, unknown> & {
-        about: { id: string }[];
+        subject: { id: string }[];
         provenance: { generatedBy: string; parameters: { model: string } };
       };
       saved: boolean;
@@ -2135,14 +2139,14 @@ describe('the API: writing about a record', () => {
     expect(result.work.text).toBe(
       'Ilsabet Marrow kept the ford and took stories for tolls.',
     );
-    expect(result.work.model).toBe('work');
-    expect(result.work.workType).toBe('article');
-    expect(result.work.about[0]?.id).toBe(person);
+    expect(result.work.resourceType).toBe('Work');
+    expect(result.work.type).toBe('article');
+    expect(result.work.subject[0]?.id).toBe(person);
     expect(result.work.provenance.generatedBy).toMatch(/^article@/);
     expect(result.work.provenance.parameters.model).toBe('scripted:scripted-1');
     // What the model was allowed to say came from the record.
     expect(result.facts).toContain('Person: Ilsabet Marrow');
-    expect(result.facts).toContain('Sex: female');
+    expect(result.facts).toContain('Gender: female');
     expect(lastPrompt).toContain('A river-warden of the ford.');
     expect(result.spend).toMatchObject({
       model: 'test-model',
@@ -2217,11 +2221,11 @@ describe('the API: writing about a record', () => {
     expect(asked.status).toBe(200);
     const result = asked.body as {
       answer: string;
-      sources: { model: string; id: string; name: string }[];
+      sources: { type: string; id: string; display: string }[];
       facts: string[];
     };
     expect(result.answer).toContain('Ilsabet Marrow');
-    expect(result.sources.map((s) => s.name)).toContain('Ilsabet Marrow');
+    expect(result.sources.map((s) => s.display)).toContain('Ilsabet Marrow');
     // The model was told the world's own record and the person's facts.
     expect(lastPrompt).toContain('World: Written');
     expect(lastPrompt).toContain('Ilsabet Marrow');
@@ -2275,7 +2279,7 @@ describe('the API: modules', () => {
     await drew.post(`/v1/worlds/${setting}/language`, { name: 'Reach Cant' });
     await drew.post(`/v1/worlds/${setting}/calendar`, {
       name: 'Common Reckoning',
-      months: [{ name: 'Year', length: 360 }],
+      month: [{ name: 'Year', length: 360 }],
     });
 
     // Something private, from another world of Drew's.

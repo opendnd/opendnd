@@ -10,14 +10,14 @@
     }
   ],
   "properties": {
-    "featType": {
+    "type": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/feat-type.schema.json"
     },
     "repeatable": {
       "type": "boolean",
       "description": "Whether it may be taken more than once."
     },
-    "prerequisites": {
+    "prerequisite": {
       "type": "object",
       "properties": {
         "minimumLevel": {
@@ -33,7 +33,7 @@
       "additionalProperties": false,
       "description": "What must be true before it can be taken."
     },
-    "prerequisiteOptions": {
+    "prerequisiteOption": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice",
       "description": "A choice among prerequisites, where the rules offer one."
     }

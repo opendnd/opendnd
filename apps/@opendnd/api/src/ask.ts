@@ -98,7 +98,7 @@ export async function askWorld(
       if (!record) continue;
       const about = await factsAbout(store, hit.model, record, options.label);
       facts.push('', ...about.facts);
-      sources.push({ model: hit.model, id: hit.id, name: hit.name });
+      sources.push({ type: hit.model, id: hit.id, display: hit.name });
     }
   }
 

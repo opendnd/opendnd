@@ -26,7 +26,7 @@ Sign in with any name. The API's `dev` task runs with development sign-in on, so
 
 ## Generating
 
-A model the API can generate has a Generate button on its list page. The form there is built from the generator's input as `/v1/models` describes it, in JSON Schema, the same way a resource's form is built from its schema: a reference input whose `model` the schema fixes gets a picker that searches only that model. Generating saves nothing. The results are listed by kind, and Keep all imports them in one transaction; one result of the model asked for opens its page, more than one opens the list.
+A model the API can generate has a Generate button on its list page. The form there is built from the generator's input as `/v1/models` describes it, in JSON Schema, the same way a resource's form is built from its schema: a reference input whose `type` the schema fixes gets a picker that searches only that model. Generating saves nothing. The results are listed by kind, and Keep all imports them in one transaction; one result of the model asked for opens its page, more than one opens the list.
 
 ## Simulating history
 

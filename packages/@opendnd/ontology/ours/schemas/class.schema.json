@@ -25,28 +25,28 @@
       },
       "description": "The abilities the class is built on."
     },
-    "savingThrows": {
+    "savingThrow": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/vocabularies/ability.schema.json"
       },
       "description": "Saving throws it is proficient in."
     },
-    "proficiencies": {
+    "proficiency": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Proficiencies every member of the class has."
     },
-    "proficiencyChoices": {
+    "proficiencyChoice": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
       },
       "description": "Proficiencies chosen on taking the class."
     },
-    "startingEquipmentOptions": {
+    "startingEquipmentOption": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
@@ -120,14 +120,14 @@
       "additionalProperties": false,
       "description": "How the class casts, where it casts."
     },
-    "spells": {
+    "spell": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "The spell list the class draws on."
     },
-    "levels": {
+    "level": {
       "type": "array",
       "description": "What the class gains at each level.",
       "items": {
@@ -182,7 +182,7 @@
         "additionalProperties": false
       }
     },
-    "primaryAbilityOptions": {
+    "primaryAbilityOption": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice",
       "description": "A choice of primary ability, for a class that offers one."
     }

@@ -68,14 +68,14 @@ function fightBattle(
     makeEvent(yctx, `battle/${war.event.id}`, input.calendar, {
       type: 'battle',
       year,
-      name: `Battle of ${fieldName(field?.name)}, ${year}`,
+      name: `Battle of ${fieldName(field?.display)}, ${year}`,
       description: `${victor.name} holds the field.`,
-      participants: [
+      participant: [
         { actor: ref('person', claimant), role: 'attacker' },
         { actor: ref('person', holder), role: 'defender' },
         { actor: ref('person', victor), role: 'victor' },
       ],
-      ...(field ? { locations: [field] } : {}),
+      ...(field ? { location: [field] } : {}),
       partOf: ref('event', war.event),
       outcome: attackerWon ? 'attacker' : 'defender',
     }),
@@ -101,10 +101,10 @@ function conclude(
 ): void {
   state.wars.splice(state.wars.indexOf(war), 1);
   const event = war.event as {
-    when: { begin?: unknown; end?: unknown };
+    occurred: { begin?: unknown; end?: unknown };
     outcome?: string;
   };
-  event.when = { ...event.when, end: yearOf(input.calendar, year) };
+  event.occurred = { ...event.occurred, end: yearOf(input.calendar, year) };
   event.outcome = outcome;
 
   const claim = war.claim as { resolvedBy?: Reference };
@@ -122,11 +122,11 @@ function conclude(
       type: 'deposition',
       year,
       name: `${holder.name} is deposed from ${title.name}`,
-      participants: [
+      participant: [
         { actor: ref('person', holder), role: 'deposed' },
         { actor: ref('person', claimant), role: 'successor' },
       ],
-      ...(seat ? { locations: [seat] } : {}),
+      ...(seat ? { location: [seat] } : {}),
       causedBy: [ref('event', war.event)],
       partOf: ref('event', war.event),
     },
@@ -158,11 +158,11 @@ function conclude(
       year,
       name: `${claimant.name} takes ${title.name}`,
       description: `Won by force of arms.`,
-      participants: [
+      participant: [
         { actor: ref('person', claimant), role: 'successor' },
         { actor: ref('person', holder), role: 'predecessor' },
       ],
-      ...(seat ? { locations: [seat] } : {}),
+      ...(seat ? { location: [seat] } : {}),
       causedBy: [ref('event', deposition)],
     },
   );
@@ -211,12 +211,12 @@ function declareWars(
       year,
       name: `War for ${title.name}`,
       description: `${claimant.name} presses a claim to ${title.name} against ${holder.name}.`,
-      participants: [
+      participant: [
         { actor: ref('person', claimant), role: 'claimant' },
         { actor: ref('person', holder), role: 'holder' },
       ],
       ...(state.seatOf(defender)
-        ? { locations: [state.seatOf(defender)!] }
+        ? { location: [state.seatOf(defender)!] }
         : {}),
     });
     state.addEvent(event);

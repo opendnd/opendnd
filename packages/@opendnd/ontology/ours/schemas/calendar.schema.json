@@ -10,7 +10,7 @@
     }
   ],
   "properties": {
-    "months": {
+    "month": {
       "type": "array",
       "items": {
         "type": "object",
@@ -35,7 +35,7 @@
       },
       "minItems": 1
     },
-    "weekdays": {
+    "weekday": {
       "type": "array",
       "items": {
         "type": "string"
@@ -68,7 +68,7 @@
       ],
       "additionalProperties": false
     },
-    "moons": {
+    "moon": {
       "type": "array",
       "items": {
         "type": "object",
@@ -92,7 +92,7 @@
         "additionalProperties": false
       }
     },
-    "seasons": {
+    "season": {
       "type": "array",
       "items": {
         "type": "object",
@@ -117,7 +117,7 @@
         "additionalProperties": false
       }
     },
-    "eras": {
+    "era": {
       "type": "array",
       "items": {
         "type": "object",
@@ -151,7 +151,7 @@
     }
   },
   "required": [
-    "months"
+    "month"
   ],
   "unevaluatedProperties": false
 }

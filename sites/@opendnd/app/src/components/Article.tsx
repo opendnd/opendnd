@@ -3,7 +3,12 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Markdown } from './Markdown';
 import { config } from '../config';
-import { type Resource, isReference } from '../api/types';
+import {
+  type Reference,
+  type Resource,
+  isReference,
+  modelOfReference,
+} from '../api/types';
 import { recordPath, useWorld } from '../app/world';
 import { type Field, humanize } from '../schema/fields';
 import {
@@ -40,13 +45,13 @@ const HANDLED: ReadonlySet<string> = new Set([
   'world',
   'module',
   'name',
-  'alternateNames',
+  'alternateName',
   'description',
   'tags',
   'canonStatus',
   'perspective',
-  'recorded',
-  'citations',
+  'meta',
+  'citation',
 ]);
 
 /** Fields about the record rather than the thing, shown last and folded. */
@@ -90,8 +95,8 @@ export function Article(props: ArticleProps) {
   const record = ordered.filter(
     (name) => RECORD.has(name) && !isEmpty(resource[name]),
   );
-  const citations = Array.isArray(resource.citations) ? resource.citations : [];
-  const alternateNames = resource.alternateNames;
+  const citations = Array.isArray(resource.citation) ? resource.citation : [];
+  const alternateNames = resource.alternateName;
   const tags = resource.tags;
 
   const headings = [
@@ -261,7 +266,7 @@ function hatnote(
   root: Field,
   fields: ReadonlyMap<string, Field>,
 ): string {
-  const kind = humanize(resource.model ?? root.name).toLowerCase();
+  const kind = humanize(resource.resourceType ?? root.name).toLowerCase();
   const status = labelOf(fields.get('canonStatus'), resource.canonStatus);
   const said = status
     ? `${indefinite(status)} ${status.toLowerCase()} ${kind}.`
@@ -300,8 +305,8 @@ function Infobox(props: {
 }) {
   const { resource } = props;
   const image = picture(resource);
-  const revision = resource.recorded?.revision;
-  const updated = resource.recorded?.updatedAt;
+  const revision = resource.meta?.versionId;
+  const updated = resource.meta?.lastUpdated;
   const rows = props.names.flatMap((name) =>
     rowsFor(name, props.fields.get(name), resource[name]),
   );
@@ -616,18 +621,17 @@ export function Value(props: {
   return String(value);
 }
 
-function ReferenceLink(props: {
-  readonly reference: { model: string; id: string; name?: string };
-}) {
+function ReferenceLink(props: { readonly reference: Reference }) {
   const { world } = useWorld();
-  const { model, id, name } = props.reference;
+  const { id, display } = props.reference;
+  const model = modelOfReference(props.reference);
   return (
     <span className="inline-flex items-center gap-1.5">
       <Link
         className="underline underline-offset-4 hover:text-primary"
         to={recordPath(world.id, model, id)}
       >
-        {name ?? id}
+        {display ?? id}
       </Link>
       <Badge variant="ghost" className="text-muted-foreground">
         {humanize(model)}

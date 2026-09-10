@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { canonStatusCodes, models, personSchema, worldSchema } from 'src';
 
-const recorded = {
-  createdAt: '2026-09-03T12:00:00Z',
-  updatedAt: '2026-09-03T12:00:00Z',
-  revision: 1,
-};
+const meta = { versionId: '1', lastUpdated: '2026-09-03T12:00:00Z' };
 const world = '3c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a11';
 
 describe('@opendnd/types', () => {
@@ -53,11 +49,7 @@ describe('@opendnd/types', () => {
       world,
       name: 'x',
       canonStatus: 'canon' as const,
-      recorded: {
-        createdAt: '2026-09-04T00:00:00Z',
-        updatedAt: '2026-09-04T00:00:00Z',
-        revision: 1,
-      },
+      meta: { versionId: '1', lastUpdated: '2026-09-04T00:00:00Z' },
     };
     // A campaign, a session, a character and an encounter are records about
     // the world rather than parts of it, and the ontology says so rather than
@@ -68,18 +60,20 @@ describe('@opendnd/types', () => {
     expect(
       models.character.parse({
         ...base,
-        person: { model: 'person', id: world },
+        person: { type: 'Person', id: world },
       }).perspective,
     ).toBe('out-of-universe');
     expect(
-      models.encounter.parse({ ...base, place: { model: 'place', id: world } })
-        .perspective,
+      models.encounter.parse({
+        ...base,
+        location: { type: 'Place', id: world },
+      }).perspective,
     ).toBe('out-of-universe');
     // A quest can be the world's own errand, so it keeps the base default.
     expect(models.quest.parse({ ...base, status: 'active' }).perspective).toBe(
       'in-universe',
     );
-    expect(models.place.parse({ ...base, placeType: 'town' }).perspective).toBe(
+    expect(models.place.parse({ ...base, type: 'town' }).perspective).toBe(
       'in-universe',
     );
   });
@@ -90,7 +84,7 @@ describe('@opendnd/types', () => {
       world,
       name: 'Aerath',
       canonStatus: 'canon',
-      recorded,
+      meta,
     });
     expect(w.perspective).toBe('in-universe');
     expect(canonStatusCodes).toContain('generated');
@@ -102,8 +96,8 @@ describe('@opendnd/types', () => {
       world,
       name: 'Nobody',
       canonStatus: 'canon',
-      recorded,
-      residence: { model: 'place', id: 'not-a-uuid' },
+      meta,
+      residence: { type: 'Place', id: 'not-a-uuid' },
       hairColour: 'red',
     });
     expect(bad.success).toBe(false);
@@ -115,7 +109,7 @@ describe('@opendnd/types', () => {
       world,
       name: 'Maelis of Thorne',
       canonStatus: 'generated',
-      recorded,
+      meta,
       birth: { time: { trs: world, year: 1203, month: 4, precision: 'month' } },
       provenance: { generatedBy: 'person@1.0.0', seed: 'aerath/thorne/3' },
     });

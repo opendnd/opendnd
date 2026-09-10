@@ -276,5 +276,5 @@ function chromosomeKeys(layout: Readonly<Record<string, string>>): string[] {
 }
 
 function speciesRef(species: Species): ReferenceTo<'species'> {
-  return { model: 'species', id: species.id, name: species.name };
+  return { type: 'Species', id: species.id, display: species.name };
 }

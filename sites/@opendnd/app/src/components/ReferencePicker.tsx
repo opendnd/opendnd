@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import type { Reference, SearchHit } from '../api/types';
+import {
+  type Reference,
+  type SearchHit,
+  modelOfReference,
+  resourceTypeOf,
+} from '../api/types';
 import { useApi } from '../app/context';
 import { useDebounced, useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
@@ -51,9 +56,9 @@ export function ReferencePicker(props: ReferencePickerProps) {
 
   const selected: SearchHit | null = props.value
     ? {
-        model: props.value.model,
+        model: modelOfReference(props.value),
         id: props.value.id,
-        name: props.value.name ?? props.value.id,
+        name: props.value.display ?? props.value.id,
         canonStatus: '',
       }
     : null;
@@ -70,7 +75,13 @@ export function ReferencePicker(props: ReferencePickerProps) {
         value={selected}
         onValueChange={(hit) =>
           props.onChange(
-            hit ? { model: hit.model, id: hit.id, name: hit.name } : undefined,
+            hit
+              ? {
+                  type: resourceTypeOf(hit.model),
+                  id: hit.id,
+                  display: hit.name,
+                }
+              : undefined,
           )
         }
         filter={null}
@@ -108,12 +119,16 @@ export function ReferencePicker(props: ReferencePickerProps) {
         <p className="flex items-center gap-1.5 text-sm">
           <Link
             className="underline underline-offset-4"
-            to={recordPath(world.id, props.value.model, props.value.id)}
+            to={recordPath(
+              world.id,
+              modelOfReference(props.value),
+              props.value.id,
+            )}
           >
-            {props.value.name ?? props.value.id}
+            {props.value.display ?? props.value.id}
           </Link>
           <Badge variant="ghost" className="text-muted-foreground">
-            {humanize(props.value.model)}
+            {humanize(modelOfReference(props.value))}
           </Badge>
         </p>
       )}

@@ -11,11 +11,11 @@
   "schema": "https://docs.opendnd.org/ours/schemas/place.schema.json",
   "relationships": [
     {
-      "predicate": "parent",
+      "predicate": "partOf",
       "target": "Place"
     },
     {
-      "predicate": "controlledBy",
+      "predicate": "managingOrganization",
       "target": "Faction"
     }
   ],
@@ -43,6 +43,12 @@
       "schema": "https://www.wikidata.org/entity/Q3895768",
       "type": "one-to-one",
       "comment": "fictional location"
+    },
+    {
+      "system": "http://hl7.org/fhir",
+      "schema": "http://hl7.org/fhir/StructureDefinition/Location",
+      "type": "partial",
+      "comment": "A Location is a place: parent is partOf, controlledBy is managingOrganization, placeType is type, and a realm is a Location whose physicalType is jdn, which is how a jurisdiction is modelled. Location.position is one point, where a place holds ground as quadtree cells, so extent and area have no counterpart and the geometry is better read from the GeoSPARQL alignment."
     }
   ]
 }

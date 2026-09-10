@@ -82,7 +82,7 @@ export async function publishModule(
     contents: Record<string, number>;
   }>(
     `with own as (
-       select model, id, body - 'world' - 'module' - 'recorded' as content
+       select model, id, body - 'world' - 'module' - 'meta' as content
        from resource
        where layer_id = $1 and deleted_at is null and model <> 'world'
      )
@@ -151,7 +151,7 @@ export async function publishModule(
   await client.query(
     `create temp table publishing on commit drop as
        select model, id,
-              jsonb_set(body - 'world', '{recorded,revision}', '1'::jsonb)
+              jsonb_set(body - 'world', '{meta,versionId}', '"1"'::jsonb)
                 || jsonb_build_object('module', $2::text) as body
        from resource
        where layer_id = $1 and deleted_at is null and model <> 'world'`,

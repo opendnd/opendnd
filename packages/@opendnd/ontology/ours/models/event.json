@@ -11,11 +11,11 @@
   "schema": "https://docs.opendnd.org/ours/schemas/event.schema.json",
   "relationships": [
     {
-      "predicate": "locations",
+      "predicate": "location",
       "target": "Place"
     },
     {
-      "predicate": "participants.actor",
+      "predicate": "participant.actor",
       "target": "Person"
     },
     {
@@ -28,8 +28,8 @@
     }
   ],
   "validTime": {
-    "begin": "when.begin",
-    "end": "when.end"
+    "begin": "occurred.begin",
+    "end": "occurred.end"
   },
   "mapsTo": [
     {

@@ -117,9 +117,9 @@ describe('a resource as an article', () => {
       <Article
         resource={{
           ...storedPet,
-          citations: [
+          citation: [
             {
-              work: { model: 'pet', id: FRIEND_ID, name: 'The Kennel Book' },
+              work: { type: 'Pet', id: FRIEND_ID, display: 'The Kennel Book' },
               locator: 'page 4',
               quote: 'A small dog indeed.',
             },

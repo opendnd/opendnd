@@ -2,6 +2,7 @@ import {
   type ModelId,
   models,
   readOnlyFields,
+  resourceTypes,
   validTimeFields,
 } from '@opendnd/types';
 import type { PoolClient } from 'pg';
@@ -10,7 +11,7 @@ import type { PoolClient } from 'pg';
 export type Resource = Record<string, unknown> & {
   id: string;
   world: string;
-  model?: string;
+  resourceType?: string;
 };
 
 export interface ReadOptions {
@@ -388,15 +389,13 @@ export class Store {
       deriveValidTime(model, {
         ...clean,
         id,
-        model,
+        resourceType: resourceTypes[model],
         world: this.world,
         canonStatus: clean.canonStatus ?? previous?.canonStatus ?? 'proposed',
-        recorded: {
-          createdAt:
-            (previous?.recorded as { createdAt?: string } | undefined)
-              ?.createdAt ?? now.toISOString(),
-          updatedAt: now.toISOString(),
-          revision,
+        meta: {
+          versionId: String(revision),
+          lastUpdated: now.toISOString(),
+          profile: [modelUrl(model)],
         },
       }),
     );
@@ -438,10 +437,10 @@ export class Store {
     const revision = (await this.lastRevision(model, id)) + 1;
     const tombstone: Resource = {
       ...existing,
-      recorded: {
-        ...(existing.recorded as Record<string, unknown>),
-        updatedAt: now.toISOString(),
-        revision,
+      meta: {
+        ...(existing.meta as Record<string, unknown>),
+        lastUpdated: now.toISOString(),
+        versionId: String(revision),
       },
     };
     await this.client.query(
@@ -645,7 +644,7 @@ export class Store {
         model,
         deriveValidTime(model, {
           ...own,
-          model,
+          resourceType: resourceTypes[model],
           world: this.world,
           // Nor need it carry an id or say whether it is canon: an unmarked
           // record is proposed, as one created on its own is.
@@ -653,10 +652,9 @@ export class Store {
           canonStatus: own.canonStatus ?? 'proposed',
           // Content from a generator arrives stamped; content typed by a
           // person does not, and should not have to be to be saved in a batch.
-          recorded: own.recorded ?? {
-            createdAt: now.toISOString(),
-            updatedAt: now.toISOString(),
-            revision: 1,
+          meta: own.meta ?? {
+            versionId: '1',
+            lastUpdated: now.toISOString(),
           },
         }),
       );
@@ -679,7 +677,7 @@ export class Store {
            from unnest($2::text[], $3::uuid[], $4::text[]) as t(model, id, body)
          ), stamped as (
            select model, id, revision,
-                  jsonb_set(body, '{recorded,revision}', to_jsonb(revision)) as body
+                  jsonb_set(body, '{meta,versionId}', to_jsonb(revision::text)) as body
            from incoming
          ), versioned as (
            insert into resource_version
@@ -742,7 +740,7 @@ export class Store {
          set body = $4, recorded_at = $5
          where layer_id = $1 and model = $2 and id = $3
            and deleted_at is null
-           and (body -> 'recorded' ->> 'revision')::int = $6`,
+           and (body -> 'meta' ->> 'versionId')::int = $6`,
         [this.world, model, id, body, now, revisionOf(previous)],
       );
       if (updated.rowCount === 0) {
@@ -820,10 +818,10 @@ export class Store {
 
   /**
    * A record as it leaves the store. It belongs to the world reading it,
-   * whichever layer it was read from, and it says which model it is.
+   * whichever layer it was read from, and it says what type it is.
    */
   private outbound(model: ModelId, body: Resource): Resource {
-    return { ...body, model, world: this.world };
+    return { ...body, resourceType: resourceTypes[model], world: this.world };
   }
 
   /**
@@ -987,8 +985,17 @@ function withoutReadOnly(
   return out;
 }
 
+/**
+ * Where a model's definition is published. A record says which one it claims
+ * to conform to, so a reader that has never seen this world can resolve it.
+ */
+function modelUrl(model: ModelId): string {
+  return `https://docs.opendnd.org/ours/models/${model}.json`;
+}
+
 function revisionOf(body: Record<string, unknown>): number {
-  return (body.recorded as { revision?: number } | undefined)?.revision ?? 0;
+  const meta = body.meta as { versionId?: string } | undefined;
+  return meta?.versionId === undefined ? 0 : Number(meta.versionId);
 }
 
 function valueAt(body: unknown, path: string): unknown {

@@ -5,7 +5,7 @@ import {
   realmGenerator,
   settlementGenerator,
 } from '@opendnd/generators';
-import { type ModelId, vocabularies } from '@opendnd/types';
+import { type ModelId, resourceTypes, vocabularies } from '@opendnd/types';
 import { type Resource, ValidationError } from './store';
 
 /**
@@ -190,8 +190,12 @@ export function generate(
   }
 }
 
+/** A generated record, saying what it is, as every record does. */
 function tag(model: ModelId, body: unknown): Record<string, unknown> {
-  return { ...(body as Record<string, unknown>), model };
+  return {
+    ...(body as Record<string, unknown>),
+    resourceType: resourceTypes[model],
+  };
 }
 
 export function canGenerate(model: ModelId): boolean {
@@ -265,9 +269,11 @@ export async function resolveWithin(
     ...input,
     within: container.cell,
     parent: input.parent ?? {
-      model: 'place',
+      type: 'Place',
       id: container.id,
-      ...(typeof container.name === 'string' ? { name: container.name } : {}),
+      ...(typeof container.name === 'string'
+        ? { display: container.name }
+        : {}),
     },
   };
 }

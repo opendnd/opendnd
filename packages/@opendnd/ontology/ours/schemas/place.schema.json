@@ -10,10 +10,10 @@
     }
   ],
   "properties": {
-    "placeType": {
+    "type": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/place-type.schema.json"
     },
-    "parent": {
+    "partOf": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "feature": {
@@ -24,7 +24,7 @@
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Cell"
       },
-      "description": "The ground this place holds, as quadtree cells. A border is a curve, which cannot be owned or compared; a set of cells can be. Whether a place holds somewhere is then a prefix test, and when a border moves, cells change hands — which is what a border moving is. Coarse cells inland, fine ones along the edge. `cell` is where the place is; this is what it covers.",
+      "description": "The ground this place holds, as quadtree cells. A border is a curve, which cannot be owned or compared; a set of cells can be. Whether a place holds somewhere is then a prefix test, and when a border moves, cells change hands \u2014 which is what a border moving is. Coarse cells inland, fine ones along the edge. `cell` is where the place is; this is what it covers.",
       "uniqueItems": true
     },
     "cell": {
@@ -41,7 +41,7 @@
     "terrain": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/terrain.schema.json"
     },
-    "resources": {
+    "resource": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/vocabularies/resource.schema.json"
@@ -70,7 +70,7 @@
       ],
       "additionalProperties": false
     },
-    "controlledBy": {
+    "managingOrganization": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "founded": {
@@ -78,7 +78,7 @@
     }
   },
   "required": [
-    "placeType"
+    "type"
   ],
   "unevaluatedProperties": false
 }

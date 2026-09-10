@@ -130,6 +130,21 @@ export function emitZodModule(bundle: OursBundle): string {
   );
 
   /*
+   * A record names its own type, and so does every reference to one. The
+   * type is the manifest's name, which is the resource type the model is
+   * published under; the model id stays lower case because it is what a
+   * route and a table are keyed by.
+   */
+  lines.push(
+    '/** The resource type each model is published as: `place` is a `Place`. */',
+    'export const resourceTypes = {',
+    ...models.map((m) => `  ${propertyKey(m.id)}: ${JSON.stringify(m.name)},`),
+    '} as const satisfies Record<ModelId, string>;',
+    'export type ResourceType = (typeof resourceTypes)[ModelId];',
+    '',
+  );
+
+  /*
    * What the ontology says about each model in words, for anything that
    * shows models to people: a client should not have to carry its own copy
    * of the names and let them drift from the manifests.
@@ -492,39 +507,40 @@ class EmitContext {
    *
    * A relationship says which model a Reference-typed property points at,
    * and the schema itself carries a plain Reference. The claim is written
-   * into the emitted shape: the property's `model` becomes the target's id,
-   * or one of several when relationships share a predicate. Validation then
-   * refuses a pointer at the wrong model, and a client reading the schema
-   * knows what the field may hold.
+   * into the emitted shape: the property's `type` becomes the target's
+   * resource type, or one of several when relationships share a predicate.
+   * Validation then refuses a pointer at the wrong type, and a client reading
+   * the schema knows what the field may hold.
    */
   private typeReferences(model: Model, schema: JsonSchema): JsonSchema {
     const targets = new Map<string, string[]>();
     for (const relationship of model.relationships ?? []) {
-      const target = this.modelId(relationship.target);
+      const target = this.typeName(relationship.target);
       // An unknown target is the validator's to report, not the emitter's.
       if (target === undefined) continue;
-      const ids = targets.get(relationship.predicate) ?? [];
-      if (!ids.includes(target)) ids.push(target);
-      targets.set(relationship.predicate, ids);
+      const names = targets.get(relationship.predicate) ?? [];
+      if (!names.includes(target)) names.push(target);
+      targets.set(relationship.predicate, names);
     }
     let typed = schema;
-    for (const [predicate, ids] of [...targets.entries()].sort(([a], [b]) =>
+    for (const [predicate, names] of [...targets.entries()].sort(([a], [b]) =>
       a.localeCompare(b),
     )) {
-      typed = this.typeAt(typed, model.schema, predicate.split('.'), ids);
+      typed = this.typeAt(typed, model.schema, predicate.split('.'), names);
     }
     return typed;
   }
 
-  private modelId(target: string): string | undefined {
+  /** The resource type a relationship target names, e.g. `Place`. */
+  private typeName(target: string): string | undefined {
     for (const model of this.bundle.models.values()) {
-      if (model.id === target || model.name === target) return model.id;
+      if (model.id === target || model.name === target) return model.name;
     }
     return undefined;
   }
 
   /**
-   * A copy of `node` with the Reference at `segments` fixed to `ids`. A
+   * A copy of `node` with the Reference at `segments` fixed to `types`. A
    * `$ref` met on the way is copied inline, so the rewrite lands on this
    * model's own shape and the shared definition stays as it is.
    */
@@ -532,12 +548,12 @@ class EmitContext {
     node: JsonSchema,
     doc: string,
     segments: readonly string[],
-    ids: readonly string[],
+    types: readonly string[],
   ): JsonSchema {
     if (segments.length === 0) {
       return node.items
-        ? { ...node, items: typedReference(node.items, ids) }
-        : typedReference(node, ids);
+        ? { ...node, items: typedReference(node.items, types) }
+        : typedReference(node, types);
     }
     let here = node;
     let hereDoc = doc;
@@ -555,7 +571,7 @@ class EmitContext {
     if (here.items) {
       return {
         ...here,
-        items: this.typeAt(here.items, hereDoc, segments, ids),
+        items: this.typeAt(here.items, hereDoc, segments, types),
       };
     }
     const [head, ...rest] = segments as [string, ...string[]];
@@ -564,7 +580,7 @@ class EmitContext {
         ...here,
         properties: {
           ...here.properties,
-          [head]: this.typeAt(here.properties[head], hereDoc, rest, ids),
+          [head]: this.typeAt(here.properties[head], hereDoc, rest, types),
         },
       };
     }
@@ -573,7 +589,7 @@ class EmitContext {
         ...here,
         allOf: here.allOf.map((part) =>
           this.resolveObject(part, hereDoc).schema.properties?.[head]
-            ? this.typeAt(part, hereDoc, segments, ids)
+            ? this.typeAt(part, hereDoc, segments, types)
             : part,
         ),
       };
@@ -587,25 +603,28 @@ class EmitContext {
   }
 }
 
-/** A Reference whose `model` is fixed to one of `ids`; anything else is left alone. */
-function typedReference(leaf: JsonSchema, ids: readonly string[]): JsonSchema {
+/** A Reference whose `type` is fixed to one of `types`; anything else is left alone. */
+function typedReference(
+  leaf: JsonSchema,
+  types: readonly string[],
+): JsonSchema {
   if (!/\/Reference$/.test(leaf.$ref ?? '')) return leaf;
   return {
     type: 'object',
     ...(leaf.description ? { description: leaf.description } : {}),
     properties: {
-      model: {
+      type: {
         type: 'string',
-        description: 'Model id of the target.',
-        ...(ids.length === 1 ? { const: ids[0] } : { enum: [...ids] }),
+        description: 'Resource type of the target.',
+        ...(types.length === 1 ? { const: types[0] } : { enum: [...types] }),
       },
       id: { type: 'string', format: 'uuid' },
-      name: {
+      display: {
         type: 'string',
         description: 'Denormalized display name, for convenience.',
       },
     },
-    required: ['model', 'id'],
+    required: ['type', 'id'],
     additionalProperties: false,
   };
 }

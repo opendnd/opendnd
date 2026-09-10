@@ -16,7 +16,7 @@
     "culture": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
-    "sex": {
+    "gender": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/sex.schema.json"
     },
     "pronouns": {

@@ -61,9 +61,9 @@ function contextWith(provider: Provider, ledger?: MemoryLedger): AuthorContext {
 
 const input = {
   subject: {
-    model: 'place',
+    type: 'Place',
     id: '9c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a22',
-    name: 'Itumeist',
+    display: 'Itumeist',
   },
   title: 'Itumeist',
   facts: [
@@ -72,9 +72,9 @@ const input = {
   ],
   sources: [
     {
-      model: 'event',
+      type: 'Event',
       id: '1c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a33',
-      name: 'War for Count of Itumeist',
+      display: 'War for Count of Itumeist',
     },
   ],
 } as const;
@@ -86,9 +86,9 @@ describe('articleAuthor', () => {
 
     workSchema.parse(work);
     expect(work.name).toBe('Itumeist');
-    expect(work.workType).toBe('article');
+    expect(work.type).toBe('article');
     expect(work.text).toBe('Itumeist is a county of Aerath.');
-    expect(work.about).toEqual([input.subject]);
+    expect(work.subject).toEqual([input.subject]);
     expect(work.language).toBe('en');
     expect(work.world).toBe(world);
     expect(work.canonStatus).toBe('generated');
@@ -130,7 +130,7 @@ describe('articleAuthor', () => {
 
     expect(article.perspective).toBe('out-of-universe');
     expect(chronicle.perspective).toBe('in-universe');
-    expect(chronicle.workType).toBe('chronicle');
+    expect(chronicle.type).toBe('chronicle');
   });
 
   it('gives the same record the same id, so re-authoring replaces it', async () => {

@@ -11,12 +11,12 @@
   "schema": "https://docs.opendnd.org/ours/schemas/economy.schema.json",
   "relationships": [
     {
-      "predicate": "place",
+      "predicate": "subject",
       "target": "Place"
     }
   ],
   "validTime": {
-    "begin": "at"
+    "begin": "effective"
   },
   "mapsTo": [
     {

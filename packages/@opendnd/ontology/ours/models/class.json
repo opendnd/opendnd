@@ -15,11 +15,11 @@
       "target": "Class"
     },
     {
-      "predicate": "proficiencies",
+      "predicate": "proficiency",
       "target": "Proficiency"
     },
     {
-      "predicate": "spells",
+      "predicate": "spell",
       "target": "Spell"
     },
     {
@@ -27,11 +27,11 @@
       "target": "Proficiency"
     },
     {
-      "predicate": "levels.subclass",
+      "predicate": "level.subclass",
       "target": "Class"
     },
     {
-      "predicate": "levels.features",
+      "predicate": "level.features",
       "target": "Feature"
     }
   ],

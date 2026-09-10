@@ -10,7 +10,7 @@
     }
   ],
   "properties": {
-    "place": {
+    "subject": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "species": {
@@ -23,15 +23,15 @@
       "type": "integer",
       "minimum": 0
     },
-    "at": {
+    "effective": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
     }
   },
   "required": [
-    "place",
+    "subject",
     "species",
     "count",
-    "at"
+    "effective"
   ],
   "unevaluatedProperties": false
 }

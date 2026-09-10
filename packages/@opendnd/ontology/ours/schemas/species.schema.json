@@ -13,7 +13,7 @@
     "size": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/size.schema.json"
     },
-    "parent": {
+    "subclassOf": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The species this is a subspecies of."
     },
@@ -184,11 +184,11 @@
       ],
       "additionalProperties": false
     },
-    "creatureType": {
+    "type": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/creature-type.schema.json",
       "description": "The rules category the species falls under, humanoid for most."
     },
-    "sizeOptions": {
+    "sizeOption": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice",
       "description": "A choice of size, for a species that offers one."
     }

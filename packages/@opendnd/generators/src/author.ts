@@ -52,7 +52,7 @@ export function stampAuthored(
   } = {},
 ): Pick<
   ResourceBase,
-  'id' | 'derivedId' | 'world' | 'canonStatus' | 'recorded' | 'provenance'
+  'id' | 'derivedId' | 'world' | 'canonStatus' | 'meta' | 'provenance'
 > {
   const { derivedFrom, ...rest } = extra;
   return stamp(author, ctx, {

@@ -218,8 +218,8 @@ function Draft(props: {
         <CardTitle className="flex items-center gap-2">
           <FeatherIcon className="size-4" />
           {work.name ?? 'Untitled'}
-          {typeof work.workType === 'string' && (
-            <Badge variant="outline">{work.workType}</Badge>
+          {typeof work.type === 'string' && (
+            <Badge variant="outline">{work.type}</Badge>
           )}
         </CardTitle>
         <CardDescription>

@@ -615,8 +615,8 @@ export function MapSurface() {
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {ontology.label(preview.model)}
-                      {typeof preview.resource.placeType === 'string' &&
-                        ` · ${humanize(preview.resource.placeType)}`}
+                      {typeof preview.resource.type === 'string' &&
+                        ` · ${humanize(preview.resource.type)}`}
                       {Array.isArray(preview.resource.extent) &&
                         ` · ${preview.resource.extent.length} cells held`}
                     </p>

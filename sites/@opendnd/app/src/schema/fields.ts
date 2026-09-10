@@ -175,26 +175,28 @@ export function isReferenceSchema(schema: JsonSchema): boolean {
   const keys = Object.keys(schema.properties ?? {});
   const required = schema.required ?? [];
   return (
-    keys.includes('model') &&
+    keys.includes('type') &&
     keys.includes('id') &&
-    required.includes('model') &&
+    required.includes('type') &&
     required.includes('id') &&
-    keys.every((key) => key === 'model' || key === 'id' || key === 'name')
+    keys.every((key) => key === 'type' || key === 'id' || key === 'display')
   );
 }
 
 /**
- * The models a reference may point at, when its schema fixes `model` to a
- * constant or a list. A plain `Reference` fixes nothing and may point anywhere.
+ * The models a reference may point at, when its schema fixes `type` to a
+ * constant or a list. A plain `Reference` fixes nothing and may point
+ * anywhere. Answered in model ids, because that is what a route is keyed by.
  */
 export function referenceModels(
   schema: JsonSchema,
 ): readonly string[] | undefined {
-  const model = schema.properties?.model;
-  if (!model) return undefined;
-  if (typeof model.const === 'string') return [model.const];
-  if (model.enum && model.enum.every((v) => typeof v === 'string')) {
-    return model.enum as string[];
+  const type = schema.properties?.type;
+  if (!type) return undefined;
+  const lower = (name: string) => name.toLowerCase();
+  if (typeof type.const === 'string') return [lower(type.const)];
+  if (type.enum && type.enum.every((v) => typeof v === 'string')) {
+    return (type.enum as string[]).map(lower);
   }
   return undefined;
 }

@@ -10,7 +10,7 @@
     }
   ],
   "properties": {
-    "abilityScores": {
+    "abilityScore": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/vocabularies/ability.schema.json"
@@ -21,21 +21,21 @@
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The feat it grants."
     },
-    "proficiencies": {
+    "proficiency": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Proficiencies it grants outright."
     },
-    "proficiencyChoices": {
+    "proficiencyChoice": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"
       },
       "description": "Proficiencies chosen from a list."
     },
-    "startingEquipmentOptions": {
+    "startingEquipmentOption": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Choice"

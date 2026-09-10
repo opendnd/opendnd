@@ -76,7 +76,7 @@ describe('generating from the app', () => {
   it('builds the form from the generator’s input, narrows the picker, and keeps the result', async () => {
     const user = userEvent.setup();
     const generated = [
-      { id: PET_ID, model: 'pet', name: 'Biscuit', mood: 'happy' },
+      { id: PET_ID, resourceType: 'Pet', name: 'Biscuit', mood: 'happy' },
     ];
     const { fetch, calls } = apiFor({
       [`POST /v1/worlds/${WORLD_ID}/pet/$generate`]: () => ({
@@ -108,7 +108,7 @@ describe('generating from the app', () => {
 
     const generate = calls.find((c) => c.url.includes('$generate'))!;
     expect(await generate.json()).toEqual({
-      owner: { model: 'person', id: OWNER_ID, name: 'Ada' },
+      owner: { type: 'Person', id: OWNER_ID, display: 'Ada' },
       mood: 'sad',
     });
 
@@ -151,7 +151,7 @@ describe('generating from the app', () => {
     const user = userEvent.setup();
     const { fetch } = apiFor({
       [`POST /v1/worlds/${WORLD_ID}/pet/$generate`]: () => ({
-        resources: [{ id: PET_ID, model: 'pet', name: 'Crumb' }],
+        resources: [{ id: PET_ID, resourceType: 'Pet', name: 'Crumb' }],
       }),
     });
     renderGenerate(fetch, 'viewer');

@@ -191,8 +191,8 @@ describe('the API client and the platform fetch', () => {
 describe('the API client and generation', () => {
   it('generates inside a world and imports what came back', async () => {
     const generated = [
-      { id: 'p1', model: 'place', name: 'Ford' },
-      { id: 'q1', model: 'population' },
+      { id: 'p1', resourceType: 'Place', name: 'Ford' },
+      { id: 'q1', resourceType: 'Population' },
     ];
     const { fetch, calls } = fakeFetch({
       'POST /v1/worlds/w/place/$generate': () => ({ resources: generated }),
@@ -317,7 +317,7 @@ describe('the API client and writing', () => {
         ],
       }),
       'POST /v1/worlds/w/person/p/$author': () => ({
-        work: { id: 'k', model: 'work', text: 'Words.' },
+        work: { id: 'k', resourceType: 'Work', text: 'Words.' },
         saved: false,
         facts: ['Person: Ada'],
       }),

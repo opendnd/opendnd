@@ -23,7 +23,7 @@ describe('making a record from another’s page', () => {
       [`POST /v1/worlds/${WORLD_ID}/happening`]: async (request) => {
         const body = (await request.json()) as Record<string, unknown>;
         return Response.json(
-          { ...body, id: NEW_ID, model: 'happening', world: WORLD_ID },
+          { ...body, id: NEW_ID, resourceType: 'Happening', world: WORLD_ID },
           { status: 201 },
         );
       },
@@ -60,7 +60,7 @@ describe('making a record from another’s page', () => {
     const body = (await linked.json()) as { produced: unknown[] };
     expect(body.produced).toEqual([
       ...storedShow.produced,
-      { model: 'happening', id: NEW_ID, name: 'A bow' },
+      { type: 'Happening', id: NEW_ID, display: 'A bow' },
     ]);
   });
 
@@ -70,7 +70,7 @@ describe('making a record from another’s page', () => {
       [`GET /v1/worlds/${WORLD_ID}/troupe/${TROUPE_ID}`]: () => storedTroupe,
       [`POST /v1/worlds/${WORLD_ID}/show`]: async (request) =>
         Response.json(
-          { ...(await request.json()), id: NEW_ID, model: 'show' },
+          { ...(await request.json()), id: NEW_ID, resourceType: 'Show' },
           { status: 201 },
         ),
     });
@@ -92,7 +92,7 @@ describe('making a record from another’s page', () => {
     const created = calls.find((c) => c.method === 'POST')!;
     expect(await created.json()).toEqual({
       name: 'Third Night',
-      troupe: { model: 'troupe', id: TROUPE_ID, name: 'The Lantern Players' },
+      troupe: { type: 'Troupe', id: TROUPE_ID, display: 'The Lantern Players' },
     });
     await waitFor(() =>
       expect(router.state.location.pathname).toBe(

@@ -257,8 +257,8 @@ export function RecentBlock(props: {
         pages[i]!.resources.map((resource) => ({ model, resource })),
       )
       .sort((a, b) =>
-        String(b.resource.recorded?.updatedAt ?? '').localeCompare(
-          String(a.resource.recorded?.updatedAt ?? ''),
+        String(b.resource.meta?.lastUpdated ?? '').localeCompare(
+          String(a.resource.meta?.lastUpdated ?? ''),
         ),
       )
       .slice(0, most);
@@ -282,8 +282,8 @@ export function RecentBlock(props: {
               {resource.name ?? resource.id}
             </Link>
             <span className="ml-auto text-xs text-muted-foreground">
-              {resource.recorded?.updatedAt &&
-                new Date(resource.recorded.updatedAt).toLocaleDateString()}
+              {resource.meta?.lastUpdated &&
+                new Date(resource.meta.lastUpdated).toLocaleDateString()}
             </span>
           </li>
         ))}

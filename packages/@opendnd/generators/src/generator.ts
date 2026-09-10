@@ -1,5 +1,5 @@
 import { Rng, derivedId } from '@opendnd/random';
-import type { Provenance, Recorded, ResourceBase } from '@opendnd/types';
+import type { Meta, Provenance, ResourceBase } from '@opendnd/types';
 
 /**
  * Everything a generator needs to run reproducibly.
@@ -56,7 +56,7 @@ export function childContext(
 
 /**
  * The platform fields every generated resource carries: a reproducible id,
- * the derived id, canon status `generated`, transaction time and provenance.
+ * the derived id, canon status `generated`, the metadata and provenance.
  * Spread this into the resource before its own fields.
  */
 export function stamp(
@@ -65,19 +65,20 @@ export function stamp(
   extra: Partial<Provenance> = {},
 ): Pick<
   ResourceBase,
-  'id' | 'derivedId' | 'world' | 'canonStatus' | 'recorded' | 'provenance'
+  'id' | 'derivedId' | 'world' | 'canonStatus' | 'meta' | 'provenance'
 > {
   const now = ctx.now ?? new Date().toISOString();
-  const recorded: Recorded = { createdAt: now, updatedAt: now, revision: 1 };
+  const meta: Meta = { versionId: '1', lastUpdated: now };
   return {
     id: ctx.rng.child('id').uuid(),
     derivedId: derivedId(ctx.world, ctx.seedPath),
     world: ctx.world,
     canonStatus: 'generated',
-    recorded,
+    meta,
     provenance: {
       generatedBy: `${generator.id}@${generator.version}`,
       seed: ctx.seedPath,
+      recorded: now,
       ...(ctx.requestedBy ? { attributedTo: ctx.requestedBy } : {}),
       ...extra,
     },

@@ -9,6 +9,7 @@ import {
 } from '@opendnd/llm';
 import {
   type ModelId,
+  modelIdOf,
   modelInfo,
   models,
   validTimeFields,
@@ -701,15 +702,31 @@ export function createApp(options: AppOptions) {
       }
       const resources = entries.map((entry, index) => {
         const record = entry as Record<string, unknown>;
-        const model = record.model;
-        if (typeof model !== 'string' || !isModel(model)) {
+        /*
+         * An entry is either the envelope an export writes, `{ model,
+         * resource }`, or a bare record that says what type it is. The
+         * envelope is recognised by its `model`, not by holding a
+         * `resource`: a place has a `resource` of its own, being what can be
+         * dug or grown there, and unwrapping that would import the list
+         * instead of the place.
+         */
+        const wrapped = typeof record.model === 'string';
+        const resource = (wrapped ? (record.resource ?? {}) : record) as Record<
+          string,
+          unknown
+        >;
+        const named = wrapped
+          ? (record.model as string)
+          : typeof record.resourceType === 'string'
+            ? modelIdOf(record.resourceType)
+            : undefined;
+        if (named === undefined || !isModel(named)) {
           throw new ValidationError(
             `entry ${index} names no model this ontology defines`,
             [{ path: ['resources', index, 'model'], message: 'unknown model' }],
           );
         }
-        const resource = (record.resource ?? record) as Record<string, unknown>;
-        return { model, body: resource };
+        return { model: named, body: resource };
       });
       const count = await store.import(resources, {
         summary: `imported ${resources.length} resources`,
@@ -1237,8 +1254,8 @@ function stored(
   resource: Resource,
   status: 200 | 201,
 ): Response {
-  const revision = (resource.recorded as { revision?: number } | undefined)
-    ?.revision;
+  const revision = (resource.meta as { versionId?: string } | undefined)
+    ?.versionId;
   return c.json(resource, status, {
     ...(revision !== undefined ? { etag: `"${revision}"` } : {}),
   });

@@ -33,14 +33,14 @@ export const personGenerator: Generator<PersonInput, Person> = {
     return {
       ...stamp(personGenerator, ctx, {
         derivedFrom: [
-          { model: 'species', id: species.id, name: species.name },
-          { model: 'culture', id: culture.id, name: culture.name },
+          { type: 'species', id: species.id, display: species.name },
+          { type: 'culture', id: culture.id, display: culture.name },
         ],
       }),
       name,
       perspective: 'in-universe',
       status: 'alive',
-      culture: { model: 'culture', id: culture.id, name: culture.name },
+      culture: { type: 'Culture', id: culture.id, display: culture.name },
       ...toPersonFields(genome),
     };
   },

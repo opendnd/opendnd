@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import type { Resource } from '../api/types';
 import { useApi } from '../app/context';
 import { useOntology } from '../app/ontology';
+import { resourceTypeOf } from '../api/types';
 import { recordPath, useWorld } from '../app/world';
 import { SchemaForm } from '../components/Form';
 import { ErrorNotice, Notice } from '../components/Notice';
@@ -94,7 +95,9 @@ export function Generate() {
     setKeepError(undefined);
     try {
       await api.importResources(world.id, results);
-      const own = results.filter((r) => r.model === model);
+      const own = results.filter(
+        (r) => r.resourceType === resourceTypeOf(model),
+      );
       void navigate(
         own.length === 1 && own[0]
           ? recordPath(world.id, model, own[0].id)
@@ -187,7 +190,7 @@ function Results(props: {
 }) {
   const groups = new Map<string, Resource[]>();
   for (const resource of props.results) {
-    const key = resource.model ?? 'unknown';
+    const key = resource.resourceType?.toLowerCase() ?? 'unknown';
     groups.set(key, [...(groups.get(key) ?? []), resource]);
   }
   const summary = [...groups.entries()]

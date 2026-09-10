@@ -35,7 +35,7 @@
       "target": "Item"
     },
     {
-      "predicate": "variants",
+      "predicate": "form",
       "target": "Item"
     },
     {

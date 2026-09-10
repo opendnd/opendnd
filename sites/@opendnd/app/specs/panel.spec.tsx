@@ -103,7 +103,7 @@ describe('the right panel', () => {
       }),
       [`POST /v1/worlds/${WORLD_ID}/$ask`]: () => ({
         answer: 'Biscuit belongs to **Ada**.',
-        sources: [{ model: 'pet', id: PET_ID, name: 'Biscuit' }],
+        sources: [{ type: 'Pet', id: PET_ID, display: 'Biscuit' }],
         facts: ['Pet: Biscuit'],
       }),
     });

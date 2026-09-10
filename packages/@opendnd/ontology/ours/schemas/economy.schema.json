@@ -10,16 +10,16 @@
     }
   ],
   "properties": {
-    "place": {
+    "subject": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
-    "at": {
+    "effective": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
     },
     "prosperity": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/prosperity.schema.json"
     },
-    "industries": {
+    "industry": {
       "type": "array",
       "items": {
         "type": "object",
@@ -61,8 +61,8 @@
     }
   },
   "required": [
-    "place",
-    "at",
+    "subject",
+    "effective",
     "prosperity"
   ],
   "unevaluatedProperties": false

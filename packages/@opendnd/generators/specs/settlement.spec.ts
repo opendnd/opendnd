@@ -36,8 +36,8 @@ const calendar = calendarSchema.parse({
   world,
   name: 'Common Reckoning',
   canonStatus: 'canon',
-  recorded: { createdAt: now, updatedAt: now, revision: 1 },
-  months: [{ name: 'Year', length: 360 }],
+  meta: { versionId: '1', lastUpdated: now },
+  month: [{ name: 'Year', length: 360 }],
 });
 const ctx = (seed: string) => createContext({ world, seedPath: seed, now });
 
@@ -62,7 +62,7 @@ describe('settlementGenerator', () => {
 
   it('sizes the town within its tier and derives land from density', () => {
     const p = town.place;
-    expect(p.placeType).toBe('town');
+    expect(p.type).toBe('town');
     expect(p.population).toBeGreaterThanOrEqual(TIERS.town.min);
     expect(p.population).toBeLessThanOrEqual(TIERS.town.max);
     expect(p.area!.squareMiles).toBeGreaterThan(0);
@@ -74,7 +74,7 @@ describe('settlementGenerator', () => {
 
   it('draws resources only from its terrain table', () => {
     const table = new Set(TERRAIN_RESOURCES[town.place.terrain!].resources);
-    for (const r of town.place.resources ?? []) expect(table.has(r)).toBe(true);
+    for (const r of town.place.resource ?? []) expect(table.has(r)).toBe(true);
     for (let i = 0; i < 50; i++) {
       const rs = rollResources('desert', new Rng(`r${i}`));
       expect(rs.length).toBeLessThanOrEqual(2);
@@ -99,7 +99,7 @@ describe('settlementGenerator', () => {
     )!.count;
     expect(withIron).toBeGreaterThanOrEqual(without * 2 - 1);
     expect(INDUSTRIES.miners.advantages).toContain('iron');
-    for (const i of town.economy.industries ?? [])
+    for (const i of town.economy.industry ?? [])
       expect(i.count).toBeGreaterThanOrEqual(1);
   });
 
@@ -122,7 +122,7 @@ describe('settlementGenerator', () => {
     expect(s.place.population).toBe(120);
     expect(s.place.area!.squareMiles).toBeCloseTo(120 / 3000, 3);
     expect(s.economy.prosperity).toBe('poor');
-    expect(s.place.resources).toEqual(['iron', 'stone']);
+    expect(s.place.resource).toEqual(['iron', 'stone']);
   });
 });
 
@@ -163,9 +163,9 @@ describe('realmGenerator', () => {
   it('nests demesnes and localities under the kingdom with populations that add up', () => {
     const byId = new Map(realm.places.map((p) => [p.id, p]));
     const root = realm.places[0];
-    expect(root.placeType).toBe('kingdom');
+    expect(root.type).toBe('kingdom');
     expect(root.name.startsWith('Kingdom of ')).toBe(true);
-    const types = new Set(realm.places.map((p) => p.placeType));
+    const types = new Set(realm.places.map((p) => p.type));
     expect(types.has('duchy')).toBe(true);
     expect(types.has('county')).toBe(true);
     expect(
@@ -175,14 +175,14 @@ describe('realmGenerator', () => {
     ).toBe(true);
     for (const p of realm.places) {
       if (p === root) continue;
-      expect(byId.has(p.parent!.id)).toBe(true);
+      expect(byId.has(p.partOf!.id)).toBe(true);
     }
     const childrenSum = new Map<string, number>();
     for (const p of realm.places) {
-      if (p.parent)
+      if (p.partOf)
         childrenSum.set(
-          p.parent.id,
-          (childrenSum.get(p.parent.id) ?? 0) + (p.population ?? 0),
+          p.partOf.id,
+          (childrenSum.get(p.partOf.id) ?? 0) + (p.population ?? 0),
         );
     }
     for (const [parentId, sum] of childrenSum)
@@ -193,7 +193,7 @@ describe('realmGenerator', () => {
     const byId = new Map(realm.places.map((p) => [p.id, p]));
     for (const place of realm.places) {
       expect(place.cell).toMatch(/^[0-9a-f]{1,16}$/);
-      const parent = place.parent ? byId.get(place.parent.id) : undefined;
+      const parent = place.partOf ? byId.get(place.partOf.id) : undefined;
       if (parent) {
         const outer = CellId.fromToken(parent.cell!);
         const inner = CellId.fromToken(place.cell!);
@@ -202,9 +202,9 @@ describe('realmGenerator', () => {
       }
     }
     // Siblings keep clear of one another where there is room.
-    const kingdom = realm.places.find((p) => p.placeType === 'kingdom')!;
+    const kingdom = realm.places.find((p) => p.type === 'kingdom')!;
     const duchies = realm.places
-      .filter((p) => p.parent?.id === kingdom.id)
+      .filter((p) => p.partOf?.id === kingdom.id)
       .map((p) => CellId.fromToken(p.cell!));
     expect(duchies.length).toBeGreaterThan(1);
     for (let a = 0; a < duchies.length; a++) {
@@ -220,7 +220,7 @@ describe('realmGenerator', () => {
       { tier: 'county', culture, species, calendar, year: 1000, within },
       ctx('realm/placed'),
     );
-    const top = county.places.find((p) => p.placeType === 'county')!;
+    const top = county.places.find((p) => p.type === 'county')!;
     expect(CellId.fromToken(within).contains(CellId.fromToken(top.cell!))).toBe(
       true,
     );
@@ -231,7 +231,7 @@ describe('realmGenerator', () => {
 
   it('gives every demesne a ruling house and a ranked title', () => {
     const demesnes = realm.places.filter((p) =>
-      ['kingdom', 'duchy', 'county'].includes(p.placeType),
+      ['kingdom', 'duchy', 'county'].includes(p.type),
     );
     expect(realm.factions.length).toBe(demesnes.length);
     expect(realm.titles.length).toBe(demesnes.length);
@@ -239,10 +239,10 @@ describe('realmGenerator', () => {
     expect(king.styleMale).toBe('King');
     expect(king.styleFemale).toBe('Queen');
     expect(realm.titles.filter((t) => t.rank === 1).length).toBe(
-      realm.places.filter((p) => p.placeType === 'duchy').length,
+      realm.places.filter((p) => p.type === 'duchy').length,
     );
-    for (const f of realm.factions) expect(f.factionType).toBe('dynasty');
-    const dukes = realm.factions.filter((f) => f.parent);
+    for (const f of realm.factions) expect(f.type).toBe('dynasty');
+    const dukes = realm.factions.filter((f) => f.partOf);
     expect(dukes.length).toBe(realm.factions.length - 1);
   });
 });

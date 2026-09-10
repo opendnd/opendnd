@@ -60,6 +60,12 @@
       "system": "http://gedcomx.org/v1",
       "schema": "http://gedcomx.org/v1/Person",
       "type": "partial"
+    },
+    {
+      "system": "http://hl7.org/fhir",
+      "schema": "http://hl7.org/fhir/StructureDefinition/Person",
+      "type": "partial",
+      "comment": "Name, sex as gender, and birth and death as birthDate and deceased. Species, culture, alignment and epithet have no counterpart; kinship is better read from the GEDCOM X alignment."
     }
   ]
 }

@@ -1,6 +1,64 @@
 import { join } from 'node:path';
-import type { Pool } from 'pg';
-import { createAdminPool, createPool, ensureAppRole, migrate } from 'src/db';
+import { Pool } from 'pg';
+import {
+  DEFAULT_ADMIN_URL,
+  DEFAULT_DATABASE_URL,
+  createAdminPool,
+  createPool,
+  ensureAppRole,
+  migrate,
+} from 'src/db';
+
+/**
+ * The database the tests own, which is not the one anybody develops against.
+ *
+ * A test makes worlds, fills them and drops them again. Doing that in the
+ * development database leaves the wreckage behind: this repository quietly
+ * accumulated 1,355 dead layers holding three hundred thousand orphaned
+ * versions that way. A database of its own costs one `create database` and
+ * makes the question moot.
+ *
+ * `DATABASE_URL` and `DATABASE_ADMIN_URL` still win where they are set, so a
+ * pipeline points the tests wherever it likes.
+ */
+const TEST_DATABASE = process.env.TEST_DATABASE ?? 'opendnd_test';
+
+/** The same server and credentials, a different database. */
+function withDatabase(url: string, database: string): string {
+  const parsed = new URL(url);
+  parsed.pathname = `/${database}`;
+  return parsed.toString();
+}
+
+const adminUrl =
+  process.env.DATABASE_ADMIN_URL ??
+  withDatabase(DEFAULT_ADMIN_URL, TEST_DATABASE);
+const appUrl =
+  process.env.DATABASE_URL ?? withDatabase(DEFAULT_DATABASE_URL, TEST_DATABASE);
+
+/**
+ * Create the test database, if this is the first run against this server.
+ *
+ * `create database` cannot run inside a transaction and has no `if not
+ * exists`, so it is asked for only when the catalogue says it is missing.
+ */
+async function ensureDatabase(): Promise<void> {
+  if (process.env.DATABASE_ADMIN_URL !== undefined) return;
+  const maintenance = new Pool({
+    connectionString: withDatabase(DEFAULT_ADMIN_URL, 'postgres'),
+  });
+  try {
+    const { rows } = await maintenance.query<{ exists: boolean }>(
+      'select exists (select 1 from pg_database where datname = $1) as exists',
+      [TEST_DATABASE],
+    );
+    if (!rows[0]?.exists) {
+      await maintenance.query(`create database "${TEST_DATABASE}"`);
+    }
+  } finally {
+    await maintenance.end();
+  }
+}
 
 /**
  * Bring the database up to date and hand back a pool that serves as the
@@ -11,7 +69,8 @@ import { createAdminPool, createPool, ensureAppRole, migrate } from 'src/db';
  * message says what to run if that has not happened.
  */
 export async function connect(): Promise<Pool> {
-  const admin = createAdminPool();
+  await ensureDatabase();
+  const admin = createAdminPool(adminUrl);
   try {
     await migrate(admin, join(__dirname, '..', 'migrations'));
     await ensureAppRole(admin);
@@ -24,7 +83,7 @@ export async function connect(): Promise<Pool> {
   } finally {
     await admin.end();
   }
-  const pool = createPool();
+  const pool = createPool(appUrl);
   await pool.query('select 1');
   return pool;
 }

@@ -26,7 +26,7 @@
       "type": "string",
       "description": "As the rules word it: self, touch, 60 feet."
     },
-    "components": {
+    "component": {
       "type": "array",
       "items": {
         "type": "string",
@@ -120,7 +120,7 @@
       ],
       "additionalProperties": false
     },
-    "classes": {
+    "class": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"

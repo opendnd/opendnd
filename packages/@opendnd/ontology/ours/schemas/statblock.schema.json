@@ -10,7 +10,7 @@
     }
   ],
   "properties": {
-    "creatureType": {
+    "type": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/creature-type.schema.json"
     },
     "species": {
@@ -73,32 +73,32 @@
       "additionalProperties": false,
       "description": "The six ability scores."
     },
-    "proficiencies": {
+    "proficiency": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Saving throws and skills it is proficient in."
     },
-    "damageVulnerabilities": {
+    "damageVulnerability": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/vocabularies/damage-type.schema.json"
       }
     },
-    "damageResistances": {
+    "damageResistance": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/vocabularies/damage-type.schema.json"
       }
     },
-    "damageImmunities": {
+    "damageImmunity": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/vocabularies/damage-type.schema.json"
       }
     },
-    "conditionImmunities": {
+    "conditionImmunity": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
@@ -112,7 +112,7 @@
       },
       "description": "Darkvision, blindsight, passive perception and the rest."
     },
-    "languages": {
+    "language": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
@@ -128,7 +128,7 @@
     "experience": {
       "type": "integer"
     },
-    "traits": {
+    "trait": {
       "type": "array",
       "items": {
         "type": "object",
@@ -147,7 +147,7 @@
       },
       "description": "Passive abilities."
     },
-    "actions": {
+    "action": {
       "type": "array",
       "items": {
         "type": "object",
@@ -183,7 +183,7 @@
         "additionalProperties": false
       }
     },
-    "bonusActions": {
+    "bonusAction": {
       "type": "array",
       "items": {
         "type": "object",
@@ -201,7 +201,7 @@
         "additionalProperties": false
       }
     },
-    "reactions": {
+    "reaction": {
       "type": "array",
       "items": {
         "type": "object",
@@ -219,7 +219,7 @@
         "additionalProperties": false
       }
     },
-    "legendaryActions": {
+    "legendaryAction": {
       "type": "array",
       "items": {
         "type": "object",

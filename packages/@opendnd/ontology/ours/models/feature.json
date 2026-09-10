@@ -15,7 +15,7 @@
       "target": "Class"
     },
     {
-      "predicate": "spells.spell",
+      "predicate": "spell.spell",
       "target": "Spell"
     },
     {

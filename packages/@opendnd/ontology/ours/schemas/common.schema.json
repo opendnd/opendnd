@@ -8,21 +8,21 @@
       "description": "A typed pointer to another resource in the same world.",
       "type": "object",
       "properties": {
-        "model": {
+        "type": {
           "type": "string",
-          "description": "Model id of the target, e.g. person."
+          "description": "Resource type of the target, e.g. Place."
         },
         "id": {
           "type": "string",
           "format": "uuid"
         },
-        "name": {
+        "display": {
           "type": "string",
           "description": "Denormalized display name, for convenience."
         }
       },
       "required": [
-        "model",
+        "type",
         "id"
       ],
       "additionalProperties": false
@@ -287,36 +287,13 @@
             }
           },
           "additionalProperties": false
+        },
+        "recorded": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When this record was first written, as opposed to when the fact holds in-world."
         }
       },
-      "additionalProperties": false
-    },
-    "Recorded": {
-      "description": "Transaction time: when the record itself was written, as opposed to when the fact holds in-world.",
-      "type": "object",
-      "properties": {
-        "createdAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time"
-        },
-        "revision": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "author": {
-          "type": "string",
-          "description": "User id."
-        }
-      },
-      "required": [
-        "createdAt",
-        "updatedAt",
-        "revision"
-      ],
       "additionalProperties": false
     },
     "Citation": {
@@ -340,7 +317,7 @@
       "additionalProperties": false
     },
     "ResourceBase": {
-      "description": "Every OpenDnD resource is an assertion about a world: it carries in-world valid time, transaction time, canon status, perspective and provenance.",
+      "description": "Every resource is an assertion about a world: it carries in-world valid time, canon status, perspective and provenance beside the metadata the platform keeps.",
       "type": "object",
       "properties": {
         "id": {
@@ -349,10 +326,10 @@
           "description": "Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references.",
           "readOnly": true
         },
-        "model": {
+        "resourceType": {
           "type": "string",
           "readOnly": true,
-          "description": "The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels."
+          "description": "The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels."
         },
         "derivedId": {
           "type": "string",
@@ -369,7 +346,7 @@
           "type": "string",
           "minLength": 1
         },
-        "alternateNames": {
+        "alternateName": {
           "type": "array",
           "items": {
             "type": "string"
@@ -394,23 +371,17 @@
           "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TimeSpan",
           "description": "When this assertion holds in-world. Absent means always."
         },
-        "recorded": {
-          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Recorded",
+        "meta": {
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Meta",
           "readOnly": true
         },
         "provenance": {
           "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Provenance"
         },
-        "citations": {
+        "citation": {
           "type": "array",
           "items": {
             "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Citation"
-          }
-        },
-        "tags": {
-          "type": "array",
-          "items": {
-            "type": "string"
           }
         },
         "module": {
@@ -424,7 +395,7 @@
         "world",
         "name",
         "canonStatus",
-        "recorded"
+        "meta"
       ]
     },
     "Choice": {
@@ -484,6 +455,68 @@
       "description": "A quadtree cell token: the cell id in hex with trailing zero nibbles removed. Containment is a prefix relationship. See ADR-006.",
       "type": "string",
       "pattern": "^[0-9a-f]{1,16}$"
+    },
+    "Coding": {
+      "description": "A code drawn from a code system, as FHIR names one.",
+      "type": "object",
+      "properties": {
+        "system": {
+          "type": "string",
+          "format": "uri",
+          "description": "The code system the code is drawn from."
+        },
+        "version": {
+          "type": "string"
+        },
+        "code": {
+          "type": "string"
+        },
+        "display": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "additionalProperties": false
+    },
+    "Meta": {
+      "description": "Metadata the platform maintains about the record rather than about the world: which revision this is, when it was last written, and which model it conforms to.",
+      "type": "object",
+      "properties": {
+        "versionId": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$",
+          "description": "The revision, counting from 1. A string, because that is what the element is."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "source": {
+          "type": "string",
+          "description": "The system this record came from, when it came from another one."
+        },
+        "profile": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          },
+          "description": "The canonical URL of each definition this record claims to conform to. One entry: the model."
+        },
+        "tag": {
+          "type": "array",
+          "items": {
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Coding"
+          }
+        }
+      },
+      "required": [
+        "versionId",
+        "lastUpdated"
+      ],
+      "additionalProperties": false
     }
   }
 }

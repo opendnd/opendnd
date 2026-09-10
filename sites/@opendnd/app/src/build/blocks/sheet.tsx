@@ -1,5 +1,6 @@
 import { HeartIcon, ShieldIcon } from 'lucide-react';
 import { Link } from 'react-router';
+import { type Reference, modelOfReference } from '../../api/types';
 import { NumberField } from '../sheet/Editable';
 import {
   ABILITIES,
@@ -29,14 +30,16 @@ import { Badge } from '@/components/ui/badge';
 
 type Character = Record<string, unknown>;
 
-function reference(value: unknown): { model: string; id: string; name?: string } | undefined {
-  const ref = value as { model?: unknown; id?: unknown; name?: unknown };
+function reference(value: unknown): Reference | undefined {
+  const ref = value as { type?: unknown; id?: unknown; display?: unknown };
   if (!ref || typeof ref !== 'object') return undefined;
-  if (typeof ref.model !== 'string' || typeof ref.id !== 'string') return undefined;
+  if (typeof ref.type !== 'string' || typeof ref.id !== 'string') {
+    return undefined;
+  }
   return {
-    model: ref.model,
+    type: ref.type,
     id: ref.id,
-    ...(typeof ref.name === 'string' ? { name: ref.name } : {}),
+    ...(typeof ref.display === 'string' ? { display: ref.display } : {}),
   };
 }
 
@@ -47,9 +50,9 @@ function Ref(props: { readonly value: unknown; readonly fallback?: string }) {
   return (
     <Link
       className="underline-offset-4 hover:underline"
-      to={recordPath(world.id, ref.model, ref.id)}
+      to={recordPath(world.id, modelOfReference(ref), ref.id)}
     >
-      {ref.name ?? ref.id}
+      {ref.display ?? ref.id}
     </Link>
   );
 }
@@ -89,7 +92,7 @@ export function SheetHeader(props: { readonly record?: Character }) {
             .map((one) => {
               const taken = one as { class?: unknown; level?: unknown };
               const ref = reference(taken.class);
-              return `${ref?.name ?? 'Class'} ${String(taken.level ?? '')}`.trim();
+              return `${ref?.display ?? 'Class'} ${String(taken.level ?? '')}`.trim();
             })
             .join(' / ') || 'No class yet'}
         </span>
@@ -231,7 +234,7 @@ export function SheetCombat(props: { readonly record?: Character }) {
           <span className="ml-auto flex flex-wrap gap-1">
             {conditions.map((one, index) => (
               <Badge key={index} variant="outline" className="text-[10px]">
-                {reference(one)?.name ?? 'Condition'}
+                {reference(one)?.display ?? 'Condition'}
               </Badge>
             ))}
           </span>
@@ -404,7 +407,7 @@ export function SheetTraining(props: { readonly record?: Character }) {
           <p className="flex flex-wrap gap-1">
             {proficiencies.map((one, index) => (
               <Badge key={index} variant="outline" className="font-normal">
-                {reference(one)?.name ?? 'Proficiency'}
+                {reference(one)?.display ?? 'Proficiency'}
               </Badge>
             ))}
           </p>

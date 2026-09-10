@@ -69,9 +69,9 @@ function deaths(
     // An authored death event already records this; do not add a second one.
     const authored = state.events.some(
       (e) =>
-        e.eventType === 'death' &&
-        e.when.begin?.year === year &&
-        e.participants?.some(
+        e.type === 'death' &&
+        e.occurred.begin?.year === year &&
+        e.participant?.some(
           (p) => p.actor.id === person.id && p.role === 'deceased',
         ),
     );
@@ -81,13 +81,13 @@ function deaths(
           type: 'death',
           year,
           name: `Death of ${person.name}`,
-          participants: [
+          participant: [
             { actor: ref('person', person), role: 'deceased' },
             ...(spouse
               ? [{ actor: ref('person', spouse), role: 'widowed' as const }]
               : []),
           ],
-          ...(place ? { locations: [place] } : {}),
+          ...(place ? { location: [place] } : {}),
         }),
       );
     }
@@ -131,14 +131,14 @@ function marriages(
     const prng = yctx.rng.child(`marry/${person.id}`);
     if (prng.next() >= params.marriageChance) continue;
 
-    const wantSex: Sex = person.sex === 'female' ? 'male' : 'female';
+    const wantSex: Sex = person.gender === 'female' ? 'male' : 'female';
     const match =
       prng.next() < params.dynasticMarriageChance
         ? eligible.find(
             (other) =>
               !wed.has(other.id) &&
               other.id !== person.id &&
-              other.sex === wantSex &&
+              other.gender === wantSex &&
               state.houseOf(other.id) !== houseId,
           )
         : undefined;
@@ -166,16 +166,16 @@ function marriages(
         year,
         name: `Marriage of ${person.name} and ${spouse.name}`,
         ...(joined ? { description: joined } : {}),
-        participants: [
+        participant: [
           { actor: ref('person', person), role: 'spouse' },
           { actor: ref('person', spouse), role: 'spouse' },
         ],
-        ...(place ? { locations: [place] } : {}),
+        ...(place ? { location: [place] } : {}),
       }),
     );
     state.addRelationship(
       makeRelationship(yctx, `couple/${person.id}`, 'couple', person, spouse, {
-        facts: [
+        fact: [
           {
             type: 'marriage',
             time: yearOf(input.calendar, year),
@@ -203,9 +203,9 @@ function births(
     if (!spouse || seen.has(person.id) || seen.has(spouse.id)) continue;
     seen.add(person.id);
     seen.add(spouse.id);
-    const mother = person.sex === 'female' ? person : spouse;
+    const mother = person.gender === 'female' ? person : spouse;
     const father = mother === person ? spouse : person;
-    if (mother.sex !== 'female' || father.sex !== 'male') continue;
+    if (mother.gender !== 'female' || father.gender !== 'male') continue;
     if (!notable(mother) && !notable(father)) continue;
     const motherAge = state.age(mother);
     if (motherAge === undefined || !isFertile(motherAge, lifecycle)) continue;
@@ -244,12 +244,12 @@ function births(
         type: 'birth',
         year,
         name: `Birth of ${child.name}`,
-        participants: [
+        participant: [
           { actor: ref('person', child), role: 'child' },
           { actor: ref('person', mother), role: 'mother' },
           { actor: ref('person', father), role: 'father' },
         ],
-        ...(place ? { locations: [place] } : {}),
+        ...(place ? { location: [place] } : {}),
       }),
     );
     const order = state.children(father.id).length + 1;
@@ -264,7 +264,7 @@ function births(
           {
             legitimacy: 'legitimate',
             successionOrder: order,
-            facts: [
+            fact: [
               {
                 type: 'birth',
                 time: yearOf(input.calendar, year),
@@ -304,7 +304,7 @@ function commoner(
       {
         species: input.species,
         culture: input.culture,
-        sex: match.sex === 'female' ? 'male' : 'female',
+        sex: match.gender === 'female' ? 'male' : 'female',
       },
       sctx,
     ),

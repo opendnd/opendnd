@@ -1,4 +1,5 @@
 import { GeneratorContext, childContext, stamp } from '@opendnd/generators';
+import { resourceTypes } from '@opendnd/types';
 import type {
   Calendar,
   Claim,
@@ -23,9 +24,10 @@ export function ref<M extends ModelId>(
   model: M,
   r: { id: string; name?: string },
 ): ReferenceTo<M> {
+  const type = resourceTypes[model];
   return r.name === undefined
-    ? { model, id: r.id }
-    : { model, id: r.id, name: r.name };
+    ? { type, id: r.id }
+    : { type, id: r.id, display: r.name };
 }
 
 export function yearOf(calendar: Calendar, year: number): TemporalPosition {
@@ -37,11 +39,11 @@ export interface EventSpec {
   readonly year: number;
   readonly name: string;
   readonly description?: string;
-  readonly participants: ReadonlyArray<{
+  readonly participant: ReadonlyArray<{
     actor: ReferenceTo<'person'>;
     role: ParticipantRole;
   }>;
-  readonly locations?: ReferenceTo<'place'>[];
+  readonly location?: ReferenceTo<'place'>[];
   readonly causedBy?: ReferenceTo<'event'>[];
   readonly partOf?: ReferenceTo<'event'>;
   readonly outcome?: string;
@@ -58,10 +60,10 @@ export function makeEvent(
     name: spec.name,
     ...(spec.description ? { description: spec.description } : {}),
     perspective: 'in-universe',
-    eventType: spec.type,
-    when: { begin: yearOf(calendar, spec.year) },
-    participants: [...spec.participants],
-    ...(spec.locations ? { locations: spec.locations } : {}),
+    type: spec.type,
+    occurred: { begin: yearOf(calendar, spec.year) },
+    participant: [...spec.participant],
+    ...(spec.location ? { location: spec.location } : {}),
     ...(spec.causedBy ? { causedBy: spec.causedBy } : {}),
     ...(spec.partOf ? { partOf: spec.partOf } : {}),
     ...(spec.outcome ? { outcome: spec.outcome } : {}),
@@ -75,14 +77,14 @@ export function makeRelationship(
   party1: Person,
   party2: Person,
   extra: Partial<
-    Pick<Relationship, 'facts' | 'legitimacy' | 'successionOrder' | 'validTime'>
+    Pick<Relationship, 'fact' | 'legitimacy' | 'successionOrder' | 'validTime'>
   > = {},
 ): Relationship {
   return {
     ...stamp(HISTORY_GENERATOR, childContext(ctx, label)),
     name: `${party1.name} and ${party2.name}: ${type}`,
     perspective: 'in-universe',
-    relationshipType: type,
+    type: type,
     party1: ref('person', party1),
     party2: ref('person', party2),
     ...extra,
@@ -100,7 +102,7 @@ export function makeTenure(
 ): Tenure {
   return {
     ...stamp(HISTORY_GENERATOR, childContext(ctx, label)),
-    name: `${holder.name}, ${title.name ?? 'title'}`,
+    name: `${holder.name}, ${title.display ?? 'title'}`,
     perspective: 'in-universe',
     title,
     holder: ref('person', holder),
@@ -119,7 +121,7 @@ export function makeClaim(
 ): Claim {
   return {
     ...stamp(HISTORY_GENERATOR, childContext(ctx, label)),
-    name: `${claimant.name}'s claim to ${title.name ?? 'a title'}`,
+    name: `${claimant.name}'s claim to ${title.display ?? 'a title'}`,
     perspective: 'in-universe',
     claimant: ref('person', claimant),
     title,
@@ -141,12 +143,12 @@ export function makePopulation(
 ): Population {
   return {
     ...stamp(HISTORY_GENERATOR, childContext(ctx, label)),
-    name: `${place.name ?? 'settlement'} population, ${year}`,
+    name: `${place.display ?? 'settlement'} population, ${year}`,
     perspective: 'in-universe',
-    place,
+    subject: place,
     species,
     ...(culture ? { culture } : {}),
     count: Math.round(count),
-    at: yearOf(calendar, year),
+    effective: yearOf(calendar, year),
   };
 }

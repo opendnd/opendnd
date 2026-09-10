@@ -211,36 +211,36 @@ export function narrow(
   if (scope.model === 'world') return all;
 
   if (scope.model === 'faction') {
-    const houses = descendants(all.factions, scope.id, (f) => f.parent?.id);
+    const houses = descendants(all.factions, scope.id, (f) => f.partOf?.id);
     return {
       factions: all.factions.filter((f) => houses.has(f.id)),
       places: all.places.filter(
-        (p) => p.controlledBy && houses.has(p.controlledBy.id),
+        (p) => p.managingOrganization && houses.has(p.managingOrganization.id),
       ),
       titles: all.titles.filter((t) => houses.has(t.faction.id)),
       economies: all.economies.filter((e) =>
         all.places.some(
           (p) =>
-            p.id === e.place.id &&
-            p.controlledBy &&
-            houses.has(p.controlledBy.id),
+            p.id === e.subject.id &&
+            p.managingOrganization &&
+            houses.has(p.managingOrganization.id),
         ),
       ),
     };
   }
 
   if (scope.model === 'place') {
-    const places = descendants(all.places, scope.id, (p) => p.parent?.id);
+    const places = descendants(all.places, scope.id, (p) => p.partOf?.id);
     const houses = new Set(
       all.places
-        .filter((p) => places.has(p.id) && p.controlledBy)
-        .map((p) => p.controlledBy!.id),
+        .filter((p) => places.has(p.id) && p.managingOrganization)
+        .map((p) => p.managingOrganization!.id),
     );
     return {
       places: all.places.filter((p) => places.has(p.id)),
       factions: all.factions.filter((f) => houses.has(f.id)),
       titles: all.titles.filter((t) => houses.has(t.faction.id)),
-      economies: all.economies.filter((e) => places.has(e.place.id)),
+      economies: all.economies.filter((e) => places.has(e.subject.id)),
     };
   }
 

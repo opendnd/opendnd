@@ -733,11 +733,11 @@ export type Cell = z.infer<typeof cellSchema>;
 
 /** A typed pointer to another resource in the same world. */
 export const referenceSchema = z.strictObject({
-  /** Model id of the target, e.g. person. */
-  model: z.string(),
+  /** Resource type of the target, e.g. Place. */
+  type: z.string(),
   id: z.uuid(),
   /** Denormalized display name, for convenience. */
-  name: z.string().optional(),
+  display: z.string().optional(),
 });
 export type Reference = z.infer<typeof referenceSchema>;
 
@@ -766,6 +766,16 @@ export const citationSchema = z.strictObject({
   quote: z.string().optional(),
 });
 export type Citation = z.infer<typeof citationSchema>;
+
+/** A code drawn from a code system, as FHIR names one. */
+export const codingSchema = z.strictObject({
+  /** The code system the code is drawn from. */
+  system: z.url().optional(),
+  version: z.string().optional(),
+  code: z.string(),
+  display: z.string().optional(),
+});
+export type Coding = z.infer<typeof codingSchema>;
 
 /** A GeoJSON position: [x, y] or [x, y, z] in the world's CRS. */
 export const positionSchema = z.array(z.number()).min(2).max(3);
@@ -801,6 +811,19 @@ export const featureSchema = z.strictObject({
 });
 export type Feature = z.infer<typeof featureSchema>;
 
+/** Metadata the platform maintains about the record rather than about the world: which revision this is, when it was last written, and which model it conforms to. */
+export const metaSchema = z.strictObject({
+  /** The revision, counting from 1. A string, because that is what the element is. */
+  versionId: z.string().regex(new RegExp("^[1-9][0-9]*$")),
+  lastUpdated: z.iso.datetime(),
+  /** The system this record came from, when it came from another one. */
+  source: z.string().optional(),
+  /** The canonical URL of each definition this record claims to conform to. One entry: the model. */
+  profile: z.array(z.url()).optional(),
+  tag: z.array(codingSchema).optional(),
+});
+export type Meta = z.infer<typeof metaSchema>;
+
 /** How this record came to exist (PROV-O), including the generator seed when it was produced procedurally or by AI. */
 export const provenanceSchema = z.strictObject({
   /** Generator or author id and version, e.g. person@1.0.0. For an AI-authored record this is still the author, and the model that served it is in parameters.model. */
@@ -827,18 +850,10 @@ export const provenanceSchema = z.strictObject({
     /** The game system and edition the content is written for, e.g. 5e-2024. */
     system: z.string().optional(),
   }).optional(),
+  /** When this record was first written, as opposed to when the fact holds in-world. */
+  recorded: z.iso.datetime().optional(),
 });
 export type Provenance = z.infer<typeof provenanceSchema>;
-
-/** Transaction time: when the record itself was written, as opposed to when the fact holds in-world. */
-export const recordedSchema = z.strictObject({
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-  revision: z.int().min(1),
-  /** User id. */
-  author: z.string().optional(),
-});
-export type Recorded = z.infer<typeof recordedSchema>;
 
 /** A point in in-world time, expressed in a named calendar (OWL-Time TemporalPosition with a temporal reference system). */
 export const temporalPositionSchema = z.strictObject({
@@ -866,18 +881,18 @@ export const timeSpanSchema = z.strictObject({
 });
 export type TimeSpan = z.infer<typeof timeSpanSchema>;
 
-/** Every OpenDnD resource is an assertion about a world: it carries in-world valid time, transaction time, canon status, perspective and provenance. */
+/** Every resource is an assertion about a world: it carries in-world valid time, canon status, perspective and provenance beside the metadata the platform keeps. */
 export const resourceBaseSchema = z.object({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -885,10 +900,9 @@ export const resourceBaseSchema = z.object({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
 });
@@ -898,14 +912,14 @@ export type ResourceBase = z.infer<typeof resourceBaseSchema>;
 export const backgroundSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -913,34 +927,33 @@ export const backgroundSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** The abilities it may raise. */
-  abilityScores: z.array(abilitySchema).optional(),
+  abilityScore: z.array(abilitySchema).optional(),
   /** The feat it grants. */
   feat: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("feat"),
+    /** Resource type of the target. */
+    type: z.literal("Feat"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Proficiencies it grants outright. */
-  proficiencies: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("proficiency"),
+  proficiency: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Proficiency"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** Proficiencies chosen from a list. */
-  proficiencyChoices: z.array(choiceSchema).optional(),
+  proficiencyChoice: z.array(choiceSchema).optional(),
   /** Equipment chosen from a list. */
-  startingEquipmentOptions: z.array(choiceSchema).optional(),
+  startingEquipmentOption: z.array(choiceSchema).optional(),
   /** The rules' note on the feat, where there is one. */
   featNote: z.string().optional(),
 });
@@ -950,14 +963,14 @@ export type Background = z.infer<typeof backgroundSchema>;
 export const beliefSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -965,21 +978,20 @@ export const beliefSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   holder: z.strictObject({
-    /** Model id of the target. */
-    model: z.enum(["person", "faction"]),
+    /** Resource type of the target. */
+    type: z.enum(["Person", "Faction"]),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   proposition: z.string(),
-  about: z.array(referenceSchema).optional(),
+  subject: z.array(referenceSchema).optional(),
   value: beliefValueSchema,
   /** Why the holder believes it: observation, inference, tradition, adoption. */
   basis: z.string().optional(),
@@ -990,14 +1002,14 @@ export type Belief = z.infer<typeof beliefSchema>;
 export const calendarSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1005,36 +1017,35 @@ export const calendarSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  months: z.array(z.strictObject({
+  month: z.array(z.strictObject({
     name: z.string(),
     length: z.int().min(1),
     intercalary: z.boolean().default(false),
   })).min(1),
-  weekdays: z.array(z.string()).optional(),
+  weekday: z.array(z.string()).optional(),
   leapYear: z.strictObject({
     every: z.int().min(1),
     extraDays: z.int().min(1),
     month: z.int().min(1),
     offset: z.int().default(0),
   }).optional(),
-  moons: z.array(z.strictObject({
+  moon: z.array(z.strictObject({
     name: z.string(),
     /** Days per full cycle. */
     cycle: z.number(),
     offset: z.number().default(0),
   })).optional(),
-  seasons: z.array(z.strictObject({
+  season: z.array(z.strictObject({
     name: z.string(),
     month: z.int().min(1),
     day: z.int().min(1),
   })).optional(),
-  eras: z.array(z.strictObject({
+  era: z.array(z.strictObject({
     name: z.string(),
     abbreviation: z.string().optional(),
     startYear: z.int(),
@@ -1049,14 +1060,14 @@ export type Calendar = z.infer<typeof calendarSchema>;
 export const campaignSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1065,44 +1076,43 @@ export const campaignSchema = z.strictObject({
   perspective: perspectiveSchema.default("out-of-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   status: campaignStatusSchema,
   /** User id of whoever runs it. A user, not a person in the world: running a game is not something that happens in the fiction. */
   gamemaster: z.string().optional(),
   /** User ids of the players. */
-  players: z.array(z.string()).optional(),
+  player: z.array(z.string()).optional(),
   /** The adventuring party, a faction whose factionType is party. */
   party: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("faction"),
+    /** Resource type of the target. */
+    type: z.literal("Faction"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Where in the world it is set, if it is bounded to one place. */
   setting: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("place"),
+    /** Resource type of the target. */
+    type: z.literal("Place"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Real-world date of the first session. */
   beganOn: z.iso.date().optional(),
   endedOn: z.iso.date().optional(),
   /** Where the party currently stands in the world's own calendar. */
   inWorldTime: temporalPositionSchema.optional(),
-  characters: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("character"),
+  character: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Character"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
 });
 export type Campaign = z.infer<typeof campaignSchema>;
@@ -1111,14 +1121,14 @@ export type Campaign = z.infer<typeof campaignSchema>;
 export const characterSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1127,27 +1137,26 @@ export const characterSchema = z.strictObject({
   perspective: perspectiveSchema.default("out-of-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** The being in the world. */
   person: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("person"),
+    /** Resource type of the target. */
+    type: z.literal("Person"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   /** The campaign they are played in. */
   campaign: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("campaign"),
+    /** Resource type of the target. */
+    type: z.literal("Campaign"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** User id of whoever plays them. Absent for one the gamemaster runs. */
   player: z.string().optional(),
@@ -1156,49 +1165,49 @@ export const characterSchema = z.strictObject({
   experience: z.int().min(0).optional(),
   notes: z.string().optional(),
   /** The classes taken and the level in each; more than one for a multiclassed character. */
-  classes: z.array(z.strictObject({
+  class: z.array(z.strictObject({
     /** The class. */
     class: z.strictObject({
-      /** Model id of the target. */
-      model: z.literal("class"),
+      /** Resource type of the target. */
+      type: z.literal("Class"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     }),
     level: z.int().min(1),
   })).optional(),
   /** The background chosen. */
   background: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("background"),
+    /** Resource type of the target. */
+    type: z.literal("Background"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Feats taken. */
-  feats: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("feat"),
+  feat: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Feat"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** A stat block that stands for the character in an encounter, when one has been built. */
   statblock: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("statblock"),
+    /** Resource type of the target. */
+    type: z.literal("Statblock"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Items carried, in the order the character keeps them. */
   inventory: z.array(z.strictObject({
     item: z.strictObject({
-      /** Model id of the target. */
-      model: z.literal("item"),
+      /** Resource type of the target. */
+      type: z.literal("Item"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     }),
     quantity: z.int().min(1).default(1),
     equipped: z.boolean().default(false),
@@ -1222,38 +1231,38 @@ export const characterSchema = z.strictObject({
   /** Hit dice spent since the last long rest. */
   hitDiceSpent: z.int().min(0).optional(),
   /** Conditions currently affecting the character. */
-  conditions: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("condition"),
+  condition: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Condition"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** Proficiencies held, from every source. */
-  proficiencies: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("proficiency"),
+  proficiency: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Proficiency"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** Spellcasting state. */
-  spells: z.strictObject({
+  spellcasting: z.strictObject({
     /** Spells known or in the spellbook. */
     known: z.array(z.strictObject({
-      /** Model id of the target. */
-      model: z.literal("spell"),
+      /** Resource type of the target. */
+      type: z.literal("Spell"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     })).optional(),
     /** Spells prepared today. */
     prepared: z.array(z.strictObject({
-      /** Model id of the target. */
-      model: z.literal("spell"),
+      /** Resource type of the target. */
+      type: z.literal("Spell"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     })).optional(),
     /** Spell slots spent since the last rest, by level. */
     slotsUsed: z.array(z.strictObject({
@@ -1262,14 +1271,14 @@ export const characterSchema = z.strictObject({
     })).optional(),
   }).optional(),
   /** What was picked wherever the rules offered a choice: the skills from a background, the subclass, a fighting style, an ability score increase taken instead of a feat. */
-  choices: z.array(z.strictObject({
+  choice: z.array(z.strictObject({
     /** The class, feature, background or feat that offered the choice. */
     source: z.strictObject({
-      /** Model id of the target. */
-      model: z.enum(["class", "feature", "background", "feat"]),
+      /** Resource type of the target. */
+      type: z.enum(["Class", "Feature", "Background", "Feat"]),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     }),
     /** What was chosen. */
     chosen: z.array(referenceSchema).optional(),
@@ -1283,14 +1292,14 @@ export type Character = z.infer<typeof characterSchema>;
 export const claimSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1298,44 +1307,43 @@ export const claimSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   claimant: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("person"),
+    /** Resource type of the target. */
+    type: z.literal("Person"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   title: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("title"),
+    /** Resource type of the target. */
+    type: z.literal("Title"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   basis: claimBasisSchema,
   /** The person the claim descends from, when it comes by inheritance or marriage. */
   through: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("person"),
+    /** Resource type of the target. */
+    type: z.literal("Person"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Whether the claim has been pressed by force. */
   pressed: z.boolean().default(false),
   /** The event that made the claim good or void. */
   resolvedBy: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("event"),
+    /** Resource type of the target. */
+    type: z.literal("Event"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
 });
 export type Claim = z.infer<typeof claimSchema>;
@@ -1344,14 +1352,14 @@ export type Claim = z.infer<typeof claimSchema>;
 export const classSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1359,38 +1367,37 @@ export const classSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** Sides of the hit die, e.g. 8 for d8. */
   hitDie: z.int(),
   /** The class this is a subclass of. */
   subclassOf: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("class"),
+    /** Resource type of the target. */
+    type: z.literal("Class"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** The abilities the class is built on. */
   primaryAbility: z.array(abilitySchema).optional(),
   /** Saving throws it is proficient in. */
-  savingThrows: z.array(abilitySchema).optional(),
+  savingThrow: z.array(abilitySchema).optional(),
   /** Proficiencies every member of the class has. */
-  proficiencies: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("proficiency"),
+  proficiency: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Proficiency"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** Proficiencies chosen on taking the class. */
-  proficiencyChoices: z.array(choiceSchema).optional(),
+  proficiencyChoice: z.array(choiceSchema).optional(),
   /** Equipment chosen at the start. */
-  startingEquipmentOptions: z.array(choiceSchema).optional(),
+  startingEquipmentOption: z.array(choiceSchema).optional(),
   /** What is required to take the class as a second one, and what it grants. */
   multiclassing: z.strictObject({
     prerequisites: z.array(z.strictObject({
@@ -1398,11 +1405,11 @@ export const classSchema = z.strictObject({
       minimumScore: z.int(),
     })).optional(),
     proficiencies: z.array(z.strictObject({
-      /** Model id of the target. */
-      model: z.literal("proficiency"),
+      /** Resource type of the target. */
+      type: z.literal("Proficiency"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     })).optional(),
   }).optional(),
   /** How the class casts, where it casts. */
@@ -1417,31 +1424,31 @@ export const classSchema = z.strictObject({
     })).optional(),
   }).optional(),
   /** The spell list the class draws on. */
-  spells: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("spell"),
+  spell: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Spell"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** What the class gains at each level. */
-  levels: z.array(z.strictObject({
+  level: z.array(z.strictObject({
     level: z.int().min(1),
     /** The subclass this row belongs to, for a subclass-specific level. */
     subclass: z.strictObject({
-      /** Model id of the target. */
-      model: z.literal("class"),
+      /** Resource type of the target. */
+      type: z.literal("Class"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     }).optional(),
     proficiencyBonus: z.int().optional(),
     features: z.array(z.strictObject({
-      /** Model id of the target. */
-      model: z.literal("feature"),
+      /** Resource type of the target. */
+      type: z.literal("Feature"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     })).optional(),
     /** Counters particular to the class at this level: rage count, sneak attack dice, sorcery points. */
     classSpecific: z.record(z.string(), z.unknown()).optional(),
@@ -1453,7 +1460,7 @@ export const classSchema = z.strictObject({
     }).optional(),
   })).optional(),
   /** A choice of primary ability, for a class that offers one. */
-  primaryAbilityOptions: choiceSchema.optional(),
+  primaryAbilityOption: choiceSchema.optional(),
 });
 export type Class = z.infer<typeof classSchema>;
 
@@ -1461,14 +1468,14 @@ export type Class = z.infer<typeof classSchema>;
 export const conditionSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1476,10 +1483,9 @@ export const conditionSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
 });
@@ -1489,14 +1495,14 @@ export type Condition = z.infer<typeof conditionSchema>;
 export const cultureSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1504,10 +1510,9 @@ export const cultureSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** Seed lists the name generator learns from, by name type. */
@@ -1518,20 +1523,20 @@ export const cultureSchema = z.strictObject({
     family: z.array(z.string()).optional(),
     place: z.array(z.string()).optional(),
   }).optional(),
-  languages: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("language"),
+  language: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Language"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** Species that commonly belong to this culture. */
   species: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("species"),
+    /** Resource type of the target. */
+    type: z.literal("Species"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** Prose on how names are formed and used. */
   namingConventions: z.string().optional(),
@@ -1542,14 +1547,14 @@ export type Culture = z.infer<typeof cultureSchema>;
 export const economySchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1557,22 +1562,21 @@ export const economySchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  place: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("place"),
+  subject: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Place"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
-  at: temporalPositionSchema,
+  effective: temporalPositionSchema,
   prosperity: prosperitySchema,
-  industries: z.array(z.strictObject({
+  industry: z.array(z.strictObject({
     industry: industrySchema,
     count: z.int().min(1),
   })).optional(),
@@ -1587,14 +1591,14 @@ export type Economy = z.infer<typeof economySchema>;
 export const encounterSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1603,59 +1607,58 @@ export const encounterSchema = z.strictObject({
   perspective: perspectiveSchema.default("out-of-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** What sort of encounter it is. A trap is an encounter, not a thing of its own. */
-  kind: encounterKindSchema.optional(),
+  type: encounterKindSchema.optional(),
   /** The campaign it is prepared for. */
   campaign: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("campaign"),
+    /** Resource type of the target. */
+    type: z.literal("Campaign"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Where it happens. */
-  place: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("place"),
+  location: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Place"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   /** Quadtree cell token of the battle map it is fought on. */
   cell: cellSchema.optional(),
   difficulty: encounterDifficultySchema.optional(),
   /** What the party faces, and how many of each. */
-  adversaries: z.array(z.strictObject({
+  adversary: z.array(z.strictObject({
     actor: z.strictObject({
-      /** Model id of the target. */
-      model: z.enum(["statblock", "person"]),
+      /** Resource type of the target. */
+      type: z.enum(["Statblock", "Person"]),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     }),
     count: z.int().min(1).default(1),
   })).optional(),
   /** The quest it belongs to. */
   quest: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("quest"),
+    /** Resource type of the target. */
+    type: z.literal("Quest"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** The event it produced, once it has been played. */
   played: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("event"),
+    /** Resource type of the target. */
+    type: z.literal("Event"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
 });
 export type Encounter = z.infer<typeof encounterSchema>;
@@ -1664,14 +1667,14 @@ export type Encounter = z.infer<typeof encounterSchema>;
 export const eventSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1679,44 +1682,43 @@ export const eventSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  eventType: eventTypeSchema,
-  when: timeSpanSchema,
-  locations: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("place"),
+  type: eventTypeSchema,
+  occurred: timeSpanSchema,
+  location: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Place"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
-  participants: z.array(z.strictObject({
+  participant: z.array(z.strictObject({
     actor: z.strictObject({
-      /** Model id of the target. */
-      model: z.literal("person"),
+      /** Resource type of the target. */
+      type: z.literal("Person"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     }),
     role: participantRoleSchema,
   })).optional(),
   partOf: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("event"),
+    /** Resource type of the target. */
+    type: z.literal("Event"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   causedBy: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("event"),
+    /** Resource type of the target. */
+    type: z.literal("Event"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   outcome: z.string().optional(),
 });
@@ -1726,14 +1728,14 @@ export type Event = z.infer<typeof eventSchema>;
 export const factionSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1741,26 +1743,25 @@ export const factionSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  factionType: factionTypeSchema,
-  parent: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("faction"),
+  type: factionTypeSchema,
+  partOf: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Faction"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   seat: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("place"),
+    /** Resource type of the target. */
+    type: z.literal("Place"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   founded: temporalPositionSchema.optional(),
   dissolved: temporalPositionSchema.optional(),
@@ -1773,14 +1774,14 @@ export type Faction = z.infer<typeof factionSchema>;
 export const featSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1788,23 +1789,22 @@ export const featSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  featType: featTypeSchema.optional(),
+  type: featTypeSchema.optional(),
   /** Whether it may be taken more than once. */
   repeatable: z.boolean().optional(),
   /** What must be true before it can be taken. */
-  prerequisites: z.strictObject({
+  prerequisite: z.strictObject({
     minimumLevel: z.int().min(1).optional(),
     /** A feature the character must already have. */
     featureNamed: z.string().optional(),
   }).optional(),
   /** A choice among prerequisites, where the rules offer one. */
-  prerequisiteOptions: choiceSchema.optional(),
+  prerequisiteOption: choiceSchema.optional(),
 });
 export type Feat = z.infer<typeof featSchema>;
 
@@ -1812,66 +1812,65 @@ export type Feat = z.infer<typeof featSchema>;
 export const itemSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   image: z.url().optional(),
   canonStatus: canonStatusSchema,
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  itemCategory: itemCategorySchema.optional(),
+  type: itemCategorySchema.optional(),
   /** The kind this is one of: a world's named sword points at the longsword it is. */
   instanceOf: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("item"),
+    /** Resource type of the target. */
+    type: z.literal("Item"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Who holds it: a person or a faction. */
   owner: z.strictObject({
-    /** Model id of the target. */
-    model: z.enum(["person", "faction"]),
+    /** Resource type of the target. */
+    type: z.enum(["Person", "Faction"]),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Where it is, when nobody is carrying it. */
   location: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("place"),
+    /** Resource type of the target. */
+    type: z.literal("Place"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** What is inside it, for a container. */
   contains: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("item"),
+    /** Resource type of the target. */
+    type: z.literal("Item"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** The event that made it: a forging, a gift, a discovery. */
   created: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("event"),
+    /** Resource type of the target. */
+    type: z.literal("Event"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** A price in coin. */
   cost: z.strictObject({
@@ -1884,7 +1883,7 @@ export const itemSchema = z.strictObject({
   quantity: z.int().min(1).optional(),
   rarity: raritySchema.optional(),
   /** Weapon properties. */
-  properties: z.array(weaponPropertySchema).optional(),
+  property: z.array(weaponPropertySchema).optional(),
   /** The mastery property, for a weapon. */
   mastery: weaponMasterySchema.optional(),
   /** Damage as dice and a type. */
@@ -1911,11 +1910,11 @@ export const itemSchema = z.strictObject({
   }).optional(),
   /** The item this one is loaded with. */
   ammunition: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("item"),
+    /** Resource type of the target. */
+    type: z.literal("Item"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Armor class it confers. */
   armorClass: z.strictObject({
@@ -1943,12 +1942,12 @@ export const itemSchema = z.strictObject({
   /** Whether this is one form of a family of items, a +1 sword among +X swords. */
   variant: z.boolean().optional(),
   /** The forms this item comes in. */
-  variants: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("item"),
+  form: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Item"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** Who may use it, where the rules restrict it. */
   limitedTo: z.string().optional(),
@@ -1961,14 +1960,14 @@ export type Item = z.infer<typeof itemSchema>;
 export const languageSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -1976,20 +1975,19 @@ export const languageSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   status: languageStatusSchema.optional(),
   /** The language this one descends from, if any. */
   family: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("language"),
+    /** Resource type of the target. */
+    type: z.literal("Language"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** The writing system it is set in, where it has one. */
   script: z.string().optional(),
@@ -2002,14 +2000,14 @@ export type Language = z.infer<typeof languageSchema>;
 export const personSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2017,27 +2015,26 @@ export const personSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   species: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("species"),
+    /** Resource type of the target. */
+    type: z.literal("Species"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   culture: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("culture"),
+    /** Resource type of the target. */
+    type: z.literal("Culture"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
-  sex: sexSchema.optional(),
+  gender: sexSchema.optional(),
   pronouns: z.string().optional(),
   /** A byname earned in life, e.g. 'the Bold'. Rendered as 'Name the Bold'. */
   epithet: z.string().optional(),
@@ -2046,37 +2043,37 @@ export const personSchema = z.strictObject({
   birth: z.strictObject({
     time: temporalPositionSchema.optional(),
     place: z.strictObject({
-      /** Model id of the target. */
-      model: z.literal("place"),
+      /** Resource type of the target. */
+      type: z.literal("Place"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     }).optional(),
   }).optional(),
   death: z.strictObject({
     time: temporalPositionSchema.optional(),
     place: z.strictObject({
-      /** Model id of the target. */
-      model: z.literal("place"),
+      /** Resource type of the target. */
+      type: z.literal("Place"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     }).optional(),
     cause: z.string().optional(),
   }).optional(),
   memberOf: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("faction"),
+    /** Resource type of the target. */
+    type: z.literal("Faction"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   residence: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("place"),
+    /** Resource type of the target. */
+    type: z.literal("Place"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   occupation: z.string().optional(),
   /** How the person stands with the world's powers, each -100..100. */
@@ -2114,14 +2111,14 @@ export type Person = z.infer<typeof personSchema>;
 export const placeSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2129,19 +2126,18 @@ export const placeSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  placeType: placeTypeSchema,
-  parent: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("place"),
+  type: placeTypeSchema,
+  partOf: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Place"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   feature: featureSchema.optional(),
   /** The ground this place holds, as quadtree cells. A border is a curve, which cannot be owned or compared; a set of cells can be. Whether a place holds somewhere is then a prefix test, and when a border moves, cells change hands — which is what a border moving is. Coarse cells inland, fine ones along the edge. `cell` is where the place is; this is what it covers. */
@@ -2152,19 +2148,19 @@ export const placeSchema = z.strictObject({
   biome: z.string().optional(),
   terrain: terrainSchema.optional(),
   /** Natural resources the place yields. */
-  resources: z.array(resourceSchema).optional(),
+  resource: z.array(resourceSchema).optional(),
   /** Land in square miles. */
   area: z.strictObject({
     squareMiles: z.number().min(0),
     arableSquareMiles: z.number().min(0).optional(),
     wildernessSquareMiles: z.number().min(0).optional(),
   }).optional(),
-  controlledBy: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("faction"),
+  managingOrganization: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Faction"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   founded: temporalPositionSchema.optional(),
 });
@@ -2174,14 +2170,14 @@ export type Place = z.infer<typeof placeSchema>;
 export const populationSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2189,35 +2185,34 @@ export const populationSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  place: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("place"),
+  subject: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Place"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   species: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("species"),
+    /** Resource type of the target. */
+    type: z.literal("Species"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   culture: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("culture"),
+    /** Resource type of the target. */
+    type: z.literal("Culture"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   count: z.int().min(0),
-  at: temporalPositionSchema,
+  effective: temporalPositionSchema,
 });
 export type Population = z.infer<typeof populationSchema>;
 
@@ -2225,14 +2220,14 @@ export type Population = z.infer<typeof populationSchema>;
 export const proficiencySchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2240,20 +2235,19 @@ export const proficiencySchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  proficiencyType: proficiencyTypeSchema,
+  type: proficiencyTypeSchema,
   /** What the proficiency is in when it is a thing: a skill or an item. A saving throw names an ability instead. */
   reference: z.strictObject({
-    /** Model id of the target. */
-    model: z.enum(["skill", "item"]),
+    /** Resource type of the target. */
+    type: z.enum(["Skill", "Item"]),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** The ability, for a saving-throw proficiency. */
   ability: abilitySchema.optional(),
@@ -2264,14 +2258,14 @@ export type Proficiency = z.infer<typeof proficiencySchema>;
 export const projectSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2279,10 +2273,9 @@ export const projectSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** One line about what the project is for, shown wherever it is listed. */
@@ -2290,7 +2283,7 @@ export const projectSchema = z.strictObject({
   /** A draft is visible only to those who can edit the world; a published project is what everyone else sees. */
   status: z.enum(["draft", "published", "retired"]).default("draft"),
   /** The pages of the project, in the order they are offered. */
-  pages: z.array(z.strictObject({
+  page: z.array(z.strictObject({
     /** Stable within the project, so a layout survives a rename. */
     id: z.string(),
     name: z.string(),
@@ -2327,14 +2320,14 @@ export type Project = z.infer<typeof projectSchema>;
 export const questSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2342,45 +2335,44 @@ export const questSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   status: questStatusSchema,
   /** The campaign it belongs to, when it belongs to one. */
   campaign: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("campaign"),
+    /** Resource type of the target. */
+    type: z.literal("Campaign"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Who set it. */
   giver: z.strictObject({
-    /** Model id of the target. */
-    model: z.enum(["person", "faction"]),
+    /** Resource type of the target. */
+    type: z.enum(["Person", "Faction"]),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** The steps it breaks into, each done or not. */
-  objectives: z.array(z.strictObject({
+  objective: z.array(z.strictObject({
     summary: z.string(),
     done: z.boolean().default(false),
     about: referenceSchema.optional(),
   })).optional(),
   /** What it concerns: places, people, factions, other quests. */
-  about: z.array(referenceSchema).optional(),
+  subject: z.array(referenceSchema).optional(),
   reward: z.string().optional(),
   /** The event that finished it. */
   resolvedBy: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("event"),
+    /** Resource type of the target. */
+    type: z.literal("Event"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
 });
 export type Quest = z.infer<typeof questSchema>;
@@ -2389,14 +2381,14 @@ export type Quest = z.infer<typeof questSchema>;
 export const relationshipSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2404,38 +2396,37 @@ export const relationshipSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  relationshipType: relationshipTypeSchema,
+  type: relationshipTypeSchema,
   /** The first party. For an asymmetric type this is the senior side: the parent, the liege, the mentor. */
   party1: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("person"),
+    /** Resource type of the target. */
+    type: z.literal("Person"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   /** The second party. */
   party2: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("person"),
+    /** Resource type of the target. */
+    type: z.literal("Person"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
-  facts: z.array(z.strictObject({
+  fact: z.array(z.strictObject({
     type: relationshipFactTypeSchema,
     time: temporalPositionSchema.optional(),
     place: z.strictObject({
-      /** Model id of the target. */
-      model: z.literal("place"),
+      /** Resource type of the target. */
+      type: z.literal("Place"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
-      name: z.string().optional(),
+      display: z.string().optional(),
     }).optional(),
   })).optional(),
   legitimacy: legitimacySchema.optional(),
@@ -2447,14 +2438,14 @@ export type Relationship = z.infer<typeof relationshipSchema>;
 export const sessionSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2463,19 +2454,18 @@ export const sessionSchema = z.strictObject({
   perspective: perspectiveSchema.default("out-of-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** The campaign this belongs to. */
   campaign: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("campaign"),
+    /** Resource type of the target. */
+    type: z.literal("Campaign"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   /** Its place in the sequence. */
   number: z.int().min(1).optional(),
@@ -2487,11 +2477,11 @@ export const sessionSchema = z.strictObject({
   recap: z.string().optional(),
   /** Events in the world's record that this session created. */
   produced: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("event"),
+    /** Resource type of the target. */
+    type: z.literal("Event"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** The stretch of in-world time the session covered. */
   coveredInWorld: timeSpanSchema.optional(),
@@ -2502,14 +2492,14 @@ export type Session = z.infer<typeof sessionSchema>;
 export const skillSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2517,10 +2507,9 @@ export const skillSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** The ability a check with this skill uses. */
@@ -2532,14 +2521,14 @@ export type Skill = z.infer<typeof skillSchema>;
 export const speciesSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2547,20 +2536,19 @@ export const speciesSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   size: sizeSchema.optional(),
   /** The species this is a subspecies of. */
-  parent: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("species"),
+  subclassOf: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Species"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Chromosome number to the die rolled for each allele, or 'sex' for the sex chromosome. */
   chromosomes: z.record(z.string(), z.string().regex(new RegExp("^(d[0-9]+|sex)$"))).optional(),
@@ -2610,9 +2598,9 @@ export const speciesSchema = z.strictObject({
     maximumAge: z.int().min(1),
   }).optional(),
   /** The rules category the species falls under, humanoid for most. */
-  creatureType: creatureTypeSchema.optional(),
+  type: creatureTypeSchema.optional(),
   /** A choice of size, for a species that offers one. */
-  sizeOptions: choiceSchema.optional(),
+  sizeOption: choiceSchema.optional(),
 });
 export type Species = z.infer<typeof speciesSchema>;
 
@@ -2620,14 +2608,14 @@ export type Species = z.infer<typeof speciesSchema>;
 export const spellSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2635,10 +2623,9 @@ export const spellSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** 0 is a cantrip. */
@@ -2647,7 +2634,7 @@ export const spellSchema = z.strictObject({
   castingTime: z.string().optional(),
   /** As the rules word it: self, touch, 60 feet. */
   range: z.string().optional(),
-  components: z.array(z.enum(["V", "S", "M"])).optional(),
+  component: z.array(z.enum(["V", "S", "M"])).optional(),
   /** What the material component is. */
   material: z.string().optional(),
   duration: z.string().optional(),
@@ -2674,12 +2661,12 @@ export const spellSchema = z.strictObject({
     size: z.int(),
   }).optional(),
   /** The classes whose lists it appears on. */
-  classes: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("class"),
+  class: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Class"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
 });
 export type Spell = z.infer<typeof spellSchema>;
@@ -2688,14 +2675,14 @@ export type Spell = z.infer<typeof spellSchema>;
 export const statblockSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2703,28 +2690,27 @@ export const statblockSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  creatureType: creatureTypeSchema.optional(),
+  type: creatureTypeSchema.optional(),
   /** The species this represents, where it represents one. */
   species: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("species"),
+    /** Resource type of the target. */
+    type: z.literal("Species"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** The person this represents, for a statted individual. */
   person: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("person"),
+    /** Resource type of the target. */
+    type: z.literal("Person"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   size: sizeSchema.optional(),
   alignment: alignmentSchema.optional(),
@@ -2745,43 +2731,43 @@ export const statblockSchema = z.strictObject({
     charisma: z.int().optional(),
   }).optional(),
   /** Saving throws and skills it is proficient in. */
-  proficiencies: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("proficiency"),
+  proficiency: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Proficiency"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
-  damageVulnerabilities: z.array(damageTypeSchema).optional(),
-  damageResistances: z.array(damageTypeSchema).optional(),
-  damageImmunities: z.array(damageTypeSchema).optional(),
+  damageVulnerability: z.array(damageTypeSchema).optional(),
+  damageResistance: z.array(damageTypeSchema).optional(),
+  damageImmunity: z.array(damageTypeSchema).optional(),
   /** Conditions it cannot suffer. */
-  conditionImmunities: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("condition"),
+  conditionImmunity: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Condition"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   /** Darkvision, blindsight, passive perception and the rest. */
   senses: z.record(z.string(), z.string()).optional(),
   /** Languages it knows. */
-  languages: z.array(z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("language"),
+  language: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Language"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   })).optional(),
   challengeRating: z.number().optional(),
   proficiencyBonus: z.int().optional(),
   experience: z.int().optional(),
   /** Passive abilities. */
-  traits: z.array(z.strictObject({
+  trait: z.array(z.strictObject({
     name: z.string(),
     description: z.string().optional(),
   })).optional(),
-  actions: z.array(z.strictObject({
+  action: z.array(z.strictObject({
     name: z.string(),
     description: z.string().optional(),
     attackBonus: z.int().optional(),
@@ -2792,15 +2778,15 @@ export const statblockSchema = z.strictObject({
       damageType: damageTypeSchema.optional(),
     }).optional(),
   })).optional(),
-  bonusActions: z.array(z.strictObject({
+  bonusAction: z.array(z.strictObject({
     name: z.string(),
     description: z.string().optional(),
   })).optional(),
-  reactions: z.array(z.strictObject({
+  reaction: z.array(z.strictObject({
     name: z.string(),
     description: z.string().optional(),
   })).optional(),
-  legendaryActions: z.array(z.strictObject({
+  legendaryAction: z.array(z.strictObject({
     name: z.string(),
     description: z.string().optional(),
     cost: z.int().optional(),
@@ -2812,14 +2798,14 @@ export type Statblock = z.infer<typeof statblockSchema>;
 export const tenureSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2827,42 +2813,41 @@ export const tenureSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** The title held. */
   title: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("title"),
+    /** Resource type of the target. */
+    type: z.literal("Title"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   holder: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("person"),
+    /** Resource type of the target. */
+    type: z.literal("Person"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   /** The event that started this tenure (succession, coronation, founding). */
   began: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("event"),
+    /** Resource type of the target. */
+    type: z.literal("Event"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** The event that ended it (death, abdication, deposition). */
   ended: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("event"),
+    /** Resource type of the target. */
+    type: z.literal("Event"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
 });
 export type Tenure = z.infer<typeof tenureSchema>;
@@ -2871,14 +2856,14 @@ export type Tenure = z.infer<typeof tenureSchema>;
 export const titleSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2886,19 +2871,18 @@ export const titleSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** The faction this title belongs to. */
   faction: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("faction"),
+    /** Resource type of the target. */
+    type: z.literal("Faction"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }),
   /** Lower is higher: 0 for the sovereign seat. */
   rank: z.int().min(0).optional(),
@@ -2916,14 +2900,14 @@ export type Title = z.infer<typeof titleSchema>;
 export const workSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2931,21 +2915,20 @@ export const workSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
-  workType: workTypeSchema,
+  type: workTypeSchema,
   author: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("person"),
+    /** Resource type of the target. */
+    type: z.literal("Person"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
-  about: z.array(referenceSchema).optional(),
+  subject: z.array(referenceSchema).optional(),
   text: z.string().optional(),
   language: z.string().optional(),
 });
@@ -2955,14 +2938,14 @@ export type Work = z.infer<typeof workSchema>;
 export const worldSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
-  /** The model this record is an instance of, e.g. person. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  model: z.string().optional(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
   /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
   derivedId: z.uuid().optional(),
   /** The World this resource belongs to. */
   world: z.uuid(),
   name: z.string().min(1),
-  alternateNames: z.array(z.string()).optional(),
+  alternateName: z.array(z.string()).optional(),
   description: z.string().optional(),
   /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
   image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
@@ -2970,18 +2953,17 @@ export const worldSchema = z.strictObject({
   perspective: perspectiveSchema.default("in-universe"),
   /** When this assertion holds in-world. Absent means always. */
   validTime: timeSpanSchema.optional(),
-  recorded: recordedSchema,
+  meta: metaSchema,
   provenance: provenanceSchema.optional(),
-  citations: z.array(citationSchema).optional(),
-  tags: z.array(z.string()).optional(),
+  citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   calendar: z.strictObject({
-    /** Model id of the target. */
-    model: z.literal("calendar"),
+    /** Resource type of the target. */
+    type: z.literal("Calendar"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
-    name: z.string().optional(),
+    display: z.string().optional(),
   }).optional(),
   /** Default coordinate reference system IRI for this world's maps. */
   crs: z.url().optional(),
@@ -3819,6 +3801,44 @@ export const models = {
 } as const;
 export type ModelId = keyof typeof models;
 
+/** The resource type each model is published as: `place` is a `Place`. */
+export const resourceTypes = {
+  background: "Background",
+  belief: "Belief",
+  calendar: "Calendar",
+  campaign: "Campaign",
+  character: "Character",
+  claim: "Claim",
+  class: "Class",
+  condition: "Condition",
+  culture: "Culture",
+  economy: "Economy",
+  encounter: "Encounter",
+  event: "Event",
+  faction: "Faction",
+  feat: "Feat",
+  feature: "Feature",
+  item: "Item",
+  language: "Language",
+  person: "Person",
+  place: "Place",
+  population: "Population",
+  proficiency: "Proficiency",
+  project: "Project",
+  quest: "Quest",
+  relationship: "Relationship",
+  session: "Session",
+  skill: "Skill",
+  species: "Species",
+  spell: "Spell",
+  statblock: "Statblock",
+  tenure: "Tenure",
+  title: "Title",
+  work: "Work",
+  world: "World",
+} as const satisfies Record<ModelId, string>;
+export type ResourceType = (typeof resourceTypes)[ModelId];
+
 /** Each model's name and description, as its manifest states them. */
 export const modelInfo = {
   background: {
@@ -4055,14 +4075,14 @@ export const modelInfo = {
 } as const satisfies Record<ModelId, { id: ModelId; name: string; description?: string; category?: string; icon?: string }>;
 
 /** Fields the API sets itself. A request may omit them and cannot override them. */
-export const readOnlyFields = ["id","model","module","recorded","world"] as const;
+export const readOnlyFields = ["id","meta","module","resourceType","world"] as const;
 
 /** The properties a record's in-world valid time is derived from when it states none, by model. Dotted paths. */
 export const validTimeFields = {
-  economy: {"begin":"at"},
-  event: {"begin":"when.begin","end":"when.end"},
+  economy: {"begin":"effective"},
+  event: {"begin":"occurred.begin","end":"occurred.end"},
   faction: {"begin":"founded","end":"dissolved"},
   person: {"begin":"birth.time","end":"death.time"},
   place: {"begin":"founded"},
-  population: {"begin":"at"},
+  population: {"begin":"effective"},
 } as const satisfies Partial<Record<ModelId, { begin: string; end?: string }>>;

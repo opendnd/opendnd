@@ -41,7 +41,7 @@
     "notes": {
       "type": "string"
     },
-    "classes": {
+    "class": {
       "type": "array",
       "description": "The classes taken and the level in each; more than one for a multiclassed character.",
       "items": {
@@ -67,7 +67,7 @@
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The background chosen."
     },
-    "feats": {
+    "feat": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
@@ -172,21 +172,21 @@
       "minimum": 0,
       "description": "Hit dice spent since the last long rest."
     },
-    "conditions": {
+    "condition": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Conditions currently affecting the character."
     },
-    "proficiencies": {
+    "proficiency": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
       },
       "description": "Proficiencies held, from every source."
     },
-    "spells": {
+    "spellcasting": {
       "type": "object",
       "description": "Spellcasting state.",
       "properties": {
@@ -230,7 +230,7 @@
       },
       "additionalProperties": false
     },
-    "choices": {
+    "choice": {
       "type": "array",
       "description": "What was picked wherever the rules offered a choice: the skills from a background, the subclass, a fighting style, an ability score increase taken instead of a feat.",
       "items": {

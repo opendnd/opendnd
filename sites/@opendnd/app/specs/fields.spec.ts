@@ -29,9 +29,9 @@ describe('describing a schema as fields', () => {
     expect(pet.description).toBe('A companion animal.');
     expect(pet.fields?.slice(0, 5).map((f) => f.name)).toEqual([
       'id',
-      'model',
+      'resourceType',
       'world',
-      'recorded',
+      'meta',
       'name',
     ]);
   });
@@ -42,7 +42,7 @@ describe('describing a schema as fields', () => {
       readOnly: true,
       required: true,
     });
-    expect(field('recorded').readOnly).toBe(true);
+    expect(field('meta').readOnly).toBe(true);
     expect(field('name')).toMatchObject({
       kind: 'text',
       required: true,
@@ -88,8 +88,8 @@ describe('describing a schema as fields', () => {
     expect(
       isReferenceSchema({
         type: 'object',
-        properties: { model: {}, id: {}, extra: {} },
-        required: ['model', 'id'],
+        properties: { type: {}, id: {}, extra: {} },
+        required: ['type', 'id'],
       }),
     ).toBe(false);
   });

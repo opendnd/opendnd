@@ -4,7 +4,12 @@ import {
   articleAuthor,
 } from '@opendnd/generators';
 import type { Models, UsageRecord } from '@opendnd/llm';
-import type { ModelId, Reference } from '@opendnd/types';
+import {
+  modelIdOf,
+  resourceTypes,
+  type ModelId,
+  Reference,
+} from '@opendnd/types';
 import type { JsonSchema } from './generate';
 import { NotFoundError, type Resource, type Store } from './store';
 
@@ -116,7 +121,7 @@ export async function authorAbout(
   );
   const title = typeof subject.name === 'string' ? subject.name : scope.id;
   const input: ArticleInput = {
-    subject: { model: scope.model, id: scope.id, name: title },
+    subject: { type: scope.model, id: scope.id, display: title },
     title,
     facts,
     sources,
@@ -130,7 +135,7 @@ export async function authorAbout(
     ...(request.model ? { model: request.model } : {}),
   });
 
-  const tagged: Record<string, unknown> = { ...work, model: 'work' };
+  const tagged: Record<string, unknown> = { ...work, resourceType: 'Work' };
   const saved = request.save === true;
   const stored = saved ? await store.put('work', work.id, tagged) : tagged;
   const line = options.spend();
@@ -162,12 +167,12 @@ const PLATFORM: ReadonlySet<string> = new Set([
   'module',
   'name',
   'description',
-  'recorded',
+  'meta',
   'provenance',
   'canonStatus',
   'perspective',
   'derivedId',
-  'citations',
+  'citation',
 ]);
 
 const MOST_RELATED = 60;
@@ -212,12 +217,12 @@ export async function factsAbout(
   }
 
   const sources: Reference[] = [
-    { model, id: subject.id, name },
+    { type: resourceTypes[model], id: subject.id, display: name },
     ...related.map((hit) => ({
-      model: hit.model,
+      type: resourceTypes[hit.model],
       id: hit.resource.id,
       ...(typeof hit.resource.name === 'string'
-        ? { name: hit.resource.name }
+        ? { display: hit.resource.name }
         : {}),
     })),
   ];
@@ -234,7 +239,9 @@ function describeValue(
   }
   if (typeof value === 'boolean') return value ? 'yes' : 'no';
   if (isReference(value)) {
-    return `${value.name ?? value.id} (${label(value.model as ModelId).toLowerCase()})`;
+    const model = modelIdOf(value.type);
+    const kind = model ? ` (${label(model).toLowerCase()})` : '';
+    return `${value.display ?? value.id}${kind}`;
   }
   if (Array.isArray(value)) {
     const parts = value
@@ -270,7 +277,7 @@ function isReference(value: unknown): value is Reference {
   return (
     typeof value === 'object' &&
     value !== null &&
-    typeof (value as Reference).model === 'string' &&
+    typeof (value as Reference).type === 'string' &&
     typeof (value as Reference).id === 'string'
   );
 }

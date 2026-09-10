@@ -291,7 +291,7 @@ export function Record() {
                   <SheetTitle>The record as the API holds it</SheetTitle>
                   <SheetDescription>
                     {ontology.label(model)} · revision{' '}
-                    {String(resource.data.body.recorded?.revision ?? '?')}
+                    {String(resource.data.body.meta?.versionId ?? '?')}
                     {resource.data.etag && ` · ETag ${resource.data.etag}`}
                   </SheetDescription>
                 </SheetHeader>

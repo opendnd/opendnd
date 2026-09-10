@@ -10,7 +10,7 @@
     }
   ],
   "properties": {
-    "proficiencyType": {
+    "type": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/proficiency-type.schema.json"
     },
     "reference": {
@@ -23,7 +23,7 @@
     }
   },
   "required": [
-    "proficiencyType"
+    "type"
   ],
   "unevaluatedProperties": false
 }

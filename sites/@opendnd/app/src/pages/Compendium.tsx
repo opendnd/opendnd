@@ -210,8 +210,8 @@ export function CompendiumSurface() {
                     )}
                   </ItemContent>
                   <ItemActions>
-                    {typeof work.workType === 'string' && (
-                      <Badge variant="outline">{humanize(work.workType)}</Badge>
+                    {typeof work.type === 'string' && (
+                      <Badge variant="outline">{humanize(work.type)}</Badge>
                     )}
                   </ItemActions>
                 </Item>

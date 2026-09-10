@@ -188,7 +188,7 @@ const models: string[] = [
   'description: Every model in the ontology, with its fields, generated from the published bundle.',
   '---',
   '',
-  `Generated from the OURS bundle at [\`${bundle.ontology.url}\`](${bundle.ontology.url}). Every field is listed; \`*\` marks one the schema requires. Every model also carries the platform base: \`id\`, \`world\`, \`name\`, \`description\`, \`canonStatus\`, \`perspective\`, \`validTime\`, \`recorded\`, \`provenance\`, \`citations\`, \`tags\`, \`module\`.`,
+  `Generated from the OURS bundle at [\`${bundle.ontology.url}\`](${bundle.ontology.url}). Every field is listed; \`*\` marks one the schema requires. Every model also carries the platform base: \`id\`, \`resourceType\`, \`world\`, \`name\`, \`description\`, \`canonStatus\`, \`perspective\`, \`validTime\`, \`meta\`, \`provenance\`, \`citation\`, \`module\`.`,
   '',
 ];
 for (const layer of Object.values(LAYERS)) {

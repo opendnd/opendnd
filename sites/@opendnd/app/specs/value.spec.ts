@@ -44,7 +44,7 @@ describe('values for a form', () => {
         tricks: [],
         born: { trs: '', precision: 'year' },
         home: {},
-        friends: [{ model: 'pet', id: 'x' }, undefined],
+        friends: [{ type: 'Pet', id: 'x' }, undefined],
         nothing: undefined,
       }),
     ).toEqual({
@@ -52,7 +52,7 @@ describe('values for a form', () => {
       legs: 0,
       friendly: false,
       born: { precision: 'year' },
-      friends: [{ model: 'pet', id: 'x' }],
+      friends: [{ type: 'Pet', id: 'x' }],
     });
     expect(prune({ a: '', b: {} })).toBeUndefined();
   });

@@ -39,10 +39,10 @@ export function alleleValue(allele: string): number {
 /** The fields of a Person that a genome fills in. */
 export function toPersonFields(
   genome: Genome,
-): Pick<Person, 'species' | 'sex' | 'genome' | 'phenotype'> {
+): Pick<Person, 'species' | 'gender' | 'genome' | 'phenotype'> {
   return {
     species: genome.species,
-    sex: genome.sex,
+    gender: genome.sex,
     genome: {
       chromosomes: { ...genome.chromosomes },
       height: genome.height,

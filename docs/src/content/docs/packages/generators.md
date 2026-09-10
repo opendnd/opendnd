@@ -16,7 +16,7 @@ interface Generator<Input, Output> {
 }
 ```
 
-`GeneratorContext` carries the `world`, a `seedPath` such as `dynasty/thorne/3`, an `Rng` seeded from `world/seedPath`, and optionally `now` and `requestedBy`. `createContext()` builds one. `stamp(generator, ctx)` supplies the platform fields on any resource a generator emits: a reproducible `id`, `derivedId = uuidV5(world, seedPath)`, `canonStatus: generated`, `recorded`, and `provenance` with generator, seed and derivation. See [ADR-005](/adr/adr-005-deterministic-generation/).
+`GeneratorContext` carries the `world`, a `seedPath` such as `dynasty/thorne/3`, an `Rng` seeded from `world/seedPath`, and optionally `now` and `requestedBy`. `createContext()` builds one. `stamp(generator, ctx)` supplies the platform fields on any resource a generator emits: a reproducible `id`, `derivedId = uuidV5(world, seedPath)`, `canonStatus: generated`, `meta`, and `provenance` with generator, seed, derivation and when the record was written. See [ADR-005](/adr/adr-005-deterministic-generation/).
 
 ## The Author contract
 

@@ -76,8 +76,8 @@ export const articleAuthor: Author<ArticleInput, Work> = {
       }),
       name: input.title,
       perspective: workType === 'chronicle' ? 'in-universe' : 'out-of-universe',
-      workType,
-      about: [input.subject],
+      type: workType,
+      subject: [input.subject],
       text,
       language: input.language ?? 'en',
     };

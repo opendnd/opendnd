@@ -16,7 +16,7 @@
     "proposition": {
       "type": "string"
     },
-    "about": {
+    "subject": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"

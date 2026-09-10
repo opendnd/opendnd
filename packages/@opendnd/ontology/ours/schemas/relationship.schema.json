@@ -10,7 +10,7 @@
     }
   ],
   "properties": {
-    "relationshipType": {
+    "type": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/relationship-type.schema.json"
     },
     "party1": {
@@ -21,7 +21,7 @@
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The second party."
     },
-    "facts": {
+    "fact": {
       "type": "array",
       "items": {
         "type": "object",
@@ -51,7 +51,7 @@
     }
   },
   "required": [
-    "relationshipType",
+    "type",
     "party1",
     "party2"
   ],

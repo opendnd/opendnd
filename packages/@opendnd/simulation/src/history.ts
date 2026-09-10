@@ -43,7 +43,7 @@ export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
 
     for (const place of input.places) {
       state.places.set(place.id, place);
-      const house = place.controlledBy?.id;
+      const house = place.managingOrganization?.id;
       if (house !== undefined) {
         const held = state.holdings.get(house) ?? [];
         held.push(place.id);
@@ -55,10 +55,10 @@ export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
 
     const seeded = new Map<string, Prosperity>();
     for (const economy of input.economies ?? []) {
-      seeded.set(economy.place.id, economy.prosperity);
+      seeded.set(economy.subject.id, economy.prosperity);
     }
     for (const place of input.places) {
-      if (!LOCALITIES.has(place.placeType)) continue;
+      if (!LOCALITIES.has(place.type)) continue;
       state.settlements.set(place.id, {
         count: place.population ?? 0,
         prosperity: seeded.get(place.id) ?? 'prosperous',
@@ -67,9 +67,9 @@ export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
 
     for (const e of input.canonEvents ?? []) {
       state.addEvent(e);
-      if (e.eventType !== 'death') continue;
-      const y = e.when.begin?.year;
-      for (const p of e.participants ?? []) {
+      if (e.type !== 'death') continue;
+      const y = e.occurred.begin?.year;
+      for (const p of e.participant ?? []) {
         if (p.role === 'deceased' && y !== undefined) {
           state.forcedDeath.set(p.actor.id, y);
         }
@@ -109,7 +109,7 @@ export const historyGenerator: Generator<HistoryInput, HistoryOutput> = {
 
     const people = [...state.people.values()];
     const events = [...state.events].sort(
-      (a, b) => (a.when.begin?.year ?? 0) - (b.when.begin?.year ?? 0),
+      (a, b) => (a.occurred.begin?.year ?? 0) - (b.occurred.begin?.year ?? 0),
     );
     const output = {
       people,
@@ -140,7 +140,11 @@ function foundHouse(
   const place = house.seat;
   const houseRef = ref('faction', house);
   const fctx = childContext(ctx, `founders/${house.id}`);
-  const founder = (label: string, sex: Person['sex'], age: number): Person => ({
+  const founder = (
+    label: string,
+    sex: Person['gender'],
+    age: number,
+  ): Person => ({
     ...personGenerator.generate(
       { species: input.species, culture: input.culture, sex },
       childContext(fctx, label),
@@ -158,7 +162,7 @@ function foundHouse(
   state.addPerson(lady, true);
   state.addRelationship(
     makeRelationship(fctx, 'couple', 'couple', lord, lady, {
-      facts: [
+      fact: [
         {
           type: 'marriage',
           time: yearOf(input.calendar, year),
@@ -173,11 +177,11 @@ function foundHouse(
       type: 'founding',
       year,
       name: `Founding of ${house.name}`,
-      participants: [
+      participant: [
         { actor: ref('person', lord), role: 'founder' },
         { actor: ref('person', lady), role: 'founder' },
       ],
-      ...(place ? { locations: [place] } : {}),
+      ...(place ? { location: [place] } : {}),
     }),
   );
   // succession() seats the first holder this same year, because every title

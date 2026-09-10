@@ -10,10 +10,10 @@
     }
   ],
   "properties": {
-    "factionType": {
+    "type": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/faction-type.schema.json"
     },
-    "parent": {
+    "partOf": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
     "seat": {
@@ -34,7 +34,7 @@
     }
   },
   "required": [
-    "factionType"
+    "type"
   ],
   "unevaluatedProperties": false
 }

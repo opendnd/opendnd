@@ -129,9 +129,9 @@ export class HistoryState {
     const patch: Partial<Person> = {
       memberOf: [
         {
-          model: 'faction',
+          type: 'Faction',
           id: houseId,
-          ...(house?.name ? { name: house.name } : {}),
+          ...(house?.name ? { display: house.name } : {}),
         },
       ],
       ...(house?.seat ? { residence: house.seat } : {}),
@@ -162,7 +162,7 @@ export class HistoryState {
       total += this.settlements.get(placeId)?.count ?? 0;
     }
     for (const house of this.houses.values()) {
-      if (house.parent?.id === houseId) total += this.strengthOf(house.id);
+      if (house.partOf?.id === houseId) total += this.strengthOf(house.id);
     }
     const rounded = Math.round(total);
     this.strengthCache.set(houseId, rounded);
@@ -173,7 +173,7 @@ export class HistoryState {
     this.relationships.push(rel);
     const a = rel.party1.id;
     const b = rel.party2.id;
-    switch (rel.relationshipType) {
+    switch (rel.type) {
       case 'parent-child':
       case 'adoptive-parent-child':
       case 'foster-parent-child':

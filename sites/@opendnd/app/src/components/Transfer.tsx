@@ -217,9 +217,20 @@ function entriesOf(bundle: unknown): unknown[] {
 
 function modelOf(entry: unknown): string {
   if (typeof entry !== 'object' || entry === null) return 'unknown';
-  const record = entry as { model?: unknown; resource?: { model?: unknown } };
+  const record = entry as {
+    model?: unknown;
+    resourceType?: unknown;
+    resource?: { resourceType?: unknown };
+  };
+  // An export bundle names the model on the envelope; a bare record says
+  // what type it is, which is the same answer in upper case.
   if (typeof record.model === 'string') return record.model;
-  if (typeof record.resource?.model === 'string') return record.resource.model;
+  if (typeof record.resourceType === 'string') {
+    return record.resourceType.toLowerCase();
+  }
+  if (typeof record.resource?.resourceType === 'string') {
+    return record.resource.resourceType.toLowerCase();
+  }
   return 'unknown';
 }
 

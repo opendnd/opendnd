@@ -15,7 +15,7 @@
       "default": "out-of-universe",
       "description": "Out-of-universe by default: an encounter is preparation. Playing it produces an event, which is in-universe."
     },
-    "kind": {
+    "type": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/encounter-kind.schema.json",
       "description": "What sort of encounter it is. A trap is an encounter, not a thing of its own."
     },
@@ -23,7 +23,7 @@
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The campaign it is prepared for."
     },
-    "place": {
+    "location": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "Where it happens."
     },
@@ -34,7 +34,7 @@
     "difficulty": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/encounter-difficulty.schema.json"
     },
-    "adversaries": {
+    "adversary": {
       "type": "array",
       "description": "What the party faces, and how many of each.",
       "items": {
@@ -65,7 +65,7 @@
     }
   },
   "required": [
-    "place"
+    "location"
   ],
   "unevaluatedProperties": false
 }

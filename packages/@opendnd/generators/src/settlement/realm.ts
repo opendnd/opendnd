@@ -123,17 +123,17 @@ function generateDemesne(
     ...stamp(realmGenerator, ctx),
     name: `${demesneWord(input.tier)} of ${name}`,
     perspective: 'in-universe',
-    placeType: input.tier as PlaceType,
+    type: input.tier as PlaceType,
     ...(input.terrain ? { terrain: input.terrain } : {}),
     area: { squareMiles },
     cell,
     population: count,
-    ...(input.parent ? { parent: input.parent } : {}),
+    ...(input.parent ? { partOf: input.parent } : {}),
   };
   const placeRef: ReferenceTo<'place'> = {
-    model: 'place',
+    type: 'Place',
     id: place.id,
-    name: place.name,
+    display: place.name,
   };
 
   // The ruling house and its seat of power.
@@ -144,15 +144,15 @@ function generateDemesne(
     ...stamp(realmGenerator, childContext(ctx, 'house')),
     name: `House ${houseName}`,
     perspective: 'in-universe',
-    factionType: 'dynasty',
+    type: 'dynasty',
     seat: placeRef,
     founded: { trs: input.calendar.id, year: input.year, precision: 'year' },
-    ...(input.liege ? { parent: input.liege } : {}),
+    ...(input.liege ? { partOf: input.liege } : {}),
   };
   const houseRef: ReferenceTo<'faction'> = {
-    model: 'faction',
+    type: 'Faction',
     id: house.id,
-    name: house.name,
+    display: house.name,
   };
   const styles = STYLES[input.tier];
   const title: Title = {
@@ -166,7 +166,9 @@ function generateDemesne(
     styleFemale: styles.female,
     styleNeuter: styles.neuter,
   };
-  (place as { controlledBy?: ReferenceTo<'faction'> }).controlledBy = houseRef;
+  (
+    place as { managingOrganization?: ReferenceTo<'faction'> }
+  ).managingOrganization = houseRef;
 
   out.places.push(place);
   out.factions.push(house);
@@ -175,19 +177,19 @@ function generateDemesne(
     ...stamp(realmGenerator, childContext(ctx, 'population')),
     name: `${place.name} population, ${input.year}`,
     perspective: 'in-universe',
-    place: placeRef,
+    subject: placeRef,
     species: {
-      model: 'species',
+      type: 'Species',
       id: input.species.id,
-      name: input.species.name,
+      display: input.species.name,
     },
     culture: {
-      model: 'culture',
+      type: 'Culture',
       id: input.culture.id,
-      name: input.culture.name,
+      display: input.culture.name,
     },
     count,
-    at: { trs: input.calendar.id, year: input.year, precision: 'year' },
+    effective: { trs: input.calendar.id, year: input.year, precision: 'year' },
   });
 
   // Carve the population into children until what remains is too small.

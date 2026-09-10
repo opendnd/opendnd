@@ -11,7 +11,7 @@
   "schema": "https://docs.opendnd.org/ours/schemas/population.schema.json",
   "relationships": [
     {
-      "predicate": "place",
+      "predicate": "subject",
       "target": "Place"
     },
     {
@@ -24,7 +24,7 @@
     }
   ],
   "validTime": {
-    "begin": "at"
+    "begin": "effective"
   },
   "mapsTo": [
     {

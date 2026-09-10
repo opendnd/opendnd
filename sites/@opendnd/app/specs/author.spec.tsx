@@ -53,11 +53,11 @@ const models: ModelInfo[] = petModels.map((m) =>
 const draft = {
   work: {
     id: WORK_ID,
-    model: 'work',
+    resourceType: 'Work',
     name: 'Biscuit',
-    workType: 'article',
+    type: 'article',
     text: 'Biscuit is a small dog.\n\nBiscuit is fond of shoes.',
-    about: [{ model: 'pet', id: PET_ID }],
+    about: [{ type: 'Pet', id: PET_ID }],
   },
   saved: false,
   facts: ['Pet: Biscuit', 'Mood: happy'],
@@ -98,7 +98,7 @@ function apiFor(extra: Record<string, Handler> = {}) {
     }),
     [`GET /v1/worlds/${WORLD_ID}/pet/${PET_ID}`]: () => ({
       id: PET_ID,
-      model: 'pet',
+      resourceType: 'Pet',
       name: 'Biscuit',
     }),
     ...extra,

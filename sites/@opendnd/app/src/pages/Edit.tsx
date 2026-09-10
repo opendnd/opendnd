@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
-import type { Reference } from '../api/types';
+import { type Reference, modelOfReference, resourceTypeOf } from '../api/types';
 import { useApi } from '../app/context';
 import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
@@ -46,7 +46,7 @@ export function Edit() {
   const source = useRequest(
     () =>
       ref && isNew
-        ? api.get(world.id, ref.model, ref.id)
+        ? api.get(world.id, modelOfReference(ref), ref.id)
         : Promise.resolve(undefined),
     [api, world.id, ref, isNew],
   );
@@ -63,10 +63,10 @@ export function Edit() {
       const initial = initialValue(root) as Record<string, unknown>;
       if (ref && source.data && set) {
         const target: Reference = {
-          model: ref.model,
+          type: ref.type,
           id: ref.id,
           ...(typeof source.data.body.name === 'string'
-            ? { name: source.data.body.name }
+            ? { display: source.data.body.name }
             : {}),
         };
         const field = root.fields?.find((f) => f.name === set);
@@ -98,10 +98,10 @@ export function Edit() {
     if (isNew && ref && link) {
       try {
         await linkBack(ref, link, {
-          model,
+          type: resourceTypeOf(model),
           id: stored.body.id,
           ...(typeof stored.body.name === 'string'
-            ? { name: stored.body.name }
+            ? { display: stored.body.name }
             : {}),
         });
       } catch (cause) {
@@ -117,7 +117,7 @@ export function Edit() {
     }
     void navigate(
       isNew && ref
-        ? recordPath(world.id, ref.model, ref.id)
+        ? recordPath(world.id, modelOfReference(ref), ref.id)
         : recordPath(world.id, model, stored.body.id),
     );
   };
@@ -128,9 +128,10 @@ export function Edit() {
     field: string,
     target: Reference,
   ) => {
-    const fresh = await api.get(world.id, from.model, from.id);
-    const fromRoot = rootOf(ontology, from.model);
-    if (!fromRoot) throw new Error(`there is no model called ${from.model}`);
+    const fromModel = modelOfReference(from);
+    const fresh = await api.get(world.id, fromModel, from.id);
+    const fromRoot = rootOf(ontology, fromModel);
+    if (!fromRoot) throw new Error(`there is no model called ${fromModel}`);
     const body = editable(fresh.body, fromRoot);
     const kind = fromRoot.fields?.find((f) => f.name === field)?.kind;
     if (kind === 'list') {
@@ -141,7 +142,7 @@ export function Edit() {
     } else {
       throw new Error(`${field} is not a reference field`);
     }
-    await api.put(world.id, from.model, from.id, prune(body), fresh.etag);
+    await api.put(world.id, fromModel, from.id, prune(body), fresh.etag);
   };
 
   if (!root) {
@@ -159,7 +160,7 @@ export function Edit() {
 
   const back = isNew
     ? ref
-      ? recordPath(world.id, ref.model, ref.id)
+      ? recordPath(world.id, modelOfReference(ref), ref.id)
       : `/worlds/${world.id}/${model}`
     : recordPath(world.id, model, id);
   const sourceName =
@@ -210,5 +211,8 @@ function parseRef(value: string | null): Reference | undefined {
   if (!value) return undefined;
   const slash = value.indexOf('/');
   if (slash <= 0 || slash === value.length - 1) return undefined;
-  return { model: value.slice(0, slash), id: value.slice(slash + 1) };
+  return {
+    type: resourceTypeOf(value.slice(0, slash)),
+    id: value.slice(slash + 1),
+  };
 }

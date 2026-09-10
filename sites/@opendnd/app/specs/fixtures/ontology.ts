@@ -14,27 +14,26 @@ import {
 const reference: JsonSchema = {
   type: 'object',
   properties: {
-    model: { type: 'string' },
+    type: { type: 'string' },
     id: { type: 'string', format: 'uuid' },
-    name: { type: 'string' },
+    display: { type: 'string' },
   },
-  required: ['model', 'id'],
+  required: ['type', 'id'],
   additionalProperties: false,
 };
 
 const stored: Record<string, JsonSchema> = {
   id: { type: 'string', format: 'uuid', readOnly: true },
-  model: { type: 'string', readOnly: true },
+  resourceType: { type: 'string', readOnly: true },
   world: { type: 'string', format: 'uuid', readOnly: true },
-  recorded: {
+  meta: {
     type: 'object',
     readOnly: true,
     properties: {
-      createdAt: { type: 'string', format: 'date-time' },
-      updatedAt: { type: 'string', format: 'date-time' },
-      revision: { type: 'integer' },
+      versionId: { type: 'string' },
+      lastUpdated: { type: 'string', format: 'date-time' },
     },
-    required: ['createdAt', 'updatedAt', 'revision'],
+    required: ['versionId', 'lastUpdated'],
   },
 };
 
@@ -100,7 +99,7 @@ export const petDocument: OpenApiDocument = {
           'name',
           'canonStatus',
           'perspective',
-          'recorded',
+          'meta',
           'mood',
         ],
       },
@@ -139,11 +138,11 @@ export const petModels: ModelInfo[] = [
             type: 'object',
             description: 'Whose pet it is.',
             properties: {
-              model: { const: 'person' },
+              type: { const: 'Person' },
               id: { type: 'string', format: 'uuid' },
-              name: { type: 'string' },
+              display: { type: 'string' },
             },
-            required: ['model', 'id'],
+            required: ['type', 'id'],
             additionalProperties: false,
           },
           mood: { type: 'string', enum: ['happy', 'sad'] },
@@ -196,7 +195,7 @@ export const WORLD_ID = '44444444-4444-4444-8444-444444444444';
 
 export const storedPet = {
   id: PET_ID,
-  model: 'pet',
+  resourceType: 'Pet',
   world: WORLD_ID,
   name: 'Biscuit',
   description: 'A small dog.\n\nFond of shoes.',
@@ -205,15 +204,11 @@ export const storedPet = {
   mood: 'happy',
   legs: 4,
   friendly: true,
-  owner: { model: 'person', id: OWNER_ID, name: 'Ada' },
-  friends: [{ model: 'pet', id: FRIEND_ID, name: 'Crumb' }],
+  owner: { type: 'Person', id: OWNER_ID, display: 'Ada' },
+  friends: [{ type: 'Pet', id: FRIEND_ID, display: 'Crumb' }],
   tricks: ['sit', 'roll over'],
   born: { trs: OWNER_ID, year: 1041, precision: 'year' },
   extras: { collar: 'red' },
   unknownField: { deep: [1, 2] },
-  recorded: {
-    createdAt: '2026-09-01T10:00:00.000Z',
-    updatedAt: '2026-09-02T10:00:00.000Z',
-    revision: 2,
-  },
+  meta: { versionId: '2', lastUpdated: '2026-09-02T10:00:00.000Z' },
 };

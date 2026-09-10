@@ -10,13 +10,13 @@
     }
   ],
   "properties": {
-    "workType": {
+    "type": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/work-type.schema.json"
     },
     "author": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
-    "about": {
+    "subject": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
@@ -30,7 +30,7 @@
     }
   },
   "required": [
-    "workType"
+    "type"
   ],
   "unevaluatedProperties": false
 }

@@ -122,7 +122,7 @@ describe('a form built from a schema', () => {
 
     await user.click(screen.getByRole('button', { name: 'Create' }));
     expect(onSubmit.mock.lastCall?.[0]).toMatchObject({
-      owner: { model: 'pet', id: FRIEND_ID, name: 'Crumb' },
+      owner: { type: 'Pet', id: FRIEND_ID, display: 'Crumb' },
     });
   });
 

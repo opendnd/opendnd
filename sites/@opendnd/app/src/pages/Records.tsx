@@ -264,10 +264,8 @@ export function Records() {
                     )}
                   </TableCell>
                   <TableCell className="text-right text-muted-foreground">
-                    {resource.recorded?.updatedAt &&
-                      new Date(
-                        resource.recorded.updatedAt,
-                      ).toLocaleDateString()}
+                    {resource.meta?.lastUpdated &&
+                      new Date(resource.meta.lastUpdated).toLocaleDateString()}
                   </TableCell>
                 </TableRow>
               ))}

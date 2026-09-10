@@ -26,13 +26,13 @@
           "type": "string",
           "format": "uuid"
         },
-        "model": {
+        "type": {
           "type": "string"
         }
       },
       "required": [
         "id",
-        "model"
+        "type"
       ],
       "additionalProperties": false
     }

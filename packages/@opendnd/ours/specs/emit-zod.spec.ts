@@ -36,7 +36,7 @@ describe('emitZodModule', () => {
     expect(code).toContain('legs: z.int().min(0).max(8)');
     expect(code).toContain('born: z.iso.date().nullable().optional()');
     // The manifest says an owner is a pet, so the emitted reference says so too.
-    expect(code).toContain('model: z.literal("pet")');
+    expect(code).toContain('type: z.literal("Pet")');
     expect(code).not.toContain('owner: referenceSchema');
     expect(code).toContain('export const models = {');
   });
@@ -69,19 +69,19 @@ describe('emitZodModule', () => {
     expect(ok.data.mood).toBe('happy');
     const bad = mod.petSchema.safeParse({ id: 'nope', name: 'Rex', legs: 4 });
     expect(bad.success).toBe(false);
-    // A pointer at a model the relationship does not name is refused.
+    // A pointer at a type the relationship does not name is refused.
     const wrongOwner = mod.petSchema.safeParse({
       id: '5f7b1a1e-3c58-4f61-9c19-2d1f7a0d9e11',
       name: 'Rex',
       legs: 4,
-      owner: { model: 'person', id: '5f7b1a1e-3c58-4f61-9c19-2d1f7a0d9e12' },
+      owner: { type: 'Person', id: '5f7b1a1e-3c58-4f61-9c19-2d1f7a0d9e12' },
     });
     expect(wrongOwner.success).toBe(false);
     const rightOwner = mod.petSchema.safeParse({
       id: '5f7b1a1e-3c58-4f61-9c19-2d1f7a0d9e11',
       name: 'Rex',
       legs: 4,
-      owner: { model: 'pet', id: '5f7b1a1e-3c58-4f61-9c19-2d1f7a0d9e12' },
+      owner: { type: 'Pet', id: '5f7b1a1e-3c58-4f61-9c19-2d1f7a0d9e12' },
     });
     expect(rightOwner.success).toBe(true);
   });

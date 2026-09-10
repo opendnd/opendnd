@@ -31,9 +31,9 @@ export function checkHistory(record: HistoryRecord): Finding[] {
     if (y !== undefined) deathYear.set(p.id, y);
   }
   for (const e of record.events) {
-    if (e.eventType !== 'death') continue;
-    const y = e.when.begin?.year;
-    for (const part of e.participants ?? []) {
+    if (e.type !== 'death') continue;
+    const y = e.occurred.begin?.year;
+    for (const part of e.participant ?? []) {
       if (part.role === 'deceased' && y !== undefined) {
         const recorded = deathYear.get(part.actor.id);
         if (recorded !== undefined && recorded !== y) {
@@ -51,9 +51,9 @@ export function checkHistory(record: HistoryRecord): Finding[] {
 
   // No one takes part in anything after they die, except in their own death.
   for (const e of record.events) {
-    const y = e.when.begin?.year;
+    const y = e.occurred.begin?.year;
     if (y === undefined) continue;
-    for (const part of e.participants ?? []) {
+    for (const part of e.participant ?? []) {
       const died = deathYear.get(part.actor.id);
       if (died === undefined) continue;
       // Strictly after, because the simulation's clock is the year: whether
@@ -70,10 +70,10 @@ export function checkHistory(record: HistoryRecord): Finding[] {
       }
     }
     // Nobody is born before their parents are adults or after a parent has died.
-    if (e.eventType === 'birth') {
-      const child = e.participants?.find((p) => p.role === 'child');
+    if (e.type === 'birth') {
+      const child = e.participant?.find((p) => p.role === 'child');
       for (const role of ['mother', 'father']) {
-        const parent = e.participants?.find((p) => p.role === role);
+        const parent = e.participant?.find((p) => p.role === role);
         if (!parent || !child) continue;
         const pBorn = people.get(parent.actor.id)?.birth?.time?.year;
         if (pBorn !== undefined && record.species) {
@@ -104,9 +104,9 @@ export function checkHistory(record: HistoryRecord): Finding[] {
   // Every battle belongs to a war, so a chronicle can tell the whole story.
   const byId = new Map(record.events.map((e) => [e.id, e]));
   for (const e of record.events) {
-    if (e.eventType !== 'battle') continue;
+    if (e.type !== 'battle') continue;
     const parent = e.partOf ? byId.get(e.partOf.id) : undefined;
-    if (!parent || parent.eventType !== 'war') {
+    if (!parent || parent.type !== 'war') {
       findings.push({
         rule: 'battle-belongs-to-a-war',
         severity: 'error',
@@ -129,16 +129,16 @@ export function checkHistory(record: HistoryRecord): Finding[] {
       findings.push({
         rule: 'holder-alive-during-tenure',
         severity: 'error',
-        message: `${name(people, t.holder.id)} holds ${t.title.name ?? t.title.id} past their death in ${died}`,
+        message: `${name(people, t.holder.id)} holds ${t.title.display ?? t.title.id} past their death in ${died}`,
         resources: [t.id, t.holder.id],
       });
     }
     const endedBy = t.ended ? byId.get(t.ended.id) : undefined;
-    if (endedBy && endedBy.when.begin?.year !== end) {
+    if (endedBy && endedBy.occurred.begin?.year !== end) {
       findings.push({
         rule: 'tenure-ends-when-its-event-says',
         severity: 'error',
-        message: `Tenure ${t.name} ends in ${end} but "${endedBy.name}" is dated ${endedBy.when.begin?.year}`,
+        message: `Tenure ${t.name} ends in ${end} but "${endedBy.name}" is dated ${endedBy.occurred.begin?.year}`,
         resources: [t.id, endedBy.id],
       });
     }
@@ -166,7 +166,7 @@ export function checkHistory(record: HistoryRecord): Finding[] {
         findings.push({
           rule: 'one-holder-at-a-time',
           severity: 'error',
-          message: `Two tenures of ${sorted[i].title.name ?? titleId} overlap`,
+          message: `Two tenures of ${sorted[i].title.display ?? titleId} overlap`,
           resources: [sorted[i - 1].id, sorted[i].id],
         });
       }
@@ -178,7 +178,7 @@ export function checkHistory(record: HistoryRecord): Finding[] {
   for (const r of record.relationships) {
     const y = r.validTime?.begin?.year;
     if (y === undefined) continue;
-    const couple = r.relationshipType === 'couple';
+    const couple = r.type === 'couple';
     for (const who of [r.party1, r.party2]) {
       const died = deathYear.get(who.id);
       if (died !== undefined && died < y) {
@@ -189,7 +189,7 @@ export function checkHistory(record: HistoryRecord): Finding[] {
           severity: 'error',
           message: couple
             ? `${name(people, who.id)} marries in ${y} after dying in ${died}`
-            : `${name(people, who.id)} enters a ${r.relationshipType} bond in ${y} after dying in ${died}`,
+            : `${name(people, who.id)} enters a ${r.type} bond in ${y} after dying in ${died}`,
           resources: [r.id, who.id],
         });
       }

@@ -19,7 +19,7 @@
       "target": "Person"
     },
     {
-      "predicate": "facts.place",
+      "predicate": "fact.place",
       "target": "Place"
     }
   ],
