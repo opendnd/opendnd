@@ -59,6 +59,14 @@ const camps = [
     name: 'The Valley',
     description: 'A green valley.',
     spot: valley.token,
+    // Four fine cells inside the valley, so it holds ground for the
+    // political layer to colour and roll up.
+    extent: [
+      cellAt(2, 5 * 16, 9 * 16, 10).token,
+      cellAt(2, 5 * 16 + 1, 9 * 16, 10).token,
+      cellAt(2, 5 * 16, 9 * 16 + 1, 10).token,
+      cellAt(2, 5 * 16 + 1, 9 * 16 + 1, 10).token,
+    ],
   },
   {
     id: 'a0000000-0000-4000-8000-000000000002',
@@ -193,7 +201,11 @@ describe('the map', () => {
     // of a valley's quadtree cell is not the shape of the valley.
     expect(byName['The Valley']!.kind).toBe('name');
     expect(byName['North Camp']!.kind).toBe('marker');
-    expect(fake.layers.some((l) => l.kind === 'polygon')).toBe(false);
+    // The shapes that are drawn are the political fill, which is the ground
+    // a place holds; none of them is a named place's own cell square.
+    for (const shape of fake.layers.filter((l) => l.kind === 'polygon')) {
+      expect(shape.tooltip).toBeUndefined();
+    }
   });
 
   it('opens a short account of a record from its mark, with the way to the whole of it', async () => {
@@ -211,6 +223,25 @@ describe('the map', () => {
     expect(within(card).getByRole('link', { name: 'Open' })).toHaveAttribute(
       'href',
       `/worlds/${WORLD_ID}/camp/${camps[0]!.id}`,
+    );
+  });
+
+  it('colours the ground a place holds, as one shape, and lets it be turned off', async () => {
+    renderMap();
+    await waitFor(() =>
+      expect(fake.layers.map((l) => l.tooltip)).toContain('The Valley'),
+    );
+    // One shape for the place, not one per cell: several shapes touching
+    // show a seam at every edge, which reads as a grid rather than a country.
+    const filled = fake.layers.filter((l) => l.kind === 'polygon');
+    expect(filled).toHaveLength(1);
+    expect((filled[0]!.latlngs as unknown[]).length).toBeGreaterThan(0);
+
+    // And it is a layer, so it goes away.
+    await userEvent.click(screen.getByRole('button', { name: 'Layers' }));
+    await userEvent.click(screen.getByRole('switch', { name: /Political/ }));
+    await waitFor(() =>
+      expect(fake.layers.some((l) => l.kind === 'polygon')).toBe(false),
     );
   });
 

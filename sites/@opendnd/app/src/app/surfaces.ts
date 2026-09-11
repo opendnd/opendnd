@@ -64,7 +64,7 @@ export const SURFACES = {
   data: {
     path: 'data',
     label: 'Export and import',
-    description: "A world as one bundle, out and back in.",
+    description: 'A world as one bundle, out and back in.',
   },
   settings: {
     path: 'settings',

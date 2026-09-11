@@ -117,7 +117,9 @@ function layer(
       made.handlers[event] = handler;
       return made;
     },
-    addTo() {
+    addTo(group: unknown) {
+      const owner = group as { layers?: FakeLayer[] } | undefined;
+      owner?.layers?.push(made);
       fake.layers.push(made);
       return made;
     },
@@ -131,11 +133,25 @@ const L = {
     return fake.map;
   },
   tileLayer: () => ({ addTo: () => undefined }),
+  /*
+   * A group keeps its own layers, and clearing one clears only those. The
+   * page has three — the ground beneath, the shapes, the names — and while
+   * they all shared one list, whichever redrew last erased the other two.
+   */
   layerGroup: () => {
-    const group = {
+    const group: {
+      layers: FakeLayer[];
+      addTo: () => unknown;
+      clearLayers: () => void;
+    } = {
+      layers: [],
       addTo: () => group,
       clearLayers: () => {
-        fake.layers = [];
+        for (const made of group.layers) {
+          const at = fake.layers.indexOf(made);
+          if (at >= 0) fake.layers.splice(at, 1);
+        }
+        group.layers = [];
       },
     };
     return group;

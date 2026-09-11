@@ -1,8 +1,14 @@
-import { CopyIcon } from 'lucide-react';
+import { CopyIcon, PlusIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useApi } from '../app/context';
 import { useWorld } from '../app/world';
-import { BUNDLED, FLOOR, builtIn, copyOf } from '../build/project';
+import {
+  BUNDLED,
+  FLOOR,
+  blankProject,
+  builtIn,
+  copyOf,
+} from '../build/project';
 import { useProjects } from '../build/projects';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
 import { Badge } from '@/components/ui/badge';
@@ -36,6 +42,24 @@ export function Build() {
       .filter((project) => project.status === 'published')
       .flatMap((project) => project.pages.map((page) => page.path)),
   );
+
+  const create = async () => {
+    setBusy('new');
+    setError(undefined);
+    try {
+      const made = await api.create(
+        world.id,
+        'project',
+        blankProject(world.name),
+      );
+      projects.reload();
+      void navigate(`/worlds/${world.id}/build/${made.body.id}/page-1`);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause : new Error(String(cause)));
+    } finally {
+      setBusy(undefined);
+    }
+  };
 
   const customize = async (path: string) => {
     const page = shipped.pages.find((one) => one.path === path);
@@ -71,12 +95,23 @@ export function Build() {
       {error && <ErrorNotice error={error} />}
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl">This world&apos;s projects</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="font-display text-xl">This world&apos;s projects</h2>
+          <Button
+            className="ml-auto"
+            size="sm"
+            disabled={busy !== undefined}
+            onClick={() => void create()}
+          >
+            <PlusIcon />
+            New project
+          </Button>
+        </div>
         {projects.loading && projects.all.length === 0 && <Loading />}
         {!projects.loading && projects.all.length === 0 && (
           <Notice title="Nothing built yet">
-            Copy one of the pages below and this world gets a project of its own
-            to put it in.
+            Start an empty one, or copy a page the application already ships and
+            make it this world&apos;s own.
           </Notice>
         )}
         <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(17rem,1fr))]">
@@ -124,18 +159,12 @@ export function Build() {
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-display text-xl">Applications OpenDnD ships</h2>
+        <h2 className="font-display text-xl">Start from a page that ships</h2>
         <p className="text-sm text-muted-foreground">
-          Each is a project of pages and blocks, drawn by the same renderer as
-          anything you build. Copy a page to make it yours; turn a whole
-          application off in{' '}
-          <Link
-            className="underline underline-offset-4"
-            to={`/worlds/${world.id}/settings`}
-          >
-            settings
-          </Link>
-          .
+          Every page the application draws is itself a project of blocks. Copy
+          one and it becomes this world&apos;s, answering at the same address;
+          publish it and it is what everybody sees. Which of the bundled
+          applications a world uses at all is a setting.
         </p>
         <div className="flex flex-col gap-3">
           {/*

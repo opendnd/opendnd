@@ -16,9 +16,9 @@ export function Transfer() {
       <header className="flex flex-col gap-2">
         <h1 className="font-display text-3xl">Export and import</h1>
         <p className="text-sm text-muted-foreground">
-          Everything in {world.name} as one bundle, to keep, to move to
-          another deployment, or to read. Anyone who can read the world can
-          export it; only an editor can bring one in.
+          Everything in {world.name} as one bundle, to keep, to move to another
+          deployment, or to read. Anyone who can read the world can export it;
+          only an editor can bring one in.
         </p>
       </header>
       <TransferPanel />

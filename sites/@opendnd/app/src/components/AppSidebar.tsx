@@ -3,11 +3,9 @@ import {
   BookOpenIcon,
   ChevronRightIcon,
   CompassIcon,
-  DoorOpenIcon,
   HistoryIcon,
   ArrowDownUpIcon,
   LayoutTemplateIcon,
-  LogOutIcon,
   MapIcon,
   SearchIcon,
   SettingsIcon,
@@ -17,10 +15,10 @@ import {
 } from 'lucide-react';
 import { type ReactNode, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router';
+import { AccountMenu } from './AccountMenu';
 import { placeIn } from './Layout';
 import { ModelIcon, categoryIcon } from './ModelIcon';
 import type { ModelInfo } from '../api/types';
-import { useApp, useSession } from '../app/context';
 import { compactCount, useCounts } from '../app/counts';
 import { useMe } from '../app/me';
 import { useOntology } from '../app/ontology';
@@ -63,8 +61,6 @@ import {
  * surfaces above them are the shape a person expects, named in one place.
  */
 export function AppSidebar() {
-  const session = useSession();
-  const { signOut } = useApp();
   const me = useMe();
   const ontology = useOntology();
   const projects = useProjects();
@@ -215,7 +211,7 @@ export function AppSidebar() {
                           render={<Link to={to('build')} />}
                         >
                           {projects.all.length === 0
-                            ? 'Build one'
+                            ? 'New project'
                             : 'All projects'}
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
@@ -288,12 +284,6 @@ export function AppSidebar() {
             )}
 
             <Section label="Data" storageKey="data" defaultOpen={false}>
-              <Entry
-                to={to(SURFACES.data.path)}
-                active={location.pathname === to(SURFACES.data.path)}
-                label={SURFACES.data.label}
-                icon={<ArrowDownUpIcon />}
-              />
               <div className="relative px-2 py-1">
                 <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-3.5 -translate-y-1/2 text-muted-foreground" />
                 <SidebarInput
@@ -370,45 +360,40 @@ export function AppSidebar() {
               )}
             </Section>
 
-            {current.role === 'owner' && (
-              <SidebarGroup>
-                <SidebarGroupLabel>Manage</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
+            {/*
+              Manage is everyone's, because taking a copy of a world out is
+              anyone's who can read it; only the settings inside it are an
+              owner's.
+            */}
+            <SidebarGroup>
+              <SidebarGroupLabel>Manage</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {current.role === 'owner' && (
                     <Entry
                       to={to(SURFACES.settings.path)}
                       active={active(SURFACES.settings.path)}
                       label={SURFACES.settings.label}
                       icon={<SettingsIcon />}
                     />
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            )}
+                  )}
+                  <Entry
+                    to={to(SURFACES.data.path)}
+                    active={location.pathname === to(SURFACES.data.path)}
+                    label={SURFACES.data.label}
+                    icon={<ArrowDownUpIcon />}
+                  />
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
           </>
         )}
       </SidebarContent>
 
       <SidebarFooter>
         <SidebarMenu>
-          {inWorld && (
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                tooltip="Leave this world"
-                render={<Link to="/worlds" />}
-              >
-                <DoorOpenIcon />
-                <span className="truncate">Leave {current.name}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          )}
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={signOut} tooltip="Sign out">
-              <LogOutIcon />
-              <span className="truncate">
-                {session?.name ?? session?.subject ?? 'Sign out'}
-              </span>
-            </SidebarMenuButton>
+            <AccountMenu {...(inWorld ? { world: place.world } : {})} />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

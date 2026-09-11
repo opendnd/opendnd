@@ -56,7 +56,7 @@
     "multiclassing": {
       "type": "object",
       "properties": {
-        "prerequisites": {
+        "prerequisite": {
           "type": "array",
           "items": {
             "type": "object",
@@ -75,7 +75,7 @@
             "additionalProperties": false
           }
         },
-        "proficiencies": {
+        "proficiency": {
           "type": "array",
           "items": {
             "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
@@ -144,7 +144,7 @@
           "proficiencyBonus": {
             "type": "integer"
           },
-          "features": {
+          "feature": {
             "type": "array",
             "items": {
               "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"

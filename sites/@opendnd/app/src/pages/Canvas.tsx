@@ -96,27 +96,20 @@ export function Canvas() {
       setSaving(true);
       setFailed(undefined);
       try {
-        const pages = project.pages.map((one) =>
-          one.id === page.id
-            ? {
-                id: one.id,
-                name: one.name,
-                path: one.path,
-                scope: one.scope,
-                rows: one.layout.rows,
-                blocks: next.map((placed) => ({ ...placed })),
-              }
-            : {
-                id: one.id,
-                name: one.name,
-                path: one.path,
-                scope: one.scope,
-                rows: one.layout.rows,
-                blocks: one.layout.blocks.map((placed) => ({ ...placed })),
-              },
-        );
+        // Written in the record's shape, which names a repeating element
+        // singular: `page`, and `block` inside it.
+        const page$ = project.pages.map((one) => ({
+          id: one.id,
+          name: one.name,
+          path: one.path,
+          scope: one.scope,
+          rows: one.layout.rows,
+          block: (one.id === page.id ? next : one.layout.blocks).map(
+            (placed) => ({ ...placed }),
+          ),
+        }));
         await api.patch(world.id, 'project', project.id, {
-          pages,
+          page: page$,
           ...(status ? { status } : {}),
         });
         projects.reload();

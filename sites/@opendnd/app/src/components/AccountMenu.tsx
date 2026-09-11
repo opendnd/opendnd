@@ -1,0 +1,78 @@
+import { DoorOpenIcon, LogOutIcon, SettingsIcon, UserIcon } from 'lucide-react';
+import { Link } from 'react-router';
+import { useApp, useSession } from '../app/context';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { SidebarMenuButton } from '@/components/ui/sidebar';
+
+/**
+ * Who is signed in, and everything that is about them rather than about the
+ * world.
+ *
+ * It sits at the foot of the sidebar because that is where a person looks
+ * for it, and because the alternative — a row reading "Leave <world>" above
+ * a row reading somebody's name — put two unrelated things next to each
+ * other and made the more drastic one easier to hit.
+ */
+export function AccountMenu(props: { readonly world?: string }) {
+  const session = useSession();
+  const { signOut } = useApp();
+  const name = session?.name ?? session?.subject ?? 'Signed in';
+  const initials = name
+    .split(/\s+/)
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <SidebarMenuButton size="lg" tooltip={name}>
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-muted text-[10px] font-semibold text-brand-muted-foreground">
+              {initials || <UserIcon className="size-3.5" />}
+            </span>
+            <span className="truncate">{name}</span>
+          </SidebarMenuButton>
+        }
+      />
+      <DropdownMenuContent align="start" side="right" className="w-60">
+        <DropdownMenuLabel className="font-normal">
+          <span className="block truncate text-sm font-medium">{name}</span>
+          {session?.email && (
+            <span className="block truncate text-xs text-muted-foreground">
+              {session.email}
+            </span>
+          )}
+        </DropdownMenuLabel>
+        {props.world && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem render={<Link to="/worlds" />}>
+              <DoorOpenIcon />
+              Switch world
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              render={<Link to={`/worlds/${props.world}/settings`} />}
+            >
+              <SettingsIcon />
+              World settings
+            </DropdownMenuItem>
+          </>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={signOut}>
+          <LogOutIcon />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

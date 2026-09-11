@@ -1477,11 +1477,11 @@ export const classSchema = z.strictObject({
   startingEquipmentOption: z.array(choiceSchema).optional(),
   /** What is required to take the class as a second one, and what it grants. */
   multiclassing: z.strictObject({
-    prerequisites: z.array(z.strictObject({
+    prerequisite: z.array(z.strictObject({
       ability: abilitySchema,
       minimumScore: z.int(),
     })).optional(),
-    proficiencies: z.array(z.strictObject({
+    proficiency: z.array(z.strictObject({
       /** Resource type of the target. */
       type: z.literal("Proficiency"),
       id: z.uuid(),
@@ -1520,7 +1520,7 @@ export const classSchema = z.strictObject({
       display: z.string().optional(),
     }).optional(),
     proficiencyBonus: z.int().optional(),
-    features: z.array(z.strictObject({
+    feature: z.array(z.strictObject({
       /** Resource type of the target. */
       type: z.literal("Feature"),
       id: z.uuid(),
@@ -2220,7 +2220,7 @@ export const projectSchema = z.strictObject({
     /** Whether the rows are a fixed height that grows with what is on them, or share the height of the window. A page that is one map wants the second. */
     rows: z.enum(["fit", "fill"]).default("fit"),
     /** The blocks on the page and where they sit: col and row are grid lines counted from one, w and h are how many cells across and down. */
-    blocks: z.array(z.strictObject({
+    block: z.array(z.strictObject({
       /** Unique within the page, so a page may hold two of the same block. */
       id: z.string(),
       /** The catalogue id of the block to draw. */

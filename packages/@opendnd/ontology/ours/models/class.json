@@ -23,7 +23,7 @@
       "target": "Spell"
     },
     {
-      "predicate": "multiclassing.proficiencies",
+      "predicate": "multiclassing.proficiency",
       "target": "Proficiency"
     },
     {
@@ -31,7 +31,7 @@
       "target": "Class"
     },
     {
-      "predicate": "level.features",
+      "predicate": "level.feature",
       "target": "Feature"
     }
   ],

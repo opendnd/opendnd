@@ -28,7 +28,7 @@ describe('a project record read as pages', () => {
             name: 'Front',
             path: 'home',
             rows: 'fill',
-            blocks: [{ id: 'a', block: 'ask', col: 2, row: 3, w: 4, h: 2 }],
+            block: [{ id: 'a', block: 'ask', col: 2, row: 3, w: 4, h: 2 }],
           },
         ],
       }),
@@ -54,7 +54,7 @@ describe('a project record read as pages', () => {
         status: 'nonsense',
         page: [
           {
-            blocks: [
+            block: [
               { block: 'ask', col: -5, row: 0, w: 99, h: 99 },
               { col: 1, row: 1, w: 1, h: 1 },
               'not a block',
@@ -86,7 +86,7 @@ describe('which layout a path draws', () => {
           id: 'front',
           name: 'Front',
           path: 'home',
-          blocks: [{ id: 'a', block: 'ask', col: 1, row: 1, w: 6, h: 4 }],
+          block: [{ id: 'a', block: 'ask', col: 1, row: 1, w: 6, h: 4 }],
         },
       ],
     }),
@@ -117,12 +117,12 @@ describe('customizing a page', () => {
     const copy = copyOf(home, 'Somewhere');
     expect(copy.status).toBe('draft');
     expect(copy.replaces).toEqual(['home']);
-    const pages = copy.pages as { path: string; blocks: unknown[] }[];
+    const pages = copy.page as { path: string; block: unknown[] }[];
     expect(pages[0]!.path).toBe('home');
-    expect(pages[0]!.blocks).toHaveLength(home.layout.blocks.length);
+    expect(pages[0]!.block).toHaveLength(home.layout.blocks.length);
     // And what it copies is what was on the page, not a reference to it.
-    expect(pages[0]!.blocks[0]).not.toBe(home.layout.blocks[0]);
-    expect(pages[0]!.blocks[0]).toEqual(home.layout.blocks[0]);
+    expect(pages[0]!.block[0]).not.toBe(home.layout.blocks[0]);
+    expect(pages[0]!.block[0]).toEqual(home.layout.blocks[0]);
   });
 
   it('offers every page the application ships', () => {

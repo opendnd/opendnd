@@ -1,6 +1,7 @@
 import { HeartIcon, ShieldIcon } from 'lucide-react';
 import { Link } from 'react-router';
-import type { Reference } from '../../api/types';
+import type { Reference, Resource } from '../../api/types';
+import { Thumb } from '../../components/Thumb';
 import { useOntology } from '../../app/ontology';
 import { NumberField } from '../sheet/Editable';
 import {
@@ -85,6 +86,11 @@ export function SheetHeader(props: { readonly record?: Character }) {
   const sheet = useSheet(character);
   return (
     <section className="flex h-full flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border bg-card px-4 py-3">
+      {/*
+        A sheet is somebody's, and a face says that faster than a name. Most
+        of them have a picture already; nothing was showing it.
+      */}
+      <Thumb resource={character as Resource} />
       <div className="flex min-w-0 flex-col">
         <span className="font-display truncate text-2xl leading-tight">
           {String(character.name ?? 'Unnamed')}
@@ -101,7 +107,7 @@ export function SheetHeader(props: { readonly record?: Character }) {
       </div>
       <Fact label="Level" value={String(sheet.level)} />
       <Fact label="Proficiency" value={signed(sheet.proficiency)} />
-      <Fact label="Person" value={<Ref value={character.person} />} />
+      <Fact label="Character" value={<Ref value={character.character} />} />
       <Fact label="Background" value={<Ref value={character.background} />} />
       {typeof character.status === 'string' && (
         <Badge variant="secondary" className="ml-auto">
@@ -139,8 +145,17 @@ export function SheetAbilities(props: { readonly record?: Character }) {
             <dt className="text-[10px] tracking-wide text-muted-foreground uppercase">
               {SHORT[ability]}
             </dt>
+            {/*
+              A score nobody has filled in is not a ten. Showing `+0` for it
+              reads as a recorded fact, and a sheet full of recorded zeroes
+              is worse than one that admits it is empty.
+            */}
             <dd className="font-display text-xl leading-none tabular-nums">
-              {signed(sheet.modifiers[ability])}
+              {scores[ability] === undefined ? (
+                <span className="text-muted-foreground">—</span>
+              ) : (
+                signed(sheet.modifiers[ability])
+              )}
             </dd>
             <dd className="text-xs text-muted-foreground">
               <NumberField

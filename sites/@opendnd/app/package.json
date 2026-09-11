@@ -19,6 +19,7 @@
     "test:ui": "bunx vitest --ui specs"
   },
   "devDependencies": {
+    "@opendnd/types": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.1",

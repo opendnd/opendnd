@@ -1,6 +1,8 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
+  CheckIcon,
+  LayersIcon,
   ListIcon,
   MapPinIcon,
   MinusIcon,
@@ -21,7 +23,9 @@ import { Markdown } from '../components/Markdown';
 import { ErrorNotice, Notice } from '../components/Notice';
 import {
   type Cell,
+  type LatLng,
   type View,
+  ancestor,
   cellAtLatLng,
   cellModels,
   centerOf,
@@ -72,6 +76,163 @@ const EDGE_TOP = 104;
 
 /** How far a base map without its own limit may be zoomed. */
 const DEEPEST_ZOOM = 14;
+
+/**
+ * The ground each place holds, coarse enough to draw.
+ *
+ * A kingdom's extent is eight hundred cells at level ten, and there are a
+ * hundred and fifty kingdoms: drawing every cell is a hundred thousand
+ * shapes nobody asked for, and at a world's zoom each one is a fraction of
+ * a pixel. So the cells are rolled up to an ancestor coarse enough to see,
+ * which is what any atlas does when it draws a country small.
+ *
+ * Rolling up overlaps, because one coarse cell can hold ground from two
+ * kingdoms. That would draw borders that are simply wrong, so a coarse cell
+ * goes to whichever place holds most of it and to nobody else. A political
+ * map is a partition — that is the whole idea of one — and this keeps it a
+ * partition at every zoom, generalised but never double-claimed.
+ */
+/**
+ * A place's cells rolled up to one level, remembered.
+ *
+ * A hundred and fifty kingdoms of eight hundred cells is a hundred and
+ * twenty thousand tokens to parse, and panning refetches mostly the same
+ * places. Rolling up is the expensive half and depends only on the place
+ * and the level, so it is kept; the partition over what comes out is
+ * cheap, because what comes out is tens of cells rather than hundreds.
+ */
+interface Rolled {
+  readonly cell: Cell;
+  /** How many of the place's own cells fall inside this coarse one. */
+  readonly n: number;
+}
+
+const rolled = new Map<string, Rolled[]>();
+
+function rollUp(
+  id: string,
+  extent: readonly unknown[],
+  level: number,
+): Rolled[] {
+  const key = `${id}:${level}`;
+  const had = rolled.get(key);
+  if (had) return had;
+  const seen = new Map<string, { cell: Cell; n: number }>();
+  for (const token of extent) {
+    const cell = parseCell(String(token));
+    if (!cell) continue;
+    const coarse = cell.level <= level ? cell : ancestor(cell, level);
+    if (!coarse) continue;
+    const at = seen.get(coarse.token);
+    if (at) at.n += 1;
+    else seen.set(coarse.token, { cell: coarse, n: 1 });
+  }
+  const out = [...seen.values()];
+  // Enough for every place in view at a handful of levels; a world does not
+  // hold so many that this is worth evicting cleverly.
+  if (rolled.size > 4000) rolled.clear();
+  rolled.set(key, out);
+  return out;
+}
+
+export function politicalRings(
+  entries: readonly Entry[],
+  level: number,
+): Map<string, LatLng[][]> {
+  const claims = new Map<string, Map<string, number>>();
+  const owners = new Map<string, Cell>();
+  /*
+   * How much ground each claimant holds altogether, because the smaller
+   * holder wins a contested cell. Places nest — a kingdom sits on a
+   * continent, and both say so honestly — so the claimant with the most
+   * children in a coarse cell is almost always the continent, and a
+   * political map drawn that way is two colours. The most specific holder
+   * is the one a political map means.
+   */
+  const held = new Map<string, number>();
+  for (const entry of entries) {
+    const extent = entry.resource.extent;
+    if (!Array.isArray(extent)) continue;
+    const key = `${entry.model}/${entry.resource.id}`;
+    held.set(key, extent.length);
+    for (const { cell, n } of rollUp(
+      String(entry.resource.id),
+      extent,
+      level,
+    )) {
+      owners.set(cell.token, cell);
+      const byPlace = claims.get(cell.token) ?? new Map<string, number>();
+      byPlace.set(key, (byPlace.get(key) ?? 0) + n);
+      claims.set(cell.token, byPlace);
+    }
+  }
+  const rings = new Map<string, LatLng[][]>();
+  for (const [token, byPlace] of claims) {
+    let best: string | undefined;
+    let bestHeld = Infinity;
+    let bestCount = 0;
+    for (const [key, n] of byPlace) {
+      const size = held.get(key) ?? Infinity;
+      // Smallest holder first; then whoever holds more of this cell; then
+      // the same one every time, or the map would flicker as it redrew.
+      const better =
+        best === undefined ||
+        size < bestHeld ||
+        (size === bestHeld &&
+          (n > bestCount || (n === bestCount && key < best)));
+      if (better) {
+        best = key;
+        bestHeld = size;
+        bestCount = n;
+      }
+    }
+    const cell = owners.get(token);
+    const outline = best !== undefined && cell && outlineOf(cell, 2);
+    if (!best || !outline) continue;
+    rings.set(best, [...(rings.get(best) ?? []), outline]);
+  }
+  return rings;
+}
+
+/**
+ * A colour for a place, the same one every time.
+ *
+ * A political map wants neighbours to differ and nothing else; it does not
+ * want to mean anything. Hues off a hash give that without anybody keeping
+ * a list, and holding saturation and lightness still keeps the map a map
+ * rather than a paint chart.
+ */
+function politicalFill(id: string): string {
+  let hash = 0;
+  for (let at = 0; at < id.length; at++) {
+    hash = (hash * 31 + id.charCodeAt(at)) % 360;
+  }
+  return `hsl(${hash} 55% 55%)`;
+}
+
+/** Which layers are drawn. Remembered, because it is a preference. */
+interface Layers {
+  readonly political: boolean;
+  readonly labels: boolean;
+  readonly marks: boolean;
+}
+
+const LAYERS_KEY = 'opendnd.map.layers';
+const LAYERS_DEFAULT: Layers = {
+  political: true,
+  labels: true,
+  marks: true,
+};
+
+function readLayers(): Layers {
+  try {
+    const raw = localStorage.getItem(LAYERS_KEY);
+    if (!raw) return LAYERS_DEFAULT;
+    return { ...LAYERS_DEFAULT, ...(JSON.parse(raw) as Partial<Layers>) };
+  } catch {
+    return LAYERS_DEFAULT;
+  }
+}
 
 interface Entry {
   readonly model: string;
@@ -144,6 +305,18 @@ export function MapSurface() {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const drawn = useRef<L.LayerGroup | null>(null);
+  const [layers, setLayers] = useState<Layers>(readLayers);
+  const toggle = (which: keyof Layers) =>
+    setLayers((was) => {
+      const next = { ...was, [which]: !was[which] };
+      try {
+        localStorage.setItem(LAYERS_KEY, JSON.stringify(next));
+      } catch {
+        // A browser that keeps nothing still draws the map.
+      }
+      return next;
+    });
+  const political = useRef<L.LayerGroup | null>(null);
   const held = useRef<L.LayerGroup | null>(null);
   const resizing = useRef<ResizeObserver | null>(null);
   const clickRef =
@@ -213,6 +386,7 @@ export function MapSurface() {
       }).addTo(map);
     }
     // Ground first, so a name is never behind the shading of its own land.
+    political.current = L.layerGroup().addTo(map);
     held.current = L.layerGroup().addTo(map);
     drawn.current = L.layerGroup().addTo(map);
     // Leaflet measures its box once and listens only to the window. This box
@@ -264,6 +438,7 @@ export function MapSurface() {
       map.remove();
       mapRef.current = null;
       drawn.current = null;
+      political.current = null;
       held.current = null;
     };
     // The map is made once; the address and the base map are read at that moment.
@@ -402,6 +577,8 @@ export function MapSurface() {
         if (crowded) continue;
         taken.push({ x: inside.x, y: inside.y });
       }
+      if (!named && !layers.marks) continue;
+      if (named && !layers.labels) continue;
       const shape = named
         ? L.marker(at, {
             opacity: 0,
@@ -428,7 +605,43 @@ export function MapSurface() {
       shape.addTo(group);
     }
     // fillOf is a function of models, which modelsKey stands for.
-  }, [entries, view, modelsKey, placing.data]);
+  }, [entries, view, modelsKey, placing.data, layers.labels, layers.marks]);
+
+  /**
+   * The political layer: who holds what, in colour, always on.
+   *
+   * It is drawn from the places in view that own ground, rolled up to a
+   * level worth seeing at this zoom and partitioned so no coarse cell is
+   * claimed twice. One path per place rather than one per cell: a hundred
+   * squares as a hundred shapes shows a hundred seams where their edges
+   * meet, and as one shape shows a country.
+   */
+  const politicalLevel = view ? Math.max(2, Math.round(view.zoom) + 2) : 5;
+  const rings = useMemo(
+    () =>
+      layers.political ? politicalRings(entries, politicalLevel) : undefined,
+    [entries, politicalLevel, layers.political],
+  );
+  useEffect(() => {
+    const group = political.current;
+    if (!group) return;
+    group.clearLayers();
+    if (!rings) return;
+    for (const [key, shapes] of rings) {
+      const id = key.slice(key.indexOf('/') + 1);
+      L.polygon(
+        shapes.map((ring) =>
+          ring.map((p) => [p.lat, p.lng] as [number, number]),
+        ),
+        {
+          stroke: false,
+          fillColor: politicalFill(id),
+          fillOpacity: 0.28,
+          interactive: false,
+        },
+      ).addTo(group);
+    }
+  }, [rings]);
 
   /**
    * The ground the picked-out place holds, shaded.
@@ -444,20 +657,24 @@ export function MapSurface() {
     const extent = preview?.resource.extent;
     if (!Array.isArray(extent)) return;
     const fill = fillOf(preview!.model);
+    const shapes: [number, number][][] = [];
     for (const token of extent.slice(0, MOST_CELLS)) {
       const cell = parseCell(String(token));
       const outline = cell && outlineOf(cell);
       if (!outline) continue;
-      L.polygon(
-        outline.map((p) => [p.lat, p.lng] as [number, number]),
-        {
-          stroke: false,
-          fillColor: fill,
-          fillOpacity: 0.18,
-          interactive: false,
-        },
-      ).addTo(group);
+      shapes.push(outline.map((p) => [p.lat, p.lng] as [number, number]));
     }
+    if (shapes.length === 0) return;
+    // One shape, not one per cell: separate shapes show a seam wherever two
+    // of them touch, which reads as a grid rather than as a country.
+    L.polygon(shapes, {
+      color: fill,
+      weight: 1,
+      opacity: 0.8,
+      fillColor: fill,
+      fillOpacity: 0.25,
+      interactive: false,
+    }).addTo(group);
     // fillOf is a function of models, which modelsKey stands for.
   }, [preview, modelsKey]);
 
@@ -594,6 +811,7 @@ export function MapSurface() {
                     ? 'Nothing in view'
                     : `${entries.length} in view`}
               </Button>
+              <LayersButton layers={layers} onToggle={toggle} />
             </div>
             {preview && (
               /*
@@ -803,6 +1021,70 @@ export function MapSurface() {
 }
 
 /** Find a record by name and go to it on the map. */
+/**
+ * What the map draws, as a short list you can switch off.
+ *
+ * Every map anybody uses has this, and the reason is not that people want
+ * to configure a map: it is that a map showing everything shows nothing,
+ * and only the person looking knows which thing they came for.
+ */
+function LayersButton(props: {
+  readonly layers: Layers;
+  readonly onToggle: (which: keyof Layers) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rows: { key: keyof Layers; label: string; note: string }[] = [
+    { key: 'political', label: 'Political', note: 'Who holds what ground' },
+    { key: 'labels', label: 'Names', note: 'Countries and regions' },
+    { key: 'marks', label: 'Places', note: 'Towns, and everything smaller' },
+  ];
+  return (
+    <div className="relative">
+      <Button
+        variant="outline"
+        size="sm"
+        className="rounded-full bg-background shadow-lg"
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+      >
+        <LayersIcon data-icon="inline-start" />
+        Layers
+      </Button>
+      {open && (
+        <div className="absolute top-full left-0 z-10 mt-1 flex w-56 flex-col rounded-lg border bg-background p-1 shadow-lg">
+          {rows.map((row) => (
+            <button
+              key={row.key}
+              type="button"
+              role="switch"
+              aria-checked={props.layers[row.key]}
+              className="flex items-start gap-2 rounded-md px-2 py-1.5 text-left hover:bg-accent"
+              onClick={() => props.onToggle(row.key)}
+            >
+              <span
+                aria-hidden
+                className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-[4px] border ${
+                  props.layers[row.key]
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-input'
+                }`}
+              >
+                {props.layers[row.key] && <CheckIcon className="size-3" />}
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span className="text-sm leading-tight">{row.label}</span>
+                <span className="text-xs text-muted-foreground">
+                  {row.note}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Find(props: {
   readonly world: string;
   readonly onFound: (hit: SearchHit) => void;

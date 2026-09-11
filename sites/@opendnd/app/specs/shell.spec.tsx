@@ -82,9 +82,16 @@ describe('the shell', () => {
       'href',
       `/worlds/${WORLD_ID}/pet`,
     );
+    /*
+     * The way out is in the account menu at the foot rather than a row of
+     * its own. What the menu holds is not asserted here: Base UI's menu does
+     * not open under jsdom in this harness, and this is the application's
+     * first one, so there is no working pattern to copy yet.
+     */
+    expect(screen.getByRole('button', { name: /tester/i })).toBeInTheDocument();
     expect(
-      screen.getByRole('link', { name: 'Leave Testland' }),
-    ).toHaveAttribute('href', '/worlds');
+      screen.queryByRole('link', { name: /^Leave / }),
+    ).not.toBeInTheDocument();
     // No list of other worlds while inside one.
     expect(screen.queryByText('Your worlds')).not.toBeInTheDocument();
   });

@@ -41,7 +41,18 @@ const sites: readonly SiteConfig[] = [
       // The map page: panning and zooming over a world's picture tiles.
       `leaflet@${versions.leaflet}`,
     ],
-    devDeps: [`@types/leaflet@${versions['@types/leaflet']}`],
+    devDeps: [
+      `@types/leaflet@${versions['@types/leaflet']}`,
+      /*
+       * Tests only, and deliberately not a runtime dependency: the
+       * application is built from what the API describes at run time, and
+       * knows no model at build time. But what it *writes* has to be a shape
+       * the ontology accepts, and nothing was checking that — a page of
+       * blocks went out under the wrong key twice before anyone noticed,
+       * because the specs asserted the same wrong shape the code produced.
+       */
+      '@opendnd/types@workspace:*',
+    ],
   },
 ];
 

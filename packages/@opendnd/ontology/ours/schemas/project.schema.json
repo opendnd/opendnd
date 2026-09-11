@@ -68,7 +68,7 @@
             "default": "fit",
             "description": "Whether the rows are a fixed height that grows with what is on them, or share the height of the window. A page that is one map wants the second."
           },
-          "blocks": {
+          "block": {
             "type": "array",
             "description": "The blocks on the page and where they sit: col and row are grid lines counted from one, w and h are how many cells across and down.",
             "items": {
@@ -124,7 +124,7 @@
           "id",
           "name",
           "path",
-          "blocks"
+          "block"
         ],
         "additionalProperties": false
       }

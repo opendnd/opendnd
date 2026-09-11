@@ -56,7 +56,9 @@ export function projectOf(resource: Resource): Project {
 
 function pageOf(value: unknown, index: number): ProjectPage {
   const page = (value ?? {}) as Record<string, unknown>;
-  const blocks = Array.isArray(page.blocks) ? page.blocks : [];
+  // The record says `block`, as every repeating element does; the layout
+  // this reads into is the application's own shape and stays plural.
+  const blocks = Array.isArray(page.block) ? page.block : [];
   return {
     id: typeof page.id === 'string' ? page.id : `page-${index + 1}`,
     name: typeof page.name === 'string' ? page.name : 'Untitled page',
@@ -230,7 +232,7 @@ export function copyOf(page: ProjectPage, worldName: string): Record<string, unk
     tagline: `A ${page.name.toLowerCase()} page of this world's own.`,
     status: 'draft',
     replaces: [page.path],
-    pages: [
+    page: [
       {
         id: page.id,
         name: page.name,
@@ -239,7 +241,34 @@ export function copyOf(page: ProjectPage, worldName: string): Record<string, unk
         path: page.path,
         scope: page.scope,
         rows: page.layout.rows,
-        blocks: page.layout.blocks.map((one) => ({ ...one })),
+        block: page.layout.blocks.map((one) => ({ ...one })),
+      },
+    ],
+  };
+}
+
+/**
+ * A project with nothing in it yet.
+ *
+ * Every other way to make one starts from a page the application already
+ * ships, which is the common case and was for a while the only one. But a
+ * project that replaces nothing — a screen for a table, a reference sheet,
+ * something this world wants and no other does — had no way to exist.
+ */
+export function blankProject(worldName: string): Record<string, unknown> {
+  return {
+    name: `A project of ${worldName}`,
+    tagline: "A page of this world's own.",
+    status: 'draft',
+    page: [
+      {
+        id: 'page-1',
+        name: 'Untitled page',
+        // Its own address, so it stands beside what ships rather than over it.
+        path: `page-${Date.now().toString(36)}`,
+        scope: 'world',
+        rows: 'fit',
+        block: [],
       },
     ],
   };
