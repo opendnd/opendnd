@@ -239,7 +239,7 @@ describe('the map', () => {
 
     // And it is a layer, so it goes away.
     await userEvent.click(screen.getByRole('button', { name: 'Layers' }));
-    await userEvent.click(screen.getByRole('switch', { name: /Political/ }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /Political/ }));
     await waitFor(() =>
       expect(fake.layers.some((l) => l.kind === 'polygon')).toBe(false),
     );

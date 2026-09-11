@@ -45,12 +45,14 @@ import {
   SidebarHeader,
   SidebarInput,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarRail,
 } from '@/components/ui/sidebar';
 
 /**
@@ -112,9 +114,7 @@ export function AppSidebar() {
                   {inWorld ? current.name : 'OpenDnD'}
                 </span>
                 <span className="truncate text-[11px] text-muted-foreground">
-                  {inWorld
-                    ? `OpenDnD · ${current.role ?? 'visitor'}`
-                    : 'Worlds'}
+                  {inWorld ? 'OpenDnD' : 'Worlds'}
                 </span>
               </span>
             </SidebarMenuButton>
@@ -122,7 +122,7 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent className="gap-0">
+      <SidebarContent className="scrollbar-thin gap-0">
         {!inWorld && (
           <SidebarGroup>
             <SidebarGroupLabel>Your worlds</SidebarGroupLabel>
@@ -340,9 +340,9 @@ export function AppSidebar() {
                                 />
                                 <span className="truncate">{model.name}</span>
                                 {counts.of?.[model.id] !== undefined && (
-                                  <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground">
+                                  <SidebarMenuBadge className="top-1 z-10 font-mono text-[10px] text-muted-foreground">
                                     {compactCount(counts.of[model.id]!)}
-                                  </span>
+                                  </SidebarMenuBadge>
                                 )}
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
@@ -393,10 +393,14 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <AccountMenu {...(inWorld ? { world: place.world } : {})} />
+            <AccountMenu
+              {...(inWorld ? { world: place.world } : {})}
+              {...(inWorld && current.role ? { role: current.role } : {})}
+            />
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }

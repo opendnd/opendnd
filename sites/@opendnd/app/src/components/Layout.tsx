@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import {
   SidebarInset,
@@ -69,11 +70,20 @@ function Header() {
   const location = useLocation();
   const place = placeIn(location.pathname);
   return (
-    <header className="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    /*
+      The same bar Studio has, down to the values: both products had drifted
+      to their own height, gap and translucency, and two shells that mean the
+      same thing should not differ by four pixels.
+    */
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-2 border-b bg-background/85 px-4 backdrop-blur">
       <SidebarTrigger className="-ml-1" />
+      <Separator
+        orientation="vertical"
+        className="mr-1 data-[orientation=vertical]:h-4"
+      />
       <Crumbs />
       {place.world && <WorldSearch world={place.world} />}
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-1.5">
         <Button
           variant={panel.open ? 'secondary' : 'ghost'}
           size="icon"
@@ -102,7 +112,7 @@ function Body() {
         <Outlet />
       </div>
       {panel.open && wide && (
-        <div className="sticky top-12 h-[calc(100vh-3rem)]">
+        <div className="sticky top-14 h-[calc(100vh-3.5rem)]">
           <RightPanel onClose={close} />
         </div>
       )}

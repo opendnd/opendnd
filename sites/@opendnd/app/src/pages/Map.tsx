@@ -1,7 +1,6 @@
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
-  CheckIcon,
   LayersIcon,
   ListIcon,
   MapPinIcon,
@@ -38,6 +37,7 @@ import { Button } from '@/components/ui/button';
 import { Page } from '../build/Page';
 import { usePageLayout } from '../build/projects';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 
 /** Colours, one per model that sits on the map, in the order the ontology lists them. */
@@ -1053,31 +1053,23 @@ function LayersButton(props: {
       {open && (
         <div className="absolute top-full left-0 z-10 mt-1 flex w-56 flex-col rounded-lg border bg-background p-1 shadow-lg">
           {rows.map((row) => (
-            <button
+            <Label
               key={row.key}
-              type="button"
-              role="switch"
-              aria-checked={props.layers[row.key]}
-              className="flex items-start gap-2 rounded-md px-2 py-1.5 text-left hover:bg-accent"
-              onClick={() => props.onToggle(row.key)}
+              className="flex items-start gap-2 rounded-md px-2 py-1.5 font-normal hover:bg-accent"
             >
-              <span
-                aria-hidden
-                className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-[4px] border ${
-                  props.layers[row.key]
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'border-input'
-                }`}
-              >
-                {props.layers[row.key] && <CheckIcon className="size-3" />}
-              </span>
+              {/* The registry's checkbox rather than a square drawn by hand. */}
+              <Checkbox
+                className="mt-0.5"
+                checked={props.layers[row.key]}
+                onCheckedChange={() => props.onToggle(row.key)}
+              />
               <span className="flex min-w-0 flex-col">
                 <span className="text-sm leading-tight">{row.label}</span>
                 <span className="text-xs text-muted-foreground">
                   {row.note}
                 </span>
               </span>
-            </button>
+            </Label>
           ))}
         </div>
       )}

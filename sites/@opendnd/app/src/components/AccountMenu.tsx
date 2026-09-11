@@ -1,6 +1,8 @@
 import { DoorOpenIcon, LogOutIcon, SettingsIcon, UserIcon } from 'lucide-react';
 import { Link } from 'react-router';
 import { useApp, useSession } from '../app/context';
+import { humanize } from '../schema/fields';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,7 +22,10 @@ import { SidebarMenuButton } from '@/components/ui/sidebar';
  * a row reading somebody's name — put two unrelated things next to each
  * other and made the more drastic one easier to hit.
  */
-export function AccountMenu(props: { readonly world?: string }) {
+export function AccountMenu(props: {
+  readonly world?: string;
+  readonly role?: string;
+}) {
   const session = useSession();
   const { signOut } = useApp();
   const name = session?.name ?? session?.subject ?? 'Signed in';
@@ -36,9 +41,11 @@ export function AccountMenu(props: { readonly world?: string }) {
       <DropdownMenuTrigger
         render={
           <SidebarMenuButton size="lg" tooltip={name}>
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-brand-muted text-[10px] font-semibold text-brand-muted-foreground">
-              {initials || <UserIcon className="size-3.5" />}
-            </span>
+            <Avatar size="sm">
+              <AvatarFallback className="bg-brand-muted text-[11px] font-semibold text-brand-muted-foreground">
+                {initials || <UserIcon className="size-3.5" />}
+              </AvatarFallback>
+            </Avatar>
             <span className="truncate">{name}</span>
           </SidebarMenuButton>
         }
@@ -52,6 +59,21 @@ export function AccountMenu(props: { readonly world?: string }) {
             </span>
           )}
         </DropdownMenuLabel>
+        {props.role && (
+          <>
+            <DropdownMenuSeparator />
+            {/*
+              What this person may do here. It used to sit under the world's
+              name in the top left, where it read as part of the world rather
+              than as a fact about the reader — and where nobody needs it.
+              Studio keeps the tenant and workspace in this menu for the same
+              reason: it is context, not chrome.
+            */}
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+              {humanize(props.role)} of this world
+            </DropdownMenuLabel>
+          </>
+        )}
         {props.world && (
           <>
             <DropdownMenuSeparator />
