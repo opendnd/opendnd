@@ -1,9 +1,15 @@
-import type { Culture, NameType, Person, Sex, Species } from '@opendnd/types';
+import type {
+  Culture,
+  NameType,
+  Character,
+  Sex,
+  Species,
+} from '@opendnd/types';
 import { Generator, GeneratorContext, stamp } from '../generator';
 import { generate as generateGenome, toPersonFields } from '../genetics';
 import { NameGenerator } from '../names';
 
-export interface PersonInput {
+export interface CharacterInput {
   readonly species: Species;
   readonly culture: Culture;
   /** Defaults to a coin flip between male and female. */
@@ -17,13 +23,13 @@ export interface PersonInput {
  * stamped with provenance. This is the shape every resource-producing
  * generator follows: compose the smaller generators and stamp the result.
  */
-export const personGenerator: Generator<PersonInput, Person> = {
-  id: 'person',
+export const characterGenerator: Generator<CharacterInput, Character> = {
+  id: 'character',
   version: '1.0.0',
   description:
-    'Generates a Person with a genome and phenotype from a Species and a name from a Culture.',
+    'Generates a Character with a genome and phenotype from a Species and a name from a Culture.',
 
-  generate(input: PersonInput, ctx: GeneratorContext): Person {
+  generate(input: CharacterInput, ctx: GeneratorContext): Character {
     const { species, culture } = input;
     const rng = ctx.rng;
     const sex = input.sex ?? (rng.child('sex').chance() ? 'male' : 'female');
@@ -31,7 +37,7 @@ export const personGenerator: Generator<PersonInput, Person> = {
     const name = input.name ?? generateFullName(culture, sex, ctx);
 
     return {
-      ...stamp(personGenerator, ctx, {
+      ...stamp(characterGenerator, ctx, {
         derivedFrom: [
           { type: 'species', id: species.id, display: species.name },
           { type: 'culture', id: culture.id, display: culture.name },

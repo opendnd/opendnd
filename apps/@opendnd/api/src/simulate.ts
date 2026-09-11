@@ -102,11 +102,11 @@ export async function simulate(
   );
 
   const produced: { model: ModelId; body: Record<string, unknown> }[] = [
-    ...output.people.map((r) => pair('person', r)),
+    ...output.people.map((r) => pair('character', r)),
     ...output.relationships.map((r) => pair('relationship', r)),
     ...output.events.map((r) => pair('event', r)),
     ...output.tenures.map((r) => pair('tenure', r)),
-    ...output.claims.map((r) => pair('claim', r)),
+    ...output.claims.map((r) => pair('title-claim', r)),
     ...output.populations.map((r) => pair('population', r)),
     ...output.economies.map((r) => pair('economy', r)),
   ];

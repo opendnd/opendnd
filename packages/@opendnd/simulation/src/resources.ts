@@ -2,12 +2,12 @@ import { GeneratorContext, childContext, stamp } from '@opendnd/generators';
 import { resourceTypes } from '@opendnd/types';
 import type {
   Calendar,
-  Claim,
+  TitleClaim,
   ClaimBasis,
   Event,
   EventType,
   ParticipantRole,
-  Person,
+  Character,
   ModelId,
   Population,
   ReferenceTo,
@@ -40,7 +40,7 @@ export interface EventSpec {
   readonly name: string;
   readonly description?: string;
   readonly participant: ReadonlyArray<{
-    actor: ReferenceTo<'person'>;
+    actor: ReferenceTo<'character'>;
     role: ParticipantRole;
   }>;
   readonly location?: ReferenceTo<'place'>[];
@@ -74,8 +74,8 @@ export function makeRelationship(
   ctx: GeneratorContext,
   label: string,
   type: RelationshipType,
-  party1: Person,
-  party2: Person,
+  party1: Character,
+  party2: Character,
   extra: Partial<
     Pick<Relationship, 'fact' | 'legitimacy' | 'successionOrder' | 'validTime'>
   > = {},
@@ -85,8 +85,8 @@ export function makeRelationship(
     name: `${party1.name} and ${party2.name}: ${type}`,
     perspective: 'in-universe',
     type: type,
-    party1: ref('person', party1),
-    party2: ref('person', party2),
+    party1: ref('character', party1),
+    party2: ref('character', party2),
     ...extra,
   };
 }
@@ -96,7 +96,7 @@ export function makeTenure(
   label: string,
   calendar: Calendar,
   title: ReferenceTo<'title'>,
-  holder: Person,
+  holder: Character,
   year: number,
   began?: Event,
 ): Tenure {
@@ -105,7 +105,7 @@ export function makeTenure(
     name: `${holder.name}, ${title.display ?? 'title'}`,
     perspective: 'in-universe',
     title,
-    holder: ref('person', holder),
+    holder: ref('character', holder),
     validTime: { begin: yearOf(calendar, year) },
     ...(began ? { began: ref('event', began) } : {}),
   };
@@ -114,20 +114,20 @@ export function makeTenure(
 export function makeClaim(
   ctx: GeneratorContext,
   label: string,
-  claimant: Person,
+  claimant: Character,
   title: ReferenceTo<'title'>,
   basis: ClaimBasis,
-  through?: Person,
-): Claim {
+  through?: Character,
+): TitleClaim {
   return {
     ...stamp(HISTORY_GENERATOR, childContext(ctx, label)),
     name: `${claimant.name}'s claim to ${title.display ?? 'a title'}`,
     perspective: 'in-universe',
-    claimant: ref('person', claimant),
+    claimant: ref('character', claimant),
     title,
     basis,
     pressed: false,
-    ...(through ? { through: ref('person', through) } : {}),
+    ...(through ? { through: ref('character', through) } : {}),
   };
 }
 

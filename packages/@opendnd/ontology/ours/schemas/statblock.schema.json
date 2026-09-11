@@ -17,9 +17,9 @@
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
       "description": "The species this represents, where it represents one."
     },
-    "person": {
+    "character": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
-      "description": "The person this represents, for a statted individual."
+      "description": "The character this represents, for a statted individual."
     },
     "size": {
       "$ref": "https://docs.opendnd.org/ours/vocabularies/size.schema.json"

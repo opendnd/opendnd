@@ -41,7 +41,7 @@ const models: ModelInfo[] = [
   { id: 'character', name: 'Character' },
   { id: 'work', name: 'Work' },
   { id: 'place', name: 'Place' },
-  { id: 'person', name: 'Person' },
+  { id: 'character', name: 'Character' },
 ];
 const ontology = ontologyFrom(
   {
@@ -75,16 +75,24 @@ const campaigns = [
 function api() {
   return fakeFetch({
     [`GET /v1/worlds/${WORLD_ID}/$counts`]: () => ({
-      counts: { campaign: 1, character: 0, work: 1240, place: 900, person: 2 },
+      counts: {
+        campaign: 1,
+        'character-sheet': 0,
+        work: 1240,
+        place: 900,
+        character: 2,
+      },
     }),
-    [`GET /v1/worlds/${WORLD_ID}/person`]: () => ({
+    [`GET /v1/worlds/${WORLD_ID}/character`]: () => ({
       resources: [{ id: 'per1', name: 'Wren of the Ford' }],
     }),
     [`GET /v1/worlds/${WORLD_ID}/place`]: () => ({
       resources: [{ id: 'p1', name: 'Aldermere' }],
     }),
     [`GET /v1/worlds/${WORLD_ID}/campaign`]: () => ({ resources: campaigns }),
-    [`GET /v1/worlds/${WORLD_ID}/character`]: () => ({ resources: [] }),
+    [`GET /v1/worlds/${WORLD_ID}/character-sheet`]: () => ({
+      resources: [],
+    }),
     [`GET /v1/worlds/${WORLD_ID}/work`]: () => ({
       resources: [
         {

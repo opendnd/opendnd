@@ -1,7 +1,7 @@
 import {
   type GeneratorContext,
   createContext,
-  personGenerator,
+  characterGenerator,
   realmGenerator,
   settlementGenerator,
 } from '@opendnd/generators';
@@ -76,7 +76,7 @@ function codes(vocabulary: keyof typeof vocabularies): string[] {
  * so the OpenAPI description says what a request body is.
  */
 export const GENERATORS: Partial<Record<ModelId, GeneratorDescription>> = {
-  person: {
+  character: {
     description:
       'A whole person: a name from the culture, a genome and appearance from the species.',
     input: {
@@ -164,8 +164,10 @@ export function generate(
   ctx: GeneratorContext,
 ): Generated {
   switch (model) {
-    case 'person':
-      return [tag('person', personGenerator.generate(input as never, ctx))];
+    case 'character':
+      return [
+        tag('character', characterGenerator.generate(input as never, ctx)),
+      ];
     case 'place': {
       const tier = String(input.tier ?? 'town');
       if (LOCALITY.includes(tier)) {

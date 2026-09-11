@@ -36,7 +36,7 @@ export interface Project {
 
 /** A project record, read into the shape the renderer wants. */
 export function projectOf(resource: Resource): Project {
-  const pages = Array.isArray(resource.pages) ? resource.pages : [];
+  const pages = Array.isArray(resource.page) ? resource.page : [];
   return {
     id: String(resource.id),
     name: typeof resource.name === 'string' ? resource.name : 'Untitled',

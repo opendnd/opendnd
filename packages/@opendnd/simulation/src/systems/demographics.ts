@@ -4,10 +4,10 @@ import {
   childContext,
   generate as generateGenome,
   generateChild,
-  personGenerator,
+  characterGenerator,
   toPersonFields,
 } from '@opendnd/generators';
-import type { Person, ReferenceTo, Sex } from '@opendnd/types';
+import type { Character, ReferenceTo, Sex } from '@opendnd/types';
 import { Lifecycle, isAdult, isFertile, mortality } from '../lifecycle';
 import { makeEvent, makeRelationship, ref, yearOf } from '../resources';
 import { HistoryState } from '../state';
@@ -38,7 +38,7 @@ export function demographics(
   // out their lives and their descendants stay in the aggregate population.
   // Before any title is held (the founding year) everyone counts.
   const kinship = state.kinshipToHolders(params.lineageDepth);
-  const notable = (person: Person) =>
+  const notable = (person: Character) =>
     kinship.size === 0 || kinship.has(person.id);
 
   marriages(state, input, lifecycle, params, yctx, notable);
@@ -82,9 +82,9 @@ function deaths(
           year,
           name: `Death of ${person.name}`,
           participant: [
-            { actor: ref('person', person), role: 'deceased' },
+            { actor: ref('character', person), role: 'deceased' },
             ...(spouse
-              ? [{ actor: ref('person', spouse), role: 'widowed' as const }]
+              ? [{ actor: ref('character', spouse), role: 'widowed' as const }]
               : []),
           ],
           ...(place ? { location: [place] } : {}),
@@ -108,7 +108,7 @@ function marriages(
   lifecycle: Lifecycle,
   params: HistoryParams,
   yctx: GeneratorContext,
-  notable: (p: Person) => boolean,
+  notable: (p: Character) => boolean,
 ): void {
   const year = state.year;
   const eligible = state
@@ -167,8 +167,8 @@ function marriages(
         name: `Marriage of ${person.name} and ${spouse.name}`,
         ...(joined ? { description: joined } : {}),
         participant: [
-          { actor: ref('person', person), role: 'spouse' },
-          { actor: ref('person', spouse), role: 'spouse' },
+          { actor: ref('character', person), role: 'spouse' },
+          { actor: ref('character', spouse), role: 'spouse' },
         ],
         ...(place ? { location: [place] } : {}),
       }),
@@ -194,7 +194,7 @@ function births(
   lifecycle: Lifecycle,
   params: HistoryParams,
   yctx: GeneratorContext,
-  notable: (p: Person) => boolean,
+  notable: (p: Character) => boolean,
 ): void {
   const year = state.year;
   const seen = new Set<string>();
@@ -220,13 +220,13 @@ function births(
 
     const genome = childGenome(input, mother, father, brng);
     const cctx = childContext(yctx, `child/${mother.id}`);
-    const base = personGenerator.generate(
+    const base = characterGenerator.generate(
       { species: input.species, culture: input.culture, sex: genome.sex },
       cctx,
     );
     const house = state.houses.get(houseId);
     const place = house?.seat ?? placeOf(state, father);
-    const child: Person = {
+    const child: Character = {
       ...base,
       ...toPersonFields(genome),
       name: `${base.name.split(' ')[0]} ${familyName(father) ?? familyName(mother) ?? ''}`.trim(),
@@ -245,9 +245,9 @@ function births(
         year,
         name: `Birth of ${child.name}`,
         participant: [
-          { actor: ref('person', child), role: 'child' },
-          { actor: ref('person', mother), role: 'mother' },
-          { actor: ref('person', father), role: 'father' },
+          { actor: ref('character', child), role: 'child' },
+          { actor: ref('character', mother), role: 'mother' },
+          { actor: ref('character', father), role: 'father' },
         ],
         ...(place ? { location: [place] } : {}),
       }),
@@ -284,10 +284,10 @@ function commoner(
   input: HistoryInput,
   lifecycle: Lifecycle,
   params: HistoryParams,
-  match: Person,
+  match: Character,
   prng: GeneratorContext['rng'],
   yctx: GeneratorContext,
-): Person {
+): Character {
   const houseId = state.houseOf(match.id)!;
   const house = state.houses.get(houseId);
   const place = house?.seat ?? placeOf(state, match);
@@ -299,8 +299,8 @@ function commoner(
       prng.int(-params.spouseAgeSpread, params.spouseAgeSpread),
   );
   const sctx = childContext(yctx, `spouse/${match.id}`);
-  const spouse: Person = {
-    ...personGenerator.generate(
+  const spouse: Character = {
+    ...characterGenerator.generate(
       {
         species: input.species,
         culture: input.culture,
@@ -322,10 +322,10 @@ function commoner(
 /** The couple ordered so the member of the senior house comes first. */
 function seniority(
   state: HistoryState,
-  a: Person,
-  b: Person,
-): [Person, Person] {
-  const rank = (p: Person) => {
+  a: Character,
+  b: Character,
+): [Character, Character] {
+  const rank = (p: Character) => {
     const houseId = state.houseOf(p.id);
     const title = houseId ? state.titleOfHouse(houseId) : undefined;
     return title?.rank ?? Number.MAX_SAFE_INTEGER;
@@ -335,18 +335,18 @@ function seniority(
 
 function childGenome(
   input: HistoryInput,
-  mother: Person,
-  father: Person,
+  mother: Character,
+  father: Character,
   rng: GeneratorContext['rng'],
 ): Genome {
-  const complete = (p: Person) =>
+  const complete = (p: Character) =>
     Object.keys(p.genome?.chromosomes ?? {}).length ===
     Object.keys(input.species.chromosomes ?? {}).length;
   if (!complete(mother) || !complete(father)) {
     // A parent without a full genome (authored by hand) cannot pass alleles on.
     return generateGenome({ species: input.species, rng });
   }
-  const toGenome = (p: Person, sex: Sex): Genome => ({
+  const toGenome = (p: Character, sex: Sex): Genome => ({
     species: ref('species', input.species),
     sex,
     chromosomes: p.genome?.chromosomes ?? {},
@@ -366,7 +366,7 @@ function childGenome(
 /** Where a person is, by their house's seat or their own residence. */
 function placeOf(
   state: HistoryState,
-  person: Person,
+  person: Character,
 ): ReferenceTo<'place'> | undefined {
   const houseId = state.houseOf(person.id);
   return (houseId ? state.seatOf(houseId) : undefined) ?? person.residence;
@@ -379,8 +379,8 @@ function houseName(state: HistoryState, houseId: string | undefined): string {
 /** Apply a patch, mutating generated people and replacing authored ones. */
 function update(
   state: HistoryState,
-  person: Person,
-  patch: Partial<Person>,
+  person: Character,
+  patch: Partial<Character>,
 ): void {
   if (state.generated.has(person.id)) {
     Object.assign(person, patch);
@@ -389,7 +389,7 @@ function update(
   }
 }
 
-function familyName(person: Person): string | undefined {
+function familyName(person: Character): string | undefined {
   const parts = person.name.split(' ');
   return parts.length > 1 ? parts[parts.length - 1] : undefined;
 }

@@ -60,12 +60,12 @@ export function proficiencyBonus(level: number): number {
 /** A character's level: what they say, or the sum of their classes. */
 export function levelOf(character: {
   level?: unknown;
-  classes?: unknown;
+  class?: unknown;
 }): number {
   if (typeof character.level === 'number' && character.level > 0) {
     return character.level;
   }
-  const classes = Array.isArray(character.classes) ? character.classes : [];
+  const classes = Array.isArray(character.class) ? character.class : [];
   const summed = classes.reduce(
     (total: number, one) =>
       total +

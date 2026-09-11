@@ -316,7 +316,7 @@ describe('the API client and writing', () => {
           { id: 'm', provider: 'ollama', name: 'm:latest', local: true },
         ],
       }),
-      'POST /v1/worlds/w/person/p/$author': () => ({
+      'POST /v1/worlds/w/character/p/$author': () => ({
         work: { id: 'k', resourceType: 'Work', text: 'Words.' },
         saved: false,
         facts: ['Person: Ada'],
@@ -324,7 +324,7 @@ describe('the API client and writing', () => {
     });
     const { api } = client(fetch);
     expect((await api.llm()).models[0]?.id).toBe('m');
-    const result = await api.author('w', 'person', 'p', { words: 100 });
+    const result = await api.author('w', 'character', 'p', { words: 100 });
     expect(result.work.text).toBe('Words.');
     expect(await calls[1]!.json()).toEqual({ words: 100 });
   });

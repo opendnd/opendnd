@@ -66,7 +66,7 @@ export type BuiltInPage = keyof typeof PAGES;
  * reached from it, which is why these are keyed by model rather than by path.
  */
 export const RECORD_PAGES = {
-  character: {
+  'character-sheet': {
     rows: 'fit',
     blocks: [
       at('header', 'sheet-header', 1, 1, 6, 1),

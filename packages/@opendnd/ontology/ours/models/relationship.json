@@ -12,11 +12,11 @@
   "relationships": [
     {
       "predicate": "party1",
-      "target": "Person"
+      "target": "Character"
     },
     {
       "predicate": "party2",
-      "target": "Person"
+      "target": "Character"
     },
     {
       "predicate": "fact.place",

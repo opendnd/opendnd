@@ -83,6 +83,27 @@ export const claimBasisCodes = [
 export const claimBasisSchema = z.enum(claimBasisCodes);
 export type ClaimBasis = z.infer<typeof claimBasisSchema>;
 
+/** Condition code: The states a creature can be in that change what it may do. These are definitions, not occurrences: that a creature is poisoned right now is a Condition record naming one of these codes. */
+export const conditionCodeCodes = [
+  "blinded",
+  "charmed",
+  "deafened",
+  "exhaustion",
+  "frightened",
+  "grappled",
+  "incapacitated",
+  "invisible",
+  "paralyzed",
+  "petrified",
+  "poisoned",
+  "prone",
+  "restrained",
+  "stunned",
+  "unconscious",
+] as const;
+export const conditionCodeSchema = z.enum(conditionCodeCodes);
+export type ConditionCode = z.infer<typeof conditionCodeSchema>;
+
 /** Creature type: The rules category a creature belongs to, which spells and effects key off. */
 export const creatureTypeCodes = [
   "aberration",
@@ -121,29 +142,6 @@ export const damageTypeCodes = [
 ] as const;
 export const damageTypeSchema = z.enum(damageTypeCodes);
 export type DamageType = z.infer<typeof damageTypeSchema>;
-
-/** Encounter difficulty: How hard an encounter is meant to be for the party it is prepared for. */
-export const encounterDifficultyCodes = [
-  "trivial",
-  "easy",
-  "medium",
-  "hard",
-  "deadly",
-] as const;
-export const encounterDifficultySchema = z.enum(encounterDifficultyCodes);
-export type EncounterDifficulty = z.infer<typeof encounterDifficultySchema>;
-
-/** Encounter kind: What sort of encounter has been prepared. */
-export const encounterKindCodes = [
-  "combat",
-  "trap",
-  "hazard",
-  "social",
-  "exploration",
-  "puzzle",
-] as const;
-export const encounterKindSchema = z.enum(encounterKindCodes);
-export type EncounterKind = z.infer<typeof encounterKindSchema>;
 
 /** Event type: Kinds of event in a world's history. */
 export const eventTypeCodes = [
@@ -613,6 +611,34 @@ export const resourceCodes = [
 export const resourceSchema = z.enum(resourceCodes);
 export type Resource = z.infer<typeof resourceSchema>;
 
+/** Scene difficulty: How hard an encounter is meant to be for the party it is prepared for. */
+export const sceneDifficultyCodes = [
+  "trivial",
+  "easy",
+  "medium",
+  "hard",
+  "deadly",
+] as const;
+export const sceneDifficultySchema = z.enum(sceneDifficultyCodes);
+export type SceneDifficulty = z.infer<typeof sceneDifficultySchema>;
+
+/** Scene type: What sort of scene this is. The codes are the kinds a scene can be in any medium that stages them; a domain that stages other kinds adds its own. */
+export const sceneTypeCodes = [
+  "combat",
+  "social",
+  "exploration",
+  "puzzle",
+  "trap",
+  "hazard",
+  "dialogue",
+  "action",
+  "montage",
+  "establishing",
+  "transition",
+] as const;
+export const sceneTypeSchema = z.enum(sceneTypeCodes);
+export type SceneType = z.infer<typeof sceneTypeSchema>;
+
 /** Sex: Biological sex as used by the genetics generator. */
 export const sexCodes = [
   "male",
@@ -985,7 +1011,7 @@ export const beliefSchema = z.strictObject({
   module: z.string().optional(),
   holder: z.strictObject({
     /** Resource type of the target. */
-    type: z.enum(["Person", "Faction"]),
+    type: z.enum(["Character", "Faction"]),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
@@ -1107,9 +1133,9 @@ export const campaignSchema = z.strictObject({
   endedOn: z.iso.date().optional(),
   /** Where the party currently stands in the world's own calendar. */
   inWorldTime: temporalPositionSchema.optional(),
-  character: z.array(z.strictObject({
+  sheet: z.array(z.strictObject({
     /** Resource type of the target. */
-    type: z.literal("Character"),
+    type: z.literal("CharacterSheet"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
@@ -1117,8 +1143,119 @@ export const campaignSchema = z.strictObject({
 });
 export type Campaign = z.infer<typeof campaignSchema>;
 
-/** A person as played. The being itself is a person in the world; this is the out-of-universe record of who plays them, in which campaign, and how far they have come. It exists separately so that an NPC can become a player character without the world changing. */
+/** A being in the world: a person, a monster, anyone the fiction contains, real to it or legendary. Not the person at the table, who is a Person (schema.org Person, CIDOC E21, Wikidata fictional human). */
 export const characterSchema = z.strictObject({
+  /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateName: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  meta: metaSchema,
+  provenance: provenanceSchema.optional(),
+  citation: z.array(citationSchema).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
+  module: z.string().optional(),
+  species: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Species"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }).optional(),
+  culture: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Culture"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }).optional(),
+  gender: sexSchema.optional(),
+  pronouns: z.string().optional(),
+  /** A byname earned in life, e.g. 'the Bold'. Rendered as 'Name the Bold'. */
+  epithet: z.string().optional(),
+  alignment: alignmentSchema.optional(),
+  status: personStatusSchema.default("alive"),
+  birth: z.strictObject({
+    time: temporalPositionSchema.optional(),
+    place: z.strictObject({
+      /** Resource type of the target. */
+      type: z.literal("Place"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      display: z.string().optional(),
+    }).optional(),
+  }).optional(),
+  death: z.strictObject({
+    time: temporalPositionSchema.optional(),
+    place: z.strictObject({
+      /** Resource type of the target. */
+      type: z.literal("Place"),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      display: z.string().optional(),
+    }).optional(),
+    cause: z.string().optional(),
+  }).optional(),
+  memberOf: z.array(z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Faction"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  })).optional(),
+  residence: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Place"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }).optional(),
+  occupation: z.string().optional(),
+  /** How the person stands with the world's powers, each -100..100. */
+  standing: z.strictObject({
+    /** Ability to compel others. */
+    power: z.int().min(-100).max(100).optional(),
+    /** Regard among peers and rivals. */
+    honor: z.int().min(-100).max(100).optional(),
+    /** Regard among the faithful and the gods. */
+    piety: z.int().min(-100).max(100).optional(),
+    /** Regard among the common people. */
+    reputation: z.int().min(-100).max(100).optional(),
+  }).optional(),
+  /** Genetic record produced by the genetics generator. */
+  genome: z.strictObject({
+    /** Chromosome number to allele pair, e.g. '3=9' or 'X1=Y3'. */
+    chromosomes: z.record(z.string(), z.string().regex(new RegExp("^[XY]?[0-9]+=[XY]?[0-9]+$"))),
+    /** Inches. */
+    height: z.int().optional(),
+    /** Pounds. */
+    weight: z.int().optional(),
+  }).optional(),
+  /** The phenotype: what each of this person's genes expresses as. Distinct from a species feature such as darkvision, which is a feature. */
+  phenotype: z.array(z.strictObject({
+    gene: z.string(),
+    /** What the gene expresses as: blue eyes, a heavy build. */
+    expression: z.string(),
+  })).optional(),
+  /** A picture of the person. Somewhere on the web, or a path to a file the world itself holds. */
+  portrait: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
+});
+export type Character = z.infer<typeof characterSchema>;
+
+/** A character as played: who plays them, in which campaign, and how far they have come. It exists apart from the character so that one the gamemaster runs can become a player character without the world changing, and so that the same character can be played twice. */
+export const characterSheetSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
   /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
@@ -1143,13 +1280,13 @@ export const characterSchema = z.strictObject({
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
   /** The being in the world. */
-  person: z.strictObject({
+  character: z.strictObject({
     /** Resource type of the target. */
-    type: z.literal("Person"),
+    type: z.literal("Character"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
-  }),
+  }).optional(),
   /** The campaign they are played in. */
   campaign: z.strictObject({
     /** Resource type of the target. */
@@ -1158,8 +1295,8 @@ export const characterSchema = z.strictObject({
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
   }).optional(),
-  /** User id of whoever plays them. Absent for one the gamemaster runs. */
-  player: z.string().optional(),
+  /** The person who plays them. Absent for one the gamemaster runs. */
+  player: referenceSchema.optional(),
   status: characterStatusSchema.optional(),
   level: z.int().min(0).optional(),
   experience: z.int().min(0).optional(),
@@ -1230,7 +1367,7 @@ export const characterSchema = z.strictObject({
   }).optional(),
   /** Hit dice spent since the last long rest. */
   hitDiceSpent: z.int().min(0).optional(),
-  /** Conditions currently affecting the character. */
+  /** The states they are in now. Each is a Condition naming this sheet as its subject; the list is kept here so a sheet reads without a second query. */
   condition: z.array(z.strictObject({
     /** Resource type of the target. */
     type: z.literal("Condition"),
@@ -1286,67 +1423,7 @@ export const characterSchema = z.strictObject({
     note: z.string().optional(),
   })).optional(),
 });
-export type Character = z.infer<typeof characterSchema>;
-
-/** One person's asserted right to a title. A claim is the seed of a war: it can be pressed, won, lost, or left to descend to an heir. */
-export const claimSchema = z.strictObject({
-  /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
-  id: z.uuid(),
-  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  resourceType: z.string().optional(),
-  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
-  derivedId: z.uuid().optional(),
-  /** The World this resource belongs to. */
-  world: z.uuid(),
-  name: z.string().min(1),
-  alternateName: z.array(z.string()).optional(),
-  description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
-  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
-  canonStatus: canonStatusSchema,
-  perspective: perspectiveSchema.default("in-universe"),
-  /** When this assertion holds in-world. Absent means always. */
-  validTime: timeSpanSchema.optional(),
-  meta: metaSchema,
-  provenance: provenanceSchema.optional(),
-  citation: z.array(citationSchema).optional(),
-  /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
-  module: z.string().optional(),
-  claimant: z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Person"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  }),
-  title: z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Title"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  }),
-  basis: claimBasisSchema,
-  /** The person the claim descends from, when it comes by inheritance or marriage. */
-  through: z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Person"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  }).optional(),
-  /** Whether the claim has been pressed by force. */
-  pressed: z.boolean().default(false),
-  /** The event that made the claim good or void. */
-  resolvedBy: z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Event"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  }).optional(),
-});
-export type Claim = z.infer<typeof claimSchema>;
+export type CharacterSheet = z.infer<typeof characterSheetSchema>;
 
 /** An adventuring class, and its subclasses through `subclassOf`. Level progression is held here as a table rather than as one record per level, because a class is read whole. */
 export const classSchema = z.strictObject({
@@ -1464,7 +1541,7 @@ export const classSchema = z.strictObject({
 });
 export type Class = z.infer<typeof classSchema>;
 
-/** A state a creature can be in that changes what it may do: blinded, grappled, frightened. The rules text is the description on the base. */
+/** A state a creature is in that changes what it may do: this one, poisoned, from the spider's bite, until it saves. The states themselves are codes rather than records; what is recorded here is that one of them holds. Read as FHIR reads a Condition: a subject, a code, and the span it holds for. */
 export const conditionSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
   id: z.uuid(),
@@ -1488,6 +1565,38 @@ export const conditionSchema = z.strictObject({
   citation: z.array(citationSchema).optional(),
   /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
   module: z.string().optional(),
+  /** Who is in this state. */
+  subject: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Character"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }),
+  code: conditionCodeSchema,
+  /** How far it has gone, where the rules count degrees. Exhaustion has levels; most conditions have none. */
+  severity: z.int().min(1).optional(),
+  /** What put them in it: the creature, the spell, the trap. */
+  cause: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Character"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }).optional(),
+  /** When it took hold, in the world's own time. */
+  onset: temporalPositionSchema.optional(),
+  /** When it lifted. Absent while it still holds. */
+  abatement: temporalPositionSchema.optional(),
+  /** What lifts it, for a condition the rules let a creature shake off. */
+  endsOn: z.strictObject({
+    /** The saving throw that ends it. */
+    save: abilitySchema.optional(),
+    /** The difficulty of that save. */
+    dc: z.int().min(1).optional(),
+    /** When it may be attempted, in the rules' own words: at the end of each of its turns. */
+    when: z.string().optional(),
+  }).optional(),
 });
 export type Condition = z.infer<typeof conditionSchema>;
 
@@ -1587,82 +1696,6 @@ export const economySchema = z.strictObject({
 });
 export type Economy = z.infer<typeof economySchema>;
 
-/** A confrontation prepared for a party. It is preparation, not history: an encounter that is played produces an event in the world's record, and the encounter stays as the thing that was set up. */
-export const encounterSchema = z.strictObject({
-  /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
-  id: z.uuid(),
-  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  resourceType: z.string().optional(),
-  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
-  derivedId: z.uuid().optional(),
-  /** The World this resource belongs to. */
-  world: z.uuid(),
-  name: z.string().min(1),
-  alternateName: z.array(z.string()).optional(),
-  description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
-  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
-  canonStatus: canonStatusSchema,
-  /** Out-of-universe by default: an encounter is preparation. Playing it produces an event, which is in-universe. */
-  perspective: perspectiveSchema.default("out-of-universe"),
-  /** When this assertion holds in-world. Absent means always. */
-  validTime: timeSpanSchema.optional(),
-  meta: metaSchema,
-  provenance: provenanceSchema.optional(),
-  citation: z.array(citationSchema).optional(),
-  /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
-  module: z.string().optional(),
-  /** What sort of encounter it is. A trap is an encounter, not a thing of its own. */
-  type: encounterKindSchema.optional(),
-  /** The campaign it is prepared for. */
-  campaign: z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Campaign"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  }).optional(),
-  /** Where it happens. */
-  location: z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Place"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  }),
-  /** Quadtree cell token of the battle map it is fought on. */
-  cell: cellSchema.optional(),
-  difficulty: encounterDifficultySchema.optional(),
-  /** What the party faces, and how many of each. */
-  adversary: z.array(z.strictObject({
-    actor: z.strictObject({
-      /** Resource type of the target. */
-      type: z.enum(["Statblock", "Person"]),
-      id: z.uuid(),
-      /** Denormalized display name, for convenience. */
-      display: z.string().optional(),
-    }),
-    count: z.int().min(1).default(1),
-  })).optional(),
-  /** The quest it belongs to. */
-  quest: z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Quest"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  }).optional(),
-  /** The event it produced, once it has been played. */
-  played: z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Event"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  }).optional(),
-});
-export type Encounter = z.infer<typeof encounterSchema>;
-
 /** Something that happened in-world, with participants in roles and optional cause links (schema.org Event, CIDOC E5). */
 export const eventSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
@@ -1699,7 +1732,7 @@ export const eventSchema = z.strictObject({
   participant: z.array(z.strictObject({
     actor: z.strictObject({
       /** Resource type of the target. */
-      type: z.literal("Person"),
+      type: z.literal("Character"),
       id: z.uuid(),
       /** Denormalized display name, for convenience. */
       display: z.string().optional(),
@@ -1843,7 +1876,7 @@ export const itemSchema = z.strictObject({
   /** Who holds it: a person or a faction. */
   owner: z.strictObject({
     /** Resource type of the target. */
-    type: z.enum(["Person", "Faction"]),
+    type: z.enum(["Character", "Faction"]),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
@@ -1995,117 +2028,6 @@ export const languageSchema = z.strictObject({
   sample: z.string().optional(),
 });
 export type Language = z.infer<typeof languageSchema>;
-
-/** A person in the world, real to it or legendary (schema.org Person, CIDOC E21, Wikidata fictional human). */
-export const personSchema = z.strictObject({
-  /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
-  id: z.uuid(),
-  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
-  resourceType: z.string().optional(),
-  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
-  derivedId: z.uuid().optional(),
-  /** The World this resource belongs to. */
-  world: z.uuid(),
-  name: z.string().min(1),
-  alternateName: z.array(z.string()).optional(),
-  description: z.string().optional(),
-  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
-  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
-  canonStatus: canonStatusSchema,
-  perspective: perspectiveSchema.default("in-universe"),
-  /** When this assertion holds in-world. Absent means always. */
-  validTime: timeSpanSchema.optional(),
-  meta: metaSchema,
-  provenance: provenanceSchema.optional(),
-  citation: z.array(citationSchema).optional(),
-  /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
-  module: z.string().optional(),
-  species: z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Species"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  }).optional(),
-  culture: z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Culture"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  }).optional(),
-  gender: sexSchema.optional(),
-  pronouns: z.string().optional(),
-  /** A byname earned in life, e.g. 'the Bold'. Rendered as 'Name the Bold'. */
-  epithet: z.string().optional(),
-  alignment: alignmentSchema.optional(),
-  status: personStatusSchema.default("alive"),
-  birth: z.strictObject({
-    time: temporalPositionSchema.optional(),
-    place: z.strictObject({
-      /** Resource type of the target. */
-      type: z.literal("Place"),
-      id: z.uuid(),
-      /** Denormalized display name, for convenience. */
-      display: z.string().optional(),
-    }).optional(),
-  }).optional(),
-  death: z.strictObject({
-    time: temporalPositionSchema.optional(),
-    place: z.strictObject({
-      /** Resource type of the target. */
-      type: z.literal("Place"),
-      id: z.uuid(),
-      /** Denormalized display name, for convenience. */
-      display: z.string().optional(),
-    }).optional(),
-    cause: z.string().optional(),
-  }).optional(),
-  memberOf: z.array(z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Faction"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  })).optional(),
-  residence: z.strictObject({
-    /** Resource type of the target. */
-    type: z.literal("Place"),
-    id: z.uuid(),
-    /** Denormalized display name, for convenience. */
-    display: z.string().optional(),
-  }).optional(),
-  occupation: z.string().optional(),
-  /** How the person stands with the world's powers, each -100..100. */
-  standing: z.strictObject({
-    /** Ability to compel others. */
-    power: z.int().min(-100).max(100).optional(),
-    /** Regard among peers and rivals. */
-    honor: z.int().min(-100).max(100).optional(),
-    /** Regard among the faithful and the gods. */
-    piety: z.int().min(-100).max(100).optional(),
-    /** Regard among the common people. */
-    reputation: z.int().min(-100).max(100).optional(),
-  }).optional(),
-  /** Genetic record produced by the genetics generator. */
-  genome: z.strictObject({
-    /** Chromosome number to allele pair, e.g. '3=9' or 'X1=Y3'. */
-    chromosomes: z.record(z.string(), z.string().regex(new RegExp("^[XY]?[0-9]+=[XY]?[0-9]+$"))),
-    /** Inches. */
-    height: z.int().optional(),
-    /** Pounds. */
-    weight: z.int().optional(),
-  }).optional(),
-  /** The phenotype: what each of this person's genes expresses as. Distinct from a species feature such as darkvision, which is a feature. */
-  phenotype: z.array(z.strictObject({
-    gene: z.string(),
-    /** What the gene expresses as: blue eyes, a heavy build. */
-    expression: z.string(),
-  })).optional(),
-  /** A picture of the person. Somewhere on the web, or a path to a file the world itself holds. */
-  portrait: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
-});
-export type Person = z.infer<typeof personSchema>;
 
 /** A location at any scale, optionally with geometry in the world's CRS (schema.org Place, CIDOC E53, GeoSPARQL Feature). */
 export const placeSchema = z.strictObject({
@@ -2352,7 +2274,7 @@ export const questSchema = z.strictObject({
   /** Who set it. */
   giver: z.strictObject({
     /** Resource type of the target. */
-    type: z.enum(["Person", "Faction"]),
+    type: z.enum(["Character", "Faction"]),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
@@ -2405,7 +2327,7 @@ export const relationshipSchema = z.strictObject({
   /** The first party. For an asymmetric type this is the senior side: the parent, the liege, the mentor. */
   party1: z.strictObject({
     /** Resource type of the target. */
-    type: z.literal("Person"),
+    type: z.literal("Character"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
@@ -2413,7 +2335,7 @@ export const relationshipSchema = z.strictObject({
   /** The second party. */
   party2: z.strictObject({
     /** Resource type of the target. */
-    type: z.literal("Person"),
+    type: z.literal("Character"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
@@ -2433,6 +2355,83 @@ export const relationshipSchema = z.strictObject({
   successionOrder: z.int().min(1).optional(),
 });
 export type Relationship = z.infer<typeof relationshipSchema>;
+
+/** A staged unit of action: a fight, a conversation, a search of a room. It is preparation, not history — a scene that is played produces an event in the record, and the scene stays as the thing that was set up. The type says what kind it is, and a medium that stages other kinds adds its own codes rather than its own resource. */
+export const sceneSchema = z.strictObject({
+  /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateName: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
+  canonStatus: canonStatusSchema,
+  /** Out-of-universe by default: an encounter is preparation. Playing it produces an event, which is in-universe. */
+  perspective: perspectiveSchema.default("out-of-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  meta: metaSchema,
+  provenance: provenanceSchema.optional(),
+  citation: z.array(citationSchema).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
+  module: z.string().optional(),
+  /** What sort of scene it is. */
+  type: sceneTypeSchema.optional(),
+  /** The campaign it is prepared for. */
+  campaign: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Campaign"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }).optional(),
+  /** Where it happens. */
+  location: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Place"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }),
+  /** Quadtree cell token of the battle map it is fought on. */
+  cell: cellSchema.optional(),
+  /** How hard it is meant to be. Games rate this; other media do not. */
+  difficulty: sceneDifficultySchema.optional(),
+  /** What the party faces, and how many of each. Games cast these as stat blocks; other media leave it unset. */
+  adversary: z.array(z.strictObject({
+    actor: z.strictObject({
+      /** Resource type of the target. */
+      type: z.enum(["Statblock", "Character"]),
+      id: z.uuid(),
+      /** Denormalized display name, for convenience. */
+      display: z.string().optional(),
+    }),
+    count: z.int().min(1).default(1),
+  })).optional(),
+  /** The quest it belongs to. */
+  quest: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Quest"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }).optional(),
+  /** The event it produced, once it has been played. */
+  played: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Event"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }).optional(),
+});
+export type Scene = z.infer<typeof sceneSchema>;
 
 /** One sitting of a campaign. Dated in real time, and the place to record what the group did: the in-world events it produced are referenced, not repeated. */
 export const sessionSchema = z.strictObject({
@@ -2704,10 +2703,10 @@ export const statblockSchema = z.strictObject({
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
   }).optional(),
-  /** The person this represents, for a statted individual. */
-  person: z.strictObject({
+  /** The character this represents, for a statted individual. */
+  character: z.strictObject({
     /** Resource type of the target. */
-    type: z.literal("Person"),
+    type: z.literal("Character"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
@@ -2828,7 +2827,7 @@ export const tenureSchema = z.strictObject({
   }),
   holder: z.strictObject({
     /** Resource type of the target. */
-    type: z.literal("Person"),
+    type: z.literal("Character"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
@@ -2896,6 +2895,66 @@ export const titleSchema = z.strictObject({
 });
 export type Title = z.infer<typeof titleSchema>;
 
+/** One person's asserted right to a title. A claim is the seed of a war: it can be pressed, won, lost, or left to descend to an heir. */
+export const titleClaimSchema = z.strictObject({
+  /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
+  id: z.uuid(),
+  /** The resource type this record is an instance of, e.g. Place. Set by the API on every record it hands out, so a body carries its own type wherever it travels. */
+  resourceType: z.string().optional(),
+  /** Deterministic v5 id derived from the provenance seed, so regeneration is idempotent. */
+  derivedId: z.uuid().optional(),
+  /** The World this resource belongs to. */
+  world: z.uuid(),
+  name: z.string().min(1),
+  alternateName: z.array(z.string()).optional(),
+  description: z.string().optional(),
+  /** A picture that stands for the record: a portrait, a cover, a map. An address, not the bytes. Somewhere on the web, or a path to a file the world itself holds. */
+  image: z.string().refine((value) => URL.canParse(value) || value.startsWith('/'), { error: 'must be a URL or an absolute path' }).optional(),
+  canonStatus: canonStatusSchema,
+  perspective: perspectiveSchema.default("in-universe"),
+  /** When this assertion holds in-world. Absent means always. */
+  validTime: timeSpanSchema.optional(),
+  meta: metaSchema,
+  provenance: provenanceSchema.optional(),
+  citation: z.array(citationSchema).optional(),
+  /** Content-addressed id of the module this record ships in, when it is not native to the world. Set from the layer the record is read through. */
+  module: z.string().optional(),
+  claimant: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Character"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }),
+  title: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Title"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }),
+  basis: claimBasisSchema,
+  /** The person the claim descends from, when it comes by inheritance or marriage. */
+  through: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Character"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }).optional(),
+  /** Whether the claim has been pressed by force. */
+  pressed: z.boolean().default(false),
+  /** The event that made the claim good or void. */
+  resolvedBy: z.strictObject({
+    /** Resource type of the target. */
+    type: z.literal("Event"),
+    id: z.uuid(),
+    /** Denormalized display name, for convenience. */
+    display: z.string().optional(),
+  }).optional(),
+});
+export type TitleClaim = z.infer<typeof titleClaimSchema>;
+
 /** A creative work, in-world (a chronicle, a legend) or out-of-world (an adventure module) (schema.org CreativeWork; NOnt narration). */
 export const workSchema = z.strictObject({
   /** Random v4, assigned by the API when absent. Never derived from mutable content, so renames never break references. */
@@ -2923,7 +2982,7 @@ export const workSchema = z.strictObject({
   type: workTypeSchema,
   author: z.strictObject({
     /** Resource type of the target. */
-    type: z.literal("Person"),
+    type: z.literal("Character"),
     id: z.uuid(),
     /** Denormalized display name, for convenience. */
     display: z.string().optional(),
@@ -3082,6 +3141,28 @@ export const vocabularies = {
       { code: "usurpation", display: "Usurpation" },
     ],
   },
+  "condition-code": {
+    id: "condition-code",
+    name: "Condition code",
+    description: "The states a creature can be in that change what it may do. These are definitions, not occurrences: that a creature is poisoned right now is a Condition record naming one of these codes.",
+    codes: [
+      { code: "blinded", display: "Blinded" },
+      { code: "charmed", display: "Charmed" },
+      { code: "deafened", display: "Deafened" },
+      { code: "exhaustion", display: "Exhaustion" },
+      { code: "frightened", display: "Frightened" },
+      { code: "grappled", display: "Grappled" },
+      { code: "incapacitated", display: "Incapacitated" },
+      { code: "invisible", display: "Invisible" },
+      { code: "paralyzed", display: "Paralyzed" },
+      { code: "petrified", display: "Petrified" },
+      { code: "poisoned", display: "Poisoned" },
+      { code: "prone", display: "Prone" },
+      { code: "restrained", display: "Restrained" },
+      { code: "stunned", display: "Stunned" },
+      { code: "unconscious", display: "Unconscious" },
+    ],
+  },
   "creature-type": {
     id: "creature-type",
     name: "Creature type",
@@ -3121,31 +3202,6 @@ export const vocabularies = {
       { code: "radiant", display: "Radiant" },
       { code: "slashing", display: "Slashing" },
       { code: "thunder", display: "Thunder" },
-    ],
-  },
-  "encounter-difficulty": {
-    id: "encounter-difficulty",
-    name: "Encounter difficulty",
-    description: "How hard an encounter is meant to be for the party it is prepared for.",
-    codes: [
-      { code: "trivial", display: "Trivial" },
-      { code: "easy", display: "Easy" },
-      { code: "medium", display: "Medium" },
-      { code: "hard", display: "Hard" },
-      { code: "deadly", display: "Deadly" },
-    ],
-  },
-  "encounter-kind": {
-    id: "encounter-kind",
-    name: "Encounter kind",
-    description: "What sort of encounter has been prepared.",
-    codes: [
-      { code: "combat", display: "Combat" },
-      { code: "trap", display: "Trap" },
-      { code: "hazard", display: "Hazard" },
-      { code: "social", display: "Social" },
-      { code: "exploration", display: "Exploration" },
-      { code: "puzzle", display: "Puzzle" },
     ],
   },
   "event-type": {
@@ -3638,6 +3694,36 @@ export const vocabularies = {
       { code: "wool", display: "Wool" },
     ],
   },
+  "scene-difficulty": {
+    id: "scene-difficulty",
+    name: "Scene difficulty",
+    description: "How hard an encounter is meant to be for the party it is prepared for.",
+    codes: [
+      { code: "trivial", display: "Trivial" },
+      { code: "easy", display: "Easy" },
+      { code: "medium", display: "Medium" },
+      { code: "hard", display: "Hard" },
+      { code: "deadly", display: "Deadly" },
+    ],
+  },
+  "scene-type": {
+    id: "scene-type",
+    name: "Scene type",
+    description: "What sort of scene this is. The codes are the kinds a scene can be in any medium that stages them; a domain that stages other kinds adds its own.",
+    codes: [
+      { code: "combat", display: "Combat" },
+      { code: "social", display: "Social" },
+      { code: "exploration", display: "Exploration" },
+      { code: "puzzle", display: "Puzzle" },
+      { code: "trap", display: "Trap" },
+      { code: "hazard", display: "Hazard" },
+      { code: "dialogue", display: "Dialogue" },
+      { code: "action", display: "Action" },
+      { code: "montage", display: "Montage" },
+      { code: "establishing", display: "Establishing" },
+      { code: "transition", display: "Transition" },
+    ],
+  },
   sex: {
     id: "sex",
     name: "Sex",
@@ -3770,25 +3856,24 @@ export const models = {
   calendar: calendarSchema,
   campaign: campaignSchema,
   character: characterSchema,
-  claim: claimSchema,
+  "character-sheet": characterSheetSchema,
   class: classSchema,
   condition: conditionSchema,
   culture: cultureSchema,
   economy: economySchema,
-  encounter: encounterSchema,
   event: eventSchema,
   faction: factionSchema,
   feat: featSchema,
   feature: featureSchema,
   item: itemSchema,
   language: languageSchema,
-  person: personSchema,
   place: placeSchema,
   population: populationSchema,
   proficiency: proficiencySchema,
   project: projectSchema,
   quest: questSchema,
   relationship: relationshipSchema,
+  scene: sceneSchema,
   session: sessionSchema,
   skill: skillSchema,
   species: speciesSchema,
@@ -3796,6 +3881,7 @@ export const models = {
   statblock: statblockSchema,
   tenure: tenureSchema,
   title: titleSchema,
+  "title-claim": titleClaimSchema,
   work: workSchema,
   world: worldSchema,
 } as const;
@@ -3808,25 +3894,24 @@ export const resourceTypes = {
   calendar: "Calendar",
   campaign: "Campaign",
   character: "Character",
-  claim: "Claim",
+  "character-sheet": "CharacterSheet",
   class: "Class",
   condition: "Condition",
   culture: "Culture",
   economy: "Economy",
-  encounter: "Encounter",
   event: "Event",
   faction: "Faction",
   feat: "Feat",
   feature: "Feature",
   item: "Item",
   language: "Language",
-  person: "Person",
   place: "Place",
   population: "Population",
   proficiency: "Proficiency",
   project: "Project",
   quest: "Quest",
   relationship: "Relationship",
+  scene: "Scene",
   session: "Session",
   skill: "Skill",
   species: "Species",
@@ -3834,6 +3919,7 @@ export const resourceTypes = {
   statblock: "Statblock",
   tenure: "Tenure",
   title: "Title",
+  "title-claim": "TitleClaim",
   work: "Work",
   world: "World",
 } as const satisfies Record<ModelId, string>;
@@ -3872,16 +3958,16 @@ export const modelInfo = {
   character: {
     id: "character",
     name: "Character",
+    description: "A person in the world.",
+    category: "people",
+    icon: "user",
+  },
+  "character-sheet": {
+    id: "character-sheet",
+    name: "CharacterSheet",
     description: "A person as played, in one campaign.",
     category: "play",
     icon: "user-round",
-  },
-  claim: {
-    id: "claim",
-    name: "Claim",
-    description: "One person's asserted right to a title.",
-    category: "people",
-    icon: "gavel",
   },
   class: {
     id: "class",
@@ -3893,8 +3979,8 @@ export const modelInfo = {
   condition: {
     id: "condition",
     name: "Condition",
-    description: "A state a creature can be in that changes what it may do.",
-    category: "rules",
+    description: "That a creature is in a state the rules name: poisoned, grappled, frightened. The states themselves are codes.",
+    category: "play",
     icon: "activity",
   },
   culture: {
@@ -3910,13 +3996,6 @@ export const modelInfo = {
     description: "A snapshot of a settlement's economy at a point in time.",
     category: "places",
     icon: "coins",
-  },
-  encounter: {
-    id: "encounter",
-    name: "Encounter",
-    description: "A confrontation prepared for a party.",
-    category: "play",
-    icon: "skull",
   },
   event: {
     id: "event",
@@ -3960,13 +4039,6 @@ export const modelInfo = {
     category: "lore",
     icon: "languages",
   },
-  person: {
-    id: "person",
-    name: "Person",
-    description: "A person in the world.",
-    category: "people",
-    icon: "user",
-  },
   place: {
     id: "place",
     name: "Place",
@@ -4008,6 +4080,13 @@ export const modelInfo = {
     description: "A tie between two people.",
     category: "people",
     icon: "heart-handshake",
+  },
+  scene: {
+    id: "scene",
+    name: "Scene",
+    description: "A confrontation prepared for a party.",
+    category: "play",
+    icon: "skull",
   },
   session: {
     id: "session",
@@ -4058,6 +4137,13 @@ export const modelInfo = {
     category: "people",
     icon: "crown",
   },
+  "title-claim": {
+    id: "title-claim",
+    name: "TitleClaim",
+    description: "One person's asserted right to a title.",
+    category: "people",
+    icon: "gavel",
+  },
   work: {
     id: "work",
     name: "Work",
@@ -4079,10 +4165,11 @@ export const readOnlyFields = ["id","meta","module","resourceType","world"] as c
 
 /** The properties a record's in-world valid time is derived from when it states none, by model. Dotted paths. */
 export const validTimeFields = {
+  character: {"begin":"birth.time","end":"death.time"},
+  condition: {"begin":"onset","end":"abatement"},
   economy: {"begin":"effective"},
   event: {"begin":"occurred.begin","end":"occurred.end"},
   faction: {"begin":"founded","end":"dissolved"},
-  person: {"begin":"birth.time","end":"death.time"},
   place: {"begin":"founded"},
   population: {"begin":"effective"},
 } as const satisfies Partial<Record<ModelId, { begin: string; end?: string }>>;

@@ -3,12 +3,8 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Markdown } from './Markdown';
 import { config } from '../config';
-import {
-  type Reference,
-  type Resource,
-  isReference,
-  modelOfReference,
-} from '../api/types';
+import { type Reference, type Resource, isReference } from '../api/types';
+import { useOntology } from '../app/ontology';
 import { recordPath, useWorld } from '../app/world';
 import { type Field, humanize } from '../schema/fields';
 import {
@@ -623,8 +619,9 @@ export function Value(props: {
 
 function ReferenceLink(props: { readonly reference: Reference }) {
   const { world } = useWorld();
+  const ontology = useOntology();
   const { id, display } = props.reference;
-  const model = modelOfReference(props.reference);
+  const model = ontology.idOf(props.reference.type);
   return (
     <span className="inline-flex items-center gap-1.5">
       <Link

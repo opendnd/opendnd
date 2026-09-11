@@ -35,10 +35,10 @@ describe('the arithmetic of a sheet', () => {
 
   it('takes the level a character states, and adds up their classes when they state none', () => {
     expect(levelOf({ level: 7 })).toBe(7);
-    expect(levelOf({ classes: [{ level: 3 }, { level: 2 }] })).toBe(5);
+    expect(levelOf({ class: [{ level: 3 }, { level: 2 }] })).toBe(5);
     // A character with neither is first level, not level zero.
     expect(levelOf({})).toBe(1);
-    expect(levelOf({ level: 0, classes: [] })).toBe(1);
+    expect(levelOf({ level: 0, class: [] })).toBe(1);
   });
 
   it('writes a bonus with its sign, and a minus that is a minus', () => {

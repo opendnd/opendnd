@@ -4,7 +4,6 @@ import { Link, useNavigate, useParams } from 'react-router';
 import type { Resource } from '../api/types';
 import { useApi } from '../app/context';
 import { useOntology } from '../app/ontology';
-import { resourceTypeOf } from '../api/types';
 import { recordPath, useWorld } from '../app/world';
 import { SchemaForm } from '../components/Form';
 import { ErrorNotice, Notice } from '../components/Notice';
@@ -96,7 +95,7 @@ export function Generate() {
     try {
       await api.importResources(world.id, results);
       const own = results.filter(
-        (r) => r.resourceType === resourceTypeOf(model),
+        (r) => r.resourceType === ontology.type(model),
       );
       void navigate(
         own.length === 1 && own[0]

@@ -29,7 +29,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 /** How a suggestion is worded for each kind of record it is drawn from. */
 const ASKS: Record<string, (name: string) => string> = {
-  person: (name) => `Who is ${name}?`,
+  character: (name) => `Who is ${name}?`,
   place: (name) => `Tell me about ${name}.`,
   faction: (name) => `What does ${name} want?`,
   event: (name) => `What happened at ${name}?`,
@@ -50,7 +50,7 @@ export function AskBlock() {
   // Suggestions are drawn from the world rather than written here, so they
   // name things that actually exist and read differently in every world.
   const suggestions = useRequest(async () => {
-    const kinds = ['person', 'place', 'faction', 'event'].filter((m) =>
+    const kinds = ['character', 'place', 'faction', 'event'].filter((m) =>
       ontology.model(m),
     );
     const pages = await Promise.all(

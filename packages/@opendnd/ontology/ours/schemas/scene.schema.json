@@ -1,9 +1,9 @@
 {
-  "$id": "https://docs.opendnd.org/ours/schemas/encounter.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/scene.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Encounter",
+  "title": "Scene",
   "type": "object",
-  "description": "A confrontation prepared for a party. It is preparation, not history: an encounter that is played produces an event in the world's record, and the encounter stays as the thing that was set up.",
+  "description": "A staged unit of action: a fight, a conversation, a search of a room. It is preparation, not history \u2014 a scene that is played produces an event in the record, and the scene stays as the thing that was set up. The type says what kind it is, and a medium that stages other kinds adds its own codes rather than its own resource.",
   "allOf": [
     {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
@@ -16,8 +16,8 @@
       "description": "Out-of-universe by default: an encounter is preparation. Playing it produces an event, which is in-universe."
     },
     "type": {
-      "$ref": "https://docs.opendnd.org/ours/vocabularies/encounter-kind.schema.json",
-      "description": "What sort of encounter it is. A trap is an encounter, not a thing of its own."
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/scene-type.schema.json",
+      "description": "What sort of scene it is."
     },
     "campaign": {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
@@ -32,11 +32,12 @@
       "description": "Quadtree cell token of the battle map it is fought on."
     },
     "difficulty": {
-      "$ref": "https://docs.opendnd.org/ours/vocabularies/encounter-difficulty.schema.json"
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/scene-difficulty.schema.json",
+      "description": "How hard it is meant to be. Games rate this; other media do not."
     },
     "adversary": {
       "type": "array",
-      "description": "What the party faces, and how many of each.",
+      "description": "What the party faces, and how many of each. Games cast these as stat blocks; other media leave it unset.",
       "items": {
         "type": "object",
         "properties": {

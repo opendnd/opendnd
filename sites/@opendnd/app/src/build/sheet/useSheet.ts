@@ -62,11 +62,11 @@ export function useSheet(character: Record<string, unknown>): Sheet {
   const ontology = useOntology();
   const { world } = useWorld();
 
-  const classes = Array.isArray(character.classes)
-    ? (character.classes as { class?: { id?: string }; level?: number }[])
+  const classes = Array.isArray(character.class)
+    ? (character.class as { class?: { id?: string }; level?: number }[])
     : [];
-  const held = Array.isArray(character.proficiencies)
-    ? character.proficiencies
+  const held = Array.isArray(character.proficiency)
+    ? character.proficiency
     : [];
   const classIds = classes
     .map((one) => one.class?.id)

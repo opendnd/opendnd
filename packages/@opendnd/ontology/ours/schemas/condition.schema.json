@@ -3,13 +3,58 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Condition",
   "type": "object",
-  "description": "A state a creature can be in that changes what it may do: blinded, grappled, frightened. The rules text is the description on the base.",
+  "description": "A state a creature is in that changes what it may do: this one, poisoned, from the spider's bite, until it saves. The states themselves are codes rather than records; what is recorded here is that one of them holds. Read as FHIR reads a Condition: a subject, a code, and the span it holds for.",
   "allOf": [
     {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
-  "properties": {},
-  "required": [],
+  "properties": {
+    "subject": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "Who is in this state."
+    },
+    "code": {
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/condition-code.schema.json"
+    },
+    "severity": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "How far it has gone, where the rules count degrees. Exhaustion has levels; most conditions have none."
+    },
+    "cause": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "What put them in it: the creature, the spell, the trap."
+    },
+    "onset": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition",
+      "description": "When it took hold, in the world's own time."
+    },
+    "abatement": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition",
+      "description": "When it lifted. Absent while it still holds."
+    },
+    "endsOn": {
+      "type": "object",
+      "description": "What lifts it, for a condition the rules let a creature shake off.",
+      "properties": {
+        "save": {
+          "$ref": "https://docs.opendnd.org/ours/vocabularies/ability.schema.json",
+          "description": "The saving throw that ends it."
+        },
+        "dc": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The difficulty of that save."
+        },
+        "when": {
+          "type": "string",
+          "description": "When it may be attempted, in the rules' own words: at the end of each of its turns."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["subject", "code"],
   "unevaluatedProperties": false
 }

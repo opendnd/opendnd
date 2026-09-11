@@ -1,10 +1,10 @@
 {
   "resourceType": "Vocabulary",
-  "id": "encounter-difficulty",
-  "url": "https://docs.opendnd.org/ours/vocabularies/encounter-difficulty.json",
+  "id": "scene-difficulty",
+  "url": "https://docs.opendnd.org/ours/vocabularies/scene-difficulty.json",
   "version": "0.1.0",
   "system": "internal",
-  "name": "Encounter difficulty",
+  "name": "Scene difficulty",
   "description": "How hard an encounter is meant to be for the party it is prepared for.",
   "codes": [
     {

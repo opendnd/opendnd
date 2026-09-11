@@ -50,7 +50,7 @@
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition",
       "description": "Where the party currently stands in the world's own calendar."
     },
-    "character": {
+    "sheet": {
       "type": "array",
       "items": {
         "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"

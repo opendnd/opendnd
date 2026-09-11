@@ -16,7 +16,7 @@
     },
     {
       "predicate": "holder",
-      "target": "Person"
+      "target": "Character"
     },
     {
       "predicate": "began",

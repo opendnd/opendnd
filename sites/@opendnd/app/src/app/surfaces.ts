@@ -28,7 +28,7 @@ export const SURFACES = {
   characters: {
     path: 'characters',
     label: 'Characters',
-    model: 'character',
+    model: 'character-sheet',
     description:
       'The people as played: sheets, levels and the campaigns they belong to.',
   },
@@ -119,7 +119,7 @@ export const CATEGORIES: readonly Category[] = [
     key: 'people',
     label: 'People',
     description: 'Who is in the world, and who holds power over whom.',
-    anchor: 'person',
+    anchor: 'character',
   },
   {
     key: 'places',

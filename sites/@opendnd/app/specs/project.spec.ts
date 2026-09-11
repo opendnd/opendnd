@@ -22,7 +22,7 @@ describe('a project record read as pages', () => {
       record({
         status: 'published',
         replaces: ['home'],
-        pages: [
+        page: [
           {
             id: 'front',
             name: 'Front',
@@ -52,7 +52,7 @@ describe('a project record read as pages', () => {
     const project = projectOf(
       record({
         status: 'nonsense',
-        pages: [
+        page: [
           {
             blocks: [
               { block: 'ask', col: -5, row: 0, w: 99, h: 99 },
@@ -81,7 +81,7 @@ describe('which layout a path draws', () => {
   const own = projectOf(
     record({
       status: 'published',
-      pages: [
+      page: [
         {
           id: 'front',
           name: 'Front',

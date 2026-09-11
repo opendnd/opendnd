@@ -3,9 +3,9 @@ import {
   GeneratorContext,
   LOCALITY_TIERS,
   childContext,
-  personGenerator,
+  characterGenerator,
 } from '@opendnd/generators';
-import type { Faction, Person, Prosperity } from '@opendnd/types';
+import type { Faction, Character, Prosperity } from '@opendnd/types';
 import { checkHistory } from './checker';
 import { lifecycleOf } from './lifecycle';
 import {
@@ -142,10 +142,10 @@ function foundHouse(
   const fctx = childContext(ctx, `founders/${house.id}`);
   const founder = (
     label: string,
-    sex: Person['gender'],
+    sex: Character['gender'],
     age: number,
-  ): Person => ({
-    ...personGenerator.generate(
+  ): Character => ({
+    ...characterGenerator.generate(
       { species: input.species, culture: input.culture, sex },
       childContext(fctx, label),
     ),
@@ -178,8 +178,8 @@ function foundHouse(
       year,
       name: `Founding of ${house.name}`,
       participant: [
-        { actor: ref('person', lord), role: 'founder' },
-        { actor: ref('person', lady), role: 'founder' },
+        { actor: ref('character', lord), role: 'founder' },
+        { actor: ref('character', lady), role: 'founder' },
       ],
       ...(place ? { location: [place] } : {}),
     }),

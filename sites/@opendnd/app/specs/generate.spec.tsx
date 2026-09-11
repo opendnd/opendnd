@@ -31,7 +31,7 @@ function apiFor(extra: Record<string, Handler> = {}) {
         ? {
             results: [
               {
-                model: 'person',
+                model: 'character',
                 id: OWNER_ID,
                 name: 'Ada',
                 canonStatus: 'canon',
@@ -94,21 +94,21 @@ describe('generating from the app', () => {
       screen.getByText('A pet with a mood, belonging to someone.'),
     ).toBeInTheDocument();
 
-    // The owner is a reference fixed to persons, so the picker says so and
-    // asks the API for persons only.
+    // The owner is a reference fixed to characters, so the picker says so and
+    // asks the API for characters only.
     const owner = await screen.findByLabelText(/^Owner/);
-    expect(owner).toHaveAttribute('placeholder', 'Search person by name');
+    expect(owner).toHaveAttribute('placeholder', 'Search character by name');
     await user.type(owner, 'Ada');
     await user.click(await screen.findByRole('option', { name: /Ada/ }));
     const search = calls.find((c) => c.url.includes('$search'))!;
-    expect(new URL(search.url).searchParams.get('models')).toBe('person');
+    expect(new URL(search.url).searchParams.get('models')).toBe('character');
 
     await user.selectOptions(screen.getByLabelText(/^Mood/), 'sad');
     await user.click(screen.getByRole('button', { name: 'Generate' }));
 
     const generate = calls.find((c) => c.url.includes('$generate'))!;
     expect(await generate.json()).toEqual({
-      owner: { type: 'Person', id: OWNER_ID, display: 'Ada' },
+      owner: { type: 'Character', id: OWNER_ID, display: 'Ada' },
       mood: 'sad',
     });
 
@@ -180,7 +180,7 @@ describe('generating from the app', () => {
           ),
         },
       ],
-      { initialEntries: [`/worlds/${WORLD_ID}/person/generate`] },
+      { initialEntries: [`/worlds/${WORLD_ID}/character/generate`] },
     );
     render(
       <AppProvider services={services}>
@@ -188,7 +188,7 @@ describe('generating from the app', () => {
       </AppProvider>,
     );
     expect(
-      await screen.findByText('Nothing generates a person yet'),
+      await screen.findByText('Nothing generates a character yet'),
     ).toBeInTheDocument();
   });
 });

@@ -15,8 +15,8 @@
       "target": "Species"
     },
     {
-      "predicate": "person",
-      "target": "Person"
+      "predicate": "character",
+      "target": "Character"
     },
     {
       "predicate": "proficiency",

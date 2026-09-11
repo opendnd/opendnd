@@ -2,8 +2,8 @@ import { describe, expect, it } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { derivedId } from '@opendnd/random';
-import { cultureSchema, personSchema, speciesSchema } from '@opendnd/types';
-import { createContext, personGenerator } from 'src';
+import { cultureSchema, characterSchema, speciesSchema } from '@opendnd/types';
+import { createContext, characterGenerator } from 'src';
 
 const read = (name: string) =>
   JSON.parse(readFileSync(join(__dirname, 'fixtures', name), 'utf8'));
@@ -12,17 +12,17 @@ const culture = cultureSchema.parse(read('culture.json'));
 const world = '3c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a11';
 const now = '2026-09-03T12:00:00Z';
 
-describe('personGenerator', () => {
+describe('characterGenerator', () => {
   const ctx = () => createContext({ world, seedPath: 'dynasty/thorne/3', now });
 
-  it('produces a Person the ontology accepts, stamped as generated', () => {
-    const person = personSchema.parse(
-      personGenerator.generate({ species, culture }, ctx()),
+  it('produces a Character the ontology accepts, stamped as generated', () => {
+    const person = characterSchema.parse(
+      characterGenerator.generate({ species, culture }, ctx()),
     );
     expect(person.canonStatus).toBe('generated');
     expect(person.world).toBe(world);
     expect(person.derivedId).toBe(derivedId(world, 'dynasty/thorne/3'));
-    expect(person.provenance?.generatedBy).toBe('person@1.0.0');
+    expect(person.provenance?.generatedBy).toBe('character@1.0.0');
     expect(person.provenance?.seed).toBe('dynasty/thorne/3');
     expect(person.provenance?.derivedFrom?.map((r) => r.type)).toEqual([
       'species',
@@ -36,9 +36,9 @@ describe('personGenerator', () => {
   });
 
   it('is reproducible for a seed path and differs across seed paths', () => {
-    const a = personGenerator.generate({ species, culture }, ctx());
-    const b = personGenerator.generate({ species, culture }, ctx());
-    const c = personGenerator.generate(
+    const a = characterGenerator.generate({ species, culture }, ctx());
+    const b = characterGenerator.generate({ species, culture }, ctx());
+    const c = characterGenerator.generate(
       { species, culture },
       createContext({ world, seedPath: 'dynasty/thorne/4', now }),
     );
@@ -48,7 +48,7 @@ describe('personGenerator', () => {
   });
 
   it('honours a requested sex and name', () => {
-    const p = personGenerator.generate(
+    const p = characterGenerator.generate(
       { species, culture, sex: 'female', name: 'Livia Honoria' },
       ctx(),
     );

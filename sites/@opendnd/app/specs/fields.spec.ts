@@ -175,7 +175,7 @@ describe('references that name their models', () => {
     );
     const owner = input.fields!.find((f) => f.name === 'owner')!;
     expect(owner.kind).toBe('reference');
-    expect(owner.referenceModels).toEqual(['person']);
+    expect(owner.referenceModels).toEqual(['character']);
     // A plain Reference fixes nothing and may point anywhere.
     expect(field('owner').referenceModels).toBeUndefined();
   });

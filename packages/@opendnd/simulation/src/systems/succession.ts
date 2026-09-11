@@ -1,6 +1,6 @@
 import { GeneratorContext, childContext } from '@opendnd/generators';
 import type {
-  Person,
+  Character,
   Reference,
   SuccessionLaw,
   Tenure,
@@ -94,7 +94,7 @@ export function succession(
             participant: predecessor
               ? [
                   {
-                    actor: ref('person', predecessor),
+                    actor: ref('character', predecessor),
                     role: 'predecessor' as const,
                   },
                 ]
@@ -119,11 +119,11 @@ export function succession(
           }
         : {}),
       participant: [
-        { actor: ref('person', heir), role: 'successor' },
+        { actor: ref('character', heir), role: 'successor' },
         ...(predecessor
           ? [
               {
-                actor: ref('person', predecessor),
+                actor: ref('character', predecessor),
                 role: 'predecessor' as const,
               },
             ]
@@ -158,8 +158,8 @@ export function succession(
 function recordClaims(
   state: HistoryState,
   title: Title,
-  predecessor: Person | undefined,
-  heir: Person,
+  predecessor: Character | undefined,
+  heir: Character,
   yctx: GeneratorContext,
 ): void {
   if (!predecessor) return;
@@ -203,7 +203,7 @@ function investCadet(
   state: HistoryState,
   title: Title,
   lifecycle: Lifecycle,
-): Person | undefined {
+): Character | undefined {
   const liegeHouse = state.houses.get(title.faction.id)?.partOf?.id;
   if (liegeHouse === undefined) return undefined;
   const liegeTitle = state.titleOfHouse(liegeHouse);
@@ -254,8 +254,8 @@ function bond(
   state: HistoryState,
   input: HistoryInput,
   yctx: GeneratorContext,
-  liege: Person,
-  vassal: Person,
+  liege: Character,
+  vassal: Character,
 ): void {
   const already = state.relationships.some(
     (r) =>
@@ -279,7 +279,7 @@ function bond(
   );
 }
 
-function holderOf(state: HistoryState, titleId: string): Person | undefined {
+function holderOf(state: HistoryState, titleId: string): Character | undefined {
   const tenure = state.currentTenure(titleId);
   if (!tenure) return undefined;
   const person = state.person(tenure.holder.id);
@@ -289,7 +289,7 @@ function holderOf(state: HistoryState, titleId: string): Person | undefined {
 function holderOfHouse(
   state: HistoryState,
   houseId: string,
-): Person | undefined {
+): Character | undefined {
   const title = state.titleOfHouse(houseId);
   return title ? holderOf(state, title.id) : undefined;
 }
@@ -301,14 +301,14 @@ function holderOfHouse(
  */
 export function chooseHeir(
   title: Title,
-  predecessor: Person | undefined,
+  predecessor: Character | undefined,
   houseId: string,
   state: HistoryState,
   lifecycle: Lifecycle,
   rng: GeneratorContext['rng'],
-): Person | undefined {
+): Character | undefined {
   const law: SuccessionLaw = title.successionLaw;
-  const eligible = (p: Person) =>
+  const eligible = (p: Character) =>
     state.isAlive(p) &&
     state.houseOf(p.id) === houseId &&
     (law !== 'agnatic' || p.gender === 'male');
@@ -324,7 +324,7 @@ export function chooseHeir(
   }
 
   const visited = new Set<string>([predecessor.id]);
-  const order = (children: Person[]) => {
+  const order = (children: Character[]) => {
     const sorted = [...children].sort(byBirth);
     return law === 'male-preference'
       ? [
@@ -333,7 +333,7 @@ export function chooseHeir(
         ]
       : sorted;
   };
-  const heirOf = (person: Person): Person | undefined => {
+  const heirOf = (person: Character): Character | undefined => {
     for (const child of order(state.children(person.id))) {
       if (visited.has(child.id)) continue;
       visited.add(child.id);
@@ -345,13 +345,13 @@ export function chooseHeir(
   };
 
   // Descendants first, then each generation of ancestors' other lines.
-  let frontier: Person[] = [predecessor];
+  let frontier: Character[] = [predecessor];
   while (frontier.length > 0) {
     for (const person of frontier) {
       const heir = heirOf(person);
       if (heir) return heir;
     }
-    const next: Person[] = [];
+    const next: Character[] = [];
     for (const person of frontier) {
       for (const parent of state.parents(person.id)) {
         if (!visited.has(parent.id)) {
@@ -366,10 +366,11 @@ export function chooseHeir(
   return [...members].sort(byAge(state))[0];
 }
 
-function byBirth(a: Person, b: Person): number {
+function byBirth(a: Character, b: Character): number {
   return (a.birth?.time?.year ?? 0) - (b.birth?.time?.year ?? 0);
 }
 
 function byAge(state: HistoryState) {
-  return (a: Person, b: Person) => (state.age(b) ?? 0) - (state.age(a) ?? 0);
+  return (a: Character, b: Character) =>
+    (state.age(b) ?? 0) - (state.age(a) ?? 0);
 }

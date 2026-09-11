@@ -1,11 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import {
-  type Reference,
-  type SearchHit,
-  modelOfReference,
-  resourceTypeOf,
-} from '../api/types';
+import type { Reference, SearchHit } from '../api/types';
 import { useApi } from '../app/context';
 import { useDebounced, useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
@@ -56,7 +51,7 @@ export function ReferencePicker(props: ReferencePickerProps) {
 
   const selected: SearchHit | null = props.value
     ? {
-        model: modelOfReference(props.value),
+        model: ontology.idOf(props.value.type),
         id: props.value.id,
         name: props.value.display ?? props.value.id,
         canonStatus: '',
@@ -77,7 +72,7 @@ export function ReferencePicker(props: ReferencePickerProps) {
           props.onChange(
             hit
               ? {
-                  type: resourceTypeOf(hit.model),
+                  type: ontology.type(hit.model),
                   id: hit.id,
                   display: hit.name,
                 }
@@ -121,14 +116,14 @@ export function ReferencePicker(props: ReferencePickerProps) {
             className="underline underline-offset-4"
             to={recordPath(
               world.id,
-              modelOfReference(props.value),
+              ontology.idOf(props.value.type),
               props.value.id,
             )}
           >
             {props.value.display ?? props.value.id}
           </Link>
           <Badge variant="ghost" className="text-muted-foreground">
-            {humanize(modelOfReference(props.value))}
+            {humanize(ontology.idOf(props.value.type))}
           </Badge>
         </p>
       )}

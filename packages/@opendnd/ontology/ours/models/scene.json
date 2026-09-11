@@ -1,14 +1,14 @@
 {
   "resourceType": "Model",
-  "id": "encounter",
-  "url": "https://docs.opendnd.org/ours/models/encounter.json",
+  "id": "scene",
+  "url": "https://docs.opendnd.org/ours/models/scene.json",
   "version": "0.1.0",
   "system": "internal",
-  "name": "Encounter",
+  "name": "Scene",
   "description": "A confrontation prepared for a party.",
   "category": "play",
   "icon": "skull",
-  "schema": "https://docs.opendnd.org/ours/schemas/encounter.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/scene.schema.json",
   "relationships": [
     {
       "predicate": "location",
@@ -32,7 +32,7 @@
     },
     {
       "predicate": "adversary.actor",
-      "target": "Person"
+      "target": "Character"
     }
   ],
   "mapsTo": [

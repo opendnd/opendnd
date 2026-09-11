@@ -1,9 +1,9 @@
 import type {
-  Claim,
+  TitleClaim,
   Economy,
   Event,
   Faction,
-  Person,
+  Character,
   Place,
   Population,
   Prosperity,
@@ -17,7 +17,7 @@ import type {
 export interface War {
   readonly event: Event;
   readonly titleId: string;
-  readonly claim: Claim;
+  readonly claim: TitleClaim;
   readonly claimantId: string;
   /** House pressing the claim, and the house holding the title. */
   readonly attacker: string;
@@ -41,13 +41,13 @@ export interface SettlementState {
 export class HistoryState {
   year: number;
   /** Insertion order is creation order, which keeps iteration deterministic. */
-  readonly people = new Map<string, Person>();
+  readonly people = new Map<string, Character>();
   readonly relationships: Relationship[] = [];
   readonly events: Event[] = [];
   readonly tenures: Tenure[] = [];
   readonly populations: Population[] = [];
   readonly economies: Economy[] = [];
-  readonly claims: Claim[] = [];
+  readonly claims: TitleClaim[] = [];
   /** Wars still being fought, in declaration order. */
   readonly wars: War[] = [];
 
@@ -66,7 +66,7 @@ export class HistoryState {
   readonly vacant = new Set<string>();
   /** Ids of people this run created, as opposed to authored input. */
   readonly generated = new Set<string>();
-  /** Person id -> year they must die, from canon death events. */
+  /** Character id -> year they must die, from canon death events. */
   readonly forcedDeath = new Map<string, number>();
 
   private readonly parentsOf = new Map<string, string[]>();
@@ -79,7 +79,7 @@ export class HistoryState {
     this.year = startYear;
   }
 
-  addPerson(person: Person, generated: boolean): void {
+  addPerson(person: Character, generated: boolean): void {
     this.people.set(person.id, person);
     if (generated) this.generated.add(person.id);
     const house = person.memberOf?.[0]?.id;
@@ -112,7 +112,7 @@ export class HistoryState {
     return this.houses.get(houseId)?.seat;
   }
 
-  livingMembers(houseId: string): Person[] {
+  livingMembers(houseId: string): Character[] {
     return (this.membersOfHouse.get(houseId) ?? [])
       .map((id) => this.person(id))
       .filter((p) => this.isAlive(p));
@@ -123,10 +123,10 @@ export class HistoryState {
    * all follow. Generated people are mutated; authored ones are replaced, so
    * the input resource is never written through.
    */
-  movePersonToHouse(person: Person, houseId: string): void {
+  movePersonToHouse(person: Character, houseId: string): void {
     if (this.houseOf(person.id) === houseId) return;
     const house = this.houses.get(houseId);
-    const patch: Partial<Person> = {
+    const patch: Partial<Character> = {
       memberOf: [
         {
           type: 'Faction',
@@ -193,30 +193,30 @@ export class HistoryState {
     this.events.push(event);
   }
 
-  person(id: string): Person {
+  person(id: string): Character {
     const p = this.people.get(id);
     if (!p) throw new Error(`Unknown person ${id}`);
     return p;
   }
 
-  isAlive(person: Person): boolean {
+  isAlive(person: Character): boolean {
     return person.death === undefined;
   }
 
-  age(person: Person): number | undefined {
+  age(person: Character): number | undefined {
     const born = person.birth?.time?.year;
     return born === undefined ? undefined : this.year - born;
   }
 
-  children(id: string): Person[] {
+  children(id: string): Character[] {
     return (this.childrenOf.get(id) ?? []).map((c) => this.person(c));
   }
 
-  parents(id: string): Person[] {
+  parents(id: string): Character[] {
     return (this.parentsOf.get(id) ?? []).map((c) => this.person(c));
   }
 
-  spouse(id: string): Person | undefined {
+  spouse(id: string): Character | undefined {
     const s = this.spouseOf.get(id);
     if (s === undefined) return undefined;
     const spouse = this.person(s);
@@ -267,7 +267,7 @@ export class HistoryState {
   }
 
   /** Living people, in creation order. */
-  living(): Person[] {
+  living(): Character[] {
     return [...this.people.values()].filter((p) => this.isAlive(p));
   }
 

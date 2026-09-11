@@ -1,18 +1,18 @@
 {
   "resourceType": "Model",
-  "id": "claim",
-  "url": "https://docs.opendnd.org/ours/models/claim.json",
+  "id": "title-claim",
+  "url": "https://docs.opendnd.org/ours/models/title-claim.json",
   "version": "0.1.0",
   "system": "internal",
-  "name": "Claim",
+  "name": "TitleClaim",
   "description": "One person's asserted right to a title.",
   "category": "people",
   "icon": "gavel",
-  "schema": "https://docs.opendnd.org/ours/schemas/claim.schema.json",
+  "schema": "https://docs.opendnd.org/ours/schemas/title-claim.schema.json",
   "relationships": [
     {
       "predicate": "claimant",
-      "target": "Person"
+      "target": "Character"
     },
     {
       "predicate": "title",
@@ -20,7 +20,7 @@
     },
     {
       "predicate": "through",
-      "target": "Person"
+      "target": "Character"
     },
     {
       "predicate": "resolvedBy",

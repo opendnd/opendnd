@@ -19,8 +19,8 @@
       "target": "Place"
     },
     {
-      "predicate": "character",
-      "target": "Character"
+      "predicate": "sheet",
+      "target": "CharacterSheet"
     }
   ],
   "mapsTo": [

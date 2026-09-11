@@ -46,7 +46,7 @@ const models: ModelInfo[] = petModels.map((m) =>
 const outcome = {
   startYear: 1000,
   endYear: 1100,
-  counts: { pet: 3, person: 12 },
+  counts: { pet: 3, character: 12 },
   findings: [
     {
       rule: 'tenure-ends-when-its-event-says',
@@ -202,15 +202,15 @@ describe('simulating a history from the app', () => {
 
   it('says when a model is not something a history runs over', async () => {
     const { fetch } = apiFor({
-      [`GET /v1/worlds/${WORLD_ID}/person/${PET_ID}`]: () => ({
+      [`GET /v1/worlds/${WORLD_ID}/character/${PET_ID}`]: () => ({
         id: PET_ID,
-        model: 'person',
+        model: 'character',
         name: 'Ada',
       }),
     });
-    renderSimulate(fetch, testWorld, 'person');
+    renderSimulate(fetch, testWorld, 'character');
     expect(
-      await screen.findByText('A history cannot be simulated for a person'),
+      await screen.findByText('A history cannot be simulated for a character'),
     ).toBeInTheDocument();
   });
 });

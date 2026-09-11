@@ -200,19 +200,6 @@ export function isReference(value: unknown): value is Reference {
 }
 
 /**
- * A model id and a resource type say the same thing in different cases: a
- * `place` is published as a `Place`. Routes and the ontology are keyed by the
- * id; a record and every reference to one carry the type.
- */
-export function modelOfReference(reference: Reference): string {
-  return reference.type.toLowerCase();
-}
-
-export function resourceTypeOf(model: string): string {
-  return model.charAt(0).toUpperCase() + model.slice(1);
-}
-
-/**
  * A published package of content: a world's records snapshotted into a layer
  * of their own and addressed by a digest of that content, which another world
  * reads beneath its own.

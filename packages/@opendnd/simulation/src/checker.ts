@@ -1,6 +1,6 @@
 import type {
   Event,
-  Person,
+  Character,
   Relationship,
   Species,
   Tenure,
@@ -9,7 +9,7 @@ import { lifecycleOf } from './lifecycle';
 import type { Finding } from './types';
 
 export interface HistoryRecord {
-  readonly people: readonly Person[];
+  readonly people: readonly Character[];
   readonly relationships: readonly Relationship[];
   readonly events: readonly Event[];
   readonly tenures: readonly Tenure[];
@@ -199,6 +199,6 @@ export function checkHistory(record: HistoryRecord): Finding[] {
   return findings;
 }
 
-function name(people: Map<string, Person>, id: string): string {
+function name(people: Map<string, Character>, id: string): string {
   return people.get(id)?.name ?? id;
 }

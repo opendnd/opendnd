@@ -150,7 +150,7 @@ describe('a resource as an article', () => {
     renderInWorld(<Article resource={storedPet} root={root} />);
     expect(screen.getByRole('link', { name: 'Ada' })).toHaveAttribute(
       'href',
-      `/worlds/${WORLD_ID}/person/${OWNER_ID}`,
+      `/worlds/${WORLD_ID}/character/${OWNER_ID}`,
     );
     expect(infobox().getByText('Born').nextElementSibling).toHaveTextContent(
       '1041',

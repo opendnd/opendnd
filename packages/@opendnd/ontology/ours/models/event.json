@@ -16,7 +16,7 @@
     },
     {
       "predicate": "participant.actor",
-      "target": "Person"
+      "target": "Character"
     },
     {
       "predicate": "partOf",

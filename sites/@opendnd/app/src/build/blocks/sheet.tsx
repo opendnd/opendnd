@@ -1,6 +1,7 @@
 import { HeartIcon, ShieldIcon } from 'lucide-react';
 import { Link } from 'react-router';
-import { type Reference, modelOfReference } from '../../api/types';
+import type { Reference } from '../../api/types';
+import { useOntology } from '../../app/ontology';
 import { NumberField } from '../sheet/Editable';
 import {
   ABILITIES,
@@ -45,12 +46,13 @@ function reference(value: unknown): Reference | undefined {
 
 function Ref(props: { readonly value: unknown; readonly fallback?: string }) {
   const { world } = useWorld();
+  const ontology = useOntology();
   const ref = reference(props.value);
   if (!ref) return <span className="text-muted-foreground">{props.fallback ?? '—'}</span>;
   return (
     <Link
       className="underline-offset-4 hover:underline"
-      to={recordPath(world.id, modelOfReference(ref), ref.id)}
+      to={recordPath(world.id, ontology.idOf(ref.type), ref.id)}
     >
       {ref.display ?? ref.id}
     </Link>
@@ -79,7 +81,7 @@ function Panel(props: {
 /** Who this is: their name, what they are, and who plays them. */
 export function SheetHeader(props: { readonly record?: Character }) {
   const character = props.record ?? {};
-  const classes = Array.isArray(character.classes) ? character.classes : [];
+  const classes = Array.isArray(character.class) ? character.class : [];
   const sheet = useSheet(character);
   return (
     <section className="flex h-full flex-wrap items-center gap-x-6 gap-y-2 rounded-lg border bg-card px-4 py-3">
@@ -223,8 +225,8 @@ export function SheetCombat(props: { readonly record?: Character }) {
   const sheet = useSheet(character);
   const hp = healthOf(character.hitPoints);
   const points = (character.hitPoints ?? {}) as Record<string, unknown>;
-  const conditions = Array.isArray(character.conditions)
-    ? character.conditions
+  const conditions = Array.isArray(character.condition)
+    ? character.condition
     : [];
   return (
     <Panel
@@ -387,9 +389,9 @@ export function SheetEquipment(props: { readonly record?: Character }) {
 /** Feats and proficiencies: what the character can do that others cannot. */
 export function SheetTraining(props: { readonly record?: Character }) {
   const character = props.record ?? {};
-  const feats = Array.isArray(character.feats) ? character.feats : [];
-  const proficiencies = Array.isArray(character.proficiencies)
-    ? character.proficiencies
+  const feats = Array.isArray(character.feat) ? character.feat : [];
+  const proficiencies = Array.isArray(character.proficiency)
+    ? character.proficiency
     : [];
   return (
     <Panel title="Feats and proficiencies">
@@ -422,7 +424,7 @@ export function SheetTraining(props: { readonly record?: Character }) {
 
 /** Spells known and prepared, and the slots left today. */
 export function SheetSpells(props: { readonly record?: Character }) {
-  const spells = (props.record?.spells ?? {}) as {
+  const spells = (props.record?.spellcasting ?? {}) as {
     known?: unknown;
     prepared?: unknown;
     slotsUsed?: unknown;

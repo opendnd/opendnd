@@ -1,4 +1,4 @@
-import type { Person, ReferenceTo, Sex, Size } from '@opendnd/types';
+import type { Character, ReferenceTo, Sex, Size } from '@opendnd/types';
 
 /** One expressed gene: the gene key and what it expresses as. */
 export interface Expression {
@@ -36,10 +36,10 @@ export function alleleValue(allele: string): number {
   return Number(allele.replace(/^[XY]/, ''));
 }
 
-/** The fields of a Person that a genome fills in. */
+/** The fields of a Character that a genome fills in. */
 export function toPersonFields(
   genome: Genome,
-): Pick<Person, 'species' | 'gender' | 'genome' | 'phenotype'> {
+): Pick<Character, 'species' | 'gender' | 'genome' | 'phenotype'> {
   return {
     species: genome.species,
     gender: genome.sex,

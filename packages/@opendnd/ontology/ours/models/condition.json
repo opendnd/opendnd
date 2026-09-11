@@ -5,16 +5,36 @@
   "version": "0.1.0",
   "system": "internal",
   "name": "Condition",
-  "description": "A state a creature can be in that changes what it may do.",
-  "category": "rules",
+  "description": "That a creature is in a state the rules name: poisoned, grappled, frightened. The states themselves are codes.",
+  "category": "play",
   "icon": "activity",
   "schema": "https://docs.opendnd.org/ours/schemas/condition.schema.json",
-  "relationships": [],
+  "relationships": [
+    {
+      "predicate": "subject",
+      "target": "Character"
+    },
+    {
+      "predicate": "cause",
+      "target": "Character"
+    }
+  ],
   "mapsTo": [
+    {
+      "system": "http://hl7.org/fhir",
+      "schema": "http://hl7.org/fhir/StructureDefinition/Condition",
+      "type": "one-to-one",
+      "comment": "The same shape and the same meaning: a subject, a coded state, when it took hold and when it lifted. FHIR binds clinicalStatus and verificationStatus to clinical value sets, which have no counterpart here; severity carries a level rather than a code."
+    },
     {
       "system": "https://5e-bits.github.io/docs",
       "schema": "https://5e-bits.github.io/docs/api-reference/conditions",
-      "type": "one-to-one"
+      "type": "partial",
+      "comment": "That reference lists the states; this records one holding."
     }
-  ]
+  ],
+  "validTime": {
+    "begin": "onset",
+    "end": "abatement"
+  }
 }

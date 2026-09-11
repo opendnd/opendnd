@@ -1,7 +1,7 @@
 {
-  "$id": "https://docs.opendnd.org/ours/schemas/claim.schema.json",
+  "$id": "https://docs.opendnd.org/ours/schemas/title-claim.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Claim",
+  "title": "TitleClaim",
   "type": "object",
   "description": "One person's asserted right to a title. A claim is the seed of a war: it can be pressed, won, lost, or left to descend to an heir.",
   "allOf": [

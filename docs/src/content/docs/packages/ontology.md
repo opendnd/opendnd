@@ -13,7 +13,7 @@ The bundle lives in `packages/@opendnd/ontology/ours/`. It is data, not code: JS
 | `calendar` | A temporal reference system: months, weekdays, leap rules, moons, eras | OWL-Time TRS, Kanka calendars |
 | `species` | A kind of creature and its biology: size, chromosomes, gene expressions, growth and age tables | schema.org Taxon, World Anvil Species |
 | `culture` | A people's naming, languages and customs, separate from biology | World Anvil Ethnicity, Kanka |
-| `person` | A person, real to the world or legendary | schema.org Person, Wikidata fictional human, CIDOC E21, GEDCOM X |
+| `character` | A being in the world, real to it or legendary | schema.org Person, Wikidata fictional human, CIDOC E21, GEDCOM X |
 | `place` | A location at any scale, with optional geometry in the world's CRS | schema.org Place, CIDOC E53, GeoSPARQL Feature |
 | `faction` | State, dynasty, faction, guild, religion | schema.org Organization, CIDOC E74, W3C ORG |
 | `event` | Something that happened, with participants, roles and cause links | schema.org Event, CIDOC E5 |
@@ -29,9 +29,9 @@ Records of play and preparation rather than of the world. All but `quest` are ou
 |---|---|---|
 | `campaign` | A series of sessions a group plays in a world | schema.org EventSeries |
 | `session` | One sitting, dated in real time | schema.org Event |
-| `character` | A person as played, and by whom | schema.org Role |
+| `character-sheet` | A character as played, and by whom | schema.org Role |
 | `quest` | Something a party is meant to do, and how far they have got | schema.org Action, CIDOC E7 |
-| `encounter` | A confrontation prepared for a party | CIDOC E7 |
+| `scene` | A staged unit of action: a fight, a talk, a search | CIDOC E7 |
 
 A dungeon is a `place` whose type is `dungeon` and a party is a `faction` whose type is `party`. Neither needed a model. A published adventure is a `module`, the content-addressed package, not a `work`: a `work` is something composed, and an adventure is a bundle of quests, encounters and places.
 
@@ -48,7 +48,7 @@ Shapes only. No rules content ships in this repository; it arrives as modules th
 | `feat` | A talent taken in place of or alongside an ability score increase | 5e `feats` |
 | `spell` | Level, school, components, duration, what it does | 5e `spells` (2014 tree; the 2024 one is not yet published) |
 | `statblock` | The rules view of a creature, independent of `species` as the SRD treats it; may name the species or person it stands for | 5e `monsters` |
-| `condition` | A state that changes what a creature may do | 5e `conditions` |
+| `condition` | That a creature is in a state the rules name | FHIR Condition |
 | `skill` | A skill and the ability its checks use | 5e `skills` |
 | `proficiency` | Being trained in a weapon, tool, skill or saving throw | 5e `proficiencies` |
 
@@ -59,7 +59,7 @@ A trap is an `encounter` whose `kind` is `trap`. A familiar is a `relationship` 
 | `title` | A seat of authority in a faction with a succession rule | W3C ORG Post |
 | `tenure` | One person's time in an title, with the events that began and ended it | W3C ORG Membership |
 | `population` | An aggregate head count at a place and time | schema.org Observation |
-| `claim` | One person's asserted right to a title, and the seed of a war | schema.org Claim, CIDOC E30 Right |
+| `title-claim` | One person's asserted right to a title, and the seed of a war | schema.org Claim, CIDOC E30 Right |
 | `economy` | A snapshot of a settlement's prosperity, businesses and livestock at a time | schema.org Observation |
 
 ## The base every model extends

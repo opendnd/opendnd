@@ -5,77 +5,67 @@
   "version": "0.1.0",
   "system": "internal",
   "name": "Character",
-  "description": "A person as played, in one campaign.",
-  "category": "play",
-  "icon": "user-round",
+  "description": "A person in the world.",
+  "category": "people",
+  "icon": "user",
   "schema": "https://docs.opendnd.org/ours/schemas/character.schema.json",
   "relationships": [
     {
-      "predicate": "person",
-      "target": "Person"
+      "predicate": "species",
+      "target": "Species"
     },
     {
-      "predicate": "campaign",
-      "target": "Campaign"
+      "predicate": "culture",
+      "target": "Culture"
     },
     {
-      "predicate": "background",
-      "target": "Background"
+      "predicate": "memberOf",
+      "target": "Faction"
     },
     {
-      "predicate": "feat",
-      "target": "Feat"
+      "predicate": "residence",
+      "target": "Place"
     },
     {
-      "predicate": "statblock",
-      "target": "Statblock"
+      "predicate": "birth.place",
+      "target": "Place"
     },
     {
-      "predicate": "inventory.item",
-      "target": "Item"
-    },
-    {
-      "predicate": "class.class",
-      "target": "Class"
-    },
-    {
-      "predicate": "condition",
-      "target": "Condition"
-    },
-    {
-      "predicate": "proficiency",
-      "target": "Proficiency"
-    },
-    {
-      "predicate": "spellcasting.known",
-      "target": "Spell"
-    },
-    {
-      "predicate": "spellcasting.prepared",
-      "target": "Spell"
-    },
-    {
-      "predicate": "choice.source",
-      "target": "Class"
-    },
-    {
-      "predicate": "choice.source",
-      "target": "Feature"
-    },
-    {
-      "predicate": "choice.source",
-      "target": "Background"
-    },
-    {
-      "predicate": "choice.source",
-      "target": "Feat"
+      "predicate": "death.place",
+      "target": "Place"
     }
   ],
+  "validTime": {
+    "begin": "birth.time",
+    "end": "death.time"
+  },
   "mapsTo": [
     {
       "system": "https://schema.org",
-      "schema": "https://schema.org/Role",
+      "schema": "https://schema.org/Person",
       "type": "one-to-one"
+    },
+    {
+      "system": "https://www.wikidata.org",
+      "schema": "https://www.wikidata.org/entity/Q15632617",
+      "type": "one-to-one",
+      "comment": "fictional human"
+    },
+    {
+      "system": "http://www.cidoc-crm.org/cidoc-crm",
+      "schema": "http://www.cidoc-crm.org/cidoc-crm/E21_Person",
+      "type": "one-to-one"
+    },
+    {
+      "system": "http://gedcomx.org/v1",
+      "schema": "http://gedcomx.org/v1/Person",
+      "type": "partial"
+    },
+    {
+      "system": "http://hl7.org/fhir",
+      "schema": "http://hl7.org/fhir/StructureDefinition/Person",
+      "type": "partial",
+      "comment": "Name, gender, and birth and death as birthDate and deceased. A Person here is a being in the fiction; the person at the table is a Person of the other kind, which is why this resource is not called one. Species, culture, alignment and epithet have no counterpart; kinship is better read from the GEDCOM X alignment."
     }
   ]
 }

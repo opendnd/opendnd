@@ -138,7 +138,7 @@ export const petModels: ModelInfo[] = [
             type: 'object',
             description: 'Whose pet it is.',
             properties: {
-              type: { const: 'Person' },
+              type: { const: 'Character' },
               id: { type: 'string', format: 'uuid' },
               display: { type: 'string' },
             },
@@ -153,7 +153,7 @@ export const petModels: ModelInfo[] = [
       },
     },
   },
-  { id: 'person', name: 'Person' },
+  { id: 'character', name: 'Character' },
 ];
 
 export const petVocabularies: Vocabulary[] = [
@@ -204,7 +204,7 @@ export const storedPet = {
   mood: 'happy',
   legs: 4,
   friendly: true,
-  owner: { type: 'Person', id: OWNER_ID, display: 'Ada' },
+  owner: { type: 'Character', id: OWNER_ID, display: 'Ada' },
   friends: [{ type: 'Pet', id: FRIEND_ID, display: 'Crumb' }],
   tricks: ['sit', 'roll over'],
   born: { trs: OWNER_ID, year: 1041, precision: 'year' },

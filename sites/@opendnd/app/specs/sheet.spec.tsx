@@ -69,7 +69,12 @@ describe('a character sheet', () => {
     const user = userEvent.setup();
     const saved = vi.fn();
     const { services } = renderInWorld(
-      <EditingProvider model="character" id={arodyf.id} canEdit onSaved={saved}>
+      <EditingProvider
+        model="character-sheet"
+        id={arodyf.id}
+        canEdit
+        onSaved={saved}
+      >
         <SheetAbilities record={arodyf} />
       </EditingProvider>,
     );
@@ -84,7 +89,7 @@ describe('a character sheet', () => {
     await user.type(field, '18{Enter}');
     expect(patch).toHaveBeenCalledWith(
       expect.any(String),
-      'character',
+      'character-sheet',
       arodyf.id,
       { abilityScores: { ...arodyf.abilityScores, strength: 18 } },
     );
@@ -119,7 +124,7 @@ describe('a character sheet', () => {
 
 describe('the sheet as a page', () => {
   it('is a layout of blocks that exist, none of them over another', () => {
-    const page = RECORD_PAGES.character;
+    const page = RECORD_PAGES['character-sheet'];
     const laid: (typeof page.blocks)[number][] = [];
     for (const placed of page.blocks) {
       const block = blockById(placed.block);
@@ -132,7 +137,7 @@ describe('the sheet as a page', () => {
   });
 
   it('is found for a character and for nothing else, until a world says otherwise', () => {
-    expect(recordLayoutFor('character', [])).toBeDefined();
+    expect(recordLayoutFor('character-sheet', [])).toBeDefined();
     expect(recordLayoutFor('place', [])).toBeUndefined();
   });
 });

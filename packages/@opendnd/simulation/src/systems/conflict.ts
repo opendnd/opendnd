@@ -1,5 +1,5 @@
 import { GeneratorContext, childContext } from '@opendnd/generators';
-import type { Person, Reference, Tenure } from '@opendnd/types';
+import type { Character, Reference, Tenure } from '@opendnd/types';
 import { makeEvent, makeTenure, ref, yearOf } from '../resources';
 import { HistoryState, War } from '../state';
 import type { HistoryInput, HistoryParams } from '../types';
@@ -71,9 +71,9 @@ function fightBattle(
       name: `Battle of ${fieldName(field?.display)}, ${year}`,
       description: `${victor.name} holds the field.`,
       participant: [
-        { actor: ref('person', claimant), role: 'attacker' },
-        { actor: ref('person', holder), role: 'defender' },
-        { actor: ref('person', victor), role: 'victor' },
+        { actor: ref('character', claimant), role: 'attacker' },
+        { actor: ref('character', holder), role: 'defender' },
+        { actor: ref('character', victor), role: 'victor' },
       ],
       ...(field ? { location: [field] } : {}),
       partOf: ref('event', war.event),
@@ -96,8 +96,8 @@ function conclude(
   year: number,
   outcome: 'attacker' | 'defender' | 'inconclusive' | 'exhausted',
   yctx: GeneratorContext,
-  claimant?: Person,
-  holder?: Person,
+  claimant?: Character,
+  holder?: Character,
 ): void {
   state.wars.splice(state.wars.indexOf(war), 1);
   const event = war.event as {
@@ -123,8 +123,8 @@ function conclude(
       year,
       name: `${holder.name} is deposed from ${title.name}`,
       participant: [
-        { actor: ref('person', holder), role: 'deposed' },
-        { actor: ref('person', claimant), role: 'successor' },
+        { actor: ref('character', holder), role: 'deposed' },
+        { actor: ref('character', claimant), role: 'successor' },
       ],
       ...(seat ? { location: [seat] } : {}),
       causedBy: [ref('event', war.event)],
@@ -159,8 +159,8 @@ function conclude(
       name: `${claimant.name} takes ${title.name}`,
       description: `Won by force of arms.`,
       participant: [
-        { actor: ref('person', claimant), role: 'successor' },
-        { actor: ref('person', holder), role: 'predecessor' },
+        { actor: ref('character', claimant), role: 'successor' },
+        { actor: ref('character', holder), role: 'predecessor' },
       ],
       ...(seat ? { location: [seat] } : {}),
       causedBy: [ref('event', deposition)],
@@ -212,8 +212,8 @@ function declareWars(
       name: `War for ${title.name}`,
       description: `${claimant.name} presses a claim to ${title.name} against ${holder.name}.`,
       participant: [
-        { actor: ref('person', claimant), role: 'claimant' },
-        { actor: ref('person', holder), role: 'holder' },
+        { actor: ref('character', claimant), role: 'claimant' },
+        { actor: ref('character', holder), role: 'holder' },
       ],
       ...(state.seatOf(defender)
         ? { location: [state.seatOf(defender)!] }
@@ -245,7 +245,7 @@ function fieldName(name: string | undefined): string {
   return name.replace(/^(Kingdom|Duchy|County) of /, '');
 }
 
-function holderOf(state: HistoryState, titleId: string): Person | undefined {
+function holderOf(state: HistoryState, titleId: string): Character | undefined {
   const tenure = state.currentTenure(titleId);
   if (!tenure) return undefined;
   const person = state.person(tenure.holder.id);

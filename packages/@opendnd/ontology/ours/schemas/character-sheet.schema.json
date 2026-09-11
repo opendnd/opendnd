@@ -1,0 +1,266 @@
+{
+  "$id": "https://docs.opendnd.org/ours/schemas/character-sheet.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CharacterSheet",
+  "type": "object",
+  "description": "A character as played: who plays them, in which campaign, and how far they have come. It exists apart from the character so that one the gamemaster runs can become a player character without the world changing, and so that the same character can be played twice.",
+  "allOf": [
+    {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
+    }
+  ],
+  "properties": {
+    "perspective": {
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/perspective.schema.json",
+      "default": "out-of-universe",
+      "description": "Out-of-universe by default: the being is a person in the world, this is the record of playing them."
+    },
+    "character": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The being in the world."
+    },
+    "campaign": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The campaign they are played in."
+    },
+    "player": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The person who plays them. Absent for one the gamemaster runs."
+    },
+    "status": {
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/character-status.schema.json"
+    },
+    "level": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "experience": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "notes": {
+      "type": "string"
+    },
+    "class": {
+      "type": "array",
+      "description": "The classes taken and the level in each; more than one for a multiclassed character.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "class": {
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+            "description": "The class."
+          },
+          "level": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "class",
+          "level"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "background": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "The background chosen."
+    },
+    "feat": {
+      "type": "array",
+      "items": {
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "Feats taken."
+    },
+    "statblock": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+      "description": "A stat block that stands for the character in an encounter, when one has been built."
+    },
+    "inventory": {
+      "type": "array",
+      "description": "Items carried, in the order the character keeps them.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1
+          },
+          "equipped": {
+            "type": "boolean",
+            "default": false
+          },
+          "attuned": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "required": [
+          "item"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "abilityScores": {
+      "type": "object",
+      "description": "The six ability scores.",
+      "properties": {
+        "strength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30
+        },
+        "dexterity": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30
+        },
+        "constitution": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30
+        },
+        "intelligence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30
+        },
+        "wisdom": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30
+        },
+        "charisma": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30
+        }
+      },
+      "additionalProperties": false
+    },
+    "hitPoints": {
+      "type": "object",
+      "description": "Hit points as they stand.",
+      "properties": {
+        "current": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximum": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "temporary": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "current",
+        "maximum"
+      ],
+      "additionalProperties": false
+    },
+    "hitDiceSpent": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Hit dice spent since the last long rest."
+    },
+    "condition": {
+      "type": "array",
+      "description": "The states they are in now. Each is a Condition naming this sheet as its subject; the list is kept here so a sheet reads without a second query.",
+      "items": {
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      }
+    },
+    "proficiency": {
+      "type": "array",
+      "items": {
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      },
+      "description": "Proficiencies held, from every source."
+    },
+    "spellcasting": {
+      "type": "object",
+      "description": "Spellcasting state.",
+      "properties": {
+        "known": {
+          "type": "array",
+          "items": {
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+          },
+          "description": "Spells known or in the spellbook."
+        },
+        "prepared": {
+          "type": "array",
+          "items": {
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+          },
+          "description": "Spells prepared today."
+        },
+        "slotsUsed": {
+          "type": "array",
+          "description": "Spell slots spent since the last rest, by level.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "level": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9
+              },
+              "used": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "level",
+              "used"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "choice": {
+      "type": "array",
+      "description": "What was picked wherever the rules offered a choice: the skills from a background, the subclass, a fighting style, an ability score increase taken instead of a feat.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
+            "description": "The class, feature, background or feat that offered the choice."
+          },
+          "chosen": {
+            "type": "array",
+            "items": {
+              "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+            },
+            "description": "What was chosen."
+          },
+          "note": {
+            "type": "string",
+            "description": "The choice in words, when what was chosen is not a resource: an ability increase, a language."
+          }
+        },
+        "required": [
+          "source"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "person"
+  ],
+  "unevaluatedProperties": false
+}

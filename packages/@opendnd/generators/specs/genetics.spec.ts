@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Rng, sidesOf } from '@opendnd/random';
-import { personSchema, speciesSchema } from '@opendnd/types';
+import { characterSchema, speciesSchema } from '@opendnd/types';
 import {
   alleles,
   generate,
@@ -60,10 +60,10 @@ describe('generate', () => {
     expect(phenotype.general?.expression).toBe(expected);
   });
 
-  it('fills a Person that the ontology accepts', () => {
-    const g = generate({ species: human, rng: new Rng('person') });
+  it('fills a Character that the ontology accepts', () => {
+    const g = generate({ species: human, rng: new Rng('character') });
     const world = '3c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a11';
-    const person = personSchema.parse({
+    const person = characterSchema.parse({
       id: '0d8b9e0a-1f9a-4d70-9c0b-1f2a3b4c5d6e',
       world,
       name: 'Test',

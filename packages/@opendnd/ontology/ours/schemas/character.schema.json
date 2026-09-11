@@ -3,264 +3,159 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Character",
   "type": "object",
-  "description": "A person as played. The being itself is a person in the world; this is the out-of-universe record of who plays them, in which campaign, and how far they have come. It exists separately so that an NPC can become a player character without the world changing.",
+  "description": "A being in the world: a person, a monster, anyone the fiction contains, real to it or legendary. Not the person at the table, who is a Person (schema.org Person, CIDOC E21, Wikidata fictional human).",
   "allOf": [
     {
       "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/ResourceBase"
     }
   ],
   "properties": {
-    "perspective": {
-      "$ref": "https://docs.opendnd.org/ours/vocabularies/perspective.schema.json",
-      "default": "out-of-universe",
-      "description": "Out-of-universe by default: the being is a person in the world, this is the record of playing them."
+    "species": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
-    "person": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
-      "description": "The being in the world."
+    "culture": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
     },
-    "campaign": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
-      "description": "The campaign they are played in."
+    "gender": {
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/sex.schema.json"
     },
-    "player": {
-      "type": "string",
-      "description": "User id of whoever plays them. Absent for one the gamemaster runs."
-    },
-    "status": {
-      "$ref": "https://docs.opendnd.org/ours/vocabularies/character-status.schema.json"
-    },
-    "level": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "experience": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "notes": {
+    "pronouns": {
       "type": "string"
     },
-    "class": {
-      "type": "array",
-      "description": "The classes taken and the level in each; more than one for a multiclassed character.",
-      "items": {
-        "type": "object",
-        "properties": {
-          "class": {
-            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
-            "description": "The class."
-          },
-          "level": {
-            "type": "integer",
-            "minimum": 1
-          }
-        },
-        "required": [
-          "class",
-          "level"
-        ],
-        "additionalProperties": false
-      }
+    "epithet": {
+      "type": "string",
+      "description": "A byname earned in life, e.g. 'the Bold'. Rendered as 'Name the Bold'."
     },
-    "background": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
-      "description": "The background chosen."
+    "alignment": {
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/alignment.schema.json"
     },
-    "feat": {
-      "type": "array",
-      "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
-      },
-      "description": "Feats taken."
+    "status": {
+      "$ref": "https://docs.opendnd.org/ours/vocabularies/person-status.schema.json",
+      "default": "alive"
     },
-    "statblock": {
-      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
-      "description": "A stat block that stands for the character in an encounter, when one has been built."
-    },
-    "inventory": {
-      "type": "array",
-      "description": "Items carried, in the order the character keeps them.",
-      "items": {
-        "type": "object",
-        "properties": {
-          "item": {
-            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
-          },
-          "quantity": {
-            "type": "integer",
-            "minimum": 1,
-            "default": 1
-          },
-          "equipped": {
-            "type": "boolean",
-            "default": false
-          },
-          "attuned": {
-            "type": "boolean",
-            "default": false
-          }
-        },
-        "required": [
-          "item"
-        ],
-        "additionalProperties": false
-      }
-    },
-    "abilityScores": {
+    "birth": {
       "type": "object",
-      "description": "The six ability scores.",
       "properties": {
-        "strength": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 30
+        "time": {
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
         },
-        "dexterity": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 30
-        },
-        "constitution": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 30
-        },
-        "intelligence": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 30
-        },
-        "wisdom": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 30
-        },
-        "charisma": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 30
+        "place": {
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
         }
       },
       "additionalProperties": false
     },
-    "hitPoints": {
+    "death": {
       "type": "object",
-      "description": "Hit points as they stand.",
       "properties": {
-        "current": {
-          "type": "integer",
-          "minimum": 0
+        "time": {
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/TemporalPosition"
         },
-        "maximum": {
-          "type": "integer",
-          "minimum": 0
+        "place": {
+          "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
         },
-        "temporary": {
+        "cause": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "memberOf": {
+      "type": "array",
+      "items": {
+        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+      }
+    },
+    "residence": {
+      "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
+    },
+    "occupation": {
+      "type": "string"
+    },
+    "standing": {
+      "description": "How the person stands with the world's powers, each -100..100.",
+      "type": "object",
+      "properties": {
+        "power": {
           "type": "integer",
-          "minimum": 0
+          "minimum": -100,
+          "maximum": 100,
+          "description": "Ability to compel others."
+        },
+        "honor": {
+          "type": "integer",
+          "minimum": -100,
+          "maximum": 100,
+          "description": "Regard among peers and rivals."
+        },
+        "piety": {
+          "type": "integer",
+          "minimum": -100,
+          "maximum": 100,
+          "description": "Regard among the faithful and the gods."
+        },
+        "reputation": {
+          "type": "integer",
+          "minimum": -100,
+          "maximum": 100,
+          "description": "Regard among the common people."
+        }
+      },
+      "additionalProperties": false
+    },
+    "genome": {
+      "description": "Genetic record produced by the genetics generator.",
+      "type": "object",
+      "properties": {
+        "chromosomes": {
+          "description": "Chromosome number to allele pair, e.g. '3=9' or 'X1=Y3'.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "pattern": "^[XY]?[0-9]+=[XY]?[0-9]+$"
+          }
+        },
+        "height": {
+          "type": "integer",
+          "description": "Inches."
+        },
+        "weight": {
+          "type": "integer",
+          "description": "Pounds."
         }
       },
       "required": [
-        "current",
-        "maximum"
+        "chromosomes"
       ],
       "additionalProperties": false
     },
-    "hitDiceSpent": {
-      "type": "integer",
-      "minimum": 0,
-      "description": "Hit dice spent since the last long rest."
-    },
-    "condition": {
+    "phenotype": {
       "type": "array",
-      "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
-      },
-      "description": "Conditions currently affecting the character."
-    },
-    "proficiency": {
-      "type": "array",
-      "items": {
-        "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
-      },
-      "description": "Proficiencies held, from every source."
-    },
-    "spellcasting": {
-      "type": "object",
-      "description": "Spellcasting state.",
-      "properties": {
-        "known": {
-          "type": "array",
-          "items": {
-            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
-          },
-          "description": "Spells known or in the spellbook."
-        },
-        "prepared": {
-          "type": "array",
-          "items": {
-            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
-          },
-          "description": "Spells prepared today."
-        },
-        "slotsUsed": {
-          "type": "array",
-          "description": "Spell slots spent since the last rest, by level.",
-          "items": {
-            "type": "object",
-            "properties": {
-              "level": {
-                "type": "integer",
-                "minimum": 1,
-                "maximum": 9
-              },
-              "used": {
-                "type": "integer",
-                "minimum": 0
-              }
-            },
-            "required": [
-              "level",
-              "used"
-            ],
-            "additionalProperties": false
-          }
-        }
-      },
-      "additionalProperties": false
-    },
-    "choice": {
-      "type": "array",
-      "description": "What was picked wherever the rules offered a choice: the skills from a background, the subclass, a fighting style, an ability score increase taken instead of a feat.",
       "items": {
         "type": "object",
         "properties": {
-          "source": {
-            "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference",
-            "description": "The class, feature, background or feat that offered the choice."
+          "gene": {
+            "type": "string"
           },
-          "chosen": {
-            "type": "array",
-            "items": {
-              "$ref": "https://docs.opendnd.org/ours/schemas/common.schema.json#/$defs/Reference"
-            },
-            "description": "What was chosen."
-          },
-          "note": {
+          "expression": {
             "type": "string",
-            "description": "The choice in words, when what was chosen is not a resource: an ability increase, a language."
+            "description": "What the gene expresses as: blue eyes, a heavy build."
           }
         },
         "required": [
-          "source"
+          "gene",
+          "expression"
         ],
         "additionalProperties": false
-      }
+      },
+      "description": "The phenotype: what each of this person's genes expresses as. Distinct from a species feature such as darkvision, which is a feature."
+    },
+    "portrait": {
+      "type": "string",
+      "format": "uri-reference",
+      "description": "A picture of the person. Somewhere on the web, or a path to a file the world itself holds."
     }
   },
-  "required": [
-    "person"
-  ],
+  "required": [],
   "unevaluatedProperties": false
 }

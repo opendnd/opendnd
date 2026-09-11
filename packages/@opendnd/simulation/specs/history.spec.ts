@@ -3,16 +3,16 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   createContext,
-  personGenerator,
+  characterGenerator,
   realmGenerator,
 } from '@opendnd/generators';
 import {
   calendarSchema,
-  claimSchema,
+  titleClaimSchema,
   cultureSchema,
   economySchema,
   eventSchema,
-  personSchema,
+  characterSchema,
   populationSchema,
   relationshipSchema,
   speciesSchema,
@@ -69,7 +69,7 @@ describe('historyGenerator', () => {
   });
 
   it('emits resources the ontology accepts, all stamped generated', () => {
-    for (const p of out.people) personSchema.parse(p);
+    for (const p of out.people) characterSchema.parse(p);
     for (const e of out.events) eventSchema.parse(e);
     for (const r of out.relationships) relationshipSchema.parse(r);
     for (const t of out.tenures) tenureSchema.parse(t);
@@ -77,7 +77,7 @@ describe('historyGenerator', () => {
     for (const e of out.economies) economySchema.parse(e);
     for (const p of out.people) {
       expect(p.canonStatus).toBe('generated');
-      expect(p.provenance?.generatedBy).toMatch(/^(person|history)@/);
+      expect(p.provenance?.generatedBy).toMatch(/^(character|history)@/);
     }
     expect(out.events.map((e) => e.occurred.begin?.year ?? 0)).toEqual(
       [...out.events.map((e) => e.occurred.begin?.year ?? 0)].sort(
@@ -160,7 +160,7 @@ describe('historyGenerator', () => {
 
   it('presses claims into wars of battles, and settles the title', () => {
     expect(out.claims.length).toBeGreaterThan(0);
-    for (const c of out.claims) claimSchema.parse(c);
+    for (const c of out.claims) titleClaimSchema.parse(c);
     // Claims come from lines a law passed over, so the claimant is a daughter
     // of the holder the title went past.
     for (const c of out.claims) {
@@ -235,7 +235,7 @@ describe('historyGenerator', () => {
     const house = realm.factions[0];
     const fctx = createContext({ world, seedPath: 'history/canon', now });
     const founder = (label: string, sex: 'male' | 'female', born: number) => ({
-      ...personGenerator.generate(
+      ...characterGenerator.generate(
         { species, culture, sex },
         createContext({ world, seedPath: `history/canon/${label}`, now }),
       ),
@@ -258,7 +258,7 @@ describe('historyGenerator', () => {
       type: 'death',
       occurred: { begin: { trs: calendar.id, year: 1012 } },
       participant: [
-        { actor: { type: 'Person', id: lord.id }, role: 'deceased' },
+        { actor: { type: 'Character', id: lord.id }, role: 'deceased' },
       ],
     });
     const result = historyGenerator.generate(

@@ -1,0 +1,86 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "condition-code",
+  "url": "https://docs.opendnd.org/ours/vocabularies/condition-code.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Condition code",
+  "description": "The states a creature can be in that change what it may do. These are definitions, not occurrences: that a creature is poisoned right now is a Condition record naming one of these codes.",
+  "codes": [
+    {
+      "code": "blinded",
+      "display": "Blinded",
+      "definition": "Cannot see, and fails any check that requires sight. Attacks against the creature have advantage, and its own have disadvantage."
+    },
+    {
+      "code": "charmed",
+      "display": "Charmed",
+      "definition": "Cannot attack the charmer or target them with a harmful effect, and the charmer has advantage on social checks against them."
+    },
+    {
+      "code": "deafened",
+      "display": "Deafened",
+      "definition": "Cannot hear, and fails any check that requires hearing."
+    },
+    {
+      "code": "exhaustion",
+      "display": "Exhaustion",
+      "definition": "Weariness in degrees, each worse than the last. The severity carries the level."
+    },
+    {
+      "code": "frightened",
+      "display": "Frightened",
+      "definition": "Has disadvantage while the source of the fear is in sight, and cannot willingly move closer to it."
+    },
+    {
+      "code": "grappled",
+      "display": "Grappled",
+      "definition": "Speed is zero, and ends if the grappler is incapacitated or the two are moved apart."
+    },
+    {
+      "code": "incapacitated",
+      "display": "Incapacitated",
+      "definition": "Can take no action and no reaction."
+    },
+    {
+      "code": "invisible",
+      "display": "Invisible",
+      "definition": "Cannot be seen without magic or a special sense. Attacks against the creature have disadvantage, and its own have advantage."
+    },
+    {
+      "code": "paralyzed",
+      "display": "Paralyzed",
+      "definition": "Incapacitated, cannot move or speak, and fails strength and dexterity saves. A hit from within five feet is a critical."
+    },
+    {
+      "code": "petrified",
+      "display": "Petrified",
+      "definition": "Turned to stone with everything carried. Incapacitated, unaware, and resistant to all damage."
+    },
+    {
+      "code": "poisoned",
+      "display": "Poisoned",
+      "definition": "Has disadvantage on attack rolls and ability checks."
+    },
+    {
+      "code": "prone",
+      "display": "Prone",
+      "definition": "Can only crawl until it stands. Its attacks have disadvantage, and attacks against it have advantage from within five feet."
+    },
+    {
+      "code": "restrained",
+      "display": "Restrained",
+      "definition": "Speed is zero, its attacks have disadvantage, attacks against it have advantage, and it has disadvantage on dexterity saves."
+    },
+    {
+      "code": "stunned",
+      "display": "Stunned",
+      "definition": "Incapacitated, cannot move, speaks only falteringly, and fails strength and dexterity saves."
+    },
+    {
+      "code": "unconscious",
+      "display": "Unconscious",
+      "definition": "Incapacitated, unaware, prone and unable to hold anything. A hit from within five feet is a critical."
+    }
+  ]
+}

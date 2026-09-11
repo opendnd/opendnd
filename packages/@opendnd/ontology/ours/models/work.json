@@ -12,7 +12,7 @@
   "relationships": [
     {
       "predicate": "author",
-      "target": "Person"
+      "target": "Character"
     }
   ],
   "mapsTo": [

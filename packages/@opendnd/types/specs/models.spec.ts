@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { canonStatusCodes, models, personSchema, worldSchema } from 'src';
+import { canonStatusCodes, models, characterSchema, worldSchema } from 'src';
 
 const meta = { versionId: '1', lastUpdated: '2026-09-03T12:00:00Z' };
 const world = '3c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a11';
@@ -12,25 +12,24 @@ describe('@opendnd/types', () => {
       'calendar',
       'campaign',
       'character',
-      'claim',
+      'character-sheet',
       'class',
       'condition',
       'culture',
       'economy',
-      'encounter',
       'event',
       'faction',
       'feat',
       'feature',
       'item',
       'language',
-      'person',
       'place',
       'population',
       'proficiency',
       'project',
       'quest',
       'relationship',
+      'scene',
       'session',
       'skill',
       'species',
@@ -38,6 +37,7 @@ describe('@opendnd/types', () => {
       'statblock',
       'tenure',
       'title',
+      'title-claim',
       'work',
       'world',
     ]);
@@ -51,20 +51,20 @@ describe('@opendnd/types', () => {
       canonStatus: 'canon' as const,
       meta: { versionId: '1', lastUpdated: '2026-09-04T00:00:00Z' },
     };
-    // A campaign, a session, a character and an encounter are records about
-    // the world rather than parts of it, and the ontology says so rather than
-    // leaving every client to remember it.
+    // A campaign, a session, a sheet and a scene are records about the world
+    // rather than parts of it, and the ontology says so rather than leaving
+    // every client to remember it.
     expect(
       models.campaign.parse({ ...base, status: 'running' }).perspective,
     ).toBe('out-of-universe');
     expect(
-      models.character.parse({
+      models['character-sheet'].parse({
         ...base,
-        person: { type: 'Person', id: world },
+        character: { type: 'Character', id: world },
       }).perspective,
     ).toBe('out-of-universe');
     expect(
-      models.encounter.parse({
+      models.scene.parse({
         ...base,
         location: { type: 'Place', id: world },
       }).perspective,
@@ -91,7 +91,7 @@ describe('@opendnd/types', () => {
   });
 
   it('rejects unknown properties and bad references', () => {
-    const bad = personSchema.safeParse({
+    const bad = characterSchema.safeParse({
       id: world,
       world,
       name: 'Nobody',
@@ -104,7 +104,7 @@ describe('@opendnd/types', () => {
   });
 
   it('accepts a person with birth in a calendar and a generated provenance', () => {
-    const p = personSchema.parse({
+    const p = characterSchema.parse({
       id: '0d8b9e0a-1f9a-4d70-9c0b-1f2a3b4c5d6e',
       world,
       name: 'Maelis of Thorne',

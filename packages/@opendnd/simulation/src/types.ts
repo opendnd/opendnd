@@ -1,11 +1,11 @@
 import type {
   Calendar,
-  Claim,
+  TitleClaim,
   Culture,
   Economy,
   Event,
   Faction,
-  Person,
+  Character,
   Place,
   Population,
   Prosperity,
@@ -98,7 +98,7 @@ export interface HistoryInput {
    * Authored people to start from. Any house with no living member gets a
    * founding couple instead. Existing birth and death fields are respected.
    */
-  readonly founders?: readonly Person[];
+  readonly founders?: readonly Character[];
   /**
    * Authored events that already happened or must happen. A death event
    * for a person forces their death in that year; the simulation will not
@@ -111,11 +111,11 @@ export interface HistoryInput {
 }
 
 export interface HistoryOutput {
-  readonly people: Person[];
+  readonly people: Character[];
   readonly relationships: Relationship[];
   readonly events: Event[];
   readonly tenures: Tenure[];
-  readonly claims: Claim[];
+  readonly claims: TitleClaim[];
   readonly populations: Population[];
   readonly economies: Economy[];
   /** Consistency findings over the produced history. Empty when all is well. */

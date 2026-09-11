@@ -107,20 +107,20 @@ describe('the shell', () => {
   it('lists a group with the model it is really about first, then the rest by name', () => {
     const models = [
       { id: 'zebra', name: 'Zebra' },
-      { id: 'person', name: 'Person' },
+      { id: 'character', name: 'Character' },
       { id: 'ant', name: 'Ant' },
     ];
-    // People is about people, so Person leads however the API happened to
+    // People is about people, so Character leads however the API happened to
     // order them; everything else reads alphabetically.
     expect(inGroup('people', models).map((m) => m.id)).toEqual([
-      'person',
+      'character',
       'ant',
       'zebra',
     ]);
     // A group with nothing at its heart is simply alphabetical.
     expect(inGroup('platform', models).map((m) => m.id)).toEqual([
       'ant',
-      'person',
+      'character',
       'zebra',
     ]);
   });

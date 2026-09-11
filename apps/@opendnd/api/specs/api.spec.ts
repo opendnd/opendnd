@@ -95,7 +95,7 @@ describe('the API', () => {
     const { body } = await anonymous.get('/v1/models');
     const ids = (body as { models: { id: string }[] }).models.map((m) => m.id);
     expect(ids).toContain('place');
-    expect(ids).toContain('person');
+    expect(ids).toContain('character');
     expect(ids.length).toBe(33);
   });
 
@@ -195,7 +195,7 @@ describe('the API', () => {
     const tenure = await drew.post(`/v1/worlds/${world}/tenure`, {
       name: 'Count of Itumeist, Apiustu Nuriatia',
       title: { type: 'Title', id: crypto.randomUUID() },
-      holder: { type: 'Person', id: crypto.randomUUID() },
+      holder: { type: 'Character', id: crypto.randomUUID() },
       validTime: { begin: { trs, year: 1010 }, end: { trs, year: 1038 } },
     });
     expect(tenure.status).toBe(201);
@@ -266,7 +266,7 @@ describe('the API', () => {
       `${__dirname}/../../../../packages/@opendnd/generators/specs/fixtures/culture.json`,
     ).json();
 
-    const { status, body } = await anonymous.post('/v1/person/$generate', {
+    const { status, body } = await anonymous.post('/v1/character/$generate', {
       species,
       culture,
       seedPath: 'person/1',
@@ -277,7 +277,7 @@ describe('the API', () => {
     expect(person.canonStatus).toBe('generated');
 
     // Nothing was saved: generation is an offer, not a write.
-    const listed = await drew.get(`/v1/worlds/${world}/person`);
+    const listed = await drew.get(`/v1/worlds/${world}/character`);
     expect((listed.body as { resources: unknown[] }).resources).toHaveLength(0);
   });
 
@@ -298,7 +298,7 @@ describe('the API', () => {
     );
 
     const { status, body } = await drew.post(
-      `/v1/worlds/${world}/person/$generate`,
+      `/v1/worlds/${world}/character/$generate`,
       {
         species: (savedSpecies.body as { id: string }).id,
         culture: (savedCulture.body as { id: string }).id,
@@ -324,8 +324,8 @@ describe('the API', () => {
         }[];
       }
     ).models;
-    const person = models.find((m) => m.id === 'person')!;
-    expect(person.name).toBe('Person');
+    const person = models.find((m) => m.id === 'character')!;
+    expect(person.name).toBe('Character');
     expect(person.description).toBeTruthy();
     expect(person.generate?.input).toMatchObject({
       type: 'object',
@@ -559,7 +559,7 @@ describe('the API: actions', () => {
     expect(
       (events.body as { resources: unknown[] }).resources.length,
     ).toBeGreaterThan(0);
-    const people = await drew.get(`/v1/worlds/${world}/person?limit=500`);
+    const people = await drew.get(`/v1/worlds/${world}/character?limit=500`);
     expect(
       (people.body as { resources: unknown[] }).resources.length,
     ).toBeGreaterThan(0);
@@ -635,7 +635,7 @@ describe('the API: actions', () => {
     );
     expect(long.status).toBe(400);
     const person = await drew.post(
-      `/v1/worlds/${world}/person/${crypto.randomUUID()}/$simulate`,
+      `/v1/worlds/${world}/character/${crypto.randomUUID()}/$simulate`,
       { years: 10 },
     );
     expect(person.status).toBe(400);
@@ -658,7 +658,7 @@ describe('the API: actions', () => {
         properties: { years: { default: 100 }, save: { default: false } },
       });
     }
-    expect(models.find((m) => m.id === 'person')?.simulate).toBeUndefined();
+    expect(models.find((m) => m.id === 'character')?.simulate).toBeUndefined();
 
     // The calendar may be named as a reference, as a form sends it.
     const calendars = (
@@ -931,7 +931,7 @@ describe('the API: what a front end needs', () => {
     ).id;
     person = (
       (
-        await drew.post(`/v1/worlds/${world}/person`, {
+        await drew.post(`/v1/worlds/${world}/character`, {
           name: 'Ociaman Nuriatia',
           residence: { type: 'Place', id: place },
         })
@@ -1012,18 +1012,18 @@ describe('the API: what a front end needs', () => {
   });
 
   it('refuses a batch naming a model the ontology does not define, and writes none of it', async () => {
-    const before = await drew.get(`/v1/worlds/${world}/person?limit=500`);
+    const before = await drew.get(`/v1/worlds/${world}/character?limit=500`);
     const { status } = await drew.post(`/v1/worlds/${world}/$import`, {
       resources: [
         {
-          model: 'person',
+          model: 'character',
           resource: { name: 'Would Be Kept', canonStatus: 'canon' },
         },
         { model: 'dragon', resource: { name: 'Not A Model' } },
       ],
     });
     expect(status).toBe(400);
-    const after = await drew.get(`/v1/worlds/${world}/person?limit=500`);
+    const after = await drew.get(`/v1/worlds/${world}/character?limit=500`);
     // A batch lands whole or not at all.
     expect((after.body as { resources: unknown[] }).resources.length).toBe(
       (before.body as { resources: unknown[] }).resources.length,
@@ -1041,12 +1041,12 @@ describe('the API: what a front end needs', () => {
     ).references;
     // The person lives there, so their record points at the place.
     expect(references).toHaveLength(1);
-    expect(references[0]!.model).toBe('person');
+    expect(references[0]!.model).toBe('character');
     expect(references[0]!.resource.id).toBe(person);
 
     // A resource does not refer to itself just by carrying its own id.
     const own = await drew.get(
-      `/v1/worlds/${world}/person/${person}/references`,
+      `/v1/worlds/${world}/character/${person}/references`,
     );
     expect((own.body as { references: unknown[] }).references).toHaveLength(0);
   });
@@ -1158,7 +1158,7 @@ describe('the API: what a front end needs', () => {
     const { counts } = body as { counts: Record<string, number> };
 
     // Every count matches what listing that model actually returns.
-    for (const model of ['person', 'place', 'title']) {
+    for (const model of ['character', 'place', 'title']) {
       const listed = await drew.get(`/v1/worlds/${world}/${model}?limit=500`);
       expect(counts[model]).toBe(
         (listed.body as { resources: unknown[] }).resources.length,
@@ -1374,9 +1374,9 @@ describe('the API: the campaign layer', () => {
     for (const model of [
       'campaign',
       'session',
-      'character',
+      'character-sheet',
       'quest',
-      'encounter',
+      'scene',
     ]) {
       expect(ids).toContain(model);
     }
@@ -1398,7 +1398,7 @@ describe('the API: the campaign layer', () => {
 
   it('records a campaign, and everything hanging off it', async () => {
     const person = (
-      (await drew.post(`/v1/worlds/${world}/person`, { name: 'Ociaman' }))
+      (await drew.post(`/v1/worlds/${world}/character`, { name: 'Ociaman' }))
         .body as { id: string }
     ).id;
     const campaign = await drew.post(`/v1/worlds/${world}/campaign`, {
@@ -1414,13 +1414,13 @@ describe('the API: the campaign layer', () => {
     );
     const campaignId = (campaign.body as { id: string }).id;
 
-    const character = await drew.post(`/v1/worlds/${world}/character`, {
+    const character = await drew.post(`/v1/worlds/${world}/character-sheet`, {
       name: 'Ociaman, of the Kaviapat Four',
       status: 'active',
       level: 3,
-      person: { type: 'Person', id: person },
+      character: { type: 'Character', id: person },
       campaign: { type: 'Campaign', id: campaignId },
-      player: 'sam',
+      player: { type: 'Person', id: crypto.randomUUID() },
     });
     expect(character.status).toBe(201);
 
@@ -1449,7 +1449,7 @@ describe('the API: the campaign layer', () => {
       (references.body as { references: { model: string }[] }).references
         .map((r) => r.model)
         .sort(),
-    ).toEqual(['character', 'quest']);
+    ).toEqual(['character-sheet', 'quest']);
   });
 
   it('keeps what was prepared apart from what happened', async () => {
@@ -1470,7 +1470,7 @@ describe('the API: the campaign layer', () => {
       ).body as { id: string }
     ).id;
 
-    const encounter = await drew.post(`/v1/worlds/${world}/encounter`, {
+    const encounter = await drew.post(`/v1/worlds/${world}/scene`, {
       name: 'Ambush in the antechamber',
       difficulty: 'hard',
       location: { type: 'Place', id: place },
@@ -1495,13 +1495,13 @@ describe('the API: the campaign layer', () => {
     );
 
     const played = await drew.patch(
-      `/v1/worlds/${world}/encounter/${(encounter.body as { id: string }).id}`,
+      `/v1/worlds/${world}/scene/${(encounter.body as { id: string }).id}`,
       { played: { type: 'Event', id: (event.body as { id: string }).id } },
     );
     expect(played.status).toBe(200);
 
     // The encounter is on the battle map, so a map query in view finds it.
-    const inView = await drew.get(`/v1/worlds/${world}/encounter?cell=50221`);
+    const inView = await drew.get(`/v1/worlds/${world}/scene?cell=50221`);
     expect((inView.body as { resources: unknown[] }).resources).toHaveLength(1);
   });
 
@@ -1706,7 +1706,7 @@ describe('the API: hardening', () => {
   });
 
   it('derives the valid time from birth and death, so a read at a year sees who was alive', async () => {
-    const elder = await drew.post(`/v1/worlds/${world}/person`, {
+    const elder = await drew.post(`/v1/worlds/${world}/character`, {
       name: 'Apiustu',
       birth: { time: { trs, year: 900 } },
       death: { time: { trs, year: 950 } },
@@ -1719,14 +1719,14 @@ describe('the API: hardening', () => {
         }
       ).validTime,
     ).toMatchObject({ begin: { year: 900 }, end: { year: 950 } });
-    await drew.post(`/v1/worlds/${world}/person`, {
+    await drew.post(`/v1/worlds/${world}/character`, {
       name: 'Ociaman',
       birth: { time: { trs, year: 990 } },
     });
 
     const names = async (at: number) =>
       (
-        (await drew.get(`/v1/worlds/${world}/person?at=${at}`)).body as {
+        (await drew.get(`/v1/worlds/${world}/character?at=${at}`)).body as {
           resources: { name: string }[];
         }
       ).resources.map((p) => p.name);
@@ -1985,10 +1985,10 @@ describe('the API: hardening', () => {
       string,
       { properties?: Record<string, unknown>; required?: string[] }
     >;
-    expect(schemas.person!.properties!.id).toBeDefined();
-    expect(schemas.personInput!.properties!.id).toBeUndefined();
-    expect(schemas.personInput!.required ?? []).not.toContain('world');
-    expect(schemas.personInput!.required ?? []).not.toContain('meta');
+    expect(schemas.character!.properties!.id).toBeDefined();
+    expect(schemas.characterInput!.properties!.id).toBeUndefined();
+    expect(schemas.characterInput!.required ?? []).not.toContain('world');
+    expect(schemas.characterInput!.required ?? []).not.toContain('meta');
   });
 
   it('reports the database in its health check', async () => {
@@ -2067,7 +2067,7 @@ describe('the API: writing about a record', () => {
     ).id;
     person = (
       (
-        await drew.post(`/v1/worlds/${world}/person`, {
+        await drew.post(`/v1/worlds/${world}/character`, {
           name: 'Ilsabet Marrow',
           description: 'A river-warden of the ford.',
           gender: 'female',
@@ -2122,7 +2122,7 @@ describe('the API: writing about a record', () => {
   it('writes from the facts on file, bills the world, and saves nothing until asked', async () => {
     script.push('Ilsabet Marrow kept the ford and took stories for tolls.');
     const { status, body } = await drew.post(
-      `/v1/worlds/${world}/person/${person}/$author`,
+      `/v1/worlds/${world}/character/${person}/$author`,
       { words: 80 },
     );
     expect(status).toBe(200);
@@ -2145,7 +2145,7 @@ describe('the API: writing about a record', () => {
     expect(result.work.provenance.generatedBy).toMatch(/^article@/);
     expect(result.work.provenance.parameters.model).toBe('scripted:scripted-1');
     // What the model was allowed to say came from the record.
-    expect(result.facts).toContain('Person: Ilsabet Marrow');
+    expect(result.facts).toContain('Character: Ilsabet Marrow');
     expect(result.facts).toContain('Gender: female');
     expect(lastPrompt).toContain('A river-warden of the ford.');
     expect(result.spend).toMatchObject({
@@ -2168,7 +2168,7 @@ describe('the API: writing about a record', () => {
   it('keeps the work when asked, so it refers to its subject like any record', async () => {
     script.push('A chronicle of the ford.');
     const { status, body } = await drew.post(
-      `/v1/worlds/${world}/person/${person}/$author`,
+      `/v1/worlds/${world}/character/${person}/$author`,
       { workType: 'chronicle', save: true },
     );
     expect(status).toBe(200);
@@ -2180,7 +2180,7 @@ describe('the API: writing about a record', () => {
     expect(result.work.perspective).toBe('in-universe');
 
     const referring = (
-      (await drew.get(`/v1/worlds/${world}/person/${person}/references`))
+      (await drew.get(`/v1/worlds/${world}/character/${person}/references`))
         .body as { references: { model: string; resource: { id: string } }[] }
     ).references;
     expect(referring).toContainEqual(
@@ -2193,7 +2193,7 @@ describe('the API: writing about a record', () => {
 
   it('reports a model that is not served here, and one that fails', async () => {
     const unknown = await drew.post(
-      `/v1/worlds/${world}/person/${person}/$author`,
+      `/v1/worlds/${world}/character/${person}/$author`,
       { model: 'nowhere:latest' },
     );
     expect(unknown.status).toBe(400);
@@ -2201,7 +2201,7 @@ describe('the API: writing about a record', () => {
 
     script.push(new ModelError('the model is on fire', 'fatal', 'scripted'));
     const failed = await drew.post(
-      `/v1/worlds/${world}/person/${person}/$author`,
+      `/v1/worlds/${world}/character/${person}/$author`,
       {},
     );
     expect(failed.status).toBe(502);
@@ -2209,7 +2209,7 @@ describe('the API: writing about a record', () => {
 
     // A viewer may read the world, not spend its money.
     expect(
-      (await reader.post(`/v1/worlds/${world}/person/${person}/$author`, {}))
+      (await reader.post(`/v1/worlds/${world}/character/${person}/$author`, {}))
         .status,
     ).toBe(403);
   });

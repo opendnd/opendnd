@@ -38,8 +38,11 @@ an existing one — and a specialization may add top-level elements. So the
 freedom to have `extent` and `canonStatus` at the top of a record is not an
 exception to the standard; it is the mechanism the standard uses on itself.
 Three models specialize a real base — `place` a Location, `faction` an
-Organization, `person` a Person — and the other thirty specialize
-DomainResource.
+Organization, `character` a Person — and the other thirty specialize
+DomainResource. A character specializing Person is not a contradiction with
+the person at the table also being one: FHIR's Person is deliberately
+context-free demographics, and both are people. Only one of them may be
+*called* Person, which is settled below.
 
 **The envelope is FHIR's.** `model` becomes `resourceType`, carrying the type
 name rather than the model id: a `place` is published as a `Place`. Transaction
@@ -62,7 +65,7 @@ taxonomic specialization stays `subclassOf`, because a subspecies is not part
 of a species and the two relations should not share a name. What a record is
 about is `subject`. Where something happens is `location`. When an event
 happened is `occurred`. A `place` a Location manages is its
-`managingOrganization`, and a person's `sex` is their `gender`, because that
+`managingOrganization`, and a character's `sex` is their `gender`, because that
 is what the resources they specialize call those elements.
 
 **A repeating element is singular.** `quest.objectives` is `objective`,
@@ -75,6 +78,39 @@ array, and that is the price.
 `{ model, id, name }` and is now `{ type, id, display }` — the same three
 fields under the names FHIR gives them. `type` holds the resource type, so a
 reference and the record it points at agree about what that record is.
+
+**Four names had to move, because a type is a global token.** A resource
+type is what a reader dispatches on: a canonical URL disambiguates the
+definition, not the value on the wire. Checked against the R4 specification,
+four of the thirty-three were already taken by resources that mean something
+else, and a name that agrees while the meaning does not is worse than no
+name at all.
+
+| Was | Is | Why it could not stay |
+| --- | --- | --- |
+| `encounter` | **`scene`** | An Encounter is a clinical interaction. A scene is a staged unit of action — a fight, a talk, a search of a room — and its `type` says which, so a medium that stages other kinds adds codes rather than a resource |
+| `claim` | **`title-claim`** | A Claim is an insurance claim. This is a claim to a seat |
+| `person` | **`character`** | The being in the fiction |
+| `character` | **`character-sheet`** | That being as played, by someone |
+
+The last two are a swap, and they are the reason the collision dissolves
+rather than being dodged. A person at the table always was a Person; the
+model that claimed the name never was. So `character-sheet.player` stops
+being a user id in a string and becomes a reference to a Person defined
+elsewhere — the first element here that deliberately points out of this
+ontology.
+
+**The condition catalogue was a code system wearing a resource's clothes.**
+`condition` had no fields of its own: each record was the definition of
+blinded or grappled, and a sheet pointed at them. That is what a CodeSystem
+is for, and it is why the name collided — FHIR's Condition is the fact that a
+subject *has* one. Split correctly, the fifteen states become codes, and
+`Condition` becomes a record with a `subject`, a `code`, an `onset` and an
+`abatement`. It buys something that could not be said before: not
+"Arodyf: poisoned" but poisoned, by the spider's bite, from round three,
+until they save. Exhaustion's levels are `severity`. The mapping stops being
+a false friend and becomes one-to-one, with FHIR's clinical bindings on
+`clinicalStatus` and `verificationStatus` the one thing left to settle.
 
 ## Consequences
 

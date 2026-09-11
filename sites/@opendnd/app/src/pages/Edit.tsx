@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
-import { type Reference, modelOfReference, resourceTypeOf } from '../api/types';
+import type { Reference } from '../api/types';
 import { useApi } from '../app/context';
 import { useRequest } from '../app/hooks';
 import { useOntology } from '../app/ontology';
+import type { Ontology } from '../schema/openapi';
 import { recordPath, useWorld } from '../app/world';
 import { SchemaForm } from '../components/Form';
 import { ErrorNotice, Loading, Notice } from '../components/Notice';
@@ -29,7 +30,10 @@ export function Edit() {
   const navigate = useNavigate();
   const isNew = id === undefined;
 
-  const ref = useMemo(() => parseRef(params.get('ref')), [params]);
+  const ref = useMemo(
+    () => parseRef(params.get('ref'), ontology),
+    [params, ontology],
+  );
   const set = params.get('set') ?? undefined;
   const link = params.get('link') ?? undefined;
 
@@ -46,7 +50,7 @@ export function Edit() {
   const source = useRequest(
     () =>
       ref && isNew
-        ? api.get(world.id, modelOfReference(ref), ref.id)
+        ? api.get(world.id, ontology.idOf(ref.type), ref.id)
         : Promise.resolve(undefined),
     [api, world.id, ref, isNew],
   );
@@ -98,7 +102,7 @@ export function Edit() {
     if (isNew && ref && link) {
       try {
         await linkBack(ref, link, {
-          type: resourceTypeOf(model),
+          type: ontology.type(model),
           id: stored.body.id,
           ...(typeof stored.body.name === 'string'
             ? { display: stored.body.name }
@@ -117,7 +121,7 @@ export function Edit() {
     }
     void navigate(
       isNew && ref
-        ? recordPath(world.id, modelOfReference(ref), ref.id)
+        ? recordPath(world.id, ontology.idOf(ref.type), ref.id)
         : recordPath(world.id, model, stored.body.id),
     );
   };
@@ -128,7 +132,7 @@ export function Edit() {
     field: string,
     target: Reference,
   ) => {
-    const fromModel = modelOfReference(from);
+    const fromModel = ontology.idOf(from.type);
     const fresh = await api.get(world.id, fromModel, from.id);
     const fromRoot = rootOf(ontology, fromModel);
     if (!fromRoot) throw new Error(`there is no model called ${fromModel}`);
@@ -160,7 +164,7 @@ export function Edit() {
 
   const back = isNew
     ? ref
-      ? recordPath(world.id, modelOfReference(ref), ref.id)
+      ? recordPath(world.id, ontology.idOf(ref.type), ref.id)
       : `/worlds/${world.id}/${model}`
     : recordPath(world.id, model, id);
   const sourceName =
@@ -207,12 +211,16 @@ export function Edit() {
 }
 
 /** `model/id`, as the query carries the record a new one is linked to. */
-function parseRef(value: string | null): Reference | undefined {
+function parseRef(
+  value: string | null,
+  ontology: Ontology,
+): Reference | undefined {
   if (!value) return undefined;
   const slash = value.indexOf('/');
   if (slash <= 0 || slash === value.length - 1) return undefined;
+  // The query names the model, as a route does; a reference carries the type.
   return {
-    type: resourceTypeOf(value.slice(0, slash)),
+    type: ontology.type(value.slice(0, slash)),
     id: value.slice(slash + 1),
   };
 }

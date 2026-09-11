@@ -12,7 +12,7 @@ const bundle = {
   entry: [
     { model: 'pet', resource: { id: 'a', name: 'Biscuit' } },
     { model: 'pet', resource: { id: 'b', name: 'Crumb' } },
-    { model: 'person', resource: { id: 'c', name: 'Ada' } },
+    { model: 'character', resource: { id: 'c', name: 'Ada' } },
   ],
 };
 
@@ -58,7 +58,7 @@ describe('taking a world with you', () => {
       await screen.findByText('3 resources to import'),
     ).toBeInTheDocument();
     expect(screen.getByText('2 pet')).toBeInTheDocument();
-    expect(screen.getByText('1 person')).toBeInTheDocument();
+    expect(screen.getByText('1 character')).toBeInTheDocument();
 
     await user.click(
       screen.getByRole('button', { name: 'Import 3 resources' }),
@@ -95,9 +95,9 @@ describe('taking a world with you', () => {
   it('counts a plain list and a resources list too', () => {
     expect(summarise([{ model: 'pet' }, { model: 'pet' }]).total).toBe(2);
     expect(
-      summarise({ resources: [{ model: 'person', resource: {} }] }).counts.get(
-        'person',
-      ),
+      summarise({
+        resources: [{ model: 'character', resource: {} }],
+      }).counts.get('character'),
     ).toBe(1);
     expect(() => summarise({ hello: 'world' })).toThrow(/expected a bundle/);
   });

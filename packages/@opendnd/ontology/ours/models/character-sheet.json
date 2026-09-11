@@ -1,0 +1,81 @@
+{
+  "resourceType": "Model",
+  "id": "character-sheet",
+  "url": "https://docs.opendnd.org/ours/models/character-sheet.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "CharacterSheet",
+  "description": "A person as played, in one campaign.",
+  "category": "play",
+  "icon": "user-round",
+  "schema": "https://docs.opendnd.org/ours/schemas/character-sheet.schema.json",
+  "relationships": [
+    {
+      "predicate": "character",
+      "target": "Character"
+    },
+    {
+      "predicate": "campaign",
+      "target": "Campaign"
+    },
+    {
+      "predicate": "background",
+      "target": "Background"
+    },
+    {
+      "predicate": "feat",
+      "target": "Feat"
+    },
+    {
+      "predicate": "statblock",
+      "target": "Statblock"
+    },
+    {
+      "predicate": "inventory.item",
+      "target": "Item"
+    },
+    {
+      "predicate": "class.class",
+      "target": "Class"
+    },
+    {
+      "predicate": "condition",
+      "target": "Condition"
+    },
+    {
+      "predicate": "proficiency",
+      "target": "Proficiency"
+    },
+    {
+      "predicate": "spellcasting.known",
+      "target": "Spell"
+    },
+    {
+      "predicate": "spellcasting.prepared",
+      "target": "Spell"
+    },
+    {
+      "predicate": "choice.source",
+      "target": "Class"
+    },
+    {
+      "predicate": "choice.source",
+      "target": "Feature"
+    },
+    {
+      "predicate": "choice.source",
+      "target": "Background"
+    },
+    {
+      "predicate": "choice.source",
+      "target": "Feat"
+    }
+  ],
+  "mapsTo": [
+    {
+      "system": "https://schema.org",
+      "schema": "https://schema.org/Role",
+      "type": "one-to-one"
+    }
+  ]
+}

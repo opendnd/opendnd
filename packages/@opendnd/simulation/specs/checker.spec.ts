@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import type { Event, ParticipantRole, Person, Tenure } from '@opendnd/types';
+import type { Event, ParticipantRole, Character, Tenure } from '@opendnd/types';
 import { checkHistory } from 'src';
 
 const world = '3c2d3b40-9f0a-4d3e-8f6d-8c0b2c8e1a11';
@@ -11,7 +11,7 @@ const person = (
   name: string,
   born: number,
   died?: number,
-): Person => ({
+): Character => ({
   id,
   world,
   name,
@@ -39,7 +39,7 @@ const event = (
   type: type,
   occurred: { begin: { trs, year, precision: 'year' } },
   participant: participants.map(([pid, role]) => ({
-    actor: { type: 'Person', id: pid },
+    actor: { type: 'Character', id: pid },
     role,
   })),
 });
@@ -108,7 +108,7 @@ describe('checkHistory', () => {
       perspective: 'in-universe',
       meta,
       title: { type: 'Title', id: 'o1', display: 'Lord' },
-      holder: { type: 'Person', id: holder },
+      holder: { type: 'Character', id: holder },
       validTime: {
         begin: { trs, year: begin, precision: 'year' },
         ...(end === undefined
@@ -177,7 +177,7 @@ describe('checkHistory', () => {
           perspective: 'in-universe',
           meta,
           title: { type: 'Title', id: 'o1', display: 'Lord' },
-          holder: { type: 'Person', id: A },
+          holder: { type: 'Character', id: A },
           validTime: {
             begin: { trs, year: 1020, precision: 'year' },
             end: { trs, year: 1035, precision: 'year' },

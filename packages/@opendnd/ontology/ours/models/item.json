@@ -16,7 +16,7 @@
     },
     {
       "predicate": "owner",
-      "target": "Person"
+      "target": "Character"
     },
     {
       "predicate": "location",

@@ -1,0 +1,55 @@
+{
+  "resourceType": "Vocabulary",
+  "id": "scene-type",
+  "url": "https://docs.opendnd.org/ours/vocabularies/scene-type.json",
+  "version": "0.1.0",
+  "system": "internal",
+  "name": "Scene type",
+  "description": "What sort of scene this is. The codes are the kinds a scene can be in any medium that stages them; a domain that stages other kinds adds its own.",
+  "codes": [
+    {
+      "code": "combat",
+      "display": "Combat"
+    },
+    {
+      "code": "social",
+      "display": "Social"
+    },
+    {
+      "code": "exploration",
+      "display": "Exploration"
+    },
+    {
+      "code": "puzzle",
+      "display": "Puzzle"
+    },
+    {
+      "code": "trap",
+      "display": "Trap"
+    },
+    {
+      "code": "hazard",
+      "display": "Hazard"
+    },
+    {
+      "code": "dialogue",
+      "display": "Dialogue"
+    },
+    {
+      "code": "action",
+      "display": "Action"
+    },
+    {
+      "code": "montage",
+      "display": "Montage"
+    },
+    {
+      "code": "establishing",
+      "display": "Establishing"
+    },
+    {
+      "code": "transition",
+      "display": "Transition"
+    }
+  ]
+}

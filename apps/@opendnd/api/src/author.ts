@@ -90,7 +90,7 @@ export interface AuthorResult {
 export interface AuthorOptions {
   readonly models: Models;
   readonly context: (seedPath: string) => GeneratorContext;
-  /** What to call a model, e.g. `person` becomes `Person`. */
+  /** What to call a model, e.g. `person` becomes `Character`. */
   readonly label: (model: ModelId) => string;
   /** Where the ledger left the last usage line. */
   readonly spend: () => UsageRecord | undefined;
