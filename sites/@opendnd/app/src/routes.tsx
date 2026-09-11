@@ -5,7 +5,7 @@ import { Callback } from './pages/Callback';
 import { Campaigns } from './pages/Campaigns';
 import { Characters } from './pages/Characters';
 import { Compendium } from './pages/Compendium';
-import { Data } from './pages/Data';
+import { Transfer } from './pages/Transfer';
 import { Edit } from './pages/Edit';
 import { ErrorPage } from './pages/ErrorPage';
 import { Generate } from './pages/Generate';
@@ -53,7 +53,7 @@ export const routes: RouteObject[] = [
                   { path: 'characters', element: <Characters /> },
                   { path: 'marketplace', element: <Marketplace /> },
                   { path: 'rules', element: <Rules /> },
-                  { path: 'data', element: <Data /> },
+                  { path: 'data', element: <Transfer /> },
                   { path: 'map', element: <MapPage /> },
                   { path: 'timeline', element: <Timeline /> },
                   { path: 'build', element: <Build /> },

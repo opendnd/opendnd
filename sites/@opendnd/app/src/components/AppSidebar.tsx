@@ -5,7 +5,7 @@ import {
   CompassIcon,
   DoorOpenIcon,
   HistoryIcon,
-  LayoutGridIcon,
+  ArrowDownUpIcon,
   LayoutTemplateIcon,
   LogOutIcon,
   MapIcon,
@@ -291,8 +291,8 @@ export function AppSidebar() {
               <Entry
                 to={to(SURFACES.data.path)}
                 active={location.pathname === to(SURFACES.data.path)}
-                label="Overview"
-                icon={<LayoutGridIcon />}
+                label={SURFACES.data.label}
+                icon={<ArrowDownUpIcon />}
               />
               <div className="relative px-2 py-1">
                 <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-3.5 -translate-y-1/2 text-muted-foreground" />

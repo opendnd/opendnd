@@ -1,4 +1,4 @@
-import { ModelGroups } from './Data';
+import { ModelGroups } from '../components/ModelGroups';
 import { useOntology } from '../app/ontology';
 import { SURFACES, categoryOf } from '../app/surfaces';
 import { useWorld } from '../app/world';

@@ -1,11 +1,9 @@
 import { Link } from 'react-router';
+import { ModelIcon } from './ModelIcon';
 import type { ModelInfo } from '../api/types';
 import { compactCount, useCounts } from '../app/counts';
 import { useOntology } from '../app/ontology';
 import { CATEGORIES, categoryOf, inGroup } from '../app/surfaces';
-import { useWorld } from '../app/world';
-import { ModelIcon } from '../components/ModelIcon';
-import { Transfer } from '../components/Transfer';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -13,27 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-
-/** Every kind of record the API serves, by group, as tables; and the world's export and import. */
-export function Data() {
-  const ontology = useOntology();
-  const { world } = useWorld();
-  return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-display text-3xl">Data</h1>
-        <p className="text-sm text-muted-foreground">
-          Everything in {world.name} is one of these kinds of record, as the API
-          describes them and grouped as the ontology places them. Most of the
-          time the surfaces above do this work; this is the way in when you want
-          the tables themselves.
-        </p>
-      </header>
-      <ModelGroups models={ontology.models} world={world.id} />
-      <Transfer />
-    </div>
-  );
-}
 
 /** Models as cards, one section per category, in the order the categories are listed. */
 export function ModelGroups(props: {

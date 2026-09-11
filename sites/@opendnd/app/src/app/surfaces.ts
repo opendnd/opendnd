@@ -63,9 +63,8 @@ export const SURFACES = {
   },
   data: {
     path: 'data',
-    label: 'Data',
-    description:
-      'Every kind of record the API serves, as tables, with export and import.',
+    label: 'Export and import',
+    description: "A world as one bundle, out and back in.",
   },
   settings: {
     path: 'settings',
