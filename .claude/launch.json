@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "app",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "sites/@opendnd/app", "dev"],
+      "port": 4100
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -51,14 +52,21 @@ export function AccountMenu(props: {
         }
       />
       <DropdownMenuContent align="start" side="right" className="w-60">
-        <DropdownMenuLabel className="font-normal">
-          <span className="block truncate text-sm font-medium">{name}</span>
-          {session?.email && (
-            <span className="block truncate text-xs text-muted-foreground">
-              {session.email}
-            </span>
-          )}
-        </DropdownMenuLabel>
+        {/*
+          A label is a group's label: Base UI reads it from the group above
+          it and throws without one. Radix did not need the group, which is
+          how this got written without it.
+        */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="font-normal">
+            <span className="block truncate text-sm font-medium">{name}</span>
+            {session?.email && (
+              <span className="block truncate text-xs text-muted-foreground">
+                {session.email}
+              </span>
+            )}
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         {props.role && (
           <>
             <DropdownMenuSeparator />
@@ -69,9 +77,11 @@ export function AccountMenu(props: {
               Studio keeps the tenant and workspace in this menu for the same
               reason: it is context, not chrome.
             */}
-            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-              {humanize(props.role)} of this world
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+                {humanize(props.role)} of this world
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
           </>
         )}
         {props.world && (
