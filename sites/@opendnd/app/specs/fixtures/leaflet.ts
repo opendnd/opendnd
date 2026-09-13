@@ -4,7 +4,7 @@
  * can read it and a way to fire its events.
  */
 export interface FakeLayer {
-  readonly kind: 'polygon' | 'marker' | 'name';
+  readonly kind: 'polygon' | 'line' | 'marker' | 'name';
   readonly latlngs: unknown;
   readonly options: unknown;
   tooltip?: string;
@@ -28,6 +28,18 @@ export class FakeMap {
   setMinZoom() {}
 
   invalidateSize() {}
+
+  /** Panes the page makes to fade the ground as one layer and to keep its
+   *  borders above it, each a box with a style the page writes to. */
+  readonly panes: Record<string, { style: Record<string, string> }> = {};
+  createPane(name: string) {
+    const pane = { style: {} as Record<string, string> };
+    this.panes[name] = pane;
+    return pane;
+  }
+  getPane(name: string) {
+    return this.panes[name];
+  }
 
   getSize() {
     return { x: 360 * 400, y: 180 * 400 };
@@ -133,6 +145,9 @@ const L = {
     return fake.map;
   },
   tileLayer: () => ({ addTo: () => undefined }),
+  // The surface the political panes are painted onto. A test reads the
+  // shapes, not the paint, so it need only be something to hand them.
+  canvas: (options: unknown) => ({ options, addTo: () => ({ options }) }),
   /*
    * A group keeps its own layers, and clearing one clears only those. The
    * page has three — the ground beneath, the shapes, the names — and while
@@ -158,6 +173,8 @@ const L = {
   },
   polygon: (latlngs: unknown, options: unknown) =>
     layer('polygon', latlngs, options),
+  polyline: (latlngs: unknown, options: unknown) =>
+    layer('line', latlngs, options),
   circleMarker: (latlng: unknown, options: unknown) =>
     layer('marker', latlng, options),
   // A big place is a name written on the map, which is an invisible marker

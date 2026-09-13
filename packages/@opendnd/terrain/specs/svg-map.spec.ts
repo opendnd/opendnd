@@ -82,6 +82,12 @@ describe('reading a drawn map', () => {
       'land',
       'land',
     ]);
+    expect(map.shapes.map((s) => s.fill)).toEqual([
+      '#628975',
+      '#b6d1db',
+      '#ce7a7a',
+      '#ce7a7a',
+    ]);
   });
 
   it('measures each shape, so a continent can be told from an island', () => {
@@ -433,6 +439,39 @@ describe('the ground a place holds', () => {
     // And what each holds is the half it is seated in.
     for (const token of shared.west!) {
       expect(CellId.fromToken(token).centerLatLng().lng).toBeLessThan(east.lng);
+    }
+  });
+
+  it('refines only the cells where a border between seats passes', () => {
+    const parent = CellId.fromFaceIJ(0, 2, 2, 3);
+    const [west, east] = [
+      parent.children()[0]!.centerLatLng(),
+      parent.children()[3]!.centerLatLng(),
+    ];
+    const shared = divide(
+      [parent.token()],
+      [
+        { key: 'west', at: west },
+        { key: 'east', at: east },
+      ],
+      { maxLevel: 9 },
+    );
+    const cells = [...shared.west!, ...shared.east!].map(CellId.fromToken);
+    expect(shared.west!.length).toBeGreaterThan(0);
+    expect(shared.east!.length).toBeGreaterThan(0);
+    // A diagonal border needs the finest cells where it cuts across the
+    // grid, while ground away from it remains in larger cells.
+    expect(cells.some((cell) => cell.level() === 9)).toBe(true);
+    expect(cells.some((cell) => cell.level() < 9)).toBe(true);
+    expect(shareOfGlobe(cells.map((cell) => cell.token()))).toBeCloseTo(
+      shareOfGlobe([parent.token()]),
+      12,
+    );
+    for (const cell of cells) {
+      for (const other of cells) {
+        if (cell.equals(other)) continue;
+        expect(cell.contains(other)).toBe(false);
+      }
     }
   });
 

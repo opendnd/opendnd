@@ -44,6 +44,12 @@ export interface MapShape {
   readonly bounds: readonly [number, number, number, number];
   /** Area in square drawing units, which orders continents before islands. */
   readonly area: number;
+  /**
+   * The paint the drawing used, when it used one. A small palette is reused
+   * across countries, so this is not an identity — only a class of neighbours
+   * that must be told apart some other way.
+   */
+  readonly fill?: string;
 }
 
 export interface DrawnMap {
@@ -133,12 +139,14 @@ export function readDrawnMap(svg: string, options: ReadOptions = {}): DrawnMap {
 
     const own = tag.attributes.id ?? '';
     const wet = water.test(own) || open.some((id) => water.test(id));
+    const fill = paintOf(tag.attributes);
     shapes.push({
       // The nearest named group that is not the water layer itself: a lake
       // belongs to the continent it sits in, not to a layer called Water.
       group:
         [...open].reverse().find((id) => id !== '' && !water.test(id)) ?? '',
       kind: wet ? 'water' : 'land',
+      ...(fill !== undefined ? { fill } : {}),
       rings,
       outlines,
       bounds: boundsOf(rings),
@@ -200,6 +208,19 @@ function attributesIn(text: string): Record<string, string> {
     found[(match[1] ?? match[3])!] = (match[2] ?? match[4])!;
   }
   return found;
+}
+
+/** The fill a path was painted, if it was painted at all. */
+function paintOf(attrs: Record<string, string>): string | undefined {
+  const direct = attrs.fill?.trim();
+  const fromStyle = /(?:^|;)\s*fill\s*:\s*([^;]+)/i
+    .exec(attrs.style ?? '')?.[1]
+    ?.trim();
+  const value = direct || fromStyle;
+  if (value === undefined || value === '' || value === 'none') {
+    return undefined;
+  }
+  return value.toLowerCase();
 }
 
 /**

@@ -2,7 +2,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ModelInfo } from 'src/api/types';
-import { MapPage } from 'src/pages/Map';
+import { MapPage, politicalLabelAt } from 'src/pages/Map';
 import {
   cellAt,
   cellAtLatLng,
@@ -72,6 +72,12 @@ const camps = [
     id: 'a0000000-0000-4000-8000-000000000002',
     name: 'North Camp',
     spot: north.token,
+    // Ground of its own, against the valley's eastern side, so the two have
+    // a border between them and not only a coast.
+    extent: [
+      cellAt(2, 5 * 16 + 2, 9 * 16, 10).token,
+      cellAt(2, 5 * 16 + 2, 9 * 16 + 1, 10).token,
+    ],
   },
   {
     id: 'a0000000-0000-4000-8000-000000000003',
@@ -159,6 +165,14 @@ async function mapAt(zoom: number) {
 describe('the map', () => {
   beforeEach(reset);
 
+  it('names continents while zoomed out and kingdoms while zoomed in', () => {
+    expect(politicalLabelAt('continent', 2)).toBe(true);
+    expect(politicalLabelAt('kingdom', 2)).toBe(false);
+    expect(politicalLabelAt('continent', 6)).toBe(false);
+    expect(politicalLabelAt('kingdom', 6)).toBe(true);
+    expect(politicalLabelAt('city', 6)).toBeUndefined();
+  });
+
   it('fetches the cells under the view down to a level worth drawing, and lists what it finds', async () => {
     const { calls } = renderMap();
     await mapAt(4);
@@ -174,18 +188,20 @@ describe('the map', () => {
       calls
         .filter((c) => c.url.includes('/camp?'))
         .map((c) => new URL(c.url).searchParams);
-    // Two questions per sampled square, and every request is bounded by one.
-    // What is inside it, down to level 8, which is as fine as zoom 4 draws;
-    // and what it is inside, which is how a county larger than the screen is
-    // found at all.
+    // Two questions per sampled square, and a third of the whole layer so
+    // the political fill is not missing a country whose seat is off-screen.
     await waitFor(() => expect(asked().length).toBeGreaterThan(1));
     expect(
       asked().every(
-        (q) => (q.has('cell') && q.has('maxLevel')) || q.has('covers'),
+        (q) =>
+          (q.has('cell') && q.has('maxLevel')) ||
+          q.has('covers') ||
+          (!q.has('cell') && !q.has('covers')),
       ),
     ).toBe(true);
     expect(asked().some((q) => q.get('maxLevel') === '8')).toBe(true);
     expect(asked().some((q) => q.has('covers'))).toBe(true);
+    expect(asked().some((q) => !q.has('cell') && !q.has('covers'))).toBe(true);
     // A model without a cell field is not asked; only camps sit on the map.
     expect(calls.some((c) => c.url.includes('/song'))).toBe(false);
   });
@@ -226,16 +242,33 @@ describe('the map', () => {
     );
   });
 
-  it('colours the ground a place holds, as one shape, and lets it be turned off', async () => {
+  it('paints the ground a place holds seamlessly, draws its border, and lets both go', async () => {
     renderMap();
     await waitFor(() =>
       expect(fake.layers.map((l) => l.tooltip)).toContain('The Valley'),
     );
-    // One shape for the place, not one per cell: several shapes touching
-    // show a seam at every edge, which reads as a grid rather than a country.
     const filled = fake.layers.filter((l) => l.kind === 'polygon');
-    expect(filled).toHaveLength(1);
+    expect(filled.length).toBeGreaterThan(0);
     expect((filled[0]!.latlngs as unknown[]).length).toBeGreaterThan(0);
+    /*
+     * The ground is painted solid and in one colour, edges included, and the
+     * pane it sits on is what fades it. Half-transparent shapes that share
+     * an edge show that edge, and a country made of a hundred of them would
+     * read as a grid rather than as a country.
+     */
+    for (const shape of filled) {
+      const options = shape.options as Record<string, unknown>;
+      expect(options.pane).toBe('political');
+      expect(options.fillOpacity).toBe(1);
+      expect(options.color).toBe(options.fillColor);
+    }
+    const pane = fake.map!.panes.political;
+    expect(Number(pane!.style.opacity)).toBeLessThan(1);
+
+    // The border is a line of its own, above the ground rather than on it.
+    const lines = fake.layers.filter((l) => l.kind === 'line');
+    expect(lines.length).toBeGreaterThan(0);
+    expect((lines[0]!.options as Record<string, unknown>).pane).toBe('borders');
 
     // And it is a layer, so it goes away.
     await userEvent.click(screen.getByRole('button', { name: 'Layers' }));
@@ -243,6 +276,7 @@ describe('the map', () => {
     await waitFor(() =>
       expect(fake.layers.some((l) => l.kind === 'polygon')).toBe(false),
     );
+    expect(fake.layers.some((l) => l.kind === 'line')).toBe(false);
   });
 
   it('places a record brought to it at the cell under the click, as fine as the zoom', async () => {

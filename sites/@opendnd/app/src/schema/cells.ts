@@ -254,6 +254,17 @@ export function centerOf(cell: Cell): LatLng {
 }
 
 /**
+ * A place inside a cell, in fractions of its side.
+ *
+ * Fractions outside [0, 1] are outside the cell, which is how the ground
+ * across one of its sides is asked about without first working out which
+ * face that ground is on.
+ */
+export function pointWithin(cell: Cell, s: number, t: number): LatLng {
+  return within(cell, s, t);
+}
+
+/**
  * A cell's outline as points around it, several to an edge because a cell's
  * edges are curves on a map drawn in latitude and longitude. Nothing for a
  * cell that reaches around a pole, which no such map can outline.

@@ -24,15 +24,14 @@ import {
   type Cell,
   type LatLng,
   type View,
-  ancestor,
   cellAtLatLng,
   cellModels,
   centerOf,
   coverage,
-  outlineOf,
   parseCell,
   zoomFor,
 } from '../schema/cells';
+import { groundOf, inView, levelToDraw } from '../schema/ground';
 import { Button } from '@/components/ui/button';
 import { Page } from '../build/Page';
 import { usePageLayout } from '../build/projects';
@@ -59,12 +58,15 @@ const DRAWN_BELOW = 4;
  */
 const NAMED_BELOW = 2;
 
+/**
+ * The depth where an atlas stops naming continents and starts naming their
+ * countries. Political places are always names on their ground, never dots:
+ * the outline already says where they are.
+ */
+const POLITICAL_DETAIL_ZOOM = 5;
+
 /** Up to this many things in view, every one is labelled. */
 const MOST_LABELS = 40;
-
-/** How many of a place's cells are shaded when it is picked out. */
-const MOST_CELLS = 1200;
-
 /** How near, in pixels, two marks may be before the second is left out. */
 const CROWDED = 22;
 
@@ -78,123 +80,6 @@ const EDGE_TOP = 104;
 const DEEPEST_ZOOM = 14;
 
 /**
- * The ground each place holds, coarse enough to draw.
- *
- * A kingdom's extent is eight hundred cells at level ten, and there are a
- * hundred and fifty kingdoms: drawing every cell is a hundred thousand
- * shapes nobody asked for, and at a world's zoom each one is a fraction of
- * a pixel. So the cells are rolled up to an ancestor coarse enough to see,
- * which is what any atlas does when it draws a country small.
- *
- * Rolling up overlaps, because one coarse cell can hold ground from two
- * kingdoms. That would draw borders that are simply wrong, so a coarse cell
- * goes to whichever place holds most of it and to nobody else. A political
- * map is a partition — that is the whole idea of one — and this keeps it a
- * partition at every zoom, generalised but never double-claimed.
- */
-/**
- * A place's cells rolled up to one level, remembered.
- *
- * A hundred and fifty kingdoms of eight hundred cells is a hundred and
- * twenty thousand tokens to parse, and panning refetches mostly the same
- * places. Rolling up is the expensive half and depends only on the place
- * and the level, so it is kept; the partition over what comes out is
- * cheap, because what comes out is tens of cells rather than hundreds.
- */
-interface Rolled {
-  readonly cell: Cell;
-  /** How many of the place's own cells fall inside this coarse one. */
-  readonly n: number;
-}
-
-const rolled = new Map<string, Rolled[]>();
-
-function rollUp(
-  id: string,
-  extent: readonly unknown[],
-  level: number,
-): Rolled[] {
-  const key = `${id}:${level}`;
-  const had = rolled.get(key);
-  if (had) return had;
-  const seen = new Map<string, { cell: Cell; n: number }>();
-  for (const token of extent) {
-    const cell = parseCell(String(token));
-    if (!cell) continue;
-    const coarse = cell.level <= level ? cell : ancestor(cell, level);
-    if (!coarse) continue;
-    const at = seen.get(coarse.token);
-    if (at) at.n += 1;
-    else seen.set(coarse.token, { cell: coarse, n: 1 });
-  }
-  const out = [...seen.values()];
-  // Enough for every place in view at a handful of levels; a world does not
-  // hold so many that this is worth evicting cleverly.
-  if (rolled.size > 4000) rolled.clear();
-  rolled.set(key, out);
-  return out;
-}
-
-export function politicalRings(
-  entries: readonly Entry[],
-  level: number,
-): Map<string, LatLng[][]> {
-  const claims = new Map<string, Map<string, number>>();
-  const owners = new Map<string, Cell>();
-  /*
-   * How much ground each claimant holds altogether, because the smaller
-   * holder wins a contested cell. Places nest — a kingdom sits on a
-   * continent, and both say so honestly — so the claimant with the most
-   * children in a coarse cell is almost always the continent, and a
-   * political map drawn that way is two colours. The most specific holder
-   * is the one a political map means.
-   */
-  const held = new Map<string, number>();
-  for (const entry of entries) {
-    const extent = entry.resource.extent;
-    if (!Array.isArray(extent)) continue;
-    const key = `${entry.model}/${entry.resource.id}`;
-    held.set(key, extent.length);
-    for (const { cell, n } of rollUp(
-      String(entry.resource.id),
-      extent,
-      level,
-    )) {
-      owners.set(cell.token, cell);
-      const byPlace = claims.get(cell.token) ?? new Map<string, number>();
-      byPlace.set(key, (byPlace.get(key) ?? 0) + n);
-      claims.set(cell.token, byPlace);
-    }
-  }
-  const rings = new Map<string, LatLng[][]>();
-  for (const [token, byPlace] of claims) {
-    let best: string | undefined;
-    let bestHeld = Infinity;
-    let bestCount = 0;
-    for (const [key, n] of byPlace) {
-      const size = held.get(key) ?? Infinity;
-      // Smallest holder first; then whoever holds more of this cell; then
-      // the same one every time, or the map would flicker as it redrew.
-      const better =
-        best === undefined ||
-        size < bestHeld ||
-        (size === bestHeld &&
-          (n > bestCount || (n === bestCount && key < best)));
-      if (better) {
-        best = key;
-        bestHeld = size;
-        bestCount = n;
-      }
-    }
-    const cell = owners.get(token);
-    const outline = best !== undefined && cell && outlineOf(cell, 2);
-    if (!best || !outline) continue;
-    rings.set(best, [...(rings.get(best) ?? []), outline]);
-  }
-  return rings;
-}
-
-/**
  * A colour for a place, the same one every time.
  *
  * A political map wants neighbours to differ and nothing else; it does not
@@ -202,12 +87,21 @@ export function politicalRings(
  * a list, and holding saturation and lightness still keeps the map a map
  * rather than a paint chart.
  */
-function politicalFill(id: string): string {
+function hueOf(id: string): number {
   let hash = 0;
   for (let at = 0; at < id.length; at++) {
     hash = (hash * 31 + id.charCodeAt(at)) % 360;
   }
-  return `hsl(${hash} 55% 55%)`;
+  return hash;
+}
+
+function politicalFill(id: string): string {
+  return `hsl(${hueOf(id)} 55% 55%)`;
+}
+
+/** The same colour, dark enough to read as a line over its own ground. */
+function politicalEdge(id: string): string {
+  return `hsl(${hueOf(id)} 60% 32%)`;
 }
 
 /** Which layers are drawn. Remembered, because it is a preference. */
@@ -245,6 +139,16 @@ interface Placing {
   readonly model: string;
   readonly field: string;
   readonly resource: Resource;
+}
+
+/** Whether a political place belongs at this depth; undefined for other places. */
+export function politicalLabelAt(
+  type: unknown,
+  zoom: number,
+): boolean | undefined {
+  if (type === 'continent') return zoom < POLITICAL_DETAIL_ZOOM;
+  if (type === 'kingdom') return zoom >= POLITICAL_DETAIL_ZOOM;
+  return undefined;
 }
 
 /** What the world's own record says its base map is. */
@@ -317,7 +221,19 @@ export function MapSurface() {
       return next;
     });
   const political = useRef<L.LayerGroup | null>(null);
+  const borders = useRef<L.LayerGroup | null>(null);
   const held = useRef<L.LayerGroup | null>(null);
+  /**
+   * The political layer is painted rather than made of elements.
+   *
+   * A country's outline is thousands of points, and a world's is a hundred
+   * and fifty of those: as elements that is a document the browser lays out
+   * and repaints on every pan, which is felt. Painted onto one surface per
+   * pane it is a picture, and the cost stops growing with the number of
+   * countries. Nothing in these two panes is clicked, so the elements were
+   * buying nothing.
+   */
+  const paint = useRef<{ ground: L.Canvas; edges: L.Canvas } | null>(null);
   const resizing = useRef<ResizeObserver | null>(null);
   const clickRef =
     useRef<(at: { lat: number; lng: number }) => void>(undefined);
@@ -385,8 +301,31 @@ export function MapSurface() {
         ...(baseMap.attribution ? { attribution: baseMap.attribution } : {}),
       }).addTo(map);
     }
-    // Ground first, so a name is never behind the shading of its own land.
+    /*
+     * Ground first, so a name is never behind the shading of its own land.
+     *
+     * The ground has a pane of its own and is faded by it, not by the shapes
+     * on it: two half-transparent squares that share an edge show that edge,
+     * and a country drawn out of a hundred of them would be a grid. Painted
+     * solid and faded as one layer, the grid is not there to show. The
+     * borders take a second pane above it so a line is a line rather than a
+     * third of one.
+     */
+    for (const [name, z, fade] of [
+      ['political', 380, '0.34'],
+      ['borders', 390, '1'],
+    ] as const) {
+      const pane = map.createPane(name);
+      pane.style.zIndex = String(z);
+      pane.style.opacity = fade;
+      pane.style.pointerEvents = 'none';
+    }
+    paint.current = {
+      ground: L.canvas({ pane: 'political', padding: 0.3 }).addTo(map),
+      edges: L.canvas({ pane: 'borders', padding: 0.3 }).addTo(map),
+    };
     political.current = L.layerGroup().addTo(map);
+    borders.current = L.layerGroup().addTo(map);
     held.current = L.layerGroup().addTo(map);
     drawn.current = L.layerGroup().addTo(map);
     // Leaflet measures its box once and listens only to the window. This box
@@ -469,6 +408,45 @@ export function MapSurface() {
   const planKey = plan
     ? `${plan.cells.join(' ')}|${plan.points.join(' ')}|${plan.maxLevel}`
     : '';
+  /**
+   * Every place that holds ground, for the political layer.
+   *
+   * The view fetch samples a handful of spots, which is enough to name what
+   * you are looking at and the wrong way to colour a country: a kingdom
+   * whose capital is off-screen would simply not be drawn. The census is
+   * the whole layer; a hundred and fifty kingdoms is one page.
+   */
+  const census = useRequest(async () => {
+    if (!layers.political) return [] as Entry[];
+    const pages = await Promise.all(
+      models.map(async (m) => {
+        const resources: Resource[] = [];
+        let cursor: string | undefined;
+        do {
+          const page = await api.list(world.id, m.model, {
+            limit: 500,
+            ...(cursor ? { cursor } : {}),
+            ...(asOf ? { at: asOf } : {}),
+          });
+          resources.push(...page.resources);
+          cursor = page.next;
+        } while (cursor !== undefined);
+        return resources.map((resource) => ({ m, resource }));
+      }),
+    );
+    const entries: Entry[] = [];
+    for (const { m, resource } of pages.flat()) {
+      if (!Array.isArray(resource.extent) || resource.extent.length === 0) {
+        continue;
+      }
+      const cell = parseCell(resource[m.field]);
+      if (cell) {
+        entries.push({ model: m.model, field: m.field, resource, cell });
+      }
+    }
+    return entries;
+  }, [api, world.id, modelsKey, asOf, layers.political]);
+
   const records = useRequest(
     async () => {
       if (!plan) return [] as Entry[];
@@ -545,8 +523,17 @@ export function MapSurface() {
     const map = mapRef.current;
     for (const entry of entries) {
       const fill = fillOf(entry.model);
-      const named = entry.cell.level <= zoom + NAMED_BELOW;
-      let at = middleOf(entry) ?? centerOf(entry.cell);
+      const political = politicalLabelAt(entry.resource.type, zoom);
+      if (political === false) continue;
+      const named = political ?? entry.cell.level <= zoom + NAMED_BELOW;
+      // A political cell is its seat: imported from a name written on the
+      // authored map and therefore guaranteed to lie on the country. An
+      // extent's geometric middle can instead fall in a bay or between the
+      // islands of an archipelago.
+      let at =
+        political === true
+          ? centerOf(entry.cell)
+          : (middleOf(entry) ?? centerOf(entry.cell));
       if (map) {
         // A place found because the view is *inside* it has its middle
         // somewhere off the screen — stand in the middle of a kingdom and the
@@ -610,38 +597,69 @@ export function MapSurface() {
   /**
    * The political layer: who holds what, in colour, always on.
    *
-   * It is drawn from the places in view that own ground, rolled up to a
-   * level worth seeing at this zoom and partitioned so no coarse cell is
-   * claimed twice. One path per place rather than one per cell: a hundred
-   * squares as a hundred shapes shows a hundred seams where their edges
-   * meet, and as one shape shows a country.
+   * The ground is painted flat and seamless — blocks of one colour, drawn on
+   * a pane the browser fades as a whole, so no cell's own edge shows through
+   * another's. The only lines are borders, and a border is not a shape
+   * anybody stored: it is the sides of the held cells whose far side belongs
+   * to somebody else. Give a five-foot cell to the neighbour and the line
+   * moves, which is the whole of what a border is.
    */
-  const politicalLevel = view ? Math.max(2, Math.round(view.zoom) + 2) : 5;
-  const rings = useMemo(
-    () =>
-      layers.political ? politicalRings(entries, politicalLevel) : undefined,
-    [entries, politicalLevel, layers.political],
+  const heldEntries = census.data ?? [];
+  const showing = useMemo(
+    () => (view ? inView(heldEntries, view) : heldEntries),
+    [heldEntries, view],
+  );
+  const politicalLevel = useMemo(
+    () => (view ? levelToDraw(showing, view.zoom) : 8),
+    [showing, view?.zoom],
+  );
+  const ground = useMemo(
+    () => (layers.political ? groundOf(showing, politicalLevel) : undefined),
+    [showing, politicalLevel, layers.political],
   );
   useEffect(() => {
     const group = political.current;
-    if (!group) return;
+    const lines = borders.current;
+    if (!group || !lines) return;
     group.clearLayers();
-    if (!rings) return;
-    for (const [key, shapes] of rings) {
+    lines.clearLayers();
+    if (!ground) return;
+    const asRings = (rings: readonly LatLng[][]) =>
+      rings.map((ring) => ring.map((p) => [p.lat, p.lng] as [number, number]));
+    for (const [key, held] of ground) {
       const id = key.slice(key.indexOf('/') + 1);
-      L.polygon(
-        shapes.map((ring) =>
-          ring.map((p) => [p.lat, p.lng] as [number, number]),
-        ),
-        {
-          stroke: false,
-          fillColor: politicalFill(id),
-          fillOpacity: 0.28,
+      const fill = politicalFill(id);
+      if (held.fills.length > 0) {
+        L.polygon(asRings(held.fills), {
+          // One shape per country, however many pieces of coast and lake
+          // it is: a ring inside a ring is a hole by the even-odd rule,
+          // and a ring beside it is an island.
+          fillRule: 'evenodd',
+          color: fill,
+          weight: 1,
+          opacity: 1,
+          fillColor: fill,
+          fillOpacity: 1,
           interactive: false,
-        },
-      ).addTo(group);
+          pane: 'political',
+          ...(paint.current ? { renderer: paint.current.ground } : {}),
+        }).addTo(group);
+      }
+      // One line per country rather than one per stretch of border: a
+      // country's frontier is drawn the same either way, and a hundred and
+      // fifty of them is the difference between one shape and a thousand.
+      if (held.borders.length > 0) {
+        L.polyline(asRings(held.borders), {
+          color: politicalEdge(id),
+          weight: 1.4,
+          opacity: 0.9,
+          interactive: false,
+          pane: 'borders',
+          ...(paint.current ? { renderer: paint.current.edges } : {}),
+        }).addTo(lines);
+      }
     }
-  }, [rings]);
+  }, [ground]);
 
   /**
    * The ground the picked-out place holds, shaded.
@@ -655,28 +673,34 @@ export function MapSurface() {
     if (!group) return;
     group.clearLayers();
     const extent = preview?.resource.extent;
-    if (!Array.isArray(extent)) return;
-    const fill = fillOf(preview!.model);
-    const shapes: [number, number][][] = [];
-    for (const token of extent.slice(0, MOST_CELLS)) {
-      const cell = parseCell(String(token));
-      const outline = cell && outlineOf(cell);
-      if (!outline) continue;
-      shapes.push(outline.map((p) => [p.lat, p.lng] as [number, number]));
+    if (!Array.isArray(extent) || !preview) return;
+    const fill = fillOf(preview.model);
+    const level = view ? Math.max(8, Math.round(view.zoom) + 5) : 10;
+    const shown = groundOf([preview], level).values().next().value;
+    if (shown && shown.fills.length > 0) {
+      L.polygon(
+        shown.fills.map((ring) =>
+          ring.map((p) => [p.lat, p.lng] as [number, number]),
+        ),
+        {
+          fillRule: 'evenodd',
+          color: fill,
+          weight: 1,
+          opacity: 0.35,
+          fillColor: fill,
+          fillOpacity: 0.3,
+          interactive: false,
+        },
+      ).addTo(group);
     }
-    if (shapes.length === 0) return;
-    // One shape, not one per cell: separate shapes show a seam wherever two
-    // of them touch, which reads as a grid rather than as a country.
-    L.polygon(shapes, {
-      color: fill,
-      weight: 1,
-      opacity: 0.8,
-      fillColor: fill,
-      fillOpacity: 0.25,
-      interactive: false,
-    }).addTo(group);
+    for (const line of shown?.borders ?? []) {
+      L.polyline(
+        line.map((p) => [p.lat, p.lng] as [number, number]),
+        { color: fill, weight: 2, opacity: 0.95, interactive: false },
+      ).addTo(group);
+    }
     // fillOf is a function of models, which modelsKey stands for.
-  }, [preview, modelsKey]);
+  }, [preview, modelsKey, view]);
 
   // Placing: a click gives the record the cell under it at the chosen level.
   const level = placeLevel ?? (view ? Math.round(view.zoom) + DRAWN_BELOW : 8);
@@ -731,18 +755,43 @@ export function MapSurface() {
   function middleOf(entry: Entry): { lat: number; lng: number } | undefined {
     const extent = entry.resource.extent;
     if (!Array.isArray(extent) || extent.length === 0) return undefined;
-    let lat = 0;
-    let lng = 0;
-    let count = 0;
+    const cells: { at: { lat: number; lng: number }; level: number }[] = [];
+    let x = 0;
+    let y = 0;
+    let z = 0;
     for (const token of extent) {
       const cell = parseCell(String(token));
       if (!cell) continue;
       const at = centerOf(cell);
-      lat += at.lat;
-      lng += at.lng;
-      count += 1;
+      const lat = (at.lat * Math.PI) / 180;
+      const lng = (at.lng * Math.PI) / 180;
+      const weight = 4 ** -cell.level;
+      const flat = Math.cos(lat);
+      x += flat * Math.cos(lng) * weight;
+      y += flat * Math.sin(lng) * weight;
+      z += Math.sin(lat) * weight;
+      cells.push({ at, level: cell.level });
     }
-    return count === 0 ? undefined : { lat: lat / count, lng: lng / count };
+    if (cells.length === 0) return undefined;
+    // A centroid can sit in a bay or between islands. Put the name on one of
+    // the largest interior cells nearest that centroid, so text always lands
+    // on the place it names rather than in the sea beside it.
+    const coarsest = Math.min(...cells.map((cell) => cell.level));
+    return cells
+      .filter((cell) => cell.level === coarsest)
+      .reduce(
+        (best, cell) => {
+          const lat = (cell.at.lat * Math.PI) / 180;
+          const lng = (cell.at.lng * Math.PI) / 180;
+          const flat = Math.cos(lat);
+          const score =
+            flat * Math.cos(lng) * x +
+            flat * Math.sin(lng) * y +
+            Math.sin(lat) * z;
+          return score > best.score ? { at: cell.at, score } : best;
+        },
+        { at: cells[0]!.at, score: -Infinity },
+      ).at;
   }
 
   /** A record found by name: fly to it, or say it is not placed yet. */
