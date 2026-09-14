@@ -43,6 +43,7 @@
     "@opendnd/spatial": "workspace:*",
     "@opendnd/terrain": "workspace:*",
     "@opendnd/types": "workspace:*",
+    "@resvg/resvg-wasm": "^2.6.2",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.13.5",
     "pg": "^8.23.0",

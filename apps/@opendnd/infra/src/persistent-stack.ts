@@ -17,6 +17,7 @@ import {
   BlockPublicAccess,
   Bucket,
   BucketEncryption,
+  CfnBucket,
   HttpMethods,
 } from 'aws-cdk-lib/aws-s3';
 import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
@@ -132,6 +133,12 @@ export class PersistentStack extends Stack {
         },
       ],
     });
+    // Terrain rendering subscribes on the default bus without making this
+    // persistent stack depend on a replaceable Lambda.
+    const bucketResource = this.assets.node.defaultChild as CfnBucket;
+    bucketResource.notificationConfiguration = {
+      eventBridgeConfiguration: { eventBridgeEnabled: true },
+    };
 
     new CfnOutput(this, 'UserPoolId', { value: this.userPool.userPoolId });
     new CfnOutput(this, 'UserPoolClientId', {

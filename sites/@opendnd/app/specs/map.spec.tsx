@@ -12,10 +12,10 @@ import {
 } from 'src/schema/cells';
 import { type JsonSchema, ontologyFrom } from 'src/schema/openapi';
 import { WORLD_ID } from './fixtures/ontology';
-import { fake, reset } from './fixtures/leaflet';
+import { fake, reset } from './fixtures/maplibre';
 import { fakeFetch, renderInWorld } from './helpers';
 
-vi.mock('leaflet', () => import('./fixtures/leaflet'));
+vi.mock('maplibre-gl', () => import('./fixtures/maplibre'));
 
 /** An invented model with a cell field, the way a place has one. */
 const stored: Record<string, JsonSchema> = {
@@ -131,6 +131,7 @@ function renderMap(path = `/worlds/${WORLD_ID}/map`) {
     [`GET /v1/worlds/${WORLD_ID}/world/${WORLD_ID}`]: () => ({
       id: WORLD_ID,
       name: 'Testland',
+      map: { source: 'terrain' },
     }),
     [`GET /v1/worlds/${WORLD_ID}/camp`]: listed,
   });
@@ -164,6 +165,18 @@ async function mapAt(zoom: number) {
 
 describe('the map', () => {
   beforeEach(reset);
+
+  it('draws one globe rather than repeating a flat world', async () => {
+    renderMap();
+    await mapAt(0);
+    const style = fake.map!.options.style as {
+      projection?: { type?: string };
+      sources?: { world?: { tiles?: string[] } };
+    };
+    expect(style.projection?.type).toBe('globe');
+    expect(style.sources?.world?.tiles?.[0]).toContain('terrain=1');
+    expect(fake.map!.options.renderWorldCopies).toBe(false);
+  });
 
   it('names continents while zoomed out and kingdoms while zoomed in', () => {
     expect(politicalLabelAt('continent', 2)).toBe(true);
@@ -210,28 +223,37 @@ describe('the map', () => {
     renderMap();
     await mapAt(4);
     await waitFor(() =>
-      expect(fake.layers.map((l) => l.tooltip)).toContain('The Valley'),
+      expect(
+        fake.markers.map((marker) => marker.element.getAttribute('aria-label')),
+      ).toContain('The Valley'),
     );
-    const byName = Object.fromEntries(fake.layers.map((l) => [l.tooltip, l]));
+    const byName = Object.fromEntries(
+      fake.markers.map((marker) => [
+        marker.element.getAttribute('aria-label'),
+        marker,
+      ]),
+    );
     // A place larger than the view is its name, not a rectangle: the square
     // of a valley's quadtree cell is not the shape of the valley.
-    expect(byName['The Valley']!.kind).toBe('name');
-    expect(byName['North Camp']!.kind).toBe('marker');
+    expect(byName['The Valley']!.element.dataset.kind).toBe('name');
+    expect(byName['North Camp']!.element.dataset.kind).toBe('marker');
     // The shapes that are drawn are the political fill, which is the ground
     // a place holds; none of them is a named place's own cell square.
-    for (const shape of fake.layers.filter((l) => l.kind === 'polygon')) {
-      expect(shape.tooltip).toBeUndefined();
-    }
+    expect(fake.map!.sources['political-ground']!.data.features.length).toBe(2);
   });
 
   it('opens a short account of a record from its mark, with the way to the whole of it', async () => {
     renderMap();
     await mapAt(4);
     await waitFor(() =>
-      expect(fake.layers.map((l) => l.tooltip)).toContain('The Valley'),
+      expect(
+        fake.markers.map((marker) => marker.element.getAttribute('aria-label')),
+      ).toContain('The Valley'),
     );
-    const valleyLayer = fake.layers.find((l) => l.tooltip === 'The Valley')!;
-    valleyLayer.handlers.click!({ latlng: centerOf(valley) });
+    const valleyLayer = fake.markers.find(
+      (marker) => marker.element.getAttribute('aria-label') === 'The Valley',
+    )!;
+    valleyLayer.element.click();
     // A card over the map, not a drawer from the side: the map stays live
     // and the mark you clicked stays where it is.
     const card = await screen.findByRole('group', { name: 'The Valley' });
@@ -245,38 +267,32 @@ describe('the map', () => {
   it('paints the ground a place holds seamlessly, draws its border, and lets both go', async () => {
     renderMap();
     await waitFor(() =>
-      expect(fake.layers.map((l) => l.tooltip)).toContain('The Valley'),
+      expect(fake.map?.sources['political-ground']).toBeDefined(),
     );
-    const filled = fake.layers.filter((l) => l.kind === 'polygon');
-    expect(filled.length).toBeGreaterThan(0);
-    expect((filled[0]!.latlngs as unknown[]).length).toBeGreaterThan(0);
+    const filled = fake.map!.sources['political-ground']!;
+    await waitFor(() => expect(filled.data.features.length).toBeGreaterThan(0));
     /*
-     * The ground is painted solid and in one colour, edges included, and the
-     * pane it sits on is what fades it. Half-transparent shapes that share
-     * an edge show that edge, and a country made of a hundred of them would
-     * read as a grid rather than as a country.
+     * The ground is one WebGL layer, faded once by the layer rather than once
+     * per cell. A country made of a hundred cells consequently reads as a
+     * country rather than a grid.
      */
-    for (const shape of filled) {
-      const options = shape.options as Record<string, unknown>;
-      expect(options.pane).toBe('political');
-      expect(options.fillOpacity).toBe(1);
-      expect(options.color).toBe(options.fillColor);
-    }
-    const pane = fake.map!.panes.political;
-    expect(Number(pane!.style.opacity)).toBeLessThan(1);
+    const fillLayer = fake.map!.layers.find(
+      (layer) => (layer as { id?: string }).id === 'political-fill',
+    ) as { paint: { 'fill-opacity': number } };
+    expect(fillLayer.paint['fill-opacity']).toBeLessThan(1);
 
     // The border is a line of its own, above the ground rather than on it.
-    const lines = fake.layers.filter((l) => l.kind === 'line');
-    expect(lines.length).toBeGreaterThan(0);
-    expect((lines[0]!.options as Record<string, unknown>).pane).toBe('borders');
+    expect(
+      fake.map!.sources['political-borders']!.data.features.length,
+    ).toBeGreaterThan(0);
 
     // And it is a layer, so it goes away.
     await userEvent.click(screen.getByRole('button', { name: 'Layers' }));
     await userEvent.click(screen.getByRole('checkbox', { name: /Political/ }));
-    await waitFor(() =>
-      expect(fake.layers.some((l) => l.kind === 'polygon')).toBe(false),
+    await waitFor(() => expect(filled.data.features).toHaveLength(0));
+    expect(fake.map!.sources['political-borders']!.data.features).toHaveLength(
+      0,
     );
-    expect(fake.layers.some((l) => l.kind === 'line')).toBe(false);
   });
 
   it('places a record brought to it at the cell under the click, as fine as the zoom', async () => {
@@ -287,7 +303,7 @@ describe('the map', () => {
     const map = await mapAt(4);
     await screen.findByText('Placing Nowhere Camp');
     const at = { lat: 20.5, lng: -30.25 };
-    map.fire('click', { latlng: at });
+    map.fire('click', { lngLat: at });
     await waitFor(() =>
       expect(calls.some((c) => c.method === 'PATCH')).toBe(true),
     );

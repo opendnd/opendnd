@@ -46,10 +46,10 @@ export const versions = {
   '@fontsource/dm-serif-display': '^5.3.0',
   '@fontsource-variable/jetbrains-mono': '^5.3.0',
   'react-markdown': '^10.1.0',
-  // The map: a slippy map over picture tiles, the way web maps have worked
-  // since the first one.
-  leaflet: '^1.9.4',
-  '@types/leaflet': '^1.9.21',
+  // The map: raster picture tiles on a globe that becomes a flat Mercator
+  // map as it is approached.
+  'maplibre-gl': '^6.9.0',
+  '@types/geojson': '^7946.0.16',
   'remark-gfm': '^4.0.1',
   jsdom: '^30.0.1',
   '@testing-library/react': '^16.3.3',
@@ -72,6 +72,7 @@ export const versions = {
   '@aws-sdk/client-secrets-manager': '^3.1126.0',
 
   // API
+  '@resvg/resvg-wasm': '^2.6.2',
   hono: '^4.13.5',
   'drizzle-orm': '^0.45.2',
   'drizzle-kit': '^0.31.10',

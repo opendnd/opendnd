@@ -35,4 +35,14 @@ A world's pictures and its map now work anywhere the API runs, with nothing else
 
 Deleting a world does not yet delete its files. Nothing points at them once the records are gone, and archiving keeps everything by design, but a world removed for good leaves bytes behind. That wants a sweep, and it is not written yet.
 
-Tiles are rendered by nothing: the store hands back pictures somebody drew. Rendering them from a world's terrain, which is what makes a map keep going past the zoom the pictures stop at, is the work `source: terrain` is reserved for.
+Pictures somebody drew are still handed back unchanged for `source: tiles`.
+
+## Decided later, 2026-09-14: terrain textures are derived and cached
+
+A globe renderer needs raster textures, even when the source of the map is a vector drawing. For `source: terrain`, the PNG endpoint therefore draws the same live coastline as the SVG endpoint, rasterizes it, and keeps the result under a key containing the digest of `terrain.json`. Replacing that file selects a new cache namespace immediately; a tile from an older coastline can never satisfy a render for the new one.
+
+The low globe levels, zero through four, are rendered in the background when the deployment's asset bucket observes a new `terrain.json`. They are only 341 tiles and are the pictures every first view needs. Deeper levels are rendered and cached when first viewed; pre-rendering every level would grow as four to the depth and create billions of files nobody asks for. A development folder has the same lazy path, and its importer may invoke the prewarmer deliberately.
+
+The cache contains natural terrain only: sea, land, inland water and coastlines. Political fill, borders and names remain live layers made from current place extents in the application. Moving a held cell therefore moves a border without regenerating any texture. Only changing the underlying coastline starts a new terrain render.
+
+Content-addressed asset URLs remain immutable for a year. The stable terrain tile URL is not content-addressed, so it has a short public lifetime and revalidates after a coastline change; the revisioned object behind it is immutable.

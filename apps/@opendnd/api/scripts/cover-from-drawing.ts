@@ -59,16 +59,53 @@ const svgPath = SVG_PATH;
  *
  * The budget is a country's, not a path's, because the map page fetches
  * every country's cells to draw the layer at all: an archipelago of thirty
- * islands must not cost thirty times what a mainland costs.
+ * islands must not cost thirty times what a mainland costs. A level costs
+ * about twice the cells, since it is spent along a line, so the budget goes
+ * up with the level or the cover comes back coarser than it was asked for.
  */
-const EDGE_LEVEL = 13;
-const EDGE_BUDGET = 900;
+const EDGE_LEVEL = Number(flag('edge-level') ?? 13);
+const EDGE_BUDGET = Number(flag('edge-budget') ?? 900);
 
-function edges(paths: number): { maxLevel: number; most: number } {
-  return {
+/**
+ * The fewest cells a path is covered with, however little of a country it
+ * is: enough that an islet is an islet rather than a square.
+ */
+const EDGE_FLOOR = 48;
+
+/**
+ * A country's budget shared among its paths by how much edge each has.
+ *
+ * Shared equally, an archipelago spends as much on a rock as on its
+ * mainland, and the mainland — which is nearly all of the border anyone
+ * sees — is left in cells tens of pixels across while the rock is traced to
+ * a third of one. Cells buy a closer border only where there is border to
+ * follow, so they go in proportion to the length of it.
+ */
+function edges(
+  shapes: readonly MapShape[],
+): { maxLevel: number; most: number }[] {
+  const round = shapes.map(edgeLength);
+  const total = round.reduce((sum, length) => sum + length, 0);
+  return round.map((length) => ({
     maxLevel: EDGE_LEVEL,
-    most: Math.max(150, Math.floor(EDGE_BUDGET / Math.max(1, paths))),
-  };
+    most:
+      total > 0
+        ? Math.max(EDGE_FLOOR, Math.round((EDGE_BUDGET * length) / total))
+        : EDGE_FLOOR,
+  }));
+}
+
+/** How far it is round a shape, in the drawing's own units. */
+function edgeLength(shape: MapShape): number {
+  let length = 0;
+  for (const ring of shape.rings) {
+    for (let at = 0; at < ring.length; at++) {
+      const from = ring[at]!;
+      const to = ring[(at + 1) % ring.length]!;
+      length += Math.hypot(to[0] - from[0], to[1] - from[1]);
+    }
+  }
+  return length;
 }
 
 interface Place {
@@ -145,9 +182,10 @@ for (const place of places) {
   process.stderr.write(
     `covering ${place.name ?? place.id} (${shapes.length} paths)\n`,
   );
+  const share = edges(shapes);
   addTokens(
     place.id,
-    shapes.flatMap((shape) => coveringOf(shape, fit, edges(shapes.length))),
+    shapes.flatMap((shape, at) => coveringOf(shape, fit, share[at]!)),
   );
 }
 

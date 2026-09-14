@@ -986,12 +986,20 @@ const fixedPaths = {
         schema: { type: 'string' },
         description: 'The row and the extension, `12.png` say.',
       },
+      {
+        name: 'terrain',
+        in: 'query',
+        required: false,
+        schema: { type: 'integer', enum: [1] },
+        description:
+          'For a PNG, draw and cache the current terrain rather than read an imported picture tile.',
+      },
     ],
     get: {
       tags: ['assets'],
       summary: "One tile of a world's map",
       description:
-        'The address web maps have used for a tile since the first one. Unauthenticated and cached for the same reasons a stored file is.',
+        'The address web maps have used for a tile since the first one. Unauthenticated. Imported pictures are immutable; terrain PNGs are revisioned internally and briefly cached at this stable address.',
       responses: {
         200: { description: 'The tile' },
         404: problem('The world has no tile there'),

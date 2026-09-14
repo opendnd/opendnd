@@ -235,6 +235,26 @@ describe('how fine the ground is drawn', () => {
     expect(levelToDraw([place('a', within(4, 4, 6, 10))], 9)).toBe(10);
   });
 
+  /*
+   * Ground is traced finely where a border runs and coarsely behind it, so
+   * what a roll-up counts is about the length of the border rather than the
+   * area of the country. The budget is spent on that count, and this is why
+   * spending it buys fineness where a pixel changes: a block covering two
+   * hundred and fifty-six squares of the level drawn still costs one.
+   */
+  it('counts a country by its border, which is what the budget pays for', () => {
+    const behind = cellAt(face, 4, 4, 6).token;
+    const span = 2 ** (10 - 6);
+    const border: string[] = [];
+    for (let j = 0; j < span; j++) {
+      border.push(cellAt(face, 5 * span, 4 * span + j, 10).token);
+    }
+    const ground = [behind, ...border];
+    expect(rollUp('adaptive', ground, 10)).toHaveLength(1 + span);
+    // A budget far below the area drawn is still enough to draw it.
+    expect(levelToDraw([place('adaptive', ground)], 3, 64)).toBe(10);
+  });
+
   it('gives up levels rather than draw more shapes than it can', () => {
     // A place holding a great many fine cells cannot be drawn at the level a
     // pixel would allow, so the whole layer is drawn coarser.

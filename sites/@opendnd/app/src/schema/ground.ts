@@ -34,10 +34,16 @@ const FINEST = 20;
 
 /**
  * How many squares the layer will walk before it settles for coarser ones.
- * Walking is all the squares cost — one path is drawn per country however
- * many squares its edge is found in — so this is generous.
+ *
+ * Ground is held finely only where a border runs, so rolling it up to a
+ * level mostly counts the squares that border passes through: a hundred and
+ * fifty countries come to about ninety thousand squares between them at the
+ * level where their coasts stop being squares, and about a third of that
+ * one level coarser. A budget that stops short of the first number buys
+ * nothing but a staircase — the whole world is drawn coarse to save work on
+ * country interiors that are merged into a handful of blocks anyway.
  */
-const BUDGET = 40_000;
+const BUDGET = 100_000;
 
 /**
  * How coarsely a place is held for the question "can this be seen from
@@ -297,7 +303,7 @@ export function inView<T extends Holding>(
  * ground is held is worse than pointless: the question is then put to
  * squares nobody has an answer for, and the layer goes blank at exactly the
  * zoom where a border matters most. So the finest thing said in view is the
- * ceiling, and a world with more ground than can be drawn gives up levels
+ * ceiling, and a world with more border than can be drawn gives up levels
  * until it fits — everywhere at once, so the map stays a partition rather
  * than a patchwork of resolutions.
  */

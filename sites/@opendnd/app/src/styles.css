@@ -336,12 +336,20 @@
   @apply rounded bg-muted px-1 font-mono text-[0.9em];
 }
 
-/* Labels on the map: the name beside a mark or over an outline, in the page's own type. */
-.leaflet-container {
+/* The planet and its labels, in the page's own type. */
+.maplibregl-map {
   font-family: var(--font-sans);
-  background: var(--sage-50);
+  background: var(--foreground);
 }
-.leaflet-tooltip.map-label {
+.maplibregl-ctrl-bottom-right {
+  z-index: 1;
+}
+.maplibregl-marker-covered {
+  pointer-events: none;
+  visibility: hidden;
+}
+.map-label {
+  cursor: pointer;
   background: color-mix(in oklab, var(--background) 88%, transparent);
   border: 0;
   border-radius: 4px;
@@ -351,15 +359,29 @@
   font-weight: 500;
   color: var(--foreground);
 }
-.leaflet-tooltip.map-label::before {
-  display: none;
+.map-mark {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.map-mark-dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border: 1px solid color-mix(in oklab, var(--foreground) 40%, transparent);
+  border-radius: 9999px;
+}
+.map-mark-name {
+  display: block;
 }
 /*
  * The name of somewhere you are inside rather than looking at: a continent, a
  * kingdom. An atlas sets these larger, letter-spaced and unboxed, across the
  * land itself, and never draws a rectangle round them.
  */
-.leaflet-tooltip.map-label-wide {
+.map-label-wide {
   background: transparent;
   font-family: var(--font-display);
   font-size: 17px;

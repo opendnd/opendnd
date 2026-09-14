@@ -207,10 +207,21 @@ describe('what a world keeps as files', () => {
     const middle = await call('GET', `/v1/worlds/${world}/tiles/0/0/0.svg`);
     expect(middle.status).toBe(200);
     expect(middle.headers.get('content-type')).toBe('image/svg+xml');
-    expect(middle.headers.get('cache-control')).toContain('immutable');
+    expect(middle.headers.get('cache-control')).not.toContain('immutable');
     const svg = await middle.text();
     expect(svg).toContain('<svg');
     expect(svg).toContain('<path');
+
+    const texture = await call(
+      'GET',
+      `/v1/worlds/${world}/tiles/0/0/0.png?terrain=1`,
+    );
+    expect(texture.status).toBe(200);
+    expect(texture.headers.get('content-type')).toBe('image/png');
+    expect(texture.headers.get('cache-control')).not.toContain('immutable');
+    expect([
+      ...new Uint8Array(await texture.arrayBuffer()).slice(0, 8),
+    ]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
 
     // Deeper than anything was drawn at: still a tile, and still drawn.
     const deep = await call(

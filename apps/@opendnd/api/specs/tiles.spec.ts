@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'bun:test';
+import { createHash } from 'node:crypto';
 import type { AssetStore } from '../src/assets';
 import { TILE_KEY } from '../src/assets';
-import { forget, renderTile, terrainKey } from '../src/tiles';
+import { forget, renderPngTile, renderTile, terrainKey } from '../src/tiles';
 
 /** A world of one square island, held in memory. */
 const WORLD = '00000000-0000-4000-8000-000000000001';
@@ -20,6 +21,7 @@ const terrain = {
 
 const body = new TextEncoder().encode(JSON.stringify(terrain));
 const store: AssetStore = {
+  version: async (key) => (key === terrainKey(WORLD) ? 'terrain-1' : undefined),
   get: async (key) =>
     key === terrainKey(WORLD)
       ? {
@@ -59,5 +61,61 @@ describe('a tile of a drawn world', () => {
     expect(TILE_KEY.test('2/-1/0.svg')).toBe(true);
     expect(TILE_KEY.test('2/5/0.svg')).toBe(true);
     expect(TILE_KEY.test('2/0/-1.svg')).toBe(false);
+  });
+
+  it('rasterizes current terrain once under its content revision', async () => {
+    const files = new Map<string, { body: Uint8Array; contentType: string }>([
+      [terrainKey(WORLD), { body, contentType: 'application/json' }],
+    ]);
+    let writes = 0;
+    const caching: AssetStore = {
+      version: async (key) => {
+        const found = files.get(key);
+        return found
+          ? createHash('sha256').update(found.body).digest('hex')
+          : undefined;
+      },
+      get: async (key) => {
+        const found = files.get(key);
+        return found
+          ? {
+              key,
+              ...found,
+              size: found.body.byteLength,
+            }
+          : undefined;
+      },
+      put: async (key, bytes, contentType) => {
+        writes++;
+        files.set(key, { body: bytes, contentType });
+      },
+      list: async () => [],
+      delete: async (key) => {
+        files.delete(key);
+      },
+    };
+
+    forget(WORLD);
+    const first = await renderPngTile(caching, WORLD, 0, 0, 0);
+    expect(first?.contentType).toBe('image/png');
+    expect([...first!.body.slice(0, 8)]).toEqual([
+      137, 80, 78, 71, 13, 10, 26, 10,
+    ]);
+    expect(first?.key).toContain('/terrain-tiles/');
+    expect(writes).toBe(1);
+
+    const again = await renderPngTile(caching, WORLD, 0, 0, 0);
+    expect(again?.key).toBe(first?.key);
+    expect(writes).toBe(1);
+
+    files.set(terrainKey(WORLD), {
+      body: new TextEncoder().encode(
+        JSON.stringify({ ...terrain, seed: 'changed terrain' }),
+      ),
+      contentType: 'application/json',
+    });
+    const changed = await renderPngTile(caching, WORLD, 0, 0, 0);
+    expect(changed?.key).not.toBe(first?.key);
+    expect(writes).toBe(2);
   });
 });

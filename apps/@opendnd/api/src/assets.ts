@@ -11,6 +11,7 @@ import { dirname, join, sep } from 'node:path';
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
@@ -38,6 +39,8 @@ export interface AssetSummary {
 }
 
 export interface AssetStore {
+  /** A cheap identity for the bytes currently at a key, or none if absent. */
+  version(key: string): Promise<string | undefined>;
   get(key: string): Promise<StoredAsset | undefined>;
   put(key: string, body: Uint8Array, contentType: string): Promise<void>;
   list(prefix: string, limit: number): Promise<AssetSummary[]>;
@@ -126,6 +129,15 @@ export class FileAssets implements AssetStore {
     }
   }
 
+  async version(key: string): Promise<string | undefined> {
+    try {
+      const info = await stat(this.path(key));
+      return `${info.mtimeMs}:${info.size}`;
+    } catch {
+      return undefined;
+    }
+  }
+
   /** The type is not kept: on disk the key's extension is what says it. */
   async put(
     key: string,
@@ -197,6 +209,21 @@ export class S3Assets implements AssetStore {
         size: body.byteLength,
         body,
       };
+    } catch {
+      return undefined;
+    }
+  }
+
+  async version(key: string): Promise<string | undefined> {
+    try {
+      const answer = await this.client.send(
+        new HeadObjectCommand({ Bucket: this.bucket, Key: key }),
+      );
+      return (
+        answer.VersionId ??
+        answer.ETag ??
+        `${answer.LastModified?.getTime() ?? 0}:${answer.ContentLength ?? 0}`
+      );
     } catch {
       return undefined;
     }

@@ -139,6 +139,33 @@ describe('the deployment', () => {
     });
   });
 
+  it('pre-renders globe tiles when a terrain file changes', () => {
+    service.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'opendnd-dev-terrain-tiles',
+      Timeout: 900,
+      Environment: {
+        Variables: Match.objectLike({ TERRAIN_PREWARM_ZOOM: '4' }),
+      },
+    });
+    service.hasResourceProperties('AWS::Events::Rule', {
+      Name: 'opendnd-dev-terrain-changed',
+      EventPattern: Match.objectLike({
+        source: ['aws.s3'],
+        'detail-type': ['Object Created'],
+        detail: Match.objectLike({
+          object: {
+            key: [{ wildcard: 'worlds/*/terrain.json' }],
+          },
+        }),
+      }),
+    });
+    persistent.hasResourceProperties('AWS::S3::Bucket', {
+      NotificationConfiguration: {
+        EventBridgeConfiguration: { EventBridgeEnabled: true },
+      },
+    });
+  });
+
   it('does not schedule or expose the migrator', () => {
     // A schema change is not something to have happen as a side effect of
     // shipping code, so it is invoked deliberately and by nothing else.
@@ -149,7 +176,7 @@ describe('the deployment', () => {
   });
 
   it('keeps every log group, with a retention', () => {
-    service.resourceCountIs('AWS::Logs::LogGroup', 3);
+    service.resourceCountIs('AWS::Logs::LogGroup', 4);
     service.hasResourceProperties('AWS::Logs::LogGroup', {
       RetentionInDays: 30,
     });

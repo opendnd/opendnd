@@ -121,6 +121,11 @@ export class ServiceStack extends Stack {
       entry: join(API_SRC, 'api.ts'),
       timeout: Duration.seconds(29),
       description: 'The OpenDnD API.',
+      bundling: {
+        ...shared.bundling,
+        // Kept outside esbuild so its WebAssembly file travels with the module.
+        nodeModules: ['@resvg/resvg-wasm'],
+      },
     });
 
     const publisher = new NodejsFunction(this, 'Publisher', {
@@ -162,12 +167,50 @@ export class ServiceStack extends Stack {
       },
     });
 
+    const terrainTiles = new NodejsFunction(this, 'TerrainTiles', {
+      ...shared,
+      logGroup: logs('TerrainTiles'),
+      functionName: `opendnd-${config.stage}-terrain-tiles`,
+      entry: join(API_SRC, 'terrain-tiles.ts'),
+      timeout: Duration.minutes(15),
+      description: 'Pre-renders low-zoom PNG textures from world terrain.',
+      environment: {
+        NODE_OPTIONS: '--enable-source-maps',
+        ASSETS_BUCKET: assets.bucketName,
+        TERRAIN_PREWARM_ZOOM: '4',
+      },
+      bundling: {
+        ...shared.bundling,
+        // Kept outside esbuild so its WebAssembly file travels with the module.
+        nodeModules: ['@resvg/resvg-wasm'],
+      },
+    });
+
     databaseSecret.grantRead(api);
     databaseSecret.grantRead(publisher);
     databaseSecret.grantRead(migrator);
     databaseAdminSecret.grantRead(migrator);
     this.bus.grantPutEventsTo(publisher);
     assets.grantReadWrite(api);
+    assets.grantReadWrite(terrainTiles);
+    /*
+     * Bucket notifications would make the persistent stack depend on this
+     * replaceable function while this stack already depends on the bucket.
+     * EventBridge keeps that dependency one-way.
+     */
+    new Rule(this, 'TerrainChanged', {
+      ruleName: `opendnd-${config.stage}-terrain-changed`,
+      description: 'Pre-renders globe textures when terrain.json changes.',
+      eventPattern: {
+        source: ['aws.s3'],
+        detailType: ['Object Created'],
+        detail: {
+          bucket: { name: [assets.bucketName] },
+          object: { key: [{ wildcard: 'worlds/*/terrain.json' }] },
+        },
+      },
+      targets: [new LambdaFunction(terrainTiles, { retryAttempts: 2 })],
+    });
 
     // Model calls are the API's, and the only ones. A function that does not
     // answer requests has no reason to be able to spend on tokens.

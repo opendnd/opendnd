@@ -73,7 +73,7 @@ import {
   type WriteOptions,
   isModel,
 } from './store';
-import { forget, renderTile } from './tiles';
+import { forget, renderPngTile, renderTile } from './tiles';
 import {
   ROLES,
   VISIBILITIES,
@@ -928,7 +928,25 @@ export function createApp(options: AppOptions) {
       if (drawn === undefined) throw new NotFoundError('tile', key);
       return c.body(drawn, 200, {
         'content-type': 'image/svg+xml',
-        'cache-control': 'public, max-age=31536000, immutable',
+        // The address is stable but terrain.json may change beneath it.
+        'cache-control': 'public, max-age=60, stale-while-revalidate=300',
+      });
+    }
+    if (parts[4] === 'png' && c.req.query('terrain') === '1') {
+      const drawn = await renderPngTile(
+        assets,
+        world,
+        Number(parts[1]),
+        Number(parts[2]),
+        Number(parts[3]),
+      );
+      if (drawn === undefined) throw new NotFoundError('tile', key);
+      return c.body(drawn.body as unknown as ArrayBuffer, 200, {
+        'content-type': 'image/png',
+        'content-length': String(drawn.size),
+        // The internal render cache is content-versioned; this public address
+        // is stable, so a changed terrain file must be checked again shortly.
+        'cache-control': 'public, max-age=60, stale-while-revalidate=300',
       });
     }
     return serve(c, `${worldPrefix(world)}tiles/${key}`);

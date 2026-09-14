@@ -38,11 +38,12 @@ const sites: readonly SiteConfig[] = [
       // Long prose on a record, a wiki page say, is Markdown.
       `react-markdown@${versions['react-markdown']}`,
       `remark-gfm@${versions['remark-gfm']}`,
-      // The map page: panning and zooming over a world's picture tiles.
-      `leaflet@${versions.leaflet}`,
+      // The map page: a globe at world scale, becoming a flat slippy map as
+      // it approaches a world's picture tiles.
+      `maplibre-gl@${versions['maplibre-gl']}`,
     ],
     devDeps: [
-      `@types/leaflet@${versions['@types/leaflet']}`,
+      `@types/geojson@${versions['@types/geojson']}`,
       /*
        * Tests only, and deliberately not a runtime dependency: the
        * application is built from what the API describes at run time, and

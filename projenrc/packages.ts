@@ -132,6 +132,7 @@ const apps: readonly PackageConfig[] = [
       `@aws-sdk/client-eventbridge@${versions['@aws-sdk/client-eventbridge']}`,
       `@aws-sdk/client-s3@${versions['@aws-sdk/client-s3']}`,
       `@aws-sdk/client-secrets-manager@${versions['@aws-sdk/client-secrets-manager']}`,
+      `@resvg/resvg-wasm@${versions['@resvg/resvg-wasm']}`,
     ],
     devDeps: [
       `drizzle-kit@${versions['drizzle-kit']}`,

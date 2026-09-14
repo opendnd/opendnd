@@ -1,3 +1,6 @@
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import {
   type DrawnMap,
   type MapShape,
@@ -9,7 +12,8 @@ import {
   signedArea,
   wholeDrawing,
 } from '@opendnd/terrain';
-import type { AssetStore } from './assets';
+import { Resvg, initWasm } from '@resvg/resvg-wasm';
+import type { AssetStore, StoredAsset } from './assets';
 
 /**
  * A world's map, drawn rather than stored.
@@ -49,6 +53,10 @@ interface Ready {
   readonly map: DrawnMap;
   readonly noise: Noise;
   readonly drawnTo: number;
+  /** Digest of the coastline file, and therefore of every tile drawn from it. */
+  readonly revision: string;
+  /** Store identity used to notice a replacement in another process. */
+  readonly sourceVersion: string;
 }
 
 /**
@@ -56,7 +64,8 @@ interface Ready {
  *
  * Reading a world of coastlines takes long enough that doing it per tile would
  * be the whole cost of a map. A world's shapes change when somebody redraws
- * them, which is rare and goes through `forget`.
+ * them. A cheap store version check keeps warm API processes coherent with
+ * direct S3 writes; `forget` remains useful when this process made the write.
  */
 const ready = new Map<string, Ready>();
 
@@ -69,10 +78,16 @@ export async function terrainOf(
   assets: AssetStore,
   world: string,
 ): Promise<Ready | undefined> {
+  const key = terrainKey(world);
+  const sourceVersion = await assets.version(key);
   const held = ready.get(world);
-  if (held) return held;
+  if (held && held.sourceVersion === sourceVersion) return held;
+  if (sourceVersion === undefined) {
+    ready.delete(world);
+    return undefined;
+  }
 
-  const stored = await assets.get(terrainKey(world));
+  const stored = await assets.get(key);
   if (!stored) return undefined;
   let file: TerrainFile;
   try {
@@ -103,6 +118,8 @@ export async function terrainOf(
     map: { width: file.width, height: file.height, shapes, groups: [] },
     noise: new Noise(file.seed ?? world),
     drawnTo: file.drawnTo ?? 6,
+    revision: createHash('sha256').update(stored.body).digest('hex'),
+    sourceVersion,
   };
   ready.set(world, made);
   return made;
@@ -124,6 +141,86 @@ export async function renderTile(
 ): Promise<string | undefined> {
   const found = await terrainOf(assets, world);
   if (!found) return undefined;
+  return draw(found, z, x, y);
+}
+
+/** Where one PNG rendering of a particular coastline revision is cached. */
+export function terrainTileKey(
+  world: string,
+  revision: string,
+  z: number,
+  x: number,
+  y: number,
+): string {
+  const across = 2 ** z;
+  const column = ((x % across) + across) % across;
+  return `worlds/${world}/terrain-tiles/${revision}/${z}/${column}/${y}.png`;
+}
+
+/**
+ * A PNG texture for MapLibre, drawn from the current terrain and cached.
+ *
+ * The revision is part of the internal key, so a changed coastline can never
+ * pick up a picture rendered from the previous terrain. Concurrent misses may
+ * render the same deterministic bytes twice; either write wins.
+ */
+export async function renderPngTile(
+  assets: AssetStore,
+  world: string,
+  z: number,
+  x: number,
+  y: number,
+): Promise<StoredAsset | undefined> {
+  const found = await terrainOf(assets, world);
+  if (!found) return undefined;
+  return renderPng(assets, world, found, z, x, y);
+}
+
+async function renderPng(
+  assets: AssetStore,
+  world: string,
+  found: Ready,
+  z: number,
+  x: number,
+  y: number,
+): Promise<StoredAsset | undefined> {
+  const svg = draw(found, z, x, y);
+  if (svg === undefined) return undefined;
+  const key = terrainTileKey(world, found.revision, z, x, y);
+  const cached = await assets.get(key);
+  if (cached) return cached;
+  const body = await rasterize(svg);
+  await assets.put(key, body, 'image/png');
+  return { key, body, contentType: 'image/png', size: body.byteLength };
+}
+
+/** Fill the inexpensive globe levels after a coastline file changes. */
+export async function prewarmTerrain(
+  assets: AssetStore,
+  world: string,
+  through = 4,
+): Promise<number> {
+  forget(world);
+  const found = await terrainOf(assets, world);
+  if (!found) return 0;
+  let rendered = 0;
+  for (let z = 0; z <= through; z++) {
+    const across = 2 ** z;
+    for (let y = 0; y < across; y++) {
+      for (let x = 0; x < across; x++) {
+        if (await renderPng(assets, world, found, z, x, y)) rendered++;
+      }
+    }
+  }
+  return rendered;
+}
+
+function draw(
+  found: Ready,
+  z: number,
+  x: number,
+  y: number,
+): string | undefined {
   const { map, noise, drawnTo } = found;
   const across = 2 ** z;
   if (y < 0 || y >= across) return undefined;
@@ -145,6 +242,22 @@ export async function renderTile(
     detail: noise,
     drawnTo,
   });
+}
+
+const moduleRequire = createRequire(__filename);
+let wasmReady: Promise<void> | undefined;
+
+async function rasterize(svg: string): Promise<Uint8Array> {
+  wasmReady ??= readFile(
+    moduleRequire.resolve('@resvg/resvg-wasm/index_bg.wasm'),
+  ).then((wasm) => initWasm(wasm));
+  await wasmReady;
+  const renderer = new Resvg(svg, { font: { loadSystemFonts: false } });
+  try {
+    return renderer.render().asPng();
+  } finally {
+    renderer.free();
+  }
 }
 
 /** How deep the map can be drawn before a tile is smaller than a house. */
