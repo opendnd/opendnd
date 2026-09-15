@@ -5,7 +5,12 @@
  * unless `--apply` is passed.
  *
  *   bun scripts/cover-from-drawing.ts --world <uuid> --svg <path>
- *     [--placing <path>] [--apply]
+ *     [--placing <path>] [--apply] [--coarser-than 8]
+ *   bun scripts/cover-from-drawing.ts --world <uuid> --audit
+ *
+ * Inland cells coarser than `--coarser-than` draw as rectangles (Veria,
+ * Travara). `--audit` lists those kingdoms; `--coarser-than` covers only
+ * them.
  */
 import { CellId } from '@opendnd/spatial';
 import {
@@ -34,18 +39,22 @@ const PLACING_PATH = flag('placing');
 const API = flag('api') ?? 'http://localhost:4080';
 const USER = flag('user') ?? 'Drew';
 const APPLY = process.argv.includes('--apply');
+const AUDIT = process.argv.includes('--audit');
+const COARSER_THAN = flag('coarser-than');
 const EXPORT_TO = flag('export-to') ?? `/tmp/kur-ao-export-${Date.now()}.json`;
 const REPORT_TO = flag('report-to');
 
-if (!WORLD || !SVG_PATH) {
+if (!WORLD || (!AUDIT && !SVG_PATH)) {
   console.error(
-    'usage: bun scripts/cover-from-drawing.ts --world <uuid> --svg <path> [--apply]',
+    'usage: bun scripts/cover-from-drawing.ts --world <uuid> --svg <path> [--apply] [--coarser-than 8]',
   );
   process.exit(1);
 }
 
 const worldId = WORLD;
 const svgPath = SVG_PATH;
+const coarseFloor =
+  COARSER_THAN !== undefined ? Number(COARSER_THAN) : AUDIT ? 8 : undefined;
 
 /**
  * How finely to follow a painted edge.
@@ -102,6 +111,18 @@ interface Place {
 
 const auth = { Authorization: `Bearer dev:${USER}` };
 
+if (AUDIT && svgPath === undefined) {
+  const kingdoms = (await listPlaces()).filter(
+    (place) => place.type === 'kingdom',
+  );
+  reportCoarse(kingdoms, coarseFloor ?? 8);
+  process.exit(0);
+}
+if (svgPath === undefined) {
+  console.error('missing --svg');
+  process.exit(1);
+}
+
 const backup = await (await get(`/v1/worlds/${worldId}/$export/json`)).text();
 await Bun.write(EXPORT_TO, backup);
 console.log(`export written to ${EXPORT_TO}`);
@@ -126,6 +147,13 @@ const political = drawing.shapes.filter(
 );
 
 const places = (await listPlaces()).filter((place) => place.type === 'kingdom');
+const coarse = reportCoarse(places, coarseFloor ?? 8);
+if (AUDIT) process.exit(0);
+const targets = new Set(
+  coarseFloor === undefined
+    ? places.map((place) => place.id)
+    : coarse.map((row) => row.id),
+);
 const seats: { key: string; at: Point }[] = [];
 for (const place of places) {
   const at = seatOnPaint(place, fit, political);
@@ -167,8 +195,12 @@ function addTokens(key: string, tokens: readonly string[]): void {
  * refines what it is given.
  */
 const covering: MapShape[] = [
-  ...places.flatMap((place) => claimedShapes.get(place.id) ?? []),
-  ...result.contested.map((contest) => contest.shape),
+  ...places
+    .filter((place) => targets.has(place.id))
+    .flatMap((place) => claimedShapes.get(place.id) ?? []),
+  ...result.contested
+    .filter((contest) => contest.keys.some((key) => targets.has(key)))
+    .map((contest) => contest.shape),
 ];
 const world = covering.reduce((sum, shape) => sum + edgeLength(shape), 0);
 console.log(
@@ -198,7 +230,10 @@ function budgetOf(shape: MapShape): {
   };
 }
 
+const touched = new Set(targets);
+
 for (const place of places) {
+  if (!targets.has(place.id)) continue;
   const shapes = claimedShapes.get(place.id);
   if (!shapes || shapes.length === 0) continue;
   process.stderr.write(
@@ -220,8 +255,10 @@ for (const place of places) {
  * painting the countries apart, rather than in the division.
  */
 for (const contest of result.contested) {
+  if (!contest.keys.some((key) => targets.has(key))) continue;
   const group = seats.filter((seat) => contest.keys.includes(seat.key));
   if (group.length === 0) continue;
+  for (const key of contest.keys) touched.add(key);
   const names = group.map(
     (seat) => places.find((place) => place.id === seat.key)?.name ?? seat.key,
   );
@@ -248,6 +285,7 @@ const reports: {
 }[] = [];
 
 for (const place of places) {
+  if (!touched.has(place.id)) continue;
   const tokens = tokensByPlace.get(place.id);
   if (!tokens || tokens.length === 0) continue;
   const before = place.extent ?? [];
@@ -313,6 +351,50 @@ for (const row of reports) {
   patched += 1;
 }
 console.log(`patched extent on ${patched} kingdoms; left ${left} tiny`);
+
+/** The coarsest cell a place still holds, which is what the map draws inland. */
+function coarsestHeld(place: Place): number | undefined {
+  const extent = place.extent ?? [];
+  if (extent.length === 0) return undefined;
+  let min = Infinity;
+  for (const token of extent) {
+    try {
+      min = Math.min(min, CellId.fromToken(token).level());
+    } catch {
+      // A token that is not a cell is not a held square.
+    }
+  }
+  return Number.isFinite(min) ? min : undefined;
+}
+
+interface CoarseRow {
+  readonly id: string;
+  readonly name: string;
+  readonly min: number;
+  readonly cells: number;
+}
+
+/**
+ * Kingdoms still stored as squares larger than `floor`. Those are the
+ * staircase countries: the layer outlines the stored cell, so a level-3
+ * inland square is a rectangle on the globe.
+ */
+function reportCoarse(kingdoms: readonly Place[], floor: number): CoarseRow[] {
+  const rows = kingdoms
+    .map((place) => ({
+      id: place.id,
+      name: String(place.name ?? place.id),
+      min: coarsestHeld(place),
+      cells: place.extent?.length ?? 0,
+    }))
+    .filter((row): row is CoarseRow => row.min !== undefined && row.min < floor)
+    .sort((a, b) => a.min - b.min || b.cells - a.cells || (a.name < b.name ? -1 : 1));
+  console.log(`coarse kingdoms (min cell < ${floor}): ${rows.length}`);
+  for (const row of rows) {
+    console.log(`  ${row.name}: min L${row.min}  ${row.cells} cells`);
+  }
+  return rows;
+}
 
 function flag(name: string): string | undefined {
   const at = process.argv.indexOf(`--${name}`);

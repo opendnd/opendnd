@@ -647,7 +647,6 @@ export function MapSurface() {
         paint: {
           'fill-color': ['to-color', ['get', 'color']],
           'fill-opacity': 0.5,
-          'fill-outline-color': ['to-color', ['get', 'color']],
         },
       });
       map.addLayer({
