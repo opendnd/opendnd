@@ -34,7 +34,7 @@ export class FakeMap {
   constructor(options: Record<string, unknown>) {
     this.options = options;
     fake.map = this;
-    queueMicrotask(() => this.fire('load', undefined));
+    queueMicrotask(() => this.fire('style.load', undefined));
   }
 
   on(event: string, handler: (event: unknown) => void) {
@@ -84,6 +84,10 @@ export class FakeMap {
     return this.zoom;
   }
 
+  isStyleLoaded() {
+    return false;
+  }
+
   getContainer() {
     return {
       getBoundingClientRect: () => ({ width: 360 * 400, height: 180 * 400 }),
@@ -112,6 +116,8 @@ export class FakeMap {
   }
 
   resize() {}
+
+  triggerRepaint() {}
 
   remove() {
     this.removed = true;
@@ -158,3 +164,5 @@ export class Marker implements FakeMarker {
 
 export class NavigationControl {}
 export class AttributionControl {}
+
+export function setWorkerUrl() {}

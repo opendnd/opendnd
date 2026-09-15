@@ -5,6 +5,7 @@ import {
   type Marker,
 } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import {
   LayersIcon,
@@ -43,6 +44,11 @@ import { Page } from '../build/Page';
 import { usePageLayout } from '../build/projects';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+
+// MapLibre v6 cannot find its module worker after Vite bundles the main module.
+// Without the explicit worker URL raster tiles draw, but every GeoJSON source
+// waits forever — exactly the political-layer-only failure this map exposes.
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
 import { Label } from '@/components/ui/label';
 
 /** Colours, one per model that sits on the map, in the order the ontology lists them. */
@@ -69,12 +75,22 @@ const NAMED_BELOW = 2;
  * countries. Political places are always names on their ground, never dots:
  * the outline already says where they are.
  */
-const POLITICAL_DETAIL_ZOOM = 5;
+const POLITICAL_DETAIL_ZOOM = 3;
 
 /** Up to this many things in view, every one is labelled. */
 const MOST_LABELS = 40;
 /** How near, in pixels, two marks may be before the second is left out. */
 const CROWDED = 22;
+
+/**
+ * How much room a letter of a name takes, near enough, and how tall its line
+ * is. A name keeps its distance by the room its own letters need rather than
+ * by a circle around its middle: MOSHEDWOM is eight times wider than it is
+ * tall, so a circle either lets two long names overlap or drops one that had
+ * room beside a short one.
+ */
+const LETTER = 13;
+const LINE = 24;
 
 /** How far from the edge a name is held when its own middle is off the map. */
 const EDGE = 56;
@@ -105,12 +121,81 @@ function hueOf(id: string): number {
 }
 
 function politicalFill(id: string): string {
-  return `hsl(${hueOf(id)} 55% 55%)`;
+  return hslHex(hueOf(id), 55, 55);
 }
 
 /** The same colour, dark enough to read as a line over its own ground. */
 function politicalEdge(id: string): string {
-  return `hsl(${hueOf(id)} 60% 32%)`;
+  return hslHex(hueOf(id), 60, 32);
+}
+
+/**
+ * Hues far enough apart that two neighbours are not the same pink.
+ * A hash alone puts Veria and Travara on top of each other.
+ */
+const POLITICAL_HUES = [8, 38, 72, 118, 168, 198, 228, 268, 308, 338];
+
+function politicalColors(
+  ground: ReadonlyMap<string, { readonly neighbors: readonly string[] }>,
+): Map<string, { fill: string; edge: string }> {
+  const index = new Map<string, number>();
+  const keys = [...ground.keys()].sort(
+    (a, b) =>
+      (ground.get(b)?.neighbors.length ?? 0) -
+        (ground.get(a)?.neighbors.length ?? 0) || (a < b ? -1 : 1),
+  );
+  for (const key of keys) {
+    const used = new Set<number>();
+    for (const next of ground.get(key)?.neighbors ?? []) {
+      const had = index.get(next);
+      if (had !== undefined) used.add(had);
+    }
+    const start = hueOf(key) % POLITICAL_HUES.length;
+    let pick = start;
+    for (let step = 0; step < POLITICAL_HUES.length; step++) {
+      const at = (start + step) % POLITICAL_HUES.length;
+      if (!used.has(at)) {
+        pick = at;
+        break;
+      }
+    }
+    index.set(key, pick);
+  }
+  const out = new Map<string, { fill: string; edge: string }>();
+  for (const [key, at] of index) {
+    const hue = POLITICAL_HUES[at]!;
+    out.set(key, { fill: hslHex(hue, 55, 55), edge: hslHex(hue, 60, 32) });
+  }
+  return out;
+}
+
+/** A style-safe colour: MapLibre feature properties do not preserve CSS HSL. */
+function hslHex(hue: number, saturation: number, lightness: number): string {
+  const s = saturation / 100;
+  const l = lightness / 100;
+  const chroma = (1 - Math.abs(2 * l - 1)) * s;
+  const section = hue / 60;
+  const between = chroma * (1 - Math.abs((section % 2) - 1));
+  const [red, green, blue] =
+    section < 1
+      ? [chroma, between, 0]
+      : section < 2
+        ? [between, chroma, 0]
+        : section < 3
+          ? [0, chroma, between]
+          : section < 4
+            ? [0, between, chroma]
+            : section < 5
+              ? [between, 0, chroma]
+              : [chroma, 0, between];
+  const match = l - chroma / 2;
+  return `#${[red, green, blue]
+    .map((value) =>
+      Math.round((value + match) * 255)
+        .toString(16)
+        .padStart(2, '0'),
+    )
+    .join('')}`;
 }
 
 /** Which layers are drawn. Remembered, because it is a preference. */
@@ -150,13 +235,66 @@ interface Placing {
   readonly resource: Resource;
 }
 
+/** A rectangle of the screen, in pixels. */
+interface Room {
+  readonly left: number;
+  readonly right: number;
+  readonly top: number;
+  readonly bottom: number;
+}
+
+/**
+ * The room a label takes on the screen: a name's own letters, or a small
+ * square for a mark. A name is written across the map rather than at a
+ * point, so what keeps two names apart is their width — MOSHEDWOM is eight
+ * times wider than it is tall, and a square around its middle would either
+ * let it run through its neighbour or drop a short name that had room.
+ */
+export function roomFor(
+  name: string | undefined,
+  at: { readonly x: number; readonly y: number },
+): Room {
+  const half =
+    name === undefined
+      ? { x: CROWDED / 2, y: CROWDED / 2 }
+      : { x: (name.length * LETTER) / 2 + LETTER, y: LINE / 2 };
+  return {
+    left: at.x - half.x,
+    right: at.x + half.x,
+    top: at.y - half.y,
+    bottom: at.y + half.y,
+  };
+}
+
+/** Whether two labels would be written over each other. */
+export function overlaps(one: Room, other: Room): boolean {
+  return (
+    one.left < other.right &&
+    one.right > other.left &&
+    one.top < other.bottom &&
+    one.bottom > other.top
+  );
+}
+
+/** How many cells a place is held in, which says roughly how big it is. */
+function heldBy(entry: Entry): number {
+  const extent = (entry.resource as { extent?: unknown }).extent;
+  return Array.isArray(extent) ? extent.length : 0;
+}
+
+/** The zoom the chrome shows, and the depth political names switch at. */
+export function atlasZoom(zoom: number): number {
+  return Math.round(zoom);
+}
+
 /** Whether a political place belongs at this depth; undefined for other places. */
 export function politicalLabelAt(
   type: unknown,
   zoom: number,
 ): boolean | undefined {
-  if (type === 'continent') return zoom < POLITICAL_DETAIL_ZOOM;
-  if (type === 'kingdom') return zoom >= POLITICAL_DETAIL_ZOOM;
+  const depth = atlasZoom(zoom);
+  if (type === 'continent') return depth < POLITICAL_DETAIL_ZOOM;
+  if (type === 'kingdom') return depth >= POLITICAL_DETAIL_ZOOM;
   return undefined;
 }
 
@@ -188,6 +326,22 @@ function coordinatesOf(ring: readonly LatLng[]): [number, number][] {
   return ring.map((point) => [point.lng, point.lat]);
 }
 
+/** GeoJSON polygon rings are invalid unless their first point is repeated. */
+function polygonCoordinatesOf(
+  ring: readonly LatLng[],
+  clockwise = false,
+): [number, number][] {
+  const coordinates = coordinatesOf(ring);
+  const isClockwise = signedRingArea(ring) < 0;
+  if (isClockwise !== clockwise) coordinates.reverse();
+  const first = coordinates[0];
+  const last = coordinates[coordinates.length - 1];
+  if (first && last && (first[0] !== last[0] || first[1] !== last[1])) {
+    coordinates.push([...first]);
+  }
+  return coordinates;
+}
+
 /** Whether a point is inside a ring, on the flat unwrapped span of that ring. */
 function insideRing(point: LatLng, ring: readonly LatLng[]): boolean {
   let inside = false;
@@ -212,7 +366,7 @@ function insideRing(point: LatLng, ring: readonly LatLng[]): boolean {
  * lake to follow the outer ring it cuts. Establishing each ring's nearest
  * container makes those two descriptions agree.
  */
-function polygonsOf(rings: readonly LatLng[][]): [number, number][][][] {
+export function polygonsOf(rings: readonly LatLng[][]): [number, number][][][] {
   const parent = rings.map((ring, index) => {
     const point = ring[0];
     if (!point) return undefined;
@@ -242,30 +396,41 @@ function polygonsOf(rings: readonly LatLng[][]): [number, number][][][] {
     const holes = rings
       .map((candidate, at) => ({ candidate, at }))
       .filter(({ at }) => parent[at] === index && depth(at) % 2 === 1)
-      .map(({ candidate }) => coordinatesOf(candidate));
-    return [[coordinatesOf(ring), ...holes]];
+      .map(({ candidate }) => polygonCoordinatesOf(candidate, true));
+    return [[polygonCoordinatesOf(ring), ...holes]];
   });
 }
 
 /** Absolute planar area, used only to pick the nearest containing ring. */
 function ringArea(ring: readonly LatLng[]): number {
+  return Math.abs(signedRingArea(ring));
+}
+
+/** Signed planar area: positive counter-clockwise, negative clockwise. */
+function signedRingArea(ring: readonly LatLng[]): number {
   let twice = 0;
   for (let at = 0; at < ring.length; at++) {
     const a = ring[at]!;
     const b = ring[(at + 1) % ring.length]!;
     twice += a.lng * b.lat - b.lng * a.lat;
   }
-  return Math.abs(twice) / 2;
+  return twice / 2;
 }
 
 /** Replace the contents of one of the map's long-lived GeoJSON sources. */
+const sourceRevision = new WeakMap<GeoJSONSource, string>();
+
 function setGeoJson(
   map: MapLibreMap,
   id: string,
   features: readonly Feature<Geometry>[],
+  revision?: string,
 ): void {
   const source = map.getSource(id) as GeoJSONSource | undefined;
-  source?.setData({ type: 'FeatureCollection', features: [...features] });
+  if (!source || (revision && sourceRevision.get(source) === revision)) return;
+  if (revision) sourceRevision.set(source, revision);
+  source.setData({ type: 'FeatureCollection', features: [...features] });
+  map.triggerRepaint();
 }
 
 /**
@@ -470,7 +635,8 @@ export function MapSurface() {
     map.on('click', (event) =>
       clickRef.current?.({ lat: event.lngLat.lat, lng: event.lngLat.lng }),
     );
-    map.on('load', () => {
+    const initialize = () => {
+      if (map.getSource(POLITICAL_SOURCE)) return;
       for (const id of [POLITICAL_SOURCE, BORDERS_SOURCE, PREVIEW_SOURCE]) {
         map.addSource(id, { type: 'geojson', data: emptyGeoJson() });
       }
@@ -479,9 +645,9 @@ export function MapSurface() {
         type: 'fill',
         source: POLITICAL_SOURCE,
         paint: {
-          'fill-color': ['get', 'color'],
-          'fill-opacity': 0.34,
-          'fill-outline-color': ['get', 'color'],
+          'fill-color': ['to-color', ['get', 'color']],
+          'fill-opacity': 0.5,
+          'fill-outline-color': ['to-color', ['get', 'color']],
         },
       });
       map.addLayer({
@@ -489,7 +655,7 @@ export function MapSurface() {
         type: 'line',
         source: BORDERS_SOURCE,
         paint: {
-          'line-color': ['get', 'color'],
+          'line-color': ['to-color', ['get', 'color']],
           'line-width': 1.4,
           'line-opacity': 0.9,
         },
@@ -500,7 +666,7 @@ export function MapSurface() {
         source: PREVIEW_SOURCE,
         filter: ['==', ['get', 'part'], 'fill'],
         paint: {
-          'fill-color': ['get', 'color'],
+          'fill-color': ['to-color', ['get', 'color']],
           'fill-opacity': 0.3,
         },
       });
@@ -509,7 +675,7 @@ export function MapSurface() {
         type: 'line',
         source: PREVIEW_SOURCE,
         paint: {
-          'line-color': ['get', 'color'],
+          'line-color': ['to-color', ['get', 'color']],
           'line-width': 2,
           'line-opacity': 0.95,
         },
@@ -533,7 +699,9 @@ export function MapSurface() {
       }
       read();
       setMapReady(true);
-    });
+    };
+    map.on('style.load', initialize);
+    if (map.isStyleLoaded()) initialize();
     mapRef.current = map;
     return () => {
       resizing.current?.disconnect();
@@ -581,7 +749,6 @@ export function MapSurface() {
    * the whole layer; a hundred and fifty kingdoms is one page.
    */
   const census = useRequest(async () => {
-    if (!layers.political) return [] as Entry[];
     const pages = await Promise.all(
       models.map(async (m) => {
         const resources: Resource[] = [];
@@ -609,7 +776,7 @@ export function MapSurface() {
       }
     }
     return entries;
-  }, [api, world.id, modelsKey, asOf, layers.political]);
+  }, [api, world.id, modelsKey, asOf]);
 
   const records = useRequest(
     async () => {
@@ -658,17 +825,33 @@ export function MapSurface() {
     // The plan's key stands for the plan, which is rebuilt each render.
     [api, world.id, modelsKey, planKey, asOf],
   );
-  // At planetary scale the meaningful things in view are the continents,
-  // not a sample of whichever seats happen to face the camera. The census is
-  // already the complete political layer, and MapLibre itself hides the
-  // continent on the far side of the globe.
-  const continents = (census.data ?? []).filter(
-    (entry) => entry.resource.type === 'continent',
-  );
-  const entries =
-    view && view.zoom < POLITICAL_DETAIL_ZOOM && continents.length > 0
-      ? continents
-      : (records.data ?? []);
+  /*
+   * Political places are found by their extent, not their seat. A country's
+   * name can be far outside the window while its ground fills the window, so
+   * the sampled record query cannot be the list behind "in view".
+   */
+  const depth = view ? atlasZoom(view.zoom) : 0;
+  const politicalInView = view
+    ? depth < POLITICAL_DETAIL_ZOOM
+      ? (census.data ?? []).filter(
+          (entry) => entry.resource.type === 'continent',
+        )
+      : inView(census.data ?? [], view).filter(
+          (entry) => entry.resource.type === 'kingdom',
+        )
+    : [];
+  const entries = useMemo(() => {
+    if (view && depth < POLITICAL_DETAIL_ZOOM) return politicalInView;
+    const byKey = new Map<string, Entry>();
+    for (const entry of [...politicalInView, ...(records.data ?? [])]) {
+      byKey.set(`${entry.model}/${String(entry.resource.id)}`, entry);
+    }
+    return [...byKey.values()].sort(
+      (a, b) =>
+        a.cell.level - b.cell.level ||
+        nameOf(a.resource).localeCompare(nameOf(b.resource)),
+    );
+  }, [depth, politicalInView, records.data, view]);
   const fillOf = (model: string) =>
     FILLS[models.findIndex((m) => m.model === model) % FILLS.length]!;
 
@@ -688,14 +871,28 @@ export function MapSurface() {
     if (!map || !mapReady || !view) return;
     for (const marker of markers.current) marker.remove();
     markers.current = [];
-    const zoom = Math.round(view.zoom);
+    const zoom = atlasZoom(view.zoom);
     const labelled = entries.length <= MOST_LABELS;
     // Nothing is drawn on top of something already drawn. Eighty places in a
     // corner of the world is eighty marks in a heap, which says less than one
     // does; the coarser a place is the earlier it comes, so what survives the
     // crowd is the biggest thing there. Zooming in gives the rest their room.
-    const taken: { x: number; y: number }[] = [];
-    for (const entry of entries) {
+    const taken: Room[] = [];
+    // Among countries, the name that survives a crowd is the one whose
+    // country holds the most ground: in alphabetical order Atizsüzs would
+    // keep its name and Wyveria would lose it. The cells a country is held
+    // in stand in well enough for how big it is.
+    const political = entries.filter(
+      (entry) => politicalLabelAt(entry.resource.type, zoom) === true,
+    );
+    political.sort((a, b) => heldBy(b) - heldBy(a));
+    const ordered = [
+      ...political,
+      ...entries.filter(
+        (entry) => politicalLabelAt(entry.resource.type, zoom) !== true,
+      ),
+    ];
+    for (const entry of ordered) {
       const fill = fillOf(entry.model);
       const political = politicalLabelAt(entry.resource.type, zoom);
       if (political === false) continue;
@@ -715,7 +912,7 @@ export function MapSurface() {
       // edge as you pan, which is what every map does with a country.
       const size = map.getContainer().getBoundingClientRect();
       const point = map.project([at.lng, at.lat]);
-      const onGlobe = view.zoom < POLITICAL_DETAIL_ZOOM;
+      const onGlobe = zoom < POLITICAL_DETAIL_ZOOM;
       const inside = onGlobe
         ? { x: point.x, y: point.y }
         : {
@@ -739,14 +936,10 @@ export function MapSurface() {
         // A mark, unlike a name, belongs where the thing is or nowhere.
         continue;
       }
-      const room = named ? CROWDED * 2 : CROWDED;
-      const crowded = taken.some(
-        (other) =>
-          Math.abs(other.x - inside.x) < room &&
-          Math.abs(other.y - inside.y) < room,
-      );
+      const room = roomFor(named ? nameOf(entry.resource) : undefined, inside);
+      const crowded = taken.some((other) => overlaps(other, room));
       if (crowded) continue;
-      taken.push({ x: inside.x, y: inside.y });
+      taken.push(room);
       if (!named && !layers.marks) continue;
       if (named && !layers.labels) continue;
       const permanent =
@@ -829,38 +1022,52 @@ export function MapSurface() {
       essential: true,
     });
   }, [heldEntries, mapReady]);
+  const countries = useMemo(
+    () => heldEntries.filter((entry) => entry.resource.type !== 'continent'),
+    [heldEntries],
+  );
   const showing = useMemo(
-    () => (view ? inView(heldEntries, view) : heldEntries),
-    [heldEntries, view],
+    () => (view ? inView(countries, view) : countries),
+    [countries, view],
   );
   const politicalLevel = useMemo(
-    () => (view ? levelToDraw(showing, view.zoom) : 8),
+    () => (view ? levelToDraw(showing, view.zoom) : 7),
     [showing, view?.zoom],
   );
   const ground = useMemo(
     () => (layers.political ? groundOf(showing, politicalLevel) : undefined),
     [showing, politicalLevel, layers.political],
   );
+  const politicalRevision = `${politicalLevel}|${showing
+    .map(
+      (entry) =>
+        `${entry.model}/${String(entry.resource.id)}/${String(
+          entry.resource.versionId ?? '',
+        )}`,
+    )
+    .join(',')}|${layers.political}`;
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
     const fills: Feature<Geometry>[] = [];
     const edges: Feature<Geometry>[] = [];
     if (ground) {
+      const colors = politicalColors(ground);
       for (const [key, held] of ground) {
         const id = key.slice(key.indexOf('/') + 1);
+        const color = colors.get(key);
         const polygons = polygonsOf(held.fills);
         if (polygons.length > 0) {
           fills.push({
             type: 'Feature',
-            properties: { id, color: politicalFill(id) },
+            properties: { id, color: color?.fill ?? politicalFill(id) },
             geometry: { type: 'MultiPolygon', coordinates: polygons },
           });
         }
         if (held.borders.length > 0) {
           edges.push({
             type: 'Feature',
-            properties: { id, color: politicalEdge(id) },
+            properties: { id, color: color?.edge ?? politicalEdge(id) },
             geometry: {
               type: 'MultiLineString',
               coordinates: held.borders.map(coordinatesOf),
@@ -869,9 +1076,9 @@ export function MapSurface() {
         }
       }
     }
-    setGeoJson(map, POLITICAL_SOURCE, fills);
-    setGeoJson(map, BORDERS_SOURCE, edges);
-  }, [ground, mapReady]);
+    setGeoJson(map, POLITICAL_SOURCE, fills, politicalRevision);
+    setGeoJson(map, BORDERS_SOURCE, edges, politicalRevision);
+  }, [ground, mapReady, politicalRevision]);
 
   /**
    * The ground the picked-out place holds, shaded.
@@ -948,9 +1155,15 @@ export function MapSurface() {
 
   const go = (entry: Entry) => {
     const at = centerOf(entry.cell);
+    const politicalZoom =
+      entry.resource.type === 'continent'
+        ? WORLD_ZOOM
+        : entry.resource.type === 'kingdom'
+          ? 6
+          : undefined;
     mapRef.current?.flyTo({
       center: [at.lng, at.lat],
-      zoom: Math.min(zoomFor(entry.cell.level), deepest),
+      zoom: Math.min(politicalZoom ?? zoomFor(entry.cell.level), deepest),
       essential: true,
     });
     setPreview(entry);
@@ -1057,7 +1270,11 @@ export function MapSurface() {
       <div className="pointer-events-none absolute inset-0 z-1000 flex flex-col gap-2 p-3">
         <div className="flex items-start gap-2">
           <div className="pointer-events-auto flex w-72 flex-col gap-2">
-            <Find world={world.id} onFound={(hit) => void found(hit)} />
+            <Find
+              world={world.id}
+              models={models.map((model) => model.model)}
+              onFound={(hit) => void found(hit)}
+            />
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -1341,6 +1558,7 @@ function LayersButton(props: {
 
 function Find(props: {
   readonly world: string;
+  readonly models: readonly string[];
   readonly onFound: (hit: SearchHit) => void;
 }) {
   const api = useApi();
@@ -1353,7 +1571,7 @@ function Find(props: {
     if (!q) return;
     try {
       setError(undefined);
-      setHits(await api.search(props.world, q, 8));
+      setHits(await api.search(props.world, q, 8, props.models));
     } catch (cause) {
       setError(cause instanceof Error ? cause : new Error(String(cause)));
     }

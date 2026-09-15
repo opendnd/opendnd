@@ -12,8 +12,12 @@ import { type Holding, groundOf, levelToDraw, rollUp } from 'src/schema/ground';
 const face = 2;
 
 /** A place the layer will read: a place, and the cells it holds. */
-function place(id: string, cells: readonly string[]): Holding {
-  return { model: 'place', resource: { id, extent: [...cells] } };
+function place(
+  id: string,
+  cells: readonly string[],
+  type?: string,
+): Holding {
+  return { model: 'place', resource: { id, extent: [...cells], type } };
 }
 
 /** The four fine cells in the corner of a coarse one at `level`. */
@@ -48,8 +52,8 @@ describe('who holds the ground a political layer draws', () => {
     const drawn = groundOf(
       [
         // A continent over the same ground and a great deal more.
-        place('continent', [...ground, ...within(5, 4, 6, 7)]),
-        place('kingdom', ground),
+        place('continent', [...ground, ...within(5, 4, 6, 7)], 'continent'),
+        place('kingdom', ground, 'kingdom'),
       ],
       6,
     );
@@ -61,6 +65,48 @@ describe('who holds the ground a political layer draws', () => {
      */
     expect(drawn.get('place/kingdom')?.fills).toHaveLength(1);
     expect(drawn.get('place/continent')?.fills).toHaveLength(1);
+  });
+
+  it('does not let a neighbour paint over a country of the same size', () => {
+    // One coarse square: the larger country holds three quarters, the
+    // neighbour only a corner — plus a square of its own next door, so it
+    // does not vanish. Both claim the shared square; the neighbour must
+    // not take the colour of the country that holds most of it.
+    const shared = within(4, 4, 6, 7);
+    const drawn = groundOf(
+      [
+        place('veria', shared.slice(0, 3)),
+        place('batereau', [shared[3]!, ...within(5, 4, 6, 7)]),
+      ],
+      6,
+    );
+    expect(drawn.get('place/veria')?.fills).toHaveLength(1);
+    expect(drawn.get('place/batereau')?.fills).toHaveLength(1);
+    expect(drawn.get('place/veria')?.borders).toHaveLength(1);
+    expect(drawn.get('place/batereau')?.borders).toHaveLength(1);
+  });
+
+  it('cuts a neighbour out of a coarse inland square, so Veria is not one block', () => {
+    // One big square with a finer country sitting in its corner — the
+    // stored cover of a large kingdom. The coarse country must lose that
+    // corner rather than paint over the neighbour.
+    const inland = cellAt(face, 4, 4, 6).token;
+    const town = cellAt(face, 4 * 8 + 1, 4 * 8 + 1, 9).token;
+    const drawn = groundOf(
+      [
+        place('veria', [inland], 'kingdom'),
+        place('batereau', [town, ...within(12, 12, 6, 7)], 'kingdom'),
+      ],
+      9,
+    );
+    const veria = drawn.get('place/veria');
+    // The leftover is no longer the original square: a square is one
+    // five-point ring, and a bite taken out of it is more than that.
+    expect(veria?.fills.some((ring) => ring.length > 5)).toBe(true);
+    expect(drawn.get('place/batereau')?.fills.length).toBeGreaterThan(0);
+    for (const ring of veria?.fills ?? []) {
+      expect(ring[0]).toEqual(ring[ring.length - 1]);
+    }
   });
 
   it('leaves a cell to the same place every time, so the map does not flicker', () => {
@@ -169,7 +215,10 @@ describe('where a holding ends', () => {
     const province = cellAt(face, 5, 5, 6).token;
     const town = cellAt(face, 41, 41, 9).token;
     const ground = groundOf(
-      [place('continent', [province]), place('kingdom', [town])],
+      [
+        place('continent', [province], 'continent'),
+        place('kingdom', [town], 'kingdom'),
+      ],
       9,
     );
     // The continent keeps its square, all four corners of it...
@@ -197,6 +246,8 @@ describe('where a holding ends', () => {
     expect(held?.borders).toHaveLength(1);
     expect(held?.borders[0]).toHaveLength(2);
     expect(ground.get('place/b')?.borders).toHaveLength(1);
+    expect(held?.neighbors).toEqual(['place/b']);
+    expect(ground.get('place/b')?.neighbors).toEqual(['place/a']);
   });
 });
 

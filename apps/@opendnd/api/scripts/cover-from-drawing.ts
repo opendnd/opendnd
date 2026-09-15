@@ -57,43 +57,26 @@ const svgPath = SVG_PATH;
  * so the edge wants to be finer than the drawing it came from, and no finer
  * than that, which past level twelve or thirteen it would be.
  *
- * The budget is a country's, not a path's, because the map page fetches
- * every country's cells to draw the layer at all: an archipelago of thirty
- * islands must not cost thirty times what a mainland costs. A level costs
- * about twice the cells, since it is spent along a line, so the budget goes
- * up with the level or the cover comes back coarser than it was asked for.
+ * The budget is the world's, and it is spent along the world's edges in
+ * proportion to their length, because that is the only division under which
+ * every border comes back at the same grain. Given to each country alike, a
+ * country holding a tenth of the land is traced at cells hundreds of miles
+ * across while an island the size of a town is traced to a tenth of a mile:
+ * a covering that runs out of budget stops splitting and hands each
+ * remaining cell whole to whichever side holds its middle, so a starved
+ * country is a staircase and a rich one is a coastline. A level costs about
+ * twice the cells, since they are spent along a line, so the world's budget
+ * sets the grain: about three cells per unit of the drawing is level twelve,
+ * which is finer than the artwork's own pixel.
  */
 const EDGE_LEVEL = Number(flag('edge-level') ?? 13);
-const EDGE_BUDGET = Number(flag('edge-budget') ?? 900);
+const EDGE_BUDGET = Number(flag('edge-budget') ?? 600_000);
 
 /**
- * The fewest cells a path is covered with, however little of a country it
- * is: enough that an islet is an islet rather than a square.
+ * The fewest cells a path is covered with, however little of the world's
+ * edge it is: enough that an islet is an islet rather than a square.
  */
 const EDGE_FLOOR = 48;
-
-/**
- * A country's budget shared among its paths by how much edge each has.
- *
- * Shared equally, an archipelago spends as much on a rock as on its
- * mainland, and the mainland — which is nearly all of the border anyone
- * sees — is left in cells tens of pixels across while the rock is traced to
- * a third of one. Cells buy a closer border only where there is border to
- * follow, so they go in proportion to the length of it.
- */
-function edges(
-  shapes: readonly MapShape[],
-): { maxLevel: number; most: number }[] {
-  const round = shapes.map(edgeLength);
-  const total = round.reduce((sum, length) => sum + length, 0);
-  return round.map((length) => ({
-    maxLevel: EDGE_LEVEL,
-    most:
-      total > 0
-        ? Math.max(EDGE_FLOOR, Math.round((EDGE_BUDGET * length) / total))
-        : EDGE_FLOOR,
-  }));
-}
 
 /** How far it is round a shape, in the drawing's own units. */
 function edgeLength(shape: MapShape): number {
@@ -176,29 +159,76 @@ function addTokens(key: string, tokens: readonly string[]): void {
   tokensByPlace.set(key, [...new Set(had)]);
 }
 
+/*
+ * Every path the world will be covered from, so that the budget can be
+ * divided before any of it is spent. A contested path counts once here,
+ * however many countries it is about to be split between: it is one edge on
+ * the drawing, and the boundaries inside it are drawn by the division, which
+ * refines what it is given.
+ */
+const covering: MapShape[] = [
+  ...places.flatMap((place) => claimedShapes.get(place.id) ?? []),
+  ...result.contested.map((contest) => contest.shape),
+];
+const world = covering.reduce((sum, shape) => sum + edgeLength(shape), 0);
+console.log(
+  `edge to follow ${Math.round(world)} drawing units over ${covering.length} paths; budget ${EDGE_BUDGET} cells`,
+);
+
+/** A path's share of the world's budget, by how much of its edge it is. */
+function budgetOf(shape: MapShape): {
+  maxLevel: number;
+  minLevel: number;
+  most: number;
+} {
+  return {
+    maxLevel: EDGE_LEVEL,
+    // Inland squares coarser than this become the staircase countries:
+    // Veria is stored as a level-3 cell, and that cell is what the map
+    // draws. Eight is still cheap on the inside and fine enough that a
+    // neighbour is not a right angle.
+    minLevel: 8,
+    most:
+      world > 0
+        ? Math.max(
+            EDGE_FLOOR,
+            Math.round((EDGE_BUDGET * edgeLength(shape)) / world),
+          )
+        : EDGE_FLOOR,
+  };
+}
+
 for (const place of places) {
   const shapes = claimedShapes.get(place.id);
   if (!shapes || shapes.length === 0) continue;
   process.stderr.write(
     `covering ${place.name ?? place.id} (${shapes.length} paths)\n`,
   );
-  const share = edges(shapes);
   addTokens(
     place.id,
-    shapes.flatMap((shape, at) => coveringOf(shape, fit, share[at]!)),
+    shapes.flatMap((shape) => coveringOf(shape, fit, budgetOf(shape))),
   );
 }
 
+/*
+ * A painted region with several countries on it is one country as far as the
+ * artwork goes: the boundaries between them are this script's invention, and
+ * a nearest-seat division draws them straight, which is what a map of
+ * treaties looks like and not what a map of coastlines looks like. So they
+ * are named as they are drawn — anybody looking at a suspiciously straight
+ * border on the map can find it here — and the cure is in the drawing, by
+ * painting the countries apart, rather than in the division.
+ */
 for (const contest of result.contested) {
   const group = seats.filter((seat) => contest.keys.includes(seat.key));
   if (group.length === 0) continue;
-  process.stderr.write(`dividing contested path among ${group.length} seats\n`);
-  // Shared ground is about to be split several ways, so it is covered
-  // finely enough that each side still has an edge worth drawing.
-  const cells = coveringOf(contest.shape, fit, {
-    maxLevel: EDGE_LEVEL,
-    most: EDGE_BUDGET * group.length,
-  });
+  const names = group.map(
+    (seat) => places.find((place) => place.id === seat.key)?.name ?? seat.key,
+  );
+  console.log(
+    `  dividing one painted region between ${group.length}: ${names.join(', ')}`,
+  );
+  const cells = coveringOf(contest.shape, fit, budgetOf(contest.shape));
   const split = divide(
     cells,
     group.map((seat) => ({ key: seat.key, at: toLatLng(fit, seat.at) })),
@@ -362,25 +392,38 @@ function seatOnPaint(
   fit: ReturnType<typeof wholeDrawing>,
   political: readonly MapShape[],
 ): Point | undefined {
-  if (typeof place.cell === 'string') {
-    const seat = seatFrom([place.cell], fit, political);
+  const own = pointOfCell(place.cell, fit);
+  if (own) {
+    const seat = seatFrom([place.cell as string], fit, political, own);
     if (seat) return seat;
   }
   return (
-    seatFrom(place.extent ?? [], fit, political) ??
+    seatFrom(place.extent ?? [], fit, political, own) ??
     nearby(place, fit, political)
   );
 }
 
-/** The painted shape most of these cells sit on, and a point on it. */
+/**
+ * The painted shape most of these cells sit on, and a point on it.
+ *
+ * Which shape is a vote, and the point within it is the sampled cell nearest
+ * to where the place itself was put. The point matters as much as the shape:
+ * a painted region with several countries on it is divided between their
+ * seats, so a seat that wanders from one run to the next moves a border that
+ * nothing in the world moved. Taking the first sample that landed on the
+ * winning shape makes the seat a function of which cells a previous run
+ * happened to hand out and how finely; taking the one nearest the place's own
+ * dot makes it a function of the drawing and the dot, which is what a reader
+ * of the map would say the country's middle was anyway.
+ */
 function seatFrom(
   tokens: readonly string[],
   fit: ReturnType<typeof wholeDrawing>,
   political: readonly MapShape[],
+  toward?: Point,
 ): Point | undefined {
   const step = tokens.length <= 400 ? 1 : Math.ceil(tokens.length / 400);
-  const votes = new Map<MapShape, { n: number; at: Point }>();
-  let fallback: Point | undefined;
+  const votes = new Map<MapShape, { n: number; at: Point; away: number }>();
   for (let i = 0; i < tokens.length; i += step) {
     let latlng: LatLng;
     try {
@@ -389,18 +432,38 @@ function seatFrom(
       continue;
     }
     const at = toDrawing(fit, latlng);
-    fallback ??= at;
     const hit = political.find((shape) => inShape(shape, at));
     if (!hit) continue;
+    const away = toward ? Math.hypot(at[0] - toward[0], at[1] - toward[1]) : i;
     const had = votes.get(hit);
-    if (had) had.n += 1;
-    else votes.set(hit, { n: 1, at });
+    if (!had) {
+      votes.set(hit, { n: 1, at, away });
+      continue;
+    }
+    had.n += 1;
+    if (away < had.away) {
+      had.at = at;
+      had.away = away;
+    }
   }
   let best: { n: number; at: Point } | undefined;
   for (const vote of votes.values()) {
     if (best === undefined || vote.n > best.n) best = vote;
   }
   return best?.at;
+}
+
+/** Where a place's own cell is in the drawing, if it names one. */
+function pointOfCell(
+  token: unknown,
+  fit: ReturnType<typeof wholeDrawing>,
+): Point | undefined {
+  if (typeof token !== 'string') return undefined;
+  try {
+    return toDrawing(fit, CellId.fromToken(token).centerLatLng());
+  } catch {
+    return undefined;
+  }
 }
 
 /**

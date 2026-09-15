@@ -24,7 +24,16 @@ import type { MapShape } from './svg-map';
 export interface CoveringOptions {
   /** How fine the cells may get. Higher is a closer fit and more of them. */
   readonly maxLevel?: number;
-  /** How many cells to stop at. The border is left coarse once this is reached. */
+  /**
+   * How many cells the border may be followed with. The border is left
+   * coarse once this is reached.
+   *
+   * It counts the cells the border still runs through, not the cells kept:
+   * the ground inside a shape is held in as few squares as it can be, and
+   * charging a shape for them would buy a fat country a coarse coastline —
+   * its inside would spend the budget its edge was for, and what came back
+   * would be a staircase.
+   */
   readonly most?: number;
   /** How coarse a cell may be kept. Guards against swallowing a hemisphere. */
   readonly minLevel?: number;
@@ -78,7 +87,7 @@ export function coveringOf(
     // would be a covering, which is the right answer to "where might this
     // be" and the wrong one to "whose is this": two neighbours would hold
     // the same ground, and a point in either would come back as both.
-    if (level === maxLevel || kept.length + next.length > most) {
+    if (level === maxLevel || next.length > most) {
       for (const cell of straddling.length > 0 ? straddling : next) {
         if (within(cell.centerLatLng(), fences)) kept.push(cell);
       }

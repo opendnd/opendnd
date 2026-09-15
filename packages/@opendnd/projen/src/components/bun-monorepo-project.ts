@@ -167,6 +167,11 @@ export class BunMonorepoProject extends TypeScriptProject {
       // so they only exist locally and in CI after a build has run, which is
       // exactly when prettier:check would trip over them.
       '**/.astro',
+      // And the same for CDK: a synth bundles every function's dependencies
+      // into cdk.out as one file apiece, none of them written to this
+      // project's rules. Gitignored, so they turn up only once somebody has
+      // synthesized — which is when prettier:check would trip over them.
+      '**/cdk.out',
     ]) {
       this.prettier.addIgnorePattern(pattern);
     }

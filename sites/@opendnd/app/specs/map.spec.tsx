@@ -2,7 +2,13 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ModelInfo } from 'src/api/types';
-import { MapPage, politicalLabelAt } from 'src/pages/Map';
+import {
+  MapPage,
+  atlasZoom,
+  overlaps,
+  politicalLabelAt,
+  roomFor,
+} from 'src/pages/Map';
 import {
   cellAt,
   cellAtLatLng,
@@ -53,6 +59,7 @@ const valley = cellAt(2, 5, 9, 6);
 const north = cellAt(2, 5 * 4 + 1, 9 * 4 + 0, 8);
 const south = cellAt(2, 5 * 4 + 2, 9 * 4 + 3, 8);
 const hamlet = cellAt(2, 5 * 64 + 7, 9 * 64 + 3, 12);
+const remote = cellAt(4, 5 * 4 + 1, 9 * 4 + 1, 8);
 const camps = [
   {
     id: 'a0000000-0000-4000-8000-000000000001',
@@ -71,6 +78,7 @@ const camps = [
   {
     id: 'a0000000-0000-4000-8000-000000000002',
     name: 'North Camp',
+    type: 'kingdom',
     spot: north.token,
     // Ground of its own, against the valley's eastern side, so the two have
     // a border between them and not only a coast.
@@ -90,6 +98,15 @@ const camps = [
     spot: hamlet.token,
   },
   { id: 'a0000000-0000-4000-8000-000000000005', name: 'Nowhere Camp' },
+  {
+    id: 'a0000000-0000-4000-8000-000000000006',
+    name: 'Remote Crown',
+    type: 'kingdom',
+    // Its seat is far away, but its held ground is in this view. The census,
+    // not the sampled seat query, is what must put it in the list.
+    spot: remote.token,
+    extent: [cellAt(2, 5 * 16 + 3, 9 * 16, 10).token],
+  },
 ];
 
 /** The API's answer to a list: what is inside the cell, down to the level asked. */
@@ -181,9 +198,32 @@ describe('the map', () => {
   it('names continents while zoomed out and kingdoms while zoomed in', () => {
     expect(politicalLabelAt('continent', 2)).toBe(true);
     expect(politicalLabelAt('kingdom', 2)).toBe(false);
-    expect(politicalLabelAt('continent', 6)).toBe(false);
-    expect(politicalLabelAt('kingdom', 6)).toBe(true);
+    // A continent's name is of no use once a country fills the screen, so
+    // the two change places as early as the third step in.
+    expect(politicalLabelAt('continent', 3)).toBe(false);
+    expect(politicalLabelAt('kingdom', 3)).toBe(true);
+    // The chrome rounds, so 2.6 is already the zoom that says "3".
+    expect(atlasZoom(2.6)).toBe(3);
+    expect(politicalLabelAt('continent', 2.6)).toBe(false);
+    expect(politicalLabelAt('kingdom', 2.6)).toBe(true);
     expect(politicalLabelAt('city', 6)).toBeUndefined();
+  });
+
+  it('keeps a name clear of the width of another name, not just its middle', () => {
+    const one = roomFor('MOSHEDWOM', { x: 200, y: 100 });
+    const beside = roomFor('DRINDERMOK', { x: 260, y: 100 });
+    const away = roomFor('DRINDERMOK', { x: 500, y: 100 });
+    const below = roomFor('DRINDERMOK', { x: 260, y: 160 });
+    expect(overlaps(one, beside)).toBe(true);
+    expect(overlaps(one, away)).toBe(false);
+    expect(overlaps(one, below)).toBe(false);
+    // A mark is a dot, and takes only a dot's room.
+    expect(
+      overlaps(
+        roomFor(undefined, { x: 200, y: 100 }),
+        roomFor(undefined, { x: 260, y: 100 }),
+      ),
+    ).toBe(false);
   });
 
   it('fetches the cells under the view down to a level worth drawing, and lists what it finds', async () => {
@@ -195,6 +235,7 @@ describe('the map', () => {
     const list = screen.getByRole('list', { name: 'In view' });
     await within(list).findByText('The Valley');
     expect(within(list).getByText('North Camp')).toBeInTheDocument();
+    expect(within(list).getByText('Remote Crown')).toBeInTheDocument();
     // Four levels below a tile-sized cell is as fine as zoom 4 draws: level 8.
     expect(within(list).queryByText('Tiny Hamlet')).not.toBeInTheDocument();
     const asked = () =>
@@ -236,10 +277,35 @@ describe('the map', () => {
     // A place larger than the view is its name, not a rectangle: the square
     // of a valley's quadtree cell is not the shape of the valley.
     expect(byName['The Valley']!.element.dataset.kind).toBe('name');
-    expect(byName['North Camp']!.element.dataset.kind).toBe('marker');
+    expect(byName['North Camp']!.element.dataset.kind).toBe('name');
+    expect(byName['South Camp']!.element.dataset.kind).toBe('marker');
     // The shapes that are drawn are the political fill, which is the ground
     // a place holds; none of them is a named place's own cell square.
-    expect(fake.map!.sources['political-ground']!.data.features.length).toBe(2);
+    const political = fake.map!.sources['political-ground']!.data.features as {
+      properties: { color: string };
+      geometry: {
+        coordinates: [number, number][][][];
+      };
+    }[];
+    expect(political).toHaveLength(3);
+    // Feature colours are serialized rather than left as CSS HSL strings.
+    expect(
+      political.every((feature) =>
+        /^#[0-9a-f]{6}$/.test(feature.properties.color),
+      ),
+    ).toBe(true);
+    for (const feature of political) {
+      for (const polygon of feature.geometry.coordinates) {
+        for (const [index, ring] of polygon.entries()) {
+          expect(ring[ring.length - 1]).toEqual(ring[0]);
+          const twice = ring.reduce((area, point, at) => {
+            const next = ring[(at + 1) % ring.length]!;
+            return area + point[0] * next[1] - next[0] * point[1];
+          }, 0);
+          expect(index === 0 ? twice : -twice).toBeGreaterThan(0);
+        }
+      }
+    }
   });
 
   it('opens a short account of a record from its mark, with the way to the whole of it', async () => {
@@ -320,7 +386,7 @@ describe('the map', () => {
 
   it('finds a record by name and flies to it', async () => {
     const user = userEvent.setup();
-    const { fetch } = fakeFetch({
+    const { fetch, calls } = fakeFetch({
       [`GET /v1/worlds/${WORLD_ID}/$search`]: () => ({
         results: [
           {
@@ -346,7 +412,9 @@ describe('the map', () => {
     const map = await mapAt(2);
     await user.type(screen.getByLabelText('Find on the map'), 'North{enter}');
     await user.click(await screen.findByRole('button', { name: 'North Camp' }));
-    await waitFor(() => expect(map.zoom).toBe(11));
+    await waitFor(() => expect(map.zoom).toBe(6));
+    const search = calls.find((call) => call.url.includes('/$search?'))!;
+    expect(new URL(search.url).searchParams.get('models')).toBe('camp');
     const centre = centerOf(north);
     expect(map.center.lat).toBeCloseTo(centre.lat, 5);
     expect(

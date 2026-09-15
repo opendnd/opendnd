@@ -5,6 +5,7 @@ import {
   cellAt,
   cellAtLatLng,
   centerOf,
+  contains,
   parseCell,
   pointWithin,
 } from './cells';
@@ -73,6 +74,7 @@ export interface Holding {
   readonly resource: {
     readonly id?: unknown;
     readonly extent?: unknown;
+    readonly type?: unknown;
   };
 }
 
@@ -81,6 +83,8 @@ export interface Ground {
   readonly fills: LatLng[][];
   /** The stretches of that outline another place is across, as lines. */
   readonly borders: LatLng[][];
+  /** Places that share a side with this one, for colouring them apart. */
+  readonly neighbors: readonly string[];
 }
 
 /**
@@ -92,7 +96,7 @@ const parsed = new Map<string, Cell | undefined>();
 function cellOf(token: string): Cell | undefined {
   if (parsed.has(token)) return parsed.get(token);
   const cell = parseCell(token);
-  if (parsed.size > 400_000) parsed.clear();
+  if (parsed.size > 1_600_000) parsed.clear();
   parsed.set(token, cell);
   return cell;
 }
@@ -350,8 +354,8 @@ function whoHolds(
   holdings: readonly Holding[],
   level: number,
 ): { owner: Map<number, string>; held: Map<string, Cell[]> } {
-  const claims = new Map<number, Map<string, number>>();
   const size = new Map<string, number>();
+  const kinds = new Map<string, string>();
   const own = new Map<string, Cell[]>();
   for (const holding of holdings) {
     const extent = holding.resource.extent;
@@ -359,15 +363,27 @@ function whoHolds(
     if (!speaks(holding, level)) continue;
     const key = `${holding.model}/${String(holding.resource.id)}`;
     size.set(key, extent.length);
-    const cells = rollUp(String(holding.resource.id), extent, level);
+    if (typeof holding.resource.type === 'string' && holding.resource.type) {
+      kinds.set(key, holding.resource.type);
+    }
     own.set(
       key,
-      cells.map(({ cell }) => cell),
+      rollUp(String(holding.resource.id), extent, level).map(
+        ({ cell }) => cell,
+      ),
     );
-    for (const { cell, part } of cells) {
+  }
+  const peers = (a: string, b: string) => sameKind(a, b, kinds, size);
+  // A kingdom stored as a coarse inland square still covers its
+  // neighbours until those neighbours are cut out of it. Continents keep
+  // the square a kingdom stands on, so only a peer is carved away.
+  const carved = carvePeers(own, peers);
+  const claims = new Map<number, Map<string, number>>();
+  for (const [key, cells] of carved) {
+    for (const cell of cells) {
       const at = keyOf(cell.face, cell.i, cell.j, cell.level);
       const byPlace = claims.get(at) ?? new Map<string, number>();
-      byPlace.set(key, Math.max(byPlace.get(key) ?? 0, part));
+      byPlace.set(key, 1);
       claims.set(at, byPlace);
     }
   }
@@ -378,15 +394,21 @@ function whoHolds(
     let bestCount = 0;
     for (const [key, part] of byPlace) {
       const held = size.get(key) ?? Infinity;
-      // Smallest holder first, because a kingdom on a continent is the
-      // finer thing said about that ground; then whoever holds more of the
-      // square; then the same one every time, or the map would flicker as
-      // it redrew.
+      // A kingdom on a continent is the finer thing said about that
+      // ground, so the smaller holder wins when the two are different
+      // kinds. Two countries of a kind are a partition: whoever holds
+      // more of the square keeps it, or a neighbour that only touches a
+      // corner would paint over the country that holds the rest.
+      const nest = best !== undefined && !peers(key, best);
       const better =
         best === undefined ||
-        held < bestHeld ||
-        (held === bestHeld &&
-          (part > bestCount || (part === bestCount && key < best)));
+        (nest
+          ? held < bestHeld ||
+            (held === bestHeld &&
+              (part > bestCount || (part === bestCount && key < best)))
+          : part > bestCount ||
+            (part === bestCount &&
+              (held < bestHeld || (held === bestHeld && key < best))));
       if (better) {
         best = key;
         bestHeld = held;
@@ -396,13 +418,112 @@ function whoHolds(
     if (best !== undefined) owner.set(at, best);
   }
   // Largest holder first, so that the ground a kingdom shares with its
-  // continent is painted the kingdom's colour.
-  const order = [...own.keys()].sort(
+  // continent is painted the kingdom's colour. A neighbour of the same
+  // kind is not drawn over the country that actually holds the square.
+  const order = [...carved.keys()].sort(
     (a, b) => (size.get(b) ?? 0) - (size.get(a) ?? 0) || (a < b ? -1 : 1),
   );
   const held = new Map<string, Cell[]>();
-  for (const key of order) held.set(key, standing(own.get(key) ?? []));
+  for (const key of order) {
+    const cells = (carved.get(key) ?? []).filter((cell) => {
+      const who = owner.get(keyOf(cell.face, cell.i, cell.j, cell.level));
+      if (who === undefined || who === key) return true;
+      return !peers(key, who);
+    });
+    held.set(key, standing(cells));
+  }
   return { owner, held };
+}
+
+/**
+ * Whether two holdings are the same kind of place.
+ *
+ * Type is the honest signal — a kingdom is not a continent. When nobody
+ * said, size is the stand-in: a kingdom is a few times smaller than its
+ * continent, never four provinces beside each other.
+ */
+function sameKind(
+  a: string,
+  b: string,
+  kinds: ReadonlyMap<string, string>,
+  size: ReadonlyMap<string, number>,
+): boolean {
+  const ta = kinds.get(a);
+  const tb = kinds.get(b);
+  if (ta !== undefined && tb !== undefined) return ta === tb;
+  const sa = size.get(a) ?? 0;
+  const sb = size.get(b) ?? 0;
+  if (sa === 0 || sb === 0) return true;
+  return sa * 4 >= sb && sb * 4 >= sa;
+}
+
+function sameCell(a: Cell, b: Cell): boolean {
+  return (
+    a.face === b.face && a.level === b.level && a.i === b.i && a.j === b.j
+  );
+}
+
+function childrenOf(cell: Cell): Cell[] {
+  return [
+    square(cell.face, cell.i * 2, cell.j * 2, cell.level + 1),
+    square(cell.face, cell.i * 2 + 1, cell.j * 2, cell.level + 1),
+    square(cell.face, cell.i * 2, cell.j * 2 + 1, cell.level + 1),
+    square(cell.face, cell.i * 2 + 1, cell.j * 2 + 1, cell.level + 1),
+  ];
+}
+
+/**
+ * `cell` with every hole that sits strictly inside it cut out, as the
+ * leftover siblings of those holes. The exact square a neighbour also
+ * claims is left in, so who holds more of it can still decide.
+ */
+function minus(cell: Cell, holes: readonly Cell[]): Cell[] {
+  const inside = holes.filter((hole) => contains(cell, hole));
+  if (inside.length === 0) return [cell];
+  // The same square said by two places stays; who holds more of it
+  // decides. A neighbour sitting *inside* this square is cut out, and
+  // that child is not kept — keeping it lets four siblings merge back
+  // into the square we just split.
+  if (inside.some((hole) => sameCell(hole, cell))) return [cell];
+  if (cell.level >= FINEST) return [cell];
+  return childrenOf(cell).flatMap((child) => {
+    const childHoles = inside.filter((hole) => contains(child, hole));
+    if (childHoles.some((hole) => sameCell(hole, child))) return [];
+    return minus(child, childHoles);
+  });
+}
+
+function carvePeers(
+  own: ReadonlyMap<string, Cell[]>,
+  peers: (a: string, b: string) => boolean,
+): Map<string, Cell[]> {
+  // A cell sits inside every ancestor of it. Index once so carving a
+  // coarse inland square looks up who is in it, instead of testing every
+  // other country's cells.
+  const sitting = new Map<number, { key: string; cell: Cell }[]>();
+  for (const [key, cells] of own) {
+    for (const cell of cells) {
+      for (let level = cell.level; level >= 0; level--) {
+        const back = cell.level - level;
+        const at = keyOf(cell.face, cell.i >>> back, cell.j >>> back, level);
+        const had = sitting.get(at);
+        if (had) had.push({ key, cell });
+        else sitting.set(at, [{ key, cell }]);
+      }
+    }
+  }
+  const out = new Map<string, Cell[]>();
+  for (const [key, cells] of own) {
+    const carved: Cell[] = [];
+    for (const cell of cells) {
+      const holes = (sitting.get(keyOf(cell.face, cell.i, cell.j, cell.level)) ?? [])
+        .filter((other) => other.key !== key && peers(key, other.key))
+        .map((other) => other.cell);
+      carved.push(...minus(cell, holes));
+    }
+    out.set(key, carved);
+  }
+  return out;
 }
 
 /**
@@ -775,9 +896,14 @@ export function groundOf(
     }
     const edge: Piece[] = [];
     for (const block of blocks) edge.push(...edgeOf(block, mine, owner, level));
+    const neighbors = new Set<string>();
+    for (const piece of edge) {
+      if (piece.other !== undefined) neighbors.add(piece.other);
+    }
     out.set(key, {
       fills: join(edge),
       borders: join(edge.filter((piece) => piece.other !== undefined)),
+      neighbors: [...neighbors],
     });
   }
   return out;

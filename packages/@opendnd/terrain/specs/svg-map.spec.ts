@@ -419,7 +419,28 @@ describe('the ground a place holds', () => {
   it('stops at the number of cells it was told to carry', () => {
     expect(
       coveringOf(shape, fit, { maxLevel: 14, most: 40 }).length,
-    ).toBeLessThan(160);
+    ).toBeLessThan(400);
+  });
+
+  it('spends its budget on the edge rather than on the inside', () => {
+    // Two shapes with the same edge, one of them ten times the other's area.
+    // A budget for the edge follows both of them equally finely; a budget
+    // the inside can spend leaves the fat one a staircase.
+    const thin = readDrawnMap(
+      `<svg viewBox="0 0 1000 1000"><g id="Thin">` +
+        `<path d="M300 497L700 497L700 503L300 503Z"/></g></svg>`,
+    ).shapes[0]!;
+    const fat = readDrawnMap(
+      `<svg viewBox="0 0 1000 1000"><g id="Fat">` +
+        `<path d="M300 470L700 470L700 530L300 530Z"/></g></svg>`,
+    ).shapes[0]!;
+    const finest = (shapeToCover: typeof thin) =>
+      Math.max(
+        ...coveringOf(shapeToCover, fit, { maxLevel: 12, most: 600 }).map(
+          (token) => CellId.fromToken(token).level(),
+        ),
+      );
+    expect(finest(fat)).toBe(finest(thin));
   });
 
   it('shares one piece of ground out among the places seated on it', () => {
