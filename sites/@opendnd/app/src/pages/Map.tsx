@@ -8,6 +8,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import {
+  Columns2Icon,
   LayersIcon,
   ListIcon,
   MapPinIcon,
@@ -77,6 +78,9 @@ const NAMED_BELOW = 2;
  */
 const POLITICAL_DETAIL_ZOOM = 3;
 
+/** Cities join the atlas once countries are the thing being named. */
+const CITY_ZOOM = 3;
+
 /** Up to this many things in view, every one is labelled. */
 const MOST_LABELS = 40;
 /** How near, in pixels, two marks may be before the second is left out. */
@@ -91,12 +95,6 @@ const CROWDED = 22;
  */
 const LETTER = 13;
 const LINE = 24;
-
-/** How far from the edge a name is held when its own middle is off the map. */
-const EDGE = 56;
-
-/** And how far from the top, which is where the map's own controls float. */
-const EDGE_TOP = 104;
 
 /** How far a base map without its own limit may be zoomed. */
 const DEEPEST_ZOOM = 14;
@@ -298,13 +296,48 @@ export function politicalLabelAt(
   return undefined;
 }
 
+/** Whether a city is named at this depth. */
+export function cityLabelAt(type: unknown, zoom: number): boolean {
+  return type === 'city' && atlasZoom(zoom) >= CITY_ZOOM;
+}
+
+/** Whether a projected point still sits on the map, not past its edge. */
+export function onMap(
+  point: { x: number; y: number },
+  size: { width: number; height: number },
+): boolean {
+  return (
+    point.x >= 0 &&
+    point.x <= size.width &&
+    point.y >= 0 &&
+    point.y <= size.height
+  );
+}
+
+/** Whether a place's seat sits inside a view of the world. */
+function seatInView(cell: Cell, view: View): boolean {
+  const at = centerOf(cell);
+  if (at.lat < view.south || at.lat > view.north) return false;
+  if (view.east - view.west >= 360) return true;
+  let lng = at.lng;
+  while (lng < view.west) lng += 360;
+  return lng <= view.east;
+}
+
 /** What the world's own record says its base map is. */
 interface BaseMap {
   readonly tiles: string;
+  /** The imported PNG pyramid, when the live tiles are drawn from terrain. */
+  readonly pictures?: string;
   readonly minZoom?: number;
   readonly maxZoom?: number;
+  /** Last zoom the imported pictures were cut at; MapLibre overzooms past it. */
+  readonly pictureMaxZoom?: number;
   readonly attribution?: string;
 }
+
+/** Imported political pictures are cut through zoom 7. */
+const PICTURE_MAX_ZOOM = 7;
 
 interface Viewport extends View {
   readonly lat: number;
@@ -320,6 +353,88 @@ const emptyGeoJson = (): FeatureCollection => ({
   type: 'FeatureCollection',
   features: [],
 });
+
+/** `?compare=1` puts the picture tiles beside the held-ground globe. */
+export function isComparing(params: URLSearchParams): boolean {
+  return params.get('compare') === '1';
+}
+
+/** The camera both globes share, so a pan on one is a pan on the other. */
+function cameraOf(map: maplibregl.Map) {
+  return {
+    center: map.getCenter(),
+    zoom: map.getZoom(),
+    bearing: map.getBearing(),
+    pitch: map.getPitch(),
+  };
+}
+
+/** A globe that shows the world's picture tiles. Held ground is added later. */
+function globeStyle(
+  baseMap: BaseMap | undefined,
+  deepest: number,
+  which: 'live' | 'original' = 'live',
+): maplibregl.StyleSpecification {
+  const tiles =
+    which === 'original' ? (baseMap?.pictures ?? baseMap?.tiles) : baseMap?.tiles;
+  const maxzoom =
+    which === 'original' ? (baseMap?.pictureMaxZoom ?? deepest) : deepest;
+  const raster: Record<
+    string,
+    {
+      type: 'raster';
+      tiles: string[];
+      tileSize: number;
+      minzoom: number;
+      maxzoom: number;
+      attribution?: string;
+    }
+  > = {};
+  if (tiles) {
+    raster.world = {
+      type: 'raster',
+      tiles: [tiles],
+      tileSize: 256,
+      minzoom: baseMap?.minZoom ?? 0,
+      maxzoom,
+      ...(baseMap?.attribution ? { attribution: baseMap.attribution } : {}),
+    };
+  }
+  return {
+    version: 8,
+    projection: { type: 'globe' },
+    sources: raster,
+    layers: [
+      {
+        id: 'world-background',
+        type: 'background',
+        paint: { 'background-color': '#dbe7df' },
+      },
+      ...(tiles
+        ? [
+            {
+              id: 'world',
+              type: 'raster' as const,
+              source: 'world',
+            },
+          ]
+        : []),
+    ],
+    sky: {
+      'atmosphere-blend': [
+        'interpolate',
+        ['linear'],
+        ['zoom'],
+        0,
+        1,
+        5,
+        1,
+        7,
+        0,
+      ],
+    },
+  };
+}
 
 /** A ring in GeoJSON's longitude-first order. */
 function coordinatesOf(ring: readonly LatLng[]): [number, number][] {
@@ -480,7 +595,10 @@ export function MapSurface() {
   const deepest = baseMap?.maxZoom ?? DEEPEST_ZOOM;
 
   const container = useRef<HTMLDivElement>(null);
+  const original = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
+  const originalMap = useRef<MapLibreMap | null>(null);
+  const comparing = isComparing(params);
   const markers = useRef<Marker[]>([]);
   const [mapReady, setMapReady] = useState(false);
   const [layers, setLayers] = useState<Layers>(readLayers);
@@ -536,63 +654,9 @@ export function MapSurface() {
   useEffect(() => {
     const element = container.current;
     if (!element || base.loading || mapRef.current) return undefined;
-    const raster: Record<
-      string,
-      {
-        type: 'raster';
-        tiles: string[];
-        tileSize: number;
-        minzoom: number;
-        maxzoom: number;
-        attribution?: string;
-      }
-    > = {};
-    if (baseMap) {
-      raster.world = {
-        type: 'raster',
-        tiles: [baseMap.tiles],
-        tileSize: 256,
-        minzoom: baseMap.minZoom ?? 0,
-        maxzoom: deepest,
-        ...(baseMap.attribution ? { attribution: baseMap.attribution } : {}),
-      };
-    }
     const map = new maplibregl.Map({
       container: element,
-      style: {
-        version: 8,
-        projection: { type: 'globe' },
-        sources: raster,
-        layers: [
-          {
-            id: 'world-background',
-            type: 'background',
-            paint: { 'background-color': '#dbe7df' },
-          },
-          ...(baseMap
-            ? [
-                {
-                  id: 'world',
-                  type: 'raster' as const,
-                  source: 'world',
-                },
-              ]
-            : []),
-        ],
-        sky: {
-          'atmosphere-blend': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            0,
-            1,
-            5,
-            1,
-            7,
-            0,
-          ],
-        },
-      },
+      style: globeStyle(baseMap, deepest),
       minZoom: baseMap?.minZoom ?? 0,
       maxZoom: deepest,
       center: [0, 0],
@@ -731,6 +795,52 @@ export function MapSurface() {
     // Only a move changes the address here; the rest of it is left as it is.
   }, [view]);
 
+  // The painted political PNG beside the held-ground globe, sharing one
+  // camera so a country can be judged against the drawing it was covered from.
+  useEffect(() => {
+    if (!comparing || !mapReady) return undefined;
+    const element = original.current;
+    const lead = mapRef.current;
+    if (!element || !lead) return undefined;
+    const map = new maplibregl.Map({
+      container: element,
+      style: globeStyle(baseMap, deepest, 'original'),
+      minZoom: baseMap?.minZoom ?? 0,
+      maxZoom: deepest,
+      center: [0, 0],
+      zoom: WORLD_ZOOM,
+      attributionControl: false,
+      renderWorldCopies: false,
+    });
+    let syncing = false;
+    const copy = (from: MapLibreMap, to: MapLibreMap) => {
+      if (syncing) return;
+      syncing = true;
+      to.jumpTo(cameraOf(from));
+      syncing = false;
+    };
+    const onLeadMove = () => copy(lead, map);
+    const onArtMove = () => copy(map, lead);
+    const start = () => {
+      map.jumpTo(cameraOf(lead));
+      lead.on('move', onLeadMove);
+      map.on('move', onArtMove);
+    };
+    map.on('style.load', start);
+    if (map.isStyleLoaded()) start();
+    const watching = new ResizeObserver(() => map.resize());
+    watching.observe(element);
+    originalMap.current = map;
+    lead.resize();
+    return () => {
+      watching.disconnect();
+      lead.off('move', onLeadMove);
+      map.remove();
+      originalMap.current = null;
+      lead.resize();
+    };
+  }, [comparing, mapReady, base.loading]);
+
   // What is in view, which is two questions. What is *inside* the squares under
   // the view — the towns and the encounters. And what the view is *inside* —
   // the county, the kingdom, the continent, whose own squares are far larger
@@ -766,13 +876,12 @@ export function MapSurface() {
     );
     const entries: Entry[] = [];
     for (const { m, resource } of pages.flat()) {
-      if (!Array.isArray(resource.extent) || resource.extent.length === 0) {
-        continue;
-      }
       const cell = parseCell(resource[m.field]);
-      if (cell) {
-        entries.push({ model: m.model, field: m.field, resource, cell });
-      }
+      if (!cell) continue;
+      const held =
+        Array.isArray(resource.extent) && resource.extent.length > 0;
+      if (!held && resource.type !== 'city') continue;
+      entries.push({ model: m.model, field: m.field, resource, cell });
     }
     return entries;
   }, [api, world.id, modelsKey, asOf]);
@@ -839,10 +948,21 @@ export function MapSurface() {
           (entry) => entry.resource.type === 'kingdom',
         )
     : [];
+  const citiesInView = view
+    ? (census.data ?? []).filter(
+        (entry) =>
+          cityLabelAt(entry.resource.type, depth) &&
+          seatInView(entry.cell, view),
+      )
+    : [];
   const entries = useMemo(() => {
     if (view && depth < POLITICAL_DETAIL_ZOOM) return politicalInView;
     const byKey = new Map<string, Entry>();
-    for (const entry of [...politicalInView, ...(records.data ?? [])]) {
+    for (const entry of [
+      ...politicalInView,
+      ...citiesInView,
+      ...(records.data ?? []),
+    ]) {
       byKey.set(`${entry.model}/${String(entry.resource.id)}`, entry);
     }
     return [...byKey.values()].sort(
@@ -850,7 +970,7 @@ export function MapSurface() {
         a.cell.level - b.cell.level ||
         nameOf(a.resource).localeCompare(nameOf(b.resource)),
     );
-  }, [depth, politicalInView, records.data, view]);
+  }, [citiesInView, depth, politicalInView, records.data, view]);
   const fillOf = (model: string) =>
     FILLS[models.findIndex((m) => m.model === model) % FILLS.length]!;
 
@@ -895,47 +1015,28 @@ export function MapSurface() {
       const fill = fillOf(entry.model);
       const political = politicalLabelAt(entry.resource.type, zoom);
       if (political === false) continue;
-      const named = political ?? entry.cell.level <= zoom + NAMED_BELOW;
+      const city = cityLabelAt(entry.resource.type, zoom);
+      const named =
+        political === true ||
+        city ||
+        entry.cell.level <= zoom + NAMED_BELOW;
+      const atlas = named && !city;
       // A political cell is its seat: imported from a name written on the
       // authored map and therefore guaranteed to lie on the country. An
       // extent's geometric middle can instead fall in a bay or between the
       // islands of an archipelago.
-      let at =
+      const at =
         political === true
           ? centerOf(entry.cell)
           : (middleOf(entry) ?? centerOf(entry.cell));
-      // A place found because the view is *inside* it has its middle
-      // somewhere off the screen — stand in the middle of a kingdom and the
-      // cell its name hangs from can be a hundred miles away. So the name
-      // of somewhere you are in is kept on the screen, sliding along the
-      // edge as you pan, which is what every map does with a country.
       const size = map.getContainer().getBoundingClientRect();
       const point = map.project([at.lng, at.lat]);
       const onGlobe = zoom < POLITICAL_DETAIL_ZOOM;
-      const inside = onGlobe
-        ? { x: point.x, y: point.y }
-        : {
-            x: Math.min(
-              Math.max(point.x, EDGE),
-              Math.max(EDGE, size.width - EDGE),
-            ),
-            y: Math.min(
-              Math.max(point.y, EDGE_TOP),
-              Math.max(EDGE_TOP, size.height - EDGE),
-            ),
-          };
-      if (!onGlobe && named && (inside.x !== point.x || inside.y !== point.y)) {
-        const moved = map.unproject([inside.x, inside.y]);
-        at = { lat: moved.lat, lng: moved.lng };
-      } else if (
-        !onGlobe &&
-        !named &&
-        (inside.x !== point.x || inside.y !== point.y)
-      ) {
-        // A mark, unlike a name, belongs where the thing is or nowhere.
-        continue;
-      }
-      const room = roomFor(named ? nameOf(entry.resource) : undefined, inside);
+      // A name belongs where the place is. Pinning it to the edge when the
+      // seat is off-screen made neighbouring countries look like they were
+      // in frame.
+      if (!onGlobe && !onMap(point, size)) continue;
+      const room = roomFor(named ? nameOf(entry.resource) : undefined, point);
       const crowded = taken.some((other) => overlaps(other, room));
       if (crowded) continue;
       taken.push(room);
@@ -945,19 +1046,19 @@ export function MapSurface() {
         named || labelled || entry.cell.level <= Math.round(view.zoom) + 1;
       const element = document.createElement('button');
       element.type = 'button';
-      element.className = named
+      element.className = atlas
         ? 'map-label map-label-wide'
         : 'map-mark map-label';
-      element.dataset.kind = named ? 'name' : 'marker';
+      element.dataset.kind = atlas ? 'name' : 'marker';
       element.setAttribute('aria-label', nameOf(entry.resource));
       element.title = permanent ? '' : nameOf(entry.resource);
       if (named || permanent) {
         const text = document.createElement('span');
-        text.className = named ? '' : 'map-mark-name';
+        text.className = atlas ? '' : 'map-mark-name';
         text.textContent = nameOf(entry.resource);
         element.append(text);
       }
-      if (!named) {
+      if (!atlas) {
         const dot = document.createElement('span');
         dot.className = 'map-mark-dot';
         dot.style.background = fill;
@@ -971,7 +1072,7 @@ export function MapSurface() {
       markers.current.push(
         new maplibregl.Marker({
           element,
-          anchor: named ? 'center' : 'left',
+          anchor: atlas ? 'center' : 'left',
           opacityWhenCovered: 0,
         })
           .setLngLat([at.lng, at.lat])
@@ -1253,13 +1354,33 @@ export function MapSurface() {
      * uses gives the whole window to the ground and puts its controls on top.
      */
     <div className="relative h-full min-h-96 overflow-hidden rounded-lg border">
-      <div className="absolute inset-0">
-        <div
-          ref={container}
-          role="application"
-          aria-label="Map of the world"
-          className={`size-full ${placing.data ? 'cursor-crosshair' : ''}`}
-        />
+      <div className="absolute inset-0 flex">
+        {comparing && (
+          <div className="relative min-w-0 flex-1 border-r">
+            <div
+              ref={original}
+              role="application"
+              aria-label="Original political map"
+              className="size-full"
+            />
+            <p className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-background/90 px-2 py-0.5 text-xs shadow">
+              Original map
+            </p>
+          </div>
+        )}
+        <div className="relative min-w-0 flex-1">
+          <div
+            ref={container}
+            role="application"
+            aria-label="Map of the world"
+            className={`size-full ${placing.data ? 'cursor-crosshair' : ''}`}
+          />
+          {comparing && (
+            <p className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-background/90 px-2 py-0.5 text-xs shadow">
+              Held ground
+            </p>
+          )}
+        </div>
       </div>
 
       {/*
@@ -1290,6 +1411,21 @@ export function MapSurface() {
                     : `${entries.length} in view`}
               </Button>
               <LayersButton layers={layers} onToggle={toggle} />
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full bg-background shadow-lg"
+                aria-pressed={comparing}
+                onClick={() =>
+                  keep((q) => {
+                    if (comparing) q.delete('compare');
+                    else q.set('compare', '1');
+                  })
+                }
+              >
+                <Columns2Icon data-icon="inline-start" />
+                Compare
+              </Button>
             </div>
             {preview && (
               /*
@@ -1513,7 +1649,7 @@ function LayersButton(props: {
   const [open, setOpen] = useState(false);
   const rows: { key: keyof Layers; label: string; note: string }[] = [
     { key: 'political', label: 'Political', note: 'Who holds what ground' },
-    { key: 'labels', label: 'Names', note: 'Countries and regions' },
+    { key: 'labels', label: 'Names', note: 'Countries and cities' },
     { key: 'marks', label: 'Places', note: 'Towns, and everything smaller' },
   ];
   return (
@@ -1665,11 +1801,11 @@ function asBaseMap(world: string, value: unknown): BaseMap | undefined {
   // asks the API for a cached PNG rendering of its live vector coastlines;
   // `terrain=1` distinguishes that from an imported pyramid of authored PNGs.
   const terrain = map.source === 'terrain';
-  const own =
-    `${config.apiUrl}/v1/worlds/${world}/tiles/{z}/{x}/{y}.png` +
-    (terrain ? '?terrain=1' : '');
+  const pictures = `${config.apiUrl}/v1/worlds/${world}/tiles/{z}/{x}/{y}.png`;
+  const own = pictures + (terrain ? '?terrain=1' : '');
   return {
     tiles: typeof map.tiles === 'string' ? map.tiles : own,
+    ...(terrain ? { pictures, pictureMaxZoom: PICTURE_MAX_ZOOM } : {}),
     ...(typeof map.minZoom === 'number' ? { minZoom: map.minZoom } : {}),
     ...(typeof map.maxZoom === 'number' ? { maxZoom: map.maxZoom } : {}),
     ...(typeof map.attribution === 'string'

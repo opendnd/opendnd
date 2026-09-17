@@ -33,7 +33,8 @@ export class FakeMap {
 
   constructor(options: Record<string, unknown>) {
     this.options = options;
-    fake.map = this;
+    if (!fake.map) fake.map = this;
+    fake.maps.push(this);
     queueMicrotask(() => this.fire('style.load', undefined));
   }
 
@@ -103,9 +104,26 @@ export class FakeMap {
     return { lat: 90 - point[1] / 400, lng: point[0] / 400 - 180 };
   }
 
-  jumpTo(options: { center?: [number, number]; zoom?: number }) {
+  getBearing() {
+    return 0;
+  }
+
+  getPitch() {
+    return 0;
+  }
+
+  jumpTo(options: {
+    center?: [number, number] | { lng: number; lat: number };
+    zoom?: number;
+    bearing?: number;
+    pitch?: number;
+  }) {
     if (options.center) {
-      this.center = { lng: options.center[0], lat: options.center[1] };
+      if (Array.isArray(options.center)) {
+        this.center = { lng: options.center[0], lat: options.center[1] };
+      } else {
+        this.center = options.center;
+      }
     }
     if (options.zoom !== undefined) this.zoom = options.zoom;
     return this;
@@ -119,6 +137,8 @@ export class FakeMap {
 
   triggerRepaint() {}
 
+  off() {}
+
   remove() {
     this.removed = true;
   }
@@ -126,11 +146,13 @@ export class FakeMap {
 
 export const fake: {
   map?: FakeMap;
+  maps: FakeMap[];
   markers: FakeMarker[];
-} = { markers: [] };
+} = { maps: [], markers: [] };
 
 export function reset() {
   fake.map = undefined;
+  fake.maps = [];
   fake.markers = [];
 }
 

@@ -5,6 +5,8 @@ import type { ModelInfo } from 'src/api/types';
 import {
   MapPage,
   atlasZoom,
+  cityLabelAt,
+  onMap,
   overlaps,
   politicalLabelAt,
   roomFor,
@@ -107,6 +109,13 @@ const camps = [
     spot: remote.token,
     extent: [cellAt(2, 5 * 16 + 3, 9 * 16, 10).token],
   },
+  {
+    id: 'a0000000-0000-4000-8000-000000000007',
+    name: 'Harbour Town',
+    type: 'city',
+    // A city is a seat, not a country: no ground of its own to colour.
+    spot: cellAt(2, 5 * 4 + 1, 9 * 4 + 2, 8).token,
+  },
 ];
 
 /** The API's answer to a list: what is inside the cell, down to the level asked. */
@@ -195,6 +204,44 @@ describe('the map', () => {
     expect(fake.map!.options.renderWorldCopies).toBe(false);
   });
 
+  it('opens the painted political map beside the held ground so they share one camera', async () => {
+    renderMap(`/worlds/${WORLD_ID}/map?compare=1`);
+    await mapAt(3);
+    await waitFor(() => expect(fake.maps).toHaveLength(2));
+    expect(screen.getByLabelText('Original political map')).toBeInTheDocument();
+    expect(screen.getByText('Original map')).toBeInTheDocument();
+    expect(screen.getByText('Held ground')).toBeInTheDocument();
+    const [held, art] = fake.maps;
+    const heldTiles = (
+      held!.options.style as { sources?: { world?: { tiles?: string[] } } }
+    ).sources?.world?.tiles?.[0];
+    const artTiles = (
+      art!.options.style as { sources?: { world?: { tiles?: string[] } } }
+    ).sources?.world?.tiles?.[0];
+    expect(heldTiles).toContain('terrain=1');
+    expect(artTiles).not.toContain('terrain=1');
+    expect(held!.getSource('political-ground')).toBeDefined();
+    expect(art!.getSource('political-ground')).toBeUndefined();
+    held!.center = { lat: 12, lng: 34 };
+    held!.zoom = 5;
+    held!.fire('move', undefined);
+    expect(art!.center).toEqual({ lat: 12, lng: 34 });
+    expect(art!.zoom).toBe(5);
+  });
+
+  it('turns the split on from the chrome', async () => {
+    const user = userEvent.setup();
+    renderMap();
+    await mapAt(3);
+    expect(fake.maps).toHaveLength(1);
+    await user.click(screen.getByRole('button', { name: 'Compare' }));
+    await waitFor(() => expect(fake.maps).toHaveLength(2));
+    expect(screen.getByRole('button', { name: 'Compare' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
   it('names continents while zoomed out and kingdoms while zoomed in', () => {
     expect(politicalLabelAt('continent', 2)).toBe(true);
     expect(politicalLabelAt('kingdom', 2)).toBe(false);
@@ -207,6 +254,12 @@ describe('the map', () => {
     expect(politicalLabelAt('continent', 2.6)).toBe(false);
     expect(politicalLabelAt('kingdom', 2.6)).toBe(true);
     expect(politicalLabelAt('city', 6)).toBeUndefined();
+    expect(cityLabelAt('city', 2)).toBe(false);
+    expect(cityLabelAt('city', 3)).toBe(true);
+    expect(cityLabelAt('kingdom', 3)).toBe(false);
+    expect(onMap({ x: 10, y: 10 }, { width: 100, height: 80 })).toBe(true);
+    expect(onMap({ x: -1, y: 10 }, { width: 100, height: 80 })).toBe(false);
+    expect(onMap({ x: 10, y: 90 }, { width: 100, height: 80 })).toBe(false);
   });
 
   it('keeps a name clear of the width of another name, not just its middle', () => {
@@ -279,6 +332,10 @@ describe('the map', () => {
     expect(byName['The Valley']!.element.dataset.kind).toBe('name');
     expect(byName['North Camp']!.element.dataset.kind).toBe('name');
     expect(byName['South Camp']!.element.dataset.kind).toBe('marker');
+    expect(byName['Harbour Town']!.element.dataset.kind).toBe('marker');
+    expect(byName['Harbour Town']!.element.textContent).toContain(
+      'Harbour Town',
+    );
     // The shapes that are drawn are the political fill, which is the ground
     // a place holds; none of them is a named place's own cell square.
     const political = fake.map!.sources['political-ground']!.data.features as {
