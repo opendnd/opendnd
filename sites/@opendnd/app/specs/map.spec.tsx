@@ -10,6 +10,7 @@ import {
   overlaps,
   politicalLabelAt,
   roomFor,
+  slideInside,
 } from 'src/pages/Map';
 import {
   cellAt,
@@ -115,6 +116,15 @@ const camps = [
     type: 'city',
     // A city is a seat, not a country: no ground of its own to colour.
     spot: cellAt(2, 5 * 4 + 1, 9 * 4 + 2, 8).token,
+  },
+  {
+    id: 'a0000000-0000-4000-8000-000000000008',
+    name: 'CE<DUR/ANV',
+    type: 'kingdom',
+    // A border tick the recogniser treated as a country. It must not be
+    // named, and its ground is folded into a real neighbour.
+    spot: cellAt(2, 5 * 4 + 2, 9 * 4 + 1, 8).token,
+    extent: [cellAt(2, 5 * 16 + 2, 9 * 16 + 2, 10).token],
   },
 ];
 
@@ -279,6 +289,38 @@ describe('the map', () => {
     ).toBe(false);
   });
 
+  it('slides a name off the edge that would cut it, and leaves a mark alone', () => {
+    const pane = { width: 640, height: 400 };
+    /*
+     * A country whose seat is a few letters from the right edge: its anchor
+     * is on the map, so nothing before this caught it, and its name was
+     * drawn ALDERM.
+     */
+    const cut = roomFor('ALDERMARCH', { x: 620, y: 100 });
+    const slide = slideInside(cut, pane);
+    expect(slide.x).toBeLessThan(0);
+    expect(cut.right + slide.x).toBeCloseTo(pane.width);
+    // Slid exactly far enough to be read, and no further.
+    expect(cut.left + slide.x).toBeGreaterThan(0);
+
+    // The left edge is the same fault the other way round: MEREHOLT as REHOLT.
+    const left = roomFor('MEREHOLT', { x: 6, y: 100 });
+    expect(left.left + slideInside(left, pane).x).toBeCloseTo(0);
+
+    // A name already clear of both edges is not moved at all.
+    const clear = roomFor('CANTLOW', { x: 320, y: 200 });
+    expect(slideInside(clear, pane)).toEqual({ x: 0, y: 0 });
+
+    // A name wider than the pane has nowhere to go, so it stays put rather
+    // than being shunted about to no purpose.
+    expect(
+      slideInside(roomFor('CANTLOW', { x: 30, y: 100 }), {
+        width: 40,
+        height: 400,
+      }).x,
+    ).toBe(0);
+  });
+
   it('fetches the cells under the view down to a level worth drawing, and lists what it finds', async () => {
     const { calls } = renderMap();
     await mapAt(4);
@@ -289,6 +331,7 @@ describe('the map', () => {
     await within(list).findByText('The Valley');
     expect(within(list).getByText('North Camp')).toBeInTheDocument();
     expect(within(list).getByText('Remote Crown')).toBeInTheDocument();
+    expect(within(list).queryByText('CE<DUR/ANV')).not.toBeInTheDocument();
     // Four levels below a tile-sized cell is as fine as zoom 4 draws: level 8.
     expect(within(list).queryByText('Tiny Hamlet')).not.toBeInTheDocument();
     const asked = () =>
@@ -333,9 +376,14 @@ describe('the map', () => {
     expect(byName['North Camp']!.element.dataset.kind).toBe('name');
     expect(byName['South Camp']!.element.dataset.kind).toBe('marker');
     expect(byName['Harbour Town']!.element.dataset.kind).toBe('marker');
+    expect(byName['Harbour Town']!.element.className).toBe('map-mark');
+    expect(
+      byName['Harbour Town']!.element.querySelector('.map-mark-dot'),
+    ).not.toBeNull();
     expect(byName['Harbour Town']!.element.textContent).toContain(
       'Harbour Town',
     );
+    expect(byName['CE<DUR/ANV']).toBeUndefined();
     // The shapes that are drawn are the political fill, which is the ground
     // a place holds; none of them is a named place's own cell square.
     const political = fake.map!.sources['political-ground']!.data.features as {

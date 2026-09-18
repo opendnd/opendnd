@@ -6,6 +6,7 @@
  *
  *   bun scripts/cover-from-drawing.ts --world <uuid> --svg <path>
  *     [--placing <path>] [--apply] [--coarser-than 8]
+ *     [--partition] [--rebuild]
  *   bun scripts/cover-from-drawing.ts --world <uuid> --audit
  *
  * Inland cells coarser than `--coarser-than` draw as rectangles (Veria,
@@ -17,13 +18,19 @@ import {
   aPointOf,
   boxToWhole,
   claimByFill,
+  conflictsOf,
   coveringOf,
   divide,
   inShape,
   isPoliticalFill,
   nearestPolitical,
+  ownersOf,
   placeGroups,
   readDrawnMap,
+  regionsOf,
+  sharedContests,
+  Taken,
+  takeLand,
   toDrawing,
   toLatLng,
   wholeDrawing,
@@ -40,9 +47,17 @@ const API = flag('api') ?? 'http://localhost:4080';
 const USER = flag('user') ?? 'Drew';
 const APPLY = process.argv.includes('--apply');
 const AUDIT = process.argv.includes('--audit');
+const PARTITION = process.argv.includes('--partition');
+const REBUILD = process.argv.includes('--rebuild');
 const COARSER_THAN = flag('coarser-than');
 const EXPORT_TO = flag('export-to') ?? `/tmp/kur-ao-export-${Date.now()}.json`;
 const REPORT_TO = flag('report-to');
+
+function isRealCountry(name: unknown): boolean {
+  if (typeof name !== 'string' || name.length === 0) return false;
+  if (/[<>/]/.test(name)) return false;
+  return !['fell', 'veooil'].includes(name.trim().toLowerCase());
+}
 
 if (!WORLD || (!AUDIT && !SVG_PATH)) {
   console.error(
@@ -156,6 +171,7 @@ const targets = new Set(
 );
 const seats: { key: string; at: Point }[] = [];
 for (const place of places) {
+  if (!isRealCountry(place.name)) continue;
   const at = seatOnPaint(place, fit, political);
   if (at) seats.push({ key: place.id, at });
 }
@@ -187,21 +203,52 @@ function addTokens(key: string, tokens: readonly string[]): void {
   tokensByPlace.set(key, [...new Set(had)]);
 }
 
+const seatAt = new Map(seats.map((seat) => [seat.key, seat.at]));
+const regions = regionsOf(result, seats);
+const stillShared = sharedContests(result, seats);
+const wonContest = new Set<string>();
+for (const contest of result.contested) {
+  const owners = ownersOf(contest.shape, contest.keys, seatAt);
+  const names = contest.keys.map(
+    (key) => places.find((place) => place.id === key)?.name ?? key,
+  );
+  if (owners.length === 1) {
+    wonContest.add(owners[0]!);
+    const won = places.find((place) => place.id === owners[0])?.name ?? owners[0];
+    console.log(
+      `  contested ${names.join(' | ')} → ${won} (interior seat)`,
+    );
+    continue;
+  }
+  const kept = owners.map(
+    (key) => places.find((place) => place.id === key)?.name ?? key,
+  );
+  console.log(
+    `  contested ${names.join(' | ')} split among ${kept.join(', ')}`,
+  );
+}
+
 /*
  * Every path the world will be covered from, so that the budget can be
- * divided before any of it is spent. A contested path counts once here,
- * however many countries it is about to be split between: it is one edge on
- * the drawing, and the boundaries inside it are drawn by the division, which
- * refines what it is given.
+ * divided before any of it is spent. A contested path counts once here:
+ * under --partition it belongs to one country, and without it the
+ * division still traces one edge.
  */
-const covering: MapShape[] = [
-  ...places
-    .filter((place) => targets.has(place.id))
-    .flatMap((place) => claimedShapes.get(place.id) ?? []),
-  ...result.contested
-    .filter((contest) => contest.keys.some((key) => targets.has(key)))
-    .map((contest) => contest.shape),
-];
+const covering: MapShape[] = PARTITION
+  ? [
+      ...regions
+        .filter((region) => targets.has(region.key))
+        .flatMap((region) => [...region.shapes]),
+      ...stillShared.map((contest) => contest.shape),
+    ]
+  : [
+      ...places
+        .filter((place) => targets.has(place.id))
+        .flatMap((place) => claimedShapes.get(place.id) ?? []),
+      ...result.contested
+        .filter((contest) => contest.keys.some((key) => targets.has(key)))
+        .map((contest) => contest.shape),
+    ];
 const world = covering.reduce((sum, shape) => sum + edgeLength(shape), 0);
 console.log(
   `edge to follow ${Math.round(world)} drawing units over ${covering.length} paths; budget ${EDGE_BUDGET} cells`,
@@ -232,46 +279,128 @@ function budgetOf(shape: MapShape): {
 
 const touched = new Set(targets);
 
-for (const place of places) {
-  if (!targets.has(place.id)) continue;
-  const shapes = claimedShapes.get(place.id);
-  if (!shapes || shapes.length === 0) continue;
-  process.stderr.write(
-    `covering ${place.name ?? place.id} (${shapes.length} paths)\n`,
-  );
-  addTokens(
-    place.id,
-    shapes.flatMap((shape) => coveringOf(shape, fit, budgetOf(shape))),
-  );
-}
-
-/*
- * A painted region with several countries on it is one country as far as the
- * artwork goes: the boundaries between them are this script's invention, and
- * a nearest-seat division draws them straight, which is what a map of
- * treaties looks like and not what a map of coastlines looks like. So they
- * are named as they are drawn — anybody looking at a suspiciously straight
- * border on the map can find it here — and the cure is in the drawing, by
- * painting the countries apart, rather than in the division.
- */
-for (const contest of result.contested) {
-  if (!contest.keys.some((key) => targets.has(key))) continue;
-  const group = seats.filter((seat) => contest.keys.includes(seat.key));
-  if (group.length === 0) continue;
-  for (const key of contest.keys) touched.add(key);
-  const names = group.map(
-    (seat) => places.find((place) => place.id === seat.key)?.name ?? seat.key,
-  );
+if (PARTITION) {
+  /*
+   * One owner per cell. Smallest painted area keeps its covering first;
+   * later countries may only keep cells nobody holds. A 5-foot square
+   * has one ancestor in this covering, so it has one country. Contested
+   * strokes are already one country's in `regions`. Existing extents are
+   * reused unless the country won a contested path or --rebuild is on —
+   * those have to be covered from the drawing so the stored outline is
+   * the painted one.
+   */
+  const byKey = new Map(regions.map((region) => [region.key, region]));
+  const splitKeys = new Set(stillShared.flatMap((contest) => [...contest.keys]));
+  const rawByPlace = new Map<string, string[]>();
+  for (const place of places) {
+    if (!targets.has(place.id)) continue;
+    const region = byKey.get(place.id);
+    const shapes = region?.shapes ?? [];
+    const coverFromDrawing =
+      REBUILD ||
+      wonContest.has(place.id) ||
+      splitKeys.has(place.id) ||
+      (place.extent ?? []).length === 0;
+    if (coverFromDrawing && shapes.length > 0) {
+      process.stderr.write(
+        `covering ${place.name ?? place.id} (${shapes.length} paths)\n`,
+      );
+      rawByPlace.set(
+        place.id,
+        shapes.flatMap((shape) => coveringOf(shape, fit, budgetOf(shape))),
+      );
+    } else if (splitKeys.has(place.id)) {
+      rawByPlace.set(place.id, []);
+    } else {
+      rawByPlace.set(place.id, [...(place.extent ?? [])]);
+    }
+    touched.add(place.id);
+  }
+  for (const contest of stillShared) {
+    if (!contest.keys.some((key) => targets.has(key))) continue;
+    const group = seats.filter((seat) => contest.keys.includes(seat.key));
+    if (group.length === 0) continue;
+    const names = group.map(
+      (seat) => places.find((place) => place.id === seat.key)?.name ?? seat.key,
+    );
+    process.stderr.write(
+      `dividing ${names.join(', ')} (${contest.keys.length} seats)\n`,
+    );
+    const cells = coveringOf(contest.shape, fit, budgetOf(contest.shape));
+    const split = divide(
+      cells,
+      group.map((seat) => ({ key: seat.key, at: toLatLng(fit, seat.at) })),
+      { maxLevel: EDGE_LEVEL },
+    );
+    for (const [key, tokens] of Object.entries(split)) {
+      const had = rawByPlace.get(key) ?? [];
+      rawByPlace.set(key, [...new Set([...had, ...tokens])]);
+    }
+  }
+  const taken = new Taken();
+  const ordered = [...places]
+    .filter((place) => targets.has(place.id))
+    .sort((a, b) => {
+      const aa = byKey.get(a.id)?.area ?? Number.POSITIVE_INFINITY;
+      const bb = byKey.get(b.id)?.area ?? Number.POSITIVE_INFINITY;
+      return aa !== bb ? aa - bb : a.id < b.id ? -1 : 1;
+    });
+  for (const place of ordered) {
+    const kept = takeLand(
+      rawByPlace.get(place.id) ?? [],
+      taken,
+      EDGE_LEVEL,
+    );
+    taken.addAll(kept);
+    tokensByPlace.set(place.id, kept);
+  }
+  const clashes = conflictsOf(tokensByPlace);
   console.log(
-    `  dividing one painted region between ${group.length}: ${names.join(', ')}`,
+    `partition ${ordered.length} kingdoms; ${taken.size} cells; ${clashes.length} overlaps`,
   );
-  const cells = coveringOf(contest.shape, fit, budgetOf(contest.shape));
-  const split = divide(
-    cells,
-    group.map((seat) => ({ key: seat.key, at: toLatLng(fit, seat.at) })),
-    { maxLevel: EDGE_LEVEL },
-  );
-  for (const [key, tokens] of Object.entries(split)) addTokens(key, tokens);
+} else {
+  for (const place of places) {
+    if (!targets.has(place.id)) continue;
+    const shapes = claimedShapes.get(place.id);
+    if (!shapes || shapes.length === 0) continue;
+    process.stderr.write(
+      `covering ${place.name ?? place.id} (${shapes.length} paths)\n`,
+    );
+    addTokens(
+      place.id,
+      shapes.flatMap((shape) => coveringOf(shape, fit, budgetOf(shape))),
+    );
+  }
+
+  /*
+   * A painted region with several countries on it is one country as far as
+   * the artwork goes: the boundaries between them are this script's
+   * invention, and a nearest-seat division draws them straight, which is
+   * what a map of treaties looks like and not what a map of coastlines
+   * looks like. So they are named as they are drawn — anybody looking at a
+   * suspiciously straight border on the map can find it here — and the
+   * cure is in the drawing, by painting the countries apart, rather than
+   * in the division.
+   */
+  for (const contest of result.contested) {
+    if (!contest.keys.some((key) => targets.has(key))) continue;
+    const group = seats.filter((seat) => contest.keys.includes(seat.key));
+    if (group.length === 0) continue;
+    for (const key of contest.keys) touched.add(key);
+    const names = group.map(
+      (seat) => places.find((place) => place.id === seat.key)?.name ?? seat.key,
+    );
+    console.log(
+      `  dividing one painted region between ${group.length}: ${names.join(', ')}`,
+    );
+    const cells = coveringOf(contest.shape, fit, budgetOf(contest.shape));
+    const split = divide(
+      cells,
+      group.map((seat) => ({ key: seat.key, at: toLatLng(fit, seat.at) })),
+      { maxLevel: EDGE_LEVEL },
+    );
+    for (const [key, tokens] of Object.entries(split)) addTokens(key, tokens);
+  }
 }
 
 const reports: {
@@ -287,12 +416,16 @@ const reports: {
 for (const place of places) {
   if (!touched.has(place.id)) continue;
   const tokens = tokensByPlace.get(place.id);
-  if (!tokens || tokens.length === 0) continue;
+  if (tokens === undefined) continue;
+  if (!PARTITION && tokens.length === 0) continue;
   const before = place.extent ?? [];
   reports.push({
     name: String(place.name ?? place.id),
     id: place.id,
-    paths: claimedShapes.get(place.id)?.length ?? 0,
+    paths:
+      regions.find((region) => region.key === place.id)?.shapes.length ??
+      claimedShapes.get(place.id)?.length ??
+      0,
     before: before.length,
     after: tokens.length,
     jaccard: jaccard(before, tokens),
@@ -324,7 +457,7 @@ if (!APPLY) {
 let patched = 0;
 let left = 0;
 for (const row of reports) {
-  if (row.after < 4) {
+  if (!PARTITION && row.after < 4) {
     console.log(`  skip PATCH ${row.name}: only ${row.after} cells`);
     left += 1;
     continue;

@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { cellAt, parseCell } from 'src/schema/cells';
-import { type Holding, groundOf, levelToDraw, rollUp } from 'src/schema/ground';
+import {
+  type Holding,
+  groundOf,
+  levelToDraw,
+  poleIslands,
+  ringsOfPoleIsland,
+  rollUp,
+} from 'src/schema/ground';
 
 /**
  * The political layer decides, for every patch of ground it draws, which one
@@ -107,6 +114,32 @@ describe('who holds the ground a political layer draws', () => {
     for (const ring of veria?.fills ?? []) {
       expect(ring[0]).toEqual(ring[ring.length - 1]);
     }
+  });
+
+  it('fills a strip that neither country claimed, so they meet', () => {
+    // Two kingdoms with one empty square between them — the cover followed
+    // each outline and left the land in the middle to nobody. The layer
+    // hands that square to one of them so the pale gap does not show.
+    const drawn = groundOf(
+      [
+        place('a', [cellAt(face, 8, 8, 6).token], 'kingdom'),
+        place('b', [cellAt(face, 8, 10, 6).token], 'kingdom'),
+      ],
+      6,
+    );
+    expect(drawn.get('place/a')?.neighbors).toEqual(['place/b']);
+    expect(drawn.get('place/b')?.neighbors).toEqual(['place/a']);
+    expect(drawn.get('place/a')?.borders).toHaveLength(1);
+    expect(drawn.get('place/b')?.borders).toHaveLength(1);
+  });
+
+  it('does not grow a country into the sea beside it', () => {
+    const drawn = groundOf(
+      [place('coast', [cellAt(face, 8, 8, 6).token], 'kingdom')],
+      6,
+    );
+    expect(drawn.get('place/coast')?.fills).toHaveLength(1);
+    expect(drawn.get('place/coast')?.fills[0]).toHaveLength(5);
   });
 
   it('leaves a cell to the same place every time, so the map does not flicker', () => {
@@ -264,14 +297,21 @@ describe('how fine the ground is drawn', () => {
     const quarters = within(4, 4, 6, 7);
     expect(rollUp('all', quarters, 6)[0]?.part).toBe(1);
     expect(rollUp('half', quarters.slice(0, 2), 6)[0]?.part).toBe(0.5);
-    expect(rollUp('corner', quarters.slice(0, 1), 6)[0]?.part).toBe(0.25);
+    // A corner still names the coarse square, with how much of it is held.
+    // Whether that square is painted is settled once neighbours are known.
+    const corner = rollUp('corner', quarters.slice(0, 1), 6);
+    expect(corner).toHaveLength(1);
+    expect(corner[0]!.cell.level).toBe(6);
+    expect(corner[0]!.part).toBe(0.25);
   });
 
-  it('keeps the square a place holds most of, so countries do not vanish', () => {
-    // A place holding a sixteenth of each of two squares holds neither, but
-    // it is still a place and is still drawn somewhere.
+  it('keeps the pieces a place holds, so a river does not punch a hole', () => {
+    // Two fine cells in different coarse squares: dropping each parent
+    // for being a sixteenth of it would erase the country.
     const bits = [within(4, 4, 6, 8)[0]!, within(5, 5, 6, 8)[0]!];
-    expect(rollUp('small', bits, 6)).toHaveLength(1);
+    const kept = rollUp('small', bits, 6);
+    expect(kept.length).toBe(2);
+    expect(kept.every((row) => row.cell.level === 6)).toBe(true);
   });
 
   it('draws as fine as a pixel can show', () => {
@@ -293,6 +333,20 @@ describe('how fine the ground is drawn', () => {
    * spending it buys fineness where a pixel changes: a block covering two
    * hundred and fifty-six squares of the level drawn still costs one.
    */
+  it('fills a river bank as the coarse square, not a hole the size of the zoom', () => {
+    // A river through a country: sixteen fine cells, only four of them
+    // held along one bank. The coarse square is a quarter full. Nobody
+    // else claims it, so the square stays — dropping it left a rectangle
+    // of bare ground on the political map.
+    const bank = within(4, 4, 6, 8).slice(0, 4);
+    const kept = rollUp('bank', bank, 6);
+    expect(kept).toHaveLength(1);
+    expect(kept[0]!.cell.level).toBe(6);
+    expect(kept[0]!.part).toBe(0.25);
+    const drawn = groundOf([place('bank', bank)], 6);
+    expect(drawn.get('place/bank')?.fills).toHaveLength(1);
+  });
+
   it('counts a country by its border, which is what the budget pays for', () => {
     const behind = cellAt(face, 4, 4, 6).token;
     const span = 2 ** (10 - 6);
@@ -323,5 +377,36 @@ describe('how fine the ground is drawn', () => {
     const cell = parseCell(token)!;
     expect(cell.level).toBe(9);
     expect(ground.get('place/a')?.fills).toHaveLength(1);
+  });
+});
+
+describe('the hole at a pole', () => {
+  it('invents a disk only when land rings the pole', () => {
+    const ring = [
+      cellAt(2, 32, 24, 6).token,
+      cellAt(2, 32, 40, 6).token,
+      cellAt(2, 24, 32, 6).token,
+      cellAt(2, 40, 32, 6).token,
+      cellAt(2, 24, 24, 6).token,
+      cellAt(2, 40, 40, 6).token,
+      cellAt(2, 24, 40, 6).token,
+      cellAt(2, 40, 24, 6).token,
+    ];
+    const islands = poleIslands([place('ring', ring)]);
+    expect(islands).toHaveLength(1);
+    expect(islands[0].sign).toBe(1);
+    const rings = ringsOfPoleIsland(islands[0]);
+    expect(rings).toHaveLength(36);
+    for (const ring of rings) {
+      const lngs = ring.map((point) => point.lng);
+      expect(Math.max(...lngs) - Math.min(...lngs)).toBeLessThanOrEqual(20);
+    }
+  });
+
+  it('does not invent a disk for a one-sided continent', () => {
+    const islands = poleIslands([
+      place('one', [cellAt(2, 8, 8, 6).token]),
+    ]);
+    expect(islands).toHaveLength(0);
   });
 });

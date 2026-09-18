@@ -39,7 +39,9 @@ import {
   parseCell,
   zoomFor,
 } from '../schema/cells';
-import { groundOf, inView, levelToDraw } from '../schema/ground';
+import { groundOf, inView, levelToDraw, poleIslands } from '../schema/ground';
+import { displayName, isCountryName, keepCountries } from '../schema/names';
+import { PictureSampler, paintEdge, rgbHex } from '../schema/paint';
 import { Button } from '@/components/ui/button';
 import { Page } from '../build/Page';
 import { usePageLayout } from '../build/projects';
@@ -135,6 +137,7 @@ const POLITICAL_HUES = [8, 38, 72, 118, 168, 198, 228, 268, 308, 338];
 
 function politicalColors(
   ground: ReadonlyMap<string, { readonly neighbors: readonly string[] }>,
+  painted?: ReadonlyMap<string, string>,
 ): Map<string, { fill: string; edge: string }> {
   const index = new Map<string, number>();
   const keys = [...ground.keys()].sort(
@@ -161,6 +164,11 @@ function politicalColors(
   }
   const out = new Map<string, { fill: string; edge: string }>();
   for (const [key, at] of index) {
+    const paint = painted?.get(key);
+    if (paint) {
+      out.set(key, { fill: paint, edge: paintEdge(paint) });
+      continue;
+    }
     const hue = POLITICAL_HUES[at]!;
     out.set(key, { fill: hslHex(hue, 55, 55), edge: hslHex(hue, 60, 32) });
   }
@@ -209,6 +217,29 @@ const LAYERS_DEFAULT: Layers = {
   labels: true,
   marks: true,
 };
+
+/** How solid the political fill is. Low enough that rivers still show. */
+const FILL_OPACITY_KEY = 'opendnd.map.fill';
+const FILL_OPACITY = 0.82;
+const FILL_OPACITY_MIN = 0.5;
+const FILL_OPACITY_MAX = 1;
+
+function clampFill(value: number): number {
+  if (!Number.isFinite(value)) return FILL_OPACITY;
+  return Math.min(FILL_OPACITY_MAX, Math.max(FILL_OPACITY_MIN, value));
+}
+
+function readFillOpacity(params: URLSearchParams): number {
+  const fromUrl = Number(params.get('fill'));
+  if (Number.isFinite(fromUrl) && params.has('fill')) return clampFill(fromUrl);
+  try {
+    const raw = localStorage.getItem(FILL_OPACITY_KEY);
+    if (raw) return clampFill(Number(raw));
+  } catch {
+    // A browser that keeps nothing still draws the map.
+  }
+  return FILL_OPACITY;
+}
 
 function readLayers(): Layers {
   try {
@@ -274,6 +305,34 @@ export function overlaps(one: Room, other: Room): boolean {
   );
 }
 
+/**
+ * How far a name must move to be read whole, having been written partly off
+ * the edge of the map.
+ *
+ * Whether a name's anchor is on the map is a different question from whether
+ * the name can be read. A name is written across the map from its anchor, so
+ * a country whose seat sits two letters from the edge has its name cut by
+ * that edge: ALDERMARCH drawn as ALDERM, and MEREHOLT as REHOLT. An atlas
+ * slides the name back onto the page instead, because the alternative —
+ * dropping it — loses a country that is plainly in view. A name wider than
+ * the map is left where it is: there is nowhere to slide it to.
+ */
+export function slideInside(
+  room: Room,
+  size: { readonly width: number; readonly height: number },
+): { readonly x: number; readonly y: number } {
+  const shift = (low: number, high: number, span: number) => {
+    if (high - low > span) return 0;
+    if (low < 0) return -low;
+    if (high > span) return span - high;
+    return 0;
+  };
+  return {
+    x: shift(room.left, room.right, size.width),
+    y: shift(room.top, room.bottom, size.height),
+  };
+}
+
 /** How many cells a place is held in, which says roughly how big it is. */
 function heldBy(entry: Entry): number {
   const extent = (entry.resource as { extent?: unknown }).extent;
@@ -312,6 +371,25 @@ export function onMap(
     point.y >= 0 &&
     point.y <= size.height
   );
+}
+
+/** A point of a country's ground that still sits on the map. */
+function pointOnGround(
+  entry: Entry,
+  map: MapLibreMap,
+  size: { width: number; height: number },
+): LatLng | undefined {
+  const extent = entry.resource.extent;
+  if (!Array.isArray(extent) || extent.length === 0) return undefined;
+  const step = Math.max(1, Math.floor(extent.length / 64));
+  for (let i = 0; i < extent.length; i += step) {
+    const cell = parseCell(String(extent[i]));
+    if (!cell) continue;
+    const at = centerOf(cell);
+    const point = map.project([at.lng, at.lat]);
+    if (onMap(point, size)) return at;
+  }
+  return undefined;
 }
 
 /** Whether a place's seat sits inside a view of the world. */
@@ -376,7 +454,9 @@ function globeStyle(
   which: 'live' | 'original' = 'live',
 ): maplibregl.StyleSpecification {
   const tiles =
-    which === 'original' ? (baseMap?.pictures ?? baseMap?.tiles) : baseMap?.tiles;
+    which === 'original'
+      ? (baseMap?.pictures ?? baseMap?.tiles)
+      : baseMap?.tiles;
   const maxzoom =
     which === 'original' ? (baseMap?.pictureMaxZoom ?? deepest) : deepest;
   const raster: Record<
@@ -510,7 +590,14 @@ export function polygonsOf(rings: readonly LatLng[][]): [number, number][][][] {
     if (depth(index) % 2 !== 0) return [];
     const holes = rings
       .map((candidate, at) => ({ candidate, at }))
-      .filter(({ at }) => parent[at] === index && depth(at) % 2 === 1)
+      .filter(
+        ({ at, candidate }) =>
+          parent[at] === index &&
+          depth(at) % 2 === 1 &&
+          // A five-point ring is one stored square. Treating it as a hole
+          // punches a patch of bare ground through the country.
+          candidate.length > 8,
+      )
       .map(({ candidate }) => polygonCoordinatesOf(candidate, true));
     return [[polygonCoordinatesOf(ring), ...holes]];
   });
@@ -602,6 +689,16 @@ export function MapSurface() {
   const markers = useRef<Marker[]>([]);
   const [mapReady, setMapReady] = useState(false);
   const [layers, setLayers] = useState<Layers>(readLayers);
+  const [fillOpacity, setFillOpacity] = useState(() => readFillOpacity(params));
+  const changeFill = (value: number) => {
+    const next = clampFill(value);
+    setFillOpacity(next);
+    try {
+      localStorage.setItem(FILL_OPACITY_KEY, String(next));
+    } catch {
+      // A browser that keeps nothing still draws the map.
+    }
+  };
   const toggle = (which: keyof Layers) =>
     setLayers((was) => {
       const next = { ...was, [which]: !was[which] };
@@ -623,6 +720,9 @@ export function MapSurface() {
   const [notice, setNotice] = useState<string>();
   // Closed by default: the map is the thing, and a list over it is a choice.
   const [listing, setListing] = useState(false);
+  const [painted, setPainted] = useState<ReadonlyMap<string, string>>(
+    () => new Map(),
+  );
 
   const placing = useRequest(async (): Promise<Placing | undefined> => {
     if (!placingKey) return undefined;
@@ -710,7 +810,7 @@ export function MapSurface() {
         source: POLITICAL_SOURCE,
         paint: {
           'fill-color': ['to-color', ['get', 'color']],
-          'fill-opacity': 0.5,
+          'fill-opacity': fillOpacity,
         },
       });
       map.addLayer({
@@ -878,8 +978,7 @@ export function MapSurface() {
     for (const { m, resource } of pages.flat()) {
       const cell = parseCell(resource[m.field]);
       if (!cell) continue;
-      const held =
-        Array.isArray(resource.extent) && resource.extent.length > 0;
+      const held = Array.isArray(resource.extent) && resource.extent.length > 0;
       if (!held && resource.type !== 'city') continue;
       entries.push({ model: m.model, field: m.field, resource, cell });
     }
@@ -939,12 +1038,41 @@ export function MapSurface() {
    * the sampled record query cannot be the list behind "in view".
    */
   const depth = view ? atlasZoom(view.zoom) : 0;
+  const heldEntries = census.data ?? [];
+  const countries = useMemo(
+    () =>
+      keepCountries(
+        (census.data ?? []).filter(
+          (entry) => entry.resource.type !== 'continent',
+        ),
+      ),
+    [census.data],
+  );
+  const islands = useMemo(() => poleIslands(heldEntries), [heldEntries]);
+  const visibleRaw = useMemo(
+    () => (view ? inView(countries, view) : countries),
+    [countries, view],
+  );
+  // A zoom tick makes a new view and a new in-view array of the same
+  // countries. Keep the last array so the political layer is not rebuilt
+  // on every frame of the animation.
+  const visibleHeld = useRef(visibleRaw);
+  const visibleStamp = visibleRaw
+    .map(
+      (entry) =>
+        `${String(entry.resource.id)}:${Array.isArray(entry.resource.extent) ? entry.resource.extent.length : 0}`,
+    )
+    .join(',');
+  const visibleStampHeld = useRef(visibleStamp);
+  if (visibleStamp !== visibleStampHeld.current) {
+    visibleHeld.current = visibleRaw;
+    visibleStampHeld.current = visibleStamp;
+  }
+  const visible = visibleHeld.current;
   const politicalInView = view
     ? depth < POLITICAL_DETAIL_ZOOM
-      ? (census.data ?? []).filter(
-          (entry) => entry.resource.type === 'continent',
-        )
-      : inView(census.data ?? [], view).filter(
+      ? heldEntries.filter((entry) => entry.resource.type === 'continent')
+      : inView(countries, view).filter(
           (entry) => entry.resource.type === 'kingdom',
         )
     : [];
@@ -963,6 +1091,12 @@ export function MapSurface() {
       ...citiesInView,
       ...(records.data ?? []),
     ]) {
+      if (
+        entry.resource.type === 'kingdom' &&
+        !isCountryName(entry.resource.name)
+      ) {
+        continue;
+      }
       byKey.set(`${entry.model}/${String(entry.resource.id)}`, entry);
     }
     return [...byKey.values()].sort(
@@ -1017,26 +1151,46 @@ export function MapSurface() {
       if (political === false) continue;
       const city = cityLabelAt(entry.resource.type, zoom);
       const named =
-        political === true ||
-        city ||
-        entry.cell.level <= zoom + NAMED_BELOW;
+        political === true || city || entry.cell.level <= zoom + NAMED_BELOW;
       const atlas = named && !city;
       // A political cell is its seat: imported from a name written on the
       // authored map and therefore guaranteed to lie on the country. An
       // extent's geometric middle can instead fall in a bay or between the
       // islands of an archipelago.
-      const at =
+      let at =
         political === true
           ? centerOf(entry.cell)
           : (middleOf(entry) ?? centerOf(entry.cell));
       const size = map.getContainer().getBoundingClientRect();
-      const point = map.project([at.lng, at.lat]);
+      let point = map.project([at.lng, at.lat]);
       const onGlobe = zoom < POLITICAL_DETAIL_ZOOM;
       // A name belongs where the place is. Pinning it to the edge when the
       // seat is off-screen made neighbouring countries look like they were
-      // in frame.
-      if (!onGlobe && !onMap(point, size)) continue;
-      const room = roomFor(named ? nameOf(entry.resource) : undefined, point);
+      // in frame. A country whose ground fills the window still gets its
+      // name, written on the ground that is showing.
+      if (!onGlobe && !onMap(point, size)) {
+        if (political !== true) continue;
+        const inland = pointOnGround(entry, map, size);
+        if (!inland) continue;
+        at = inland;
+        point = map.project([at.lng, at.lat]);
+        if (!onMap(point, size)) continue;
+      }
+      let room = roomFor(named ? nameOf(entry.resource) : undefined, point);
+      /*
+       * A name is slid back onto the map when the edge would cut it. Only a
+       * name: a mark is a dot on the spot a thing stands, and a dot slid
+       * inland is a lie about where the town is, where a country's name is
+       * written wherever it fits.
+       */
+      if (atlas) {
+        const slide = slideInside(room, size);
+        if (slide.x !== 0 || slide.y !== 0) {
+          point = new maplibregl.Point(point.x + slide.x, point.y + slide.y);
+          at = map.unproject(point);
+          room = roomFor(named ? nameOf(entry.resource) : undefined, point);
+        }
+      }
       const crowded = taken.some((other) => overlaps(other, room));
       if (crowded) continue;
       taken.push(room);
@@ -1046,9 +1200,7 @@ export function MapSurface() {
         named || labelled || entry.cell.level <= Math.round(view.zoom) + 1;
       const element = document.createElement('button');
       element.type = 'button';
-      element.className = atlas
-        ? 'map-label map-label-wide'
-        : 'map-mark map-label';
+      element.className = atlas ? 'map-label map-label-wide' : 'map-mark';
       element.dataset.kind = atlas ? 'name' : 'marker';
       element.setAttribute('aria-label', nameOf(entry.resource));
       element.title = permanent ? '' : nameOf(entry.resource);
@@ -1073,6 +1225,10 @@ export function MapSurface() {
         new maplibregl.Marker({
           element,
           anchor: atlas ? 'center' : 'left',
+          // The mark is a circle on the spot and a name to its right. Left
+          // without an offset pins the chip's edge, which is a lie about
+          // where the town is; four pixels is the radius of the circle.
+          ...(atlas ? {} : { offset: [-4, 0] }),
           opacityWhenCovered: 0,
         })
           .setLngLat([at.lng, at.lat])
@@ -1100,7 +1256,6 @@ export function MapSurface() {
    * to somebody else. Give a five-foot cell to the neighbour and the line
    * moves, which is the whole of what a border is.
    */
-  const heldEntries = census.data ?? [];
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady || startsWithView.current || centredWorld.current) {
@@ -1122,17 +1277,34 @@ export function MapSurface() {
       essential: true,
     });
   }, [heldEntries, mapReady]);
-  const countries = useMemo(
-    () => heldEntries.filter((entry) => entry.resource.type !== 'continent'),
-    [heldEntries],
-  );
-  const showing = useMemo(
-    () => (view ? inView(countries, view) : countries),
-    [countries, view],
-  );
+  const pictures = baseMap?.pictures;
+  useEffect(() => {
+    if (!pictures || countries.length === 0) return;
+    const sampler = new PictureSampler(pictures);
+    let cancelled = false;
+    void (async () => {
+      const next = new Map<string, string>();
+      for (const entry of countries) {
+        if (entry.resource.type !== 'kingdom') continue;
+        const at = centerOf(entry.cell);
+        const rgb = await sampler.fillAt(at.lat, at.lng);
+        if (!rgb) continue;
+        next.set(
+          `${entry.model}/${String(entry.resource.id)}`,
+          rgbHex(rgb[0], rgb[1], rgb[2]),
+        );
+      }
+      if (!cancelled) setPainted(next);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [countries, pictures]);
+  const showing = visible;
+  const zoomStep = view ? Math.round(view.zoom) : 0;
   const politicalLevel = useMemo(
-    () => (view ? levelToDraw(showing, view.zoom) : 7),
-    [showing, view?.zoom],
+    () => (view ? levelToDraw(showing, zoomStep) : 7),
+    [showing, zoomStep],
   );
   const ground = useMemo(
     () => (layers.political ? groundOf(showing, politicalLevel) : undefined),
@@ -1143,16 +1315,25 @@ export function MapSurface() {
       (entry) =>
         `${entry.model}/${String(entry.resource.id)}/${String(
           entry.resource.versionId ?? '',
-        )}`,
+        )}/${Array.isArray(entry.resource.extent) ? entry.resource.extent.length : 0}`,
     )
-    .join(',')}|${layers.political}`;
+    .join(',')}|${layers.political}|${[...painted.values()].join(',')}|${islands.length}`;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapReady) return;
+    if (typeof map.setPaintProperty !== 'function') return;
+    if (typeof map.getLayer === 'function' && !map.getLayer('political-fill')) {
+      return;
+    }
+    map.setPaintProperty('political-fill', 'fill-opacity', fillOpacity);
+  }, [fillOpacity, mapReady]);
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapReady) return;
     const fills: Feature<Geometry>[] = [];
     const edges: Feature<Geometry>[] = [];
     if (ground) {
-      const colors = politicalColors(ground);
+      const colors = politicalColors(ground, painted);
       for (const [key, held] of ground) {
         const id = key.slice(key.indexOf('/') + 1);
         const color = colors.get(key);
@@ -1178,7 +1359,7 @@ export function MapSurface() {
     }
     setGeoJson(map, POLITICAL_SOURCE, fills, politicalRevision);
     setGeoJson(map, BORDERS_SOURCE, edges, politicalRevision);
-  }, [ground, mapReady, politicalRevision]);
+  }, [ground, mapReady, painted, politicalRevision]);
 
   /**
    * The ground the picked-out place holds, shaded.
@@ -1410,7 +1591,12 @@ export function MapSurface() {
                     ? 'Nothing in view'
                     : `${entries.length} in view`}
               </Button>
-              <LayersButton layers={layers} onToggle={toggle} />
+              <LayersButton
+                layers={layers}
+                fill={fillOpacity}
+                onToggle={toggle}
+                onFill={changeFill}
+              />
               <Button
                 variant="outline"
                 size="sm"
@@ -1644,7 +1830,9 @@ export function MapSurface() {
  */
 function LayersButton(props: {
   readonly layers: Layers;
+  readonly fill: number;
   readonly onToggle: (which: keyof Layers) => void;
+  readonly onFill: (value: number) => void;
 }) {
   const [open, setOpen] = useState(false);
   const rows: { key: keyof Layers; label: string; note: string }[] = [
@@ -1652,6 +1840,7 @@ function LayersButton(props: {
     { key: 'labels', label: 'Names', note: 'Countries and cities' },
     { key: 'marks', label: 'Places', note: 'Towns, and everything smaller' },
   ];
+  const percent = Math.round(props.fill * 100);
   return (
     <div className="relative">
       <Button
@@ -1685,6 +1874,26 @@ function LayersButton(props: {
               </span>
             </Label>
           ))}
+          <Label className="flex flex-col gap-1 rounded-md px-2 py-1.5 font-normal">
+            <span className="flex items-baseline justify-between gap-2">
+              <span className="text-sm leading-tight">Fill</span>
+              <span className="text-xs text-muted-foreground">{percent}%</span>
+            </span>
+            <input
+              type="range"
+              min={Math.round(FILL_OPACITY_MIN * 100)}
+              max={Math.round(FILL_OPACITY_MAX * 100)}
+              value={percent}
+              aria-label="Political fill"
+              className="w-full accent-foreground"
+              onChange={(event) =>
+                props.onFill(Number(event.target.value) / 100)
+              }
+            />
+            <span className="text-xs text-muted-foreground">
+              Lower shows rivers through the countries
+            </span>
+          </Label>
         </div>
       )}
     </div>
@@ -1815,7 +2024,8 @@ function asBaseMap(world: string, value: unknown): BaseMap | undefined {
 }
 
 function nameOf(resource: Resource): string {
-  return typeof resource.name === 'string' ? resource.name : resource.id;
+  const name = typeof resource.name === 'string' ? resource.name : resource.id;
+  return displayName(name);
 }
 
 /** The map page: one block, filling the window. */

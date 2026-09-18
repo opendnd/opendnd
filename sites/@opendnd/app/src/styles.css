@@ -350,11 +350,10 @@
 }
 .map-label {
   cursor: pointer;
-  background: color-mix(in oklab, var(--background) 88%, transparent);
+  background: transparent;
   border: 0;
-  border-radius: 4px;
   box-shadow: none;
-  padding: 1px 5px;
+  padding: 0;
   font-size: 11px;
   font-weight: 500;
   color: var(--foreground);
@@ -362,19 +361,33 @@
 .map-mark {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   white-space: nowrap;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--foreground);
 }
 .map-mark-dot {
   display: block;
   width: 8px;
   height: 8px;
   flex: none;
-  border: 1px solid color-mix(in oklab, var(--foreground) 40%, transparent);
+  border: 1px solid color-mix(in oklab, var(--foreground) 55%, transparent);
   border-radius: 9999px;
+  box-shadow: 0 0 0 1px var(--background);
 }
 .map-mark-name {
   display: block;
+  text-shadow:
+    0 0 3px var(--background),
+    0 1px 0 var(--background),
+    0 -1px 0 var(--background),
+    1px 0 0 var(--background),
+    -1px 0 0 var(--background);
 }
 /*
  * The name of somewhere you are inside rather than looking at: a continent, a

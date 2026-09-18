@@ -60,9 +60,6 @@ const VIEW_LEVEL = 6;
  */
 const COARSEST = 6;
 
-/** How much of a square a place holds before the square is its own. */
-const HALF = 0.5;
-
 /**
  * How much coarser than the drawing a place's ground may be said and still
  * be drawn: four levels, so a block sixteen times the drawn square's width.
@@ -155,15 +152,12 @@ const rolled = new Map<string, Rolled[]>();
 /**
  * A place's ground as squares of one level.
  *
- * A square goes to a place when the place holds most of it. Handing it over
- * for holding any of it at all is how a coast painted to within half a pixel
- * comes out as a staircase in the sea: every square a border passes through
- * would belong to both sides and be drawn whole by each. Most-of-it keeps
- * the coarse map a partition, and keeps it close to the fine one — a square
- * only changes hands where it was half and half to begin with.
- *
- * A place too small to hold most of any square keeps the square it holds
- * most of, so that zooming out loses countries' shapes but not countries.
+ * Each stored cell is named as the square of `level` it sits in, and how
+ * much of that square the place holds. A river or a bay leaves some of
+ * those squares only partly full. Dropping them here punches a hole the
+ * size of the zoom — the patchy rectangles on the political map — so they
+ * stay. Who actually paints a square when two countries both touch it is
+ * settled later, once every place has been asked.
  */
 export function rollUp(
   id: string,
@@ -179,7 +173,7 @@ export function rollUp(
   const key = `${id}:${level}:${stamp}`;
   const had = rolled.get(key);
   if (had) return had;
-  const seen = new Map<number, { cell: Cell; part: number }>();
+  const seen = new Map<number, Rolled>();
   for (const token of extent) {
     const cell = cellOf(String(token));
     if (!cell) continue;
@@ -190,22 +184,62 @@ export function rollUp(
         : [cell.face, cell.i >>> deeper, cell.j >>> deeper, level];
     const part = deeper <= 0 ? 1 : 4 ** -deeper;
     const held = seen.get(keyOf(face, i, j, at));
-    if (held) held.part = Math.min(1, held.part + part);
-    else {
+    if (held) {
+      seen.set(keyOf(face, i, j, at), {
+        cell: held.cell,
+        part: Math.min(1, held.part + part),
+      });
+    } else {
       seen.set(keyOf(face, i, j, at), {
         cell: at === cell.level ? cell : square(face, i, j, at),
         part: Math.min(1, part),
       });
     }
   }
-  const all = [...seen.values()];
-  let out = all.filter(({ part }) => part >= HALF);
-  if (out.length === 0 && all.length > 0) {
-    out = [all.reduce((best, at) => (at.part > best.part ? at : best))];
-  }
+  const out = [...seen.values()];
   if (rolled.size > 4000) rolled.clear();
   rolled.set(key, out);
   return out;
+}
+
+/**
+ * When two countries of the same kind both sit in a square, the one that
+ * holds more of it keeps the square. The other lets go, so the square is
+ * not drawn whole in both colours.
+ *
+ * A square nobody else claims is kept even when it is only a bank or a
+ * coast: dropping it is how a river became a rectangle of bare ground.
+ */
+function settle(
+  claims: ReadonlyMap<string, readonly Rolled[]>,
+  peers: (a: string, b: string) => boolean,
+): Map<string, Cell[]> {
+  const sitting = new Map<number, { key: string; part: number }[]>();
+  for (const [key, rows] of claims) {
+    for (const row of rows) {
+      const at = keyOf(row.cell.face, row.cell.i, row.cell.j, row.cell.level);
+      const had = sitting.get(at);
+      if (had) had.push({ key, part: row.part });
+      else sitting.set(at, [{ key, part: row.part }]);
+    }
+  }
+  const own = new Map<string, Cell[]>();
+  for (const [key, rows] of claims) {
+    const cells: Cell[] = [];
+    for (const row of rows) {
+      const at = keyOf(row.cell.face, row.cell.i, row.cell.j, row.cell.level);
+      const stronger = (sitting.get(at) ?? []).some(
+        (other) =>
+          other.key !== key &&
+          peers(key, other.key) &&
+          (other.part > row.part ||
+            (other.part === row.part && other.key < key)),
+      );
+      if (!stronger) cells.push(row.cell);
+    }
+    own.set(key, cells);
+  }
+  return own;
 }
 
 /** The finest level a place's ground is held at, remembered by extent. */
@@ -270,6 +304,103 @@ function seen(at: LatLng, view: View): boolean {
  * piece of it inside the view, and the view inside a piece of it — the
  * second being how a continent is seen from a valley.
  */
+/**
+ * Land that already rings a pole, so the hole inside it can be finished
+ * as an island instead of a cube-face pie.
+ *
+ * The drawing never reaches the pole — Mercator stops short, and the cube
+ * stores the cap as one square. The countries around that hole are real;
+ * the missing disk is not assigned to any of them. It is invented land.
+ */
+export interface PoleIsland {
+  readonly sign: 1 | -1;
+  /** A point on the wrapping coast, to sample the land's colour. */
+  readonly edge: LatLng;
+}
+
+const POLE_BAND = 50;
+const POLE_SECTORS = 8;
+const POLE_NEED = 5;
+
+function fromPole(point: LatLng, sign: 1 | -1): number {
+  return 90 - sign * point.lat;
+}
+
+/**
+ * The polar faces that land already surrounds.
+ *
+ * Mercator terrain never covers a pole, so the cube face there is a hole.
+ * A continent that only touches one side is not an island and is left
+ * alone — inventing a disk there is how the ocean was painted.
+ */
+export function poleIslands(holdings: readonly Holding[]): PoleIsland[] {
+  const out: PoleIsland[] = [];
+  for (const sign of [1, -1] as const) {
+    const nearest = new Array<number>(POLE_SECTORS).fill(Infinity);
+    for (const holding of holdings) {
+      const extent = holding.resource.extent;
+      if (!Array.isArray(extent) || extent.length === 0) continue;
+      const rows = rollUp(String(holding.resource.id), extent, VIEW_LEVEL);
+      for (const { cell } of rows) {
+        const at = centerOf(cell);
+        const dist = fromPole(at, sign);
+        if (dist > POLE_BAND) continue;
+        let lng = at.lng;
+        while (lng < -180) lng += 360;
+        while (lng >= 180) lng -= 360;
+        const sector = Math.min(
+          POLE_SECTORS - 1,
+          Math.floor(((lng + 180) * POLE_SECTORS) / 360),
+        );
+        if (dist < nearest[sector]!) nearest[sector] = dist;
+      }
+    }
+    const hit = nearest.filter((dist) => dist < Infinity);
+    if (hit.length < POLE_NEED) continue;
+    // The south face has land on it without being a cut-off island; only
+    // the north pole is the hole the Mercator drawing left open.
+    if (sign === -1) continue;
+    const far = Math.max(...hit);
+    if (far <= 0.05 || far > POLE_BAND) continue;
+    const face = cellAt(sign === 1 ? 2 : 5, 0, 0, 0);
+    out.push({ sign, edge: pointWithin(face, 0.5, 0) });
+  }
+  return out;
+}
+
+/** Where the polar cube face ends, along a meridian. */
+function faceEdgeAtLng(sign: 1 | -1, lng: number): LatLng {
+  const rad = (lng * Math.PI) / 180;
+  const along = Math.max(Math.abs(Math.cos(rad)), Math.abs(Math.sin(rad)));
+  const fromPole = (Math.atan(1 / along) * 180) / Math.PI;
+  return { lat: sign * (90 - fromPole), lng };
+}
+
+/**
+ * The missing cube face as narrow pie slices.
+ *
+ * A quarter-disk fills the whole map in the plane the fill layer uses. A
+ * ten-degree wedge stays in its longitude and is the shape that already
+ * paints on this globe.
+ */
+export function ringsOfPoleIsland(island: PoleIsland): LatLng[][] {
+  const slices = 36;
+  const steps = 4;
+  const rings: LatLng[][] = [];
+  for (let i = 0; i < slices; i++) {
+    const lo = -180 + (360 * i) / slices;
+    const hi = lo + 360 / slices;
+    const pole = { lat: island.sign * 90, lng: (lo + hi) / 2 };
+    const ring: LatLng[] = [pole];
+    for (let step = 0; step <= steps; step++) {
+      ring.push(faceEdgeAtLng(island.sign, lo + ((hi - lo) * step) / steps));
+    }
+    ring.push(pole);
+    rings.push(ring);
+  }
+  return rings;
+}
+
 export function inView<T extends Holding>(
   holdings: readonly T[],
   view: View,
@@ -356,7 +487,7 @@ function whoHolds(
 ): { owner: Map<number, string>; held: Map<string, Cell[]> } {
   const size = new Map<string, number>();
   const kinds = new Map<string, string>();
-  const own = new Map<string, Cell[]>();
+  const claims = new Map<string, Rolled[]>();
   for (const holding of holdings) {
     const extent = holding.resource.extent;
     if (!Array.isArray(extent) || extent.length === 0) continue;
@@ -366,29 +497,25 @@ function whoHolds(
     if (typeof holding.resource.type === 'string' && holding.resource.type) {
       kinds.set(key, holding.resource.type);
     }
-    own.set(
-      key,
-      rollUp(String(holding.resource.id), extent, level).map(
-        ({ cell }) => cell,
-      ),
-    );
+    claims.set(key, rollUp(String(holding.resource.id), extent, level));
   }
   const peers = (a: string, b: string) => sameKind(a, b, kinds, size);
+  const own = settle(claims, peers);
   // A kingdom stored as a coarse inland square still covers its
   // neighbours until those neighbours are cut out of it. Continents keep
   // the square a kingdom stands on, so only a peer is carved away.
-  const carved = carvePeers(own, peers);
-  const claims = new Map<number, Map<string, number>>();
+  const carved = closeGaps(carvePeers(own, peers), peers);
+  const byCell = new Map<number, Map<string, number>>();
   for (const [key, cells] of carved) {
     for (const cell of cells) {
       const at = keyOf(cell.face, cell.i, cell.j, cell.level);
-      const byPlace = claims.get(at) ?? new Map<string, number>();
+      const byPlace = byCell.get(at) ?? new Map<string, number>();
       byPlace.set(key, 1);
-      claims.set(at, byPlace);
+      byCell.set(at, byPlace);
     }
   }
   const owner = new Map<number, string>();
-  for (const [at, byPlace] of claims) {
+  for (const [at, byPlace] of byCell) {
     let best: string | undefined;
     let bestHeld = Infinity;
     let bestCount = 0;
@@ -522,6 +649,118 @@ function carvePeers(
       carved.push(...minus(cell, holes));
     }
     out.set(key, carved);
+  }
+  return out;
+}
+
+/** The four cells that share a side with this one, on the same face. */
+function beside(cell: Cell): Cell[] {
+  const edge = 2 ** cell.level;
+  const out: Cell[] = [];
+  const add = (i: number, j: number): void => {
+    if (i >= 0 && j >= 0 && i < edge && j < edge) {
+      out.push(square(cell.face, i, j, cell.level));
+    }
+  };
+  add(cell.i - 1, cell.j);
+  add(cell.i + 1, cell.j);
+  add(cell.i, cell.j - 1);
+  add(cell.i, cell.j + 1);
+  return out;
+}
+
+/**
+ * Empty squares that sit between countries become somebody's ground.
+ *
+ * A cover that follows two outlines can leave a strip that neither path
+ * claimed — the pale gaps on the political map. Only the four neighbours
+ * of each stored cell are asked, at that cell's own level: walking the
+ * drawn rim of every coarse inland square is how the layer froze.
+ */
+function closeGaps(
+  own: ReadonlyMap<string, Cell[]>,
+  peers: (a: string, b: string) => boolean,
+): Map<string, Cell[]> {
+  const owned = new Map<number, string>();
+  // A finer country sitting inside a coarse square still occupies that
+  // square. Without this, a vacant parent of the town is filled and the
+  // carve that cut the town out is undone.
+  const covered = new Set<number>();
+  const occupy = (key: string, cell: Cell): void => {
+    owned.set(keyOf(cell.face, cell.i, cell.j, cell.level), key);
+    for (let level = cell.level - 1; level >= 0; level--) {
+      const back = cell.level - level;
+      covered.add(keyOf(cell.face, cell.i >>> back, cell.j >>> back, level));
+    }
+  };
+  for (const [key, cells] of own) {
+    for (const cell of cells) occupy(key, cell);
+  }
+  const extra = new Map<string, Cell[]>();
+  const take = (key: string, cell: Cell): void => {
+    const had = extra.get(key);
+    if (had) had.push(cell);
+    else extra.set(key, [cell]);
+    occupy(key, cell);
+  };
+  const taken = (cell: Cell): boolean =>
+    covered.has(keyOf(cell.face, cell.i, cell.j, cell.level)) ||
+    holderAt(owned, cell.face, cell.i, cell.j, cell.level) !== undefined;
+  const vacant: Cell[] = [];
+  const seen = new Set<number>();
+  const consider = (cell: Cell): void => {
+    for (const next of beside(cell)) {
+      const id = keyOf(next.face, next.i, next.j, next.level);
+      if (seen.has(id) || taken(next)) continue;
+      seen.add(id);
+      vacant.push(next);
+    }
+  };
+  for (const cells of own.values()) {
+    for (const cell of cells) consider(cell);
+  }
+  let filled = 0;
+  for (const cell of vacant) {
+    const around = beside(cell).map((next) =>
+      holderAt(owned, next.face, next.i, next.j, next.level),
+    );
+    const west = around[0];
+    const east = around[1];
+    const south = around[2];
+    const north = around[3];
+    const votes = new Map<string, number>();
+    for (const who of around) {
+      if (who === undefined) continue;
+      votes.set(who, (votes.get(who) ?? 0) + 1);
+    }
+    const names = [...votes.keys()];
+    if (names.length === 0) continue;
+    const across =
+      (west !== undefined &&
+        east !== undefined &&
+        west !== east &&
+        peers(west, east)) ||
+      (south !== undefined &&
+        north !== undefined &&
+        south !== north &&
+        peers(south, north));
+    const notch = names.length === 1 && (votes.get(names[0]!) ?? 0) >= 2;
+    if (!across && !notch) continue;
+    let best = names[0]!;
+    for (const name of names) {
+      const more = (votes.get(name) ?? 0) - (votes.get(best) ?? 0);
+      if (more > 0 || (more === 0 && name < best)) best = name;
+    }
+    take(best, cell);
+    filled += 1;
+  }
+  if (filled === 0) return new Map(own);
+  const out = new Map<string, Cell[]>();
+  for (const [key, cells] of own) {
+    out.set(key, [...cells, ...(extra.get(key) ?? [])]);
+  }
+  for (const [key, cells] of extra) {
+    if (!out.has(key)) out.set(key, cells);
   }
   return out;
 }
@@ -881,10 +1120,34 @@ function join(pieces: readonly Piece[]): LatLng[][] {
  * borders. The rest of the outline is coast, which the world's own
  * coastlines already draw.
  */
+/**
+ * Outlines already joined, because a zoom that does not change the
+ * drawing level asks the same countries the same question a dozen times
+ * on the way there. The rim walk that used to sit in who-holds made
+ * each of those asks a hitch; even the cheap walk is not free at this
+ * size, so the answer is kept.
+ */
+const drawn = new Map<string, Map<string, Ground>>();
+
+function drawnKey(holdings: readonly Holding[], level: number): string {
+  let stamp = `${level}:${holdings.length}`;
+  for (const holding of holdings) {
+    const extent = holding.resource.extent;
+    const n = Array.isArray(extent) ? extent.length : 0;
+    stamp += `|${holding.model}/${String(holding.resource.id)}:${n}:${String(
+      n > 0 ? extent[0] : '',
+    )}:${String(n > 0 ? extent[n - 1] : '')}`;
+  }
+  return stamp;
+}
+
 export function groundOf(
   holdings: readonly Holding[],
   level: number,
 ): Map<string, Ground> {
+  const stamp = drawnKey(holdings, level);
+  const had = drawn.get(stamp);
+  if (had) return had;
   const { owner, held } = whoHolds(holdings, level);
   const out = new Map<string, Ground>();
   for (const [key, cells] of held) {
@@ -906,5 +1169,7 @@ export function groundOf(
       neighbors: [...neighbors],
     });
   }
+  if (drawn.size > 32) drawn.clear();
+  drawn.set(stamp, out);
   return out;
 }

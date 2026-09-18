@@ -13,6 +13,7 @@ export * from './raster';
 export * from './draw';
 export * from './covering';
 export * from './claim';
+export * from './partition';
 export * from './divide';
 export * from './detail';
 export * from './noise';
